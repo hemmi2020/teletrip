@@ -4,6 +4,7 @@ const { body, query, param, validationResult } = require('express-validator');
 const { authUser } = require('../middlewares/auth.middleware');
 const paymentController = require('../controllers/payment.controller');
 const ApiResponse = require('../utils/response.util');
+const { cspErrorHandler } = require('../middlewares/errorHandler.middleware');
 
 
 
@@ -11,6 +12,8 @@ const ApiResponse = require('../utils/response.util');
 // ADD THIS LINE:
 router.get('/extract-hbl-data', authUser, paymentController.extractHBLData);
 router.post('/test-decrypt',authUser, paymentController.testDecryption);
+router.post('/test', paymentController.testNativeDecryption);
+
 
 
 
@@ -133,7 +136,8 @@ const validateRefundRequest = [
 router.post('/hblpay/initiate',   
   validatePaymentInitiation,
   authUser, 
-  validateRequest,        
+  validateRequest,
+  cspErrorHandler,
   paymentController.initiateHBLPayPayment   
 ); 
 // // Create payment session
@@ -215,17 +219,17 @@ router.get('/stats/:period',
 
 // ==================== PUBLIC ROUTES (No Authentication Required) ====================
 
-// HBLPay return callback (GET) - Called by HBLPay after payment
-router.get('/return', paymentController.handlePaymentReturn);
+// // HBLPay return callback (GET) - Called by HBLPay after payment
+// router.get('/return', paymentController.handlePaymentReturn);
 
-// HBLPay return callback (POST) - Some gateways use POST
-router.post('/return', paymentController.handlePaymentReturn);
+// // HBLPay return callback (POST) - Some gateways use POST
+// router.post('/return', paymentController.handlePaymentReturn);
 
-// HBLPay callback with query parameters
-router.get('/callback', paymentController.handlePaymentReturn);
+// // HBLPay callback with query parameters
+// router.get('/callback', paymentController.handlePaymentReturn);
 
-// HBLPay callback with POST data
-router.post('/callback', paymentController.handlePaymentReturn);
+// // HBLPay callback with POST data
+// router.post('/callback', paymentController.handlePaymentReturn);
 
 // 🚨 CRITICAL: HBLPay Cancel Routes (NEW)
 router.get('/cancel', paymentController.handlePaymentCancel);

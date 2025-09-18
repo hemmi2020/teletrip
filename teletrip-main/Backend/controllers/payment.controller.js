@@ -6,6 +6,7 @@ const ApiResponse = require('../utils/response.util');
 const { asyncErrorHandler } = require('../middlewares/errorHandler.middleware');
 const notificationService = require('../services/notification.service');
 const logger = require('../utils/logger.util'); // Enhanced logging utility
+const querystring = require('querystring');
 
 
 // HBLPay Configuration
@@ -34,25 +35,19 @@ const httpsAgent = new https.Agent({
   maxSockets: 50
 });
 
-// Load node-forge
-let forge;
-try {
-  forge = require('node-forge');
-  console.log('✅ node-forge loaded successfully');
-} catch (error) {
-  console.log('❌ node-forge not available:', error.message);
-}
 
-// ==================== WORKING DECRYPTION WITH BINARY PARSING ====================
-function parseGarbledData(rawDecryptedData) {
+// ==================== NATIVE CRYPTO VERSION OF YOUR WORKING FUNCTION ====================
+
+// Native equivalent of parseGarbledData function
+function parseGarbledDataNative(rawDecryptedData) {
   try {
-    console.log('🔧 [PARSE] Parsing garbled binary data...');
+    console.log('🔧 [PARSE-NATIVE] Parsing garbled binary data...');
     
     if (!rawDecryptedData) return {};
     
     // Convert to string and extract readable ASCII characters
-    let cleanText = '';  
-    for (let i = 0; i < rawDecryptedData.length; i++) { 
+    let cleanText = '';
+    for (let i = 0; i < rawDecryptedData.length; i++) {
       const char = rawDecryptedData[i];
       const code = char.charCodeAt(0);
       
@@ -62,7 +57,7 @@ function parseGarbledData(rawDecryptedData) {
       }
     }
     
-    console.log('📝 [PARSE] Extracted clean text:', cleanText);
+    console.log('📝 [PARSE-NATIVE] Extracted clean text:', cleanText);
     
     // Look for parameter patterns in the clean text
     const paramPatterns = [
@@ -84,13 +79,13 @@ function parseGarbledData(rawDecryptedData) {
       if (match) {
         const key = pattern.source.split('=')[0].replace(/[()[\]]/g, '');
         params[key] = decodeURIComponent(match[1] || '').trim();
-        console.log(`📝 [PARSE] Found ${key}:`, params[key]);
+        console.log(`📝 [PARSE-NATIVE] Found ${key}:`, params[key]);
       }
     }
     
     // If standard parsing fails, try alternative methods
     if (Object.keys(params).length === 0) {
-      console.log('🔄 [PARSE] Trying alternative parsing methods...');
+      console.log('🔄 [PARSE-NATIVE] Trying alternative parsing methods...');
       
       // Look for any text that contains "RESPONSE" or "ORDER"
       const responseMatch = cleanText.match(/.*RESPONSE.*?(\d+)/);
@@ -98,121 +93,163 @@ function parseGarbledData(rawDecryptedData) {
       
       if (responseMatch) {
         params.RESPONSE_CODE = responseMatch[1];
-        console.log('📝 [PARSE] Alternative found RESPONSE_CODE:', params.RESPONSE_CODE);
+        console.log('📝 [PARSE-NATIVE] Alternative found RESPONSE_CODE:', params.RESPONSE_CODE);
       }
       
       if (orderMatch) {
         params.ORDER_REF_NUMBER = orderMatch[1];
-        console.log('📝 [PARSE] Alternative found ORDER_REF_NUMBER:', params.ORDER_REF_NUMBER);
+        console.log('📝 [PARSE-NATIVE] Alternative found ORDER_REF_NUMBER:', params.ORDER_REF_NUMBER);
       }
     }
     
     return params;
     
   } catch (error) {
-    console.error('❌ [PARSE] Parsing failed:', error.message);
+    console.error('❌ [PARSE-NATIVE] Parsing failed:', error.message);
     return {};
   }
 }
 
-function enhancedDecryption(encryptedData, privateKeyPem) {
+// Native Node.js crypto version of your enhancedDecryption function
+function enhancedDecryptionNative(encryptedData, privateKeyPem) {
   try {
-    console.log('\n🔧 [ENHANCED] Starting enhanced decryption...');
+    console.log('\n🔧 [ENHANCED-NATIVE] Starting enhanced decryption with Node.js crypto...');
+    console.log('🌐 [ENHANCED-NATIVE] Environment:', process.env.NODE_ENV);
+    console.log('📦 [ENHANCED-NATIVE] Platform:', process.platform);
     
     if (!encryptedData || !privateKeyPem) {
+      console.log('❌ [ENHANCED-NATIVE] Missing encrypted data or private key');
       return {};
     }
     
-    // Step 1: Fix URL encoding issues
+    // Step 1: Fix URL encoding issues (exact same as your Node Forge version)
     let cleanData = encryptedData.trim();
     cleanData = cleanData.replace(/ /g, '+');
     cleanData = cleanData.replace(/%2B/g, '+');
     cleanData = cleanData.replace(/%2F/g, '/');
     cleanData = cleanData.replace(/%3D/g, '=');
     
-    console.log('🧹 [ENHANCED] Cleaned data length:', cleanData.length);
+    console.log('🧹 [ENHANCED-NATIVE] Cleaned data length:', cleanData.length);
     
-    // Step 2: Try forge decryption first (for standard cases)
-    if (forge) {
-      try {
-        const privateKey = forge.pki.privateKeyFromPem(privateKeyPem);
-        const binaryData = forge.util.decode64(cleanData);
-        
-        console.log('📦 [ENHANCED] Forge decoded:', binaryData.length, 'bytes');
-        
-        if (binaryData.length === 512) {
-          // Perfect block size - standard decryption
-          const result = privateKey.decrypt(binaryData, 'RSAES-PKCS1-V1_5');
-          if (result && result.includes('RESPONSE_CODE')) {
-            console.log('✅ [ENHANCED] Forge standard decryption successful');
-            const params = {};
-            result.split('&').forEach(pair => {
-              if (pair.includes('=')) {
-                const [key, ...valueParts] = pair.split('=');
-                params[key.trim()] = decodeURIComponent(valueParts.join('=') || '');
-              }
-            });
-            return params;
-          }
-        }
-      } catch (forgeError) {
-        console.log('❌ [ENHANCED] Forge method failed:', forgeError.message);
-      }
-    }
-    
-    // Step 3: Use Node.js crypto with NO_PADDING (this worked in your logs)
+    // Step 2: Try standard PKCS1 decryption first (fallback for standard cases)
     try {
-      console.log('🔄 [ENHANCED] Trying Node.js crypto NO_PADDING...');
+      console.log('🔄 [ENHANCED-NATIVE] Trying standard PKCS1 decryption...');
       
       const encryptedBuffer = Buffer.from(cleanData, 'base64');
-      console.log('📦 [ENHANCED] Buffer length:', encryptedBuffer.length);
+      console.log('📦 [ENHANCED-NATIVE] Buffer length:', encryptedBuffer.length);
+      
+      if (encryptedBuffer.length === 512) {
+        // Perfect block size - try standard decryption first
+        const standardResult = crypto.privateDecrypt({
+          key: privateKeyPem,
+          padding: crypto.constants.RSA_PKCS1_PADDING
+        }, encryptedBuffer);
+        
+        const standardString = standardResult.toString('utf8');
+        if (standardString && standardString.includes('RESPONSE_CODE')) {
+          console.log('✅ [ENHANCED-NATIVE] Standard PKCS1 decryption successful');
+          const params = {};
+          standardString.split('&').forEach(pair => {
+            if (pair.includes('=')) {
+              const [key, ...valueParts] = pair.split('=');
+              params[key.trim()] = decodeURIComponent(valueParts.join('=') || '');
+            }
+          });
+          return params;
+        }
+      }
+    } catch (standardError) {
+      console.log('❌ [ENHANCED-NATIVE] Standard PKCS1 method failed:', standardError.message);
+    }
+    
+    // Step 3: Use Node.js crypto with NO_PADDING (YOUR WORKING METHOD)
+    try {
+      console.log('🔄 [ENHANCED-NATIVE] Trying Node.js crypto NO_PADDING (your working method)...');
+      
+      const encryptedBuffer = Buffer.from(cleanData, 'base64');
+      console.log('📦 [ENHANCED-NATIVE] Buffer length for NO_PADDING:', encryptedBuffer.length);
       
       const decrypted = crypto.privateDecrypt({
         key: privateKeyPem,
         padding: crypto.constants.RSA_NO_PADDING
       }, encryptedBuffer);
       
-      console.log('✅ [ENHANCED] Node.js decryption successful');
+      console.log('✅ [ENHANCED-NATIVE] Node.js NO_PADDING decryption successful');
+      console.log('📊 [ENHANCED-NATIVE] Decrypted buffer length:', decrypted.length);
       
-      // Parse the garbled binary data
+      // Parse the garbled binary data (exact same method as your Node Forge version)
       const decryptedString = decrypted.toString('binary');
-      const params = parseGarbledData(decryptedString);
+      console.log('📝 [ENHANCED-NATIVE] Binary string length:', decryptedString.length);
+      console.log('📝 [ENHANCED-NATIVE] Binary string sample (first 100 chars):', 
+                  decryptedString.substring(0, 100).replace(/[^\x20-\x7E]/g, '�'));
+      
+      const params = parseGarbledDataNative(decryptedString);
       
       if (Object.keys(params).length > 0) {
-        console.log('✅ [ENHANCED] Successfully parsed parameters from binary data');
+        console.log('✅ [ENHANCED-NATIVE] Successfully parsed parameters from binary data');
         return params;
       }
       
-      // Fallback: try different string encodings
+      // Fallback: try different string encodings (exact same as your version)
+      console.log('🔄 [ENHANCED-NATIVE] Trying alternative encodings...');
       const encodings = ['utf8', 'ascii', 'latin1'];
       for (const encoding of encodings) {
         try {
+          console.log(`🔄 [ENHANCED-NATIVE] Trying ${encoding} encoding...`);
           const testString = decrypted.toString(encoding);
-          const testParams = parseGarbledData(testString);
+          const testParams = parseGarbledDataNative(testString);
           if (Object.keys(testParams).length > 0) {
-            console.log(`✅ [ENHANCED] Success with ${encoding} encoding`);
+            console.log(`✅ [ENHANCED-NATIVE] Success with ${encoding} encoding`);
             return testParams;
           }
         } catch (encodingError) {
+          console.log(`❌ [ENHANCED-NATIVE] ${encoding} encoding failed:`, encodingError.message);
           // Continue to next encoding
         }
       }
       
     } catch (cryptoError) {
-      console.log('❌ [ENHANCED] Node.js crypto failed:', cryptoError.message);
+      console.log('❌ [ENHANCED-NATIVE] Node.js crypto NO_PADDING failed:', cryptoError.message);
+      console.log('❌ [ENHANCED-NATIVE] Crypto error code:', cryptoError.code);
+      console.log('❌ [ENHANCED-NATIVE] Crypto error stack:', cryptoError.stack);
     }
     
-    console.log('❌ [ENHANCED] All decryption methods failed');
+    // Step 4: Try OAEP padding as last resort
+    try {
+      console.log('🔄 [ENHANCED-NATIVE] Trying OAEP padding as last resort...');
+      
+      const encryptedBuffer = Buffer.from(cleanData, 'base64');
+      const decrypted = crypto.privateDecrypt({
+        key: privateKeyPem,
+        padding: crypto.constants.RSA_PKCS1_OAEP_PADDING
+      }, encryptedBuffer);
+      
+      const decryptedString = decrypted.toString('binary');
+      const params = parseGarbledDataNative(decryptedString);
+      
+      if (Object.keys(params).length > 0) {
+        console.log('✅ [ENHANCED-NATIVE] OAEP padding successful');
+        return params;
+      }
+      
+    } catch (oaepError) {
+      console.log('❌ [ENHANCED-NATIVE] OAEP padding failed:', oaepError.message);
+    }
+    
+    console.log('❌ [ENHANCED-NATIVE] All decryption methods failed');
     return {};
     
   } catch (error) {
-    console.error('💥 [ENHANCED] Fatal error:', error.message);
+    console.error('💥 [ENHANCED-NATIVE] Fatal error:', error.message);
+    console.error('💥 [ENHANCED-NATIVE] Error stack:', error.stack);
+    console.log('🔍 [ENHANCED-NATIVE] Debug info:');
+    console.log('   - Node version:', process.version);
+    console.log('   - Platform:', process.platform);
+    console.log('   - Architecture:', process.arch);
+    console.log('   - Memory usage:', JSON.stringify(process.memoryUsage(), null, 2));
     return {};
   }
 }
-
-
-
 
 
 
@@ -224,11 +261,13 @@ function enhancedDecryption(encryptedData, privateKeyPem) {
 
 // ==================== UPDATED SUCCESS HANDLER ====================
 module.exports.handlePaymentSuccess = asyncErrorHandler(async (req, res) => {
-  console.log('\n🎉 ========== PAYMENT SUCCESS CALLBACK ==========');
+  console.log('\n🎉 ========== PAYMENT SUCCESS CALLBACK (NATIVE) ==========');
   console.log('🔗 Full URL:', req.url);
+  console.log('🌐 Environment:', process.env.NODE_ENV);
+  console.log('📦 Platform:', process.platform);
   
   try {
-    // Extract encrypted data from raw URL
+    // Extract encrypted data from raw URL (exact same logic as your version)
     let encryptedData;
     
     if (req.url.includes('data=')) {
@@ -239,7 +278,7 @@ module.exports.handlePaymentSuccess = asyncErrorHandler(async (req, res) => {
         rawUrl.substring(dataStart) : 
         rawUrl.substring(dataStart, dataEnd);
       
-      console.log('🔧 [SUCCESS] Extracted from raw URL:', encryptedData?.length, 'chars');
+      console.log('🔧 [SUCCESS-NATIVE] Extracted from raw URL:', encryptedData?.length, 'chars');
     }
     
     // Fallback to Express parsing
@@ -248,33 +287,42 @@ module.exports.handlePaymentSuccess = asyncErrorHandler(async (req, res) => {
     }
     
     if (!encryptedData) {
-      console.log('❌ [SUCCESS] No encrypted data found');
+      console.log('❌ [SUCCESS-NATIVE] No encrypted data found');
       return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/payment/failed?reason=missing_data`);
     }
     
-    console.log('📥 [SUCCESS] Processing encrypted data...');
+    console.log('📥 [SUCCESS-NATIVE] Processing encrypted data...');
+    console.log('📥 [SUCCESS-NATIVE] Data length:', encryptedData.length);
+    console.log('📥 [SUCCESS-NATIVE] Data sample:', encryptedData.substring(0, 50) + '...');
     
-    // Use enhanced decryption
-    const decryptedResponse = enhancedDecryption(encryptedData, privateKeyPem);
+    // Get private key from environment
+    const privateKeyPem = process.env.MERCHANT_PRIVATE_KEY_PEM;
+    
+    if (!privateKeyPem) {
+      console.log('❌ [SUCCESS-NATIVE] No private key found in environment');
+      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/payment/failed?reason=config_error`);
+    }
+    
+    console.log('🔑 [SUCCESS-NATIVE] Private key loaded, length:', privateKeyPem.length);
+    
+    // Use enhanced native decryption
+    const decryptedResponse = enhancedDecryptionNative(encryptedData, privateKeyPem);
     
     if (!decryptedResponse || Object.keys(decryptedResponse).length === 0) {
-      console.log('💥 [SUCCESS] Decryption failed completely');
+      console.log('💥 [SUCCESS-NATIVE] Decryption failed completely');
       return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/payment/failed?reason=decrypt_failed`);
     }
     
-    console.log('🎊 [SUCCESS] DECRYPTION SUCCESSFUL!');
-    console.log('📋 [SUCCESS] Decrypted parameters:', decryptedResponse);
-    
-    // For testing: ALWAYS show the success page with all decrypted data
-    // regardless of success/failure
+    console.log('🎊 [SUCCESS-NATIVE] NATIVE DECRYPTION SUCCESSFUL!');
+    console.log('📋 [SUCCESS-NATIVE] Decrypted parameters:', JSON.stringify(decryptedResponse, null, 2));
     
     const responseCode = decryptedResponse.RESPONSE_CODE;
     const orderRefNumber = decryptedResponse.ORDER_REF_NUMBER || decryptedResponse.REFERENCE_NUMBER;
     
-    console.log('🔍 [SUCCESS] Response code:', responseCode);
-    console.log('🔍 [SUCCESS] Order ref:', orderRefNumber);
+    console.log('🔍 [SUCCESS-NATIVE] Response code:', responseCode);
+    console.log('🔍 [SUCCESS-NATIVE] Order ref:', orderRefNumber);
     
-    // Update database if we have order reference
+    // Update database if we have order reference (same as your version)
     if (orderRefNumber) {
       try {
         const payment = await paymentModel.findOne({ orderRefNumber });
@@ -298,14 +346,14 @@ module.exports.handlePaymentSuccess = asyncErrorHandler(async (req, res) => {
             });
           }
           
-          console.log('✅ [SUCCESS] Database records updated');
+          console.log('✅ [SUCCESS-NATIVE] Database records updated');
         }
       } catch (dbError) {
-        console.error('❌ [SUCCESS] Database update failed:', dbError.message);
+        console.error('❌ [SUCCESS-NATIVE] Database update failed:', dbError.message);
       }
     }
     
-    // BUILD SUCCESS PAGE URL WITH ALL HBL DATA
+    // BUILD SUCCESS PAGE URL WITH ALL HBL DATA (exact same as your version)
     const successParams = new URLSearchParams({
       RESPONSE_CODE: decryptedResponse.RESPONSE_CODE || '',
       RESPONSE_MESSAGE: encodeURIComponent(decryptedResponse.RESPONSE_MESSAGE || ''),
@@ -322,13 +370,14 @@ module.exports.handlePaymentSuccess = asyncErrorHandler(async (req, res) => {
     
     const successUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/payment/success?${successParams.toString()}`;
     
-    console.log('🎯 [SUCCESS] Redirecting to:', successUrl);
-    console.log('🎯 [SUCCESS] URL length:', successUrl.length);
+    console.log('🎯 [SUCCESS-NATIVE] Redirecting to:', successUrl);
+    console.log('🎯 [SUCCESS-NATIVE] URL length:', successUrl.length);
     
     return res.redirect(successUrl);
     
   } catch (error) {
-    console.error('💥 [SUCCESS] Handler error:', error);
+    console.error('💥 [SUCCESS-NATIVE] Handler error:', error);
+    console.error('💥 [SUCCESS-NATIVE] Stack trace:', error.stack);
     return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/payment/failed?reason=server_error`);
   }
 });
@@ -1829,3 +1878,68 @@ module.exports.extractHBLData = (req, res) => {
     });
   }
 };
+
+
+
+// Enhanced test endpoint for Render deployment debugging
+// Test endpoint for native decryption
+// Test endpoint for native decryption
+module.exports.testNativeDecryption = asyncErrorHandler(async (req, res) => {
+  console.log('\n🧪 ========== NATIVE DECRYPTION TEST ==========');
+  
+  const { testData } = req.body;
+  
+  if (!testData) {
+    return res.status(400).json({
+      success: false,
+      error: 'Please provide testData in request body',
+      environment: {
+        nodeVersion: process.version,
+        platform: process.platform,
+        hasPrivateKey: !!process.env.MERCHANT_PRIVATE_KEY_PEM
+      }
+    });
+  }
+
+  console.log('🧪 [TEST] Testing native decryption...');
+  console.log('🧪 [TEST] Environment:', process.env.NODE_ENV);
+  console.log('🧪 [TEST] Platform:', process.platform);
+  console.log('🧪 [TEST] Node version:', process.version);
+  
+  const privateKeyPem = process.env.MERCHANT_PRIVATE_KEY_PEM;
+  
+  if (!privateKeyPem) {
+    return res.status(500).json({
+      success: false,
+      error: 'Private key not found in environment variables'
+    });
+  }
+  
+  const startTime = Date.now();
+  const result = enhancedDecryptionNative(testData, privateKeyPem);
+  const endTime = Date.now();
+  
+  console.log('⏱️ [TEST] Decryption took:', endTime - startTime, 'ms');
+  console.log('📊 [TEST] Result:', JSON.stringify(result, null, 2));
+  
+  return res.json({
+    success: result && Object.keys(result).length > 0,
+    decryptedData: result,
+    performance: {
+      decryptionTime: endTime - startTime,
+      memoryUsage: process.memoryUsage()
+    },
+    environment: {
+      nodeVersion: process.version,
+      platform: process.platform,
+      architecture: process.arch,
+      hasPrivateKey: !!privateKeyPem,
+      privateKeyLength: privateKeyPem ? privateKeyPem.length : 0
+    },
+    debugging: {
+      originalDataLength: testData.length,
+      originalDataSample: testData.substring(0, 100) + '...',
+      method: 'native-nodejs-crypto'
+    }
+  });
+});
