@@ -42,7 +42,7 @@ const PaymentSuccess = () => {
       
       // HBL standard parameters (from your successful decryption)
       params.responseCode = searchParams.get('RESPONSE_CODE') || searchParams.get('code') || null;
-      params.responseMessage = searchParams.get('RESPONSE_MESSAGE') || searchParams.get('message') || null;
+      params.responseMessage = decodeURIComponent(searchParams.get('RESPONSE_MESSAGE') || searchParams.get('message') || null);
       params.orderRefNumber = searchParams.get('ORDER_REF_NUMBER') || searchParams.get('orderId') || searchParams.get('ref') || null;
       params.paymentType = searchParams.get('PAYMENT_TYPE') || searchParams.get('type') || null;
       params.cardMasked = searchParams.get('CARD_NUM_MASKED') || searchParams.get('card') || null;
