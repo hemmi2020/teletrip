@@ -68,7 +68,9 @@ function parseGarbledDataNative(rawDecryptedData) {
       /CARD_NUM_MASKED=([^&\s]+)/,
       /TRANSACTION_ID=([^&\s]+)/,
       /TXN_ID=([^&\s]+)/,
-      /GUID=([^&\s]+)/
+      /GUID=([^&\s]+)/,
+      /DISCOUNTED_AMOUNT=([^&\s]+)/,
+      /DISCOUNT_CAMPAIGN_ID=([^&\s]+)/
     ];
     
     const params = {};
@@ -265,6 +267,8 @@ module.exports.handlePaymentSuccess = asyncErrorHandler(async (req, res) => {
   console.log('🔗 Full URL:', req.url);
   console.log('🌐 Environment:', process.env.NODE_ENV);
   console.log('📦 Platform:', process.platform);
+  console.log('🔍 Query params:', req.query);
+  console.log('🔍 Body params:', req.body);
   
   try {
     // Extract encrypted data from raw URL (exact same logic as your version)
@@ -1026,8 +1030,8 @@ const buildHBLPayRequest = (paymentData, userId) => {
   const request = {
     "USER_ID": HBLPAY_USER_ID,
     "PASSWORD": HBLPAY_PASSWORD,
-    "RETURN_URL": `${process.env.FRONTEND_URL || 'https://telitrip.onrender.com'}/payment/success`,
-    "CANCEL_URL": `${process.env.FRONTEND_URL || 'https://telitrip.onrender.com'}/payment/cancel`,
+    "RETURN_URL": `${process.env.BACKEND_URL || 'https://telitrip.onrender.com'}/api/payments/success`,
+    "CANCEL_URL": `${process.env.BACKEND_URL || 'https://telitrip.onrender.com'}/api/payments/cancel`,
     "CHANNEL": HBL_CHANNEL,
     "TYPE_ID": HBL_TYPE_ID,
     "ORDER": {
