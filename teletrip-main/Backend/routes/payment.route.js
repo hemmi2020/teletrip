@@ -9,6 +9,15 @@ const { cspErrorHandler } = require('../middlewares/errorHandler.middleware');
 
 
 
+// 🚨 CRITICAL: HBLPay Cancel Routes (NEW)
+router.get('/cancel', paymentController.handlePaymentCancel);
+router.post('/cancel', paymentController.handlePaymentCancel);
+
+
+// Add this to your PUBLIC ROUTES section
+router.get('/success', paymentController.handlePaymentSuccess);
+router.post('/success', paymentController.handlePaymentSuccess);
+
 // ADD THIS LINE:
 router.get('/extract-hbl-data', authUser, paymentController.extractHBLData);
 router.post('/test-decrypt',authUser, paymentController.testDecryption);
@@ -231,14 +240,7 @@ router.get('/stats/:period',
 // // HBLPay callback with POST data
 // router.post('/callback', paymentController.handlePaymentReturn);
 
-// 🚨 CRITICAL: HBLPay Cancel Routes (NEW)
-router.get('/cancel', paymentController.handlePaymentCancel);
-router.post('/cancel', paymentController.handlePaymentCancel);
 
-
-// Add this to your PUBLIC ROUTES section
-router.get('/success', paymentController.handlePaymentSuccess);
-router.post('/success', paymentController.handlePaymentSuccess);
 
 
 
