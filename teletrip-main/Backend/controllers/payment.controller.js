@@ -9,8 +9,7 @@ const logger = require('../utils/logger.util'); // Enhanced logging utility
 const querystring = require('querystring');
 const userModel = require('../models/user.model');
 const paymentService = require('../services/payment.service');  
-const notificationService = require('../services/notification.service');
-const logger = require('../utils/logger.util');
+
 
 
 const User = userModel;
