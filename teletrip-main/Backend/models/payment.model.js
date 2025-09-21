@@ -1,253 +1,109 @@
 const mongoose = require('mongoose');
 
 const paymentSchema = new mongoose.Schema({
-  // Core payment information
-  paymentId: {
+  transactionId: {
     type: String,
     required: true,
-    unique: true,
-    index: true,
-    match: /^PAY_\d+_[a-z0-9]+$/
+    unique: true
   },
-  userId: {
+  booking: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'user',
-    required: true,
-    index: true
+    ref: 'Booking',
+    required: true
   },
-  bookingId: {
+  user: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'booking',
-    required: true,
-    index: true
+    ref: 'User',
+    required: true
   },
-  
-  // Payment details
   amount: {
     type: Number,
-    required: true,
-    min: [0.01, 'Amount must be greater than 0'],
-    validate: {
-      validator: function(value) {
-        return Number.isFinite(value) && value > 0;
-      },
-      message: 'Amount must be a valid positive number'
-    }
+    required: true
   },
   currency: {
     type: String,
-    required: true,
-    enum: ['PKR', 'USD', 'EUR'],
-    default: 'PKR',
-    uppercase: true
+    default: 'PKR'
   },
-  
-  // Payment method and gateway
-  method: {
+  paymentMethod: {
     type: String,
-    required: true,
-    enum: ['HBLPay', 'Cash', 'Bank Transfer', 'Credit Card', 'Debit Card'],
-    default: 'HBLPay'
+    enum: ['credit_card', 'debit_card', 'hbl_account', 'union_pay'],
+    required: true
   },
-  gateway: {
-    type: String,
-    default: 'HBLPay',
-    enum: ['HBLPay', 'Manual', 'Other']
-  },
-  
-  // Payment status
   status: {
     type: String,
-    required: true,
-    enum: ['pending', 'processing', 'completed', 'failed', 'cancelled', 'refunded', 'partial_refund'],
-    default: 'pending',
-    index: true
+    enum: ['pending', 'processing', 'completed', 'failed', 'cancelled', 'refunded'],
+    default: 'pending'
   },
-  
-  // HBLPay specific fields
-  sessionId: {
-    type: String,
-    index: true,
-    sparse: true  // Allow null values but index non-null ones
-  },
-  transactionId: {
-    type: String,
-    index: true,
-    sparse: true
-  },
-  
-  // Gateway response data
-  gatewayResponse: {
-    type: mongoose.Schema.Types.Mixed,
-    default: {}
-  },
-  
-  // Payment card information (if applicable)
-  cardInfo: {
-    last4Digits: {
+  gateway: {
+    provider: {
       type: String,
-      match: /^\d{4}$/,
-      validate: {
-        validator: function(v) {
-          return !v || /^\d{4}$/.test(v);
-        },
-        message: 'Last 4 digits must be exactly 4 numbers'
-      }
+      default: 'HBLPay'
     },
-    cardType: {
-      type: String,
-      enum: ['Visa', 'MasterCard', 'UnionPay', 'HBL Debit', 'HBL Credit']
-    },
+    sessionId: String,
+    responseCode: String,
+    responseMessage: String,
+    authCode: String,
+    orderRefNumber: String
+  },
+  tokenization: {
+    token: String,
     maskedCardNumber: String,
-    expiryMonth: {
+    expiryDate: String
+  },
+  billing: {
+    firstName: String,
+    lastName: String,
+    email: String,
+    phone: String,
+    address: String,
+    city: String,
+    state: String,
+    country: String,
+    postalCode: String
+  },
+  fees: {
+    processingFee: {
       type: Number,
-      min: 1,
-      max: 12
+      default: 0
     },
-    expiryYear: {
+    gatewayFee: {
       type: Number,
-      min: 2023,
-      max: 2050
+      default: 0
     }
   },
-  
-  // Timestamps for payment flow
-  initiatedAt: {
-    type: Date,
-    default: Date.now,
-    index: true
+  refund: {
+    amount: Number,
+    reason: String,
+    refundedAt: Date,
+    refundTransactionId: String,
+    refundStatus: {
+      type: String,
+      enum: ['pending', 'processed', 'failed']
+    }
   },
-  completedAt: {
-    type: Date,
-    index: true
-  },
-  failedAt: {
-    type: Date
-  },
-  cancelledAt: {
-    type: Date
-  },
-  
-  // Error information
-  errorCode: String,
-  errorMessage: String,
-  failureReason: String,
-  
-  // Additional metadata
   metadata: {
-    userAgent: String,
     ipAddress: String,
-    returnUrl: String,
-    cancelUrl: String,
-    orderId: String,
-    
-    // HBLPay specific metadata
-    channel: {
-      type: String,
-      default: 'HOTEL_WEB'
-    },
-    typeId: {
-      type: String,
-      default: 'ECOM'
-    },
-    
-    // Billing information
-    billingInfo: {
-      firstName: String,
-      lastName: String,
-      email: String,
-      phone: String,
-      address: String,
-      city: String,
-      state: String,
+    userAgent: String,
+    deviceId: String,
+    location: {
       country: String,
-      postalCode: String
+      city: String
     }
   },
-  
-  // Refund information
-  refundAmount: {
-    type: Number,
-    default: 0,
-    min: 0,
-    validate: {
-      validator: function(value) {
-        return value <= this.amount;
-      },
-      message: 'Refund amount cannot exceed payment amount'
-    }
-  },
-  refundReason: String,
-  refundedAt: Date,
-  refundTransactionId: String,
-  
-  // Partial refunds tracking
-  refunds: [{
-    amount: {
-      type: Number,
-      required: true,
-      min: 0.01
-    },
-    reason: {
-      type: String,
-      required: true
-    },
-    refundedAt: {
+  auditLog: [{
+    action: String,
+    timestamp: {
       type: Date,
       default: Date.now
     },
-    transactionId: String,
-    status: {
-      type: String,
-      enum: ['pending', 'completed', 'failed'],
-      default: 'pending'
-    }
-  }],
-  
-  // Audit fields
-  createdBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'user'
-  },
-  updatedBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'user'
-  },
-  
-  // Soft delete
-  isDeleted: {
-    type: Boolean,
-    default: false,
-    index: true
-  },
-  deletedAt: Date,
-  deletedBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'user'
-  }
+    details: mongoose.Schema.Types.Mixed
+  }]
 }, {
-  timestamps: true,
-  versionKey: false,
-  
-  // Indexes for better query performance
-  indexes: [
-    { userId: 1, status: 1 },
-    { bookingId: 1 },
-    { sessionId: 1 },
-    { transactionId: 1 },
-    { paymentId: 1 },
-    { status: 1, createdAt: -1 },
-    { 'metadata.orderId': 1 },
-    { createdAt: -1 },
-    { amount: 1, currency: 1 },
-    { method: 1, gateway: 1 }
-  ]
+  timestamps: true
 });
 
 // Compound indexes
-paymentSchema.index({ userId: 1, createdAt: -1 });
-paymentSchema.index({ status: 1, initiatedAt: -1 });
-paymentSchema.index({ bookingId: 1, status: 1 });
+
 
 // Virtual for payment duration
 paymentSchema.virtual('duration').get(function() {

@@ -4,68 +4,135 @@ const mongoose = require('mongoose');
 
 
 const bookingSchema = new mongoose.Schema({
-  userId: {
+  bookingReference: {
+    type: String,
+    required: true,
+    unique: true
+  },
+  user: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'user',
+    ref: 'User',
     required: true
   },
-  bookingId: {
+  hotel: {
+    hotelCode: String,
+    name: String,
+    address: String
+  },
+  room: {
+    code: String,
+    name: String,
     type: String,
-    unique: true,
-    required: true
-  },
-  hotelName: {
-    type: String,
-    required: true
-  },
-  roomName: {
-    type: String,
-    required: true
-  },
-  location: {
-    type: String,
-    required: true
-  },
-  checkIn: {
-    type: Date,
-    required: true
-  },
-  checkOut: {
-    type: Date,
-    required: true
+    description: String
   },
   guests: {
-    type: Number,
-    required: true,
-    min: 1
+    adults: {
+      type: Number,
+      required: true,
+      min: 1
+    },
+    children: {
+      type: Number,
+      default: 0,
+      min: 0
+    },
+    infants: {
+      type: Number,
+      default: 0,
+      min: 0
+    }
   },
-  totalAmount: {
-    type: Number,
-    required: true
+  dates: {
+    checkIn: {
+      type: Date,
+      required: true
+    },
+    checkOut: {
+      type: Date,
+      required: true
+    },
+    nights: Number
   },
+  pricing: {
+    baseAmount: {
+      type: Number,
+      required: true
+    },
+    taxes: {
+      type: Number,
+      default: 0
+    },
+    fees: {
+      type: Number,
+      default: 0
+    },
+    discounts: {
+      type: Number,
+      default: 0
+    },
+    totalAmount: {
+      type: Number,
+      required: true
+    },
+    currency: {
+      type: String,
+      default: 'PKR'
+    }
+  },
+  boardType: String, // Half Board, Full Board, etc.
+  rateClass: String, // NOR, NRF, etc.
   status: {
     type: String,
-    enum: ['pending', 'confirmed', 'completed', 'cancelled', 'upcoming'],
+    enum: ['pending', 'confirmed', 'cancelled', 'completed', 'no_show'],
     default: 'pending'
   },
   paymentStatus: {
     type: String,
-    enum: ['pending', 'paid', 'failed', 'refunded'],
+    enum: ['pending', 'processing', 'paid', 'failed', 'refunded', 'partial_refund'],
     default: 'pending'
   },
-  boardType: {
-    type: String,
-    enum: ['Room Only', 'Half Board', 'Full Board', 'All Inclusive'],
-    default: 'Room Only'
+  payment: {
+    transactionId: String,
+    paymentMethod: String,
+    paidAmount: Number,
+    paidAt: Date,
+    refundAmount: Number,
+    refundAt: Date
   },
-  rateClass: {
-    type: String,
-    enum: ['NOR', 'NRF', 'PRE'],
-    default: 'NOR'
-  }
+  hotelbedsBooking: {
+    reference: String,
+    status: String,
+    createdAt: Date,
+    modifiedAt: Date
+  },
+  cancellation: {
+    reason: String,
+    cancelledAt: Date,
+    cancelledBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    refundAmount: Number,
+    penalties: Number
+  },
+  specialRequests: String,
+  notes: [String]
 }, {
-  timestamps: true
+  timestamps: true,
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
 });
+
+// Calculate nights before saving
+bookingSchema.pre('save', function(next) {
+  if (this.dates.checkIn && this.dates.checkOut) {
+    const checkIn = new Date(this.dates.checkIn);
+    const checkOut = new Date(this.dates.checkOut);
+    this.dates.nights = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24));
+  }
+  next();
+});
+
 
 const bookingModel = mongoose.model('booking', bookingSchema);
 

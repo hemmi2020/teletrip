@@ -5,71 +5,108 @@ const jwt = require('jsonwebtoken');
 
 
 const userSchema = new mongoose.Schema({
-  fullname: {
-    firstname: {
-      type: String,
-      required: true,
-      minlength: [3, 'First name must be at least 3 characters long'],
-    },
-    lastname: {
-      type: String,
-      required: true,
-      minlength: [3, 'Last name must be at least 3 characters long'],
-    },
+  firstName: {
+    type: String,
+    required: [true, 'First name is required'],
+    trim: true,
+    maxlength: [50, 'First name cannot exceed 50 characters']
+  },
+  lastName: {
+    type: String,
+    required: [true, 'Last name is required'],
+    trim: true,
+    maxlength: [50, 'Last name cannot exceed 50 characters']
   },
   email: {
     type: String,
-    required: true,
+    required: [true, 'Email is required'],
     unique: true,
-    validate: {
-      validator: function (v) {
-        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
-      },
-      message: (props) => `${props.value} is not a valid email!`,
-    },
+    lowercase: true,
+    match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Please enter a valid email']
   },
   password: {
     type: String,
-    required: true,
-    select: false,
-    minlength: [6, 'Password must be at least 6 characters long'],
+    required: [true, 'Password is required'],
+    minlength: [6, 'Password must be at least 6 characters'],
+    select: false
   },
   phone: {
     type: String,
-    default: '',
-    validate: {
-      validator: function(v) {
-        return !v || /^\+?[\d\s\-\(\)]+$/.test(v);
-      },
-      message: 'Invalid phone number format'
-    }
+    required: [true, 'Phone number is required'],
+    match: [/^\+?[1-9]\d{1,14}$/, 'Please enter a valid phone number']
   },
   address: {
-    type: String,
-    default: ''
+    street: String,
+    city: String,
+    state: String,
+    country: String,
+    postalCode: String
   },
-  preferences: {
-    emailNotifications: {
-      type: Boolean,
-      default: true
-    },
-    twoFactorAuth: {
-      type: Boolean,
-      default: false
-    }
-  },
-  resetPasswordToken: String,
-  resetPasswordExpire: Date,
   isEmailVerified: {
+    type: Boolean,
+    default: false
+  },
+  isPhoneVerified: {
     type: Boolean,
     default: false
   },
   role: {
     type: String,
-    enum: ['user', 'admin', 'super-admin'],
-    default: 'user',
-  }
-  },{ timestamps: true });
+    enum: ['user', 'admin', 'super_admin'],
+    default: 'user'
+  },
+  preferences: {
+    currency: {
+      type: String,
+      default: 'PKR'
+    },
+    language: {
+      type: String,
+      default: 'en'
+    },
+    notifications: {
+      email: { type: Boolean, default: true },
+      sms: { type: Boolean, default: true },
+      push: { type: Boolean, default: true }
+    }
+  },
+  loginAttempts: {
+    type: Number,
+    default: 0
+  },
+  lockUntil: Date,
+  lastLogin: Date,
+  resetPasswordToken: String,
+  resetPasswordExpire: Date,
+  emailVerificationToken: String,
+  emailVerificationExpire: Date
+}, {
+  timestamps: true,
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
+});
+
+
+
+
+// Virtual for full name
+userSchema.virtual('fullName').get(function() {
+  return `${this.firstName} ${this.lastName}`;
+});
+
+// Virtual for account lock status
+userSchema.virtual('isLocked').get(function() {
+  return !!(this.lockUntil && this.lockUntil > Date.now());
+});
+
+// Encrypt password before saving
+userSchema.pre('save', async function(next) {
+  if (!this.isModified('password')) return next();
+  
+  const salt = await bcrypt.genSalt(12);
+  this.password = await bcrypt.hash(this.password, salt);
+  next();
+});
 
   
   userSchema.methods.generateAuthToken = function (){
@@ -98,6 +135,25 @@ userSchema.methods.getResetPasswordToken = function() {
   
   return resetToken;
 }
+
+
+
+// Generate JWT token
+userSchema.methods.getSignedJwtToken = function() {
+  return jwt.sign(
+    { 
+      id: this._id,
+      email: this.email,
+      role: this.role 
+    },
+    process.env.JWT_SECRET,
+    { 
+      expiresIn: process.env.JWT_EXPIRES_IN || '7d',
+      issuer: process.env.JWT_ISSUER,
+      audience: process.env.JWT_AUDIENCE
+    }
+  );
+};
 
 
  const userModel = mongoose.model('user', userSchema);
