@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const { body, param, query } = require('express-validator');
-const adminDashboardController = require('../controllers/admindashboard.controller');
+const adminDashboardController = require('../controllers/admindashboard.controller'); 
 const { authUser, requireRole } = require('../middlewares/auth.middleware');
 const { validateRequest } = require('../middlewares/validation.middleware');
-
+ 
 // ========== MIDDLEWARE ==========
 // All admin routes require authentication and admin/super_admin role
 const requireAdmin = [authUser, requireRole(['admin', 'super_admin'])];

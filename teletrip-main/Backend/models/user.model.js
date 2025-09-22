@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const speakeasy = require('speakeasy');
+const jwt = require('jsonwebtoken');
 
 /**
  * @swagger
@@ -54,7 +55,7 @@ const userSchema = new mongoose.Schema({
   email: {
     type: String,
     required: [true, 'Email is required'],
-    unique: true,
+    unique: true, // This creates an index automatically
     lowercase: true,
     trim: true,
     match: [
@@ -88,6 +89,7 @@ const userSchema = new mongoose.Schema({
   phone: {
     type: String,
     trim: true,
+    sparse: true, // Allow null values but create index for non-null values
     match: [/^\+?[\d\s-()]+$/, 'Please enter a valid phone number']
   },
   
@@ -127,7 +129,8 @@ const userSchema = new mongoose.Schema({
   role: {
     type: String,
     enum: ['user', 'admin', 'super_admin', 'agent', 'partner'],
-    default: 'user'
+    default: 'user',
+    index: true // Create index for role queries
   },
   
   permissions: [{
@@ -146,7 +149,8 @@ const userSchema = new mongoose.Schema({
   status: {
     type: String,
     enum: ['active', 'inactive', 'suspended', 'banned'],
-    default: 'active'
+    default: 'active',
+    index: true // Create index for status queries
   },
   
   isEmailVerified: {
@@ -256,7 +260,11 @@ const userSchema = new mongoose.Schema({
   
   // Loyalty program
   loyaltyProgram: {
-    memberId: String,
+    memberId: {
+      type: String,
+      unique: true,
+      sparse: true // Allow null but create unique index for non-null values
+    },
     tier: {
       type: String,
       enum: ['bronze', 'silver', 'gold', 'platinum'],
@@ -298,7 +306,10 @@ const userSchema = new mongoose.Schema({
   
   // Activity tracking
   lastLoginAt: Date,
-  lastActiveAt: Date,
+  lastActiveAt: {
+    type: Date,
+    index: true // Index for active user queries
+  },
   loginHistory: [{
     timestamp: { type: Date, default: Date.now },
     ip: String,
@@ -348,14 +359,17 @@ const userSchema = new mongoose.Schema({
   toObject: { virtuals: true }
 });
 
-// Indexes for performance
-userSchema.index({ email: 1 });
-userSchema.index({ phone: 1 });
-userSchema.index({ role: 1 });
-userSchema.index({ status: 1 });
-userSchema.index({ 'loyaltyProgram.memberId': 1 });
-userSchema.index({ createdAt: -1 });
-userSchema.index({ lastActiveAt: -1 });
+// REMOVED DUPLICATE INDEXES - These are now handled in the schema definition above
+// The following indexes are now redundant and have been removed:
+// userSchema.index({ email: 1 }); // REMOVED - email field already has unique: true
+// userSchema.index({ phone: 1 }); // REMOVED - phone field now has sparse: true 
+// userSchema.index({ role: 1 }); // REMOVED - role field now has index: true
+// userSchema.index({ status: 1 }); // REMOVED - status field now has index: true
+// userSchema.index({ 'loyaltyProgram.memberId': 1 }); // REMOVED - memberId now has unique: true, sparse: true
+
+// Keep only necessary compound indexes that can't be defined in schema fields
+userSchema.index({ createdAt: -1 }); // For sorting by creation date
+userSchema.index({ lastActiveAt: -1 }); // For active user queries
 
 // Virtual for full name
 userSchema.virtual('displayName').get(function() {
@@ -395,6 +409,11 @@ userSchema.methods.isPasswordChangedAfter = function(JWTTimestamp) {
   }
   return false;
 };
+
+userSchema.methods.generateAuthToken = function (){
+    const token = jwt.sign({_id: this._id}, process.env.JWT_SECRET, {expiresIn: process.env.JWT_EXPIRES_IN});
+    return token;
+  }
 
 userSchema.methods.generatePasswordResetToken = function() {
   const resetToken = crypto.randomBytes(32).toString('hex');
@@ -581,6 +600,6 @@ userSchema.methods.toJSON = function() {
   return userObject;
 };
 
- const userModel = mongoose.model('user', userSchema);
+const userModel = mongoose.model('user', userSchema);
 
 module.exports = userModel;

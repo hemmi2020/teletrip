@@ -26,7 +26,7 @@ const paymentSchema = new mongoose.Schema({
   },
   paymentMethod: {
     type: String,
-    enum: ['credit_card', 'debit_card', 'hbl_account', 'union_pay'],
+    enum: ['credit_card', 'debit_card', 'hbl_account', 'union_pay', 'HBLPay'],
     required: true
   },
   status: {

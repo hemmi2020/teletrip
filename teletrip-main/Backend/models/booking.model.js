@@ -35,26 +35,29 @@ const bookingSchema = new mongoose.Schema({
   // Basic booking information
   bookingReference: {
     type: String,
-    unique: true,
+    unique: true, // This creates an index automatically
     required: true
   },
   
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true
+    required: true,
+    index: true // Index for user-based queries
   },
   
   bookingType: {
     type: String,
     enum: ['hotel', 'flight', 'package', 'car_rental', 'activity', 'insurance'],
-    required: true
+    required: true,
+    index: true // Index for type-based queries
   },
   
   status: {
     type: String,
     enum: ['pending', 'confirmed', 'cancelled', 'completed', 'refunded', 'expired', 'on_hold'],
-    default: 'pending'
+    default: 'pending',
+    index: true // Index for status-based queries
   },
   
   // Hotel booking details
@@ -62,8 +65,14 @@ const bookingSchema = new mongoose.Schema({
     hotelId: String, // Hotelbeds hotel ID
     hotelName: String,
     hotelCode: String,
-    checkIn: Date,
-    checkOut: Date,
+    checkIn: {
+      type: Date,
+      index: true // Index for check-in date queries
+    },
+    checkOut: {
+      type: Date,
+      index: true // Index for check-out date queries
+    },
     nights: Number,
     rooms: [{
       roomId: String,
@@ -246,7 +255,8 @@ const bookingSchema = new mongoose.Schema({
     status: {
       type: String,
       enum: ['pending', 'processing', 'completed', 'failed', 'refunded', 'partial_refund'],
-      default: 'pending'
+      default: 'pending',
+      index: true // Index for payment status queries
     },
     transactionId: String,
     paymentReference: String,
@@ -372,7 +382,10 @@ const bookingSchema = new mongoose.Schema({
   
   // Travel dates
   travelDates: {
-    departureDate: Date,
+    departureDate: {
+      type: Date,
+      index: true // Index for departure date queries
+    },
     returnDate: Date,
     duration: Number // in days
   },
@@ -394,33 +407,38 @@ const bookingSchema = new mongoose.Schema({
   },
   
   // Timestamps
-  bookedAt: { type: Date, default: Date.now },
+  bookedAt: {
+    type: Date,
+    default: Date.now,
+    index: true // Index for booking date queries
+  },
   confirmedAt: Date,
   completedAt: Date,
   expiresAt: Date
 
 }, {
-  timestamps: true,
+  timestamps: true, // This creates createdAt and updatedAt fields with indexes
   toJSON: { virtuals: true },
   toObject: { virtuals: true }
 });
 
-// Indexes for performance
-bookingSchema.index({ bookingReference: 1 });
-bookingSchema.index({ user: 1 });
-bookingSchema.index({ status: 1 });
-bookingSchema.index({ bookingType: 1 });
-bookingSchema.index({ 'payment.status': 1 });
-bookingSchema.index({ 'travelDates.departureDate': 1 });
-bookingSchema.index({ 'hotelBooking.checkIn': 1 });
-bookingSchema.index({ 'hotelBooking.checkOut': 1 });
-bookingSchema.index({ createdAt: -1 });
-bookingSchema.index({ bookedAt: -1 });
+// REMOVED DUPLICATE INDEXES - These are now handled in the schema definition above
+// The following indexes are now redundant and have been removed:
+// bookingSchema.index({ bookingReference: 1 }); // REMOVED - field has unique: true
+// bookingSchema.index({ user: 1 }); // REMOVED - field has index: true
+// bookingSchema.index({ status: 1 }); // REMOVED - field has index: true
+// bookingSchema.index({ bookingType: 1 }); // REMOVED - field has index: true
+// bookingSchema.index({ 'payment.status': 1 }); // REMOVED - field has index: true
+// bookingSchema.index({ 'travelDates.departureDate': 1 }); // REMOVED - field has index: true
+// bookingSchema.index({ 'hotelBooking.checkIn': 1 }); // REMOVED - field has index: true
+// bookingSchema.index({ 'hotelBooking.checkOut': 1 }); // REMOVED - field has index: true
+// bookingSchema.index({ createdAt: -1 }); // REMOVED - timestamps: true creates this automatically
+// bookingSchema.index({ bookedAt: -1 }); // REMOVED - field has index: true
 
-// Compound indexes
-bookingSchema.index({ user: 1, status: 1 });
-bookingSchema.index({ bookingType: 1, status: 1 });
-bookingSchema.index({ user: 1, createdAt: -1 });
+// Keep only necessary compound indexes that can't be defined in schema fields
+bookingSchema.index({ user: 1, status: 1 }); // Compound index for user + status queries
+bookingSchema.index({ bookingType: 1, status: 1 }); // Compound index for type + status queries
+bookingSchema.index({ user: 1, createdAt: -1 }); // Compound index for user + date queries
 
 // Virtual fields
 bookingSchema.virtual('isActive').get(function() {

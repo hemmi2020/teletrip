@@ -139,12 +139,7 @@ const supportTicketSchema = new mongoose.Schema({
 // Add pagination plugin
 supportTicketSchema.plugin(mongoosePaginate);
 
-// Indexes for better performance
-supportTicketSchema.index({ userId: 1, status: 1 });
-supportTicketSchema.index({ assignedTo: 1, status: 1 });
-supportTicketSchema.index({ category: 1, priority: 1 });
-supportTicketSchema.index({ ticketNumber: 1 });
-supportTicketSchema.index({ createdAt: -1 });
+
 
 // Virtual for response count
 supportTicketSchema.virtual('responseCount').get(function() {

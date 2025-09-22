@@ -1,109 +1,112 @@
-// CREATE THIS FILE: middlewares/upload.middleware.js
-
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
-// Ensure upload directory exists
-const uploadDir = './uploads';
-if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
-}
+// Create uploads directory if it doesn't exist
+const uploadsDir = path.join(__dirname, '../uploads');
+const profilePicturesDir = path.join(uploadsDir, 'profile-pictures');
+
+// Ensure directories exist
+[uploadsDir, profilePicturesDir].forEach(dir => {
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+});
 
 // Configure storage
 const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        let uploadPath = './uploads/';
-        
-        // Organize by file type
-        if (file.fieldname === 'profilePicture') {
-            uploadPath += 'profiles/';
-        } else if (file.fieldname === 'hotelImages') {
-            uploadPath += 'hotels/';
-        } else if (file.fieldname === 'documents') {
-            uploadPath += 'documents/';
-        } else {
-            uploadPath += 'others/';
-        }
-
-        // Create directory if it doesn't exist
-        if (!fs.existsSync(uploadPath)) {
-            fs.mkdirSync(uploadPath, { recursive: true });
-        }
-
-        cb(null, uploadPath);
-    },
-    filename: function (req, file, cb) {
-        // Generate unique filename
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        const extension = path.extname(file.originalname);
-        const filename = file.fieldname + '-' + uniqueSuffix + extension;
-        cb(null, filename);
+  destination: function (req, file, cb) {
+    // Determine destination based on field name
+    let uploadPath = uploadsDir;
+    
+    if (file.fieldname === 'profilePicture') {
+      uploadPath = profilePicturesDir;
     }
+    
+    cb(null, uploadPath);
+  },
+  filename: function (req, file, cb) {
+    // Create unique filename with timestamp and original extension
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const extension = path.extname(file.originalname);
+    const baseName = path.basename(file.originalname, extension);
+    
+    cb(null, `${baseName}-${uniqueSuffix}${extension}`);
+  }
 });
 
-// File filter
-const fileFilter = (req, file, cb) => {
-    // Allowed file types
-    const allowedTypes = [
-        'image/jpeg',
-        'image/jpg', 
-        'image/png',
-        'image/gif',
-        'application/pdf'
-    ];
-
-    if (allowedTypes.includes(file.mimetype)) {
-        cb(null, true);
+// File filter for images
+const imageFilter = (req, file, cb) => {
+  // Check if file is an image
+  if (file.mimetype.startsWith('image/')) {
+    // Check file extension
+    const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
+    const fileExtension = path.extname(file.originalname).toLowerCase();
+    
+    if (allowedExtensions.includes(fileExtension)) {
+      cb(null, true);
     } else {
-        cb(new Error(`File type ${file.mimetype} is not allowed`), false);
+      cb(new Error('Invalid file type. Only JPG, JPEG, PNG, GIF, and WebP images are allowed.'), false);
     }
+  } else {
+    cb(new Error('Only image files are allowed.'), false);
+  }
 };
 
 // Configure multer
 const upload = multer({
-    storage: storage,
-    limits: {
-        fileSize: 10 * 1024 * 1024, // 10MB
-        files: 10 // Maximum 10 files
-    },
-    fileFilter: fileFilter
+  storage: storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit
+    files: 1 // Maximum 1 file per request
+  },
+  fileFilter: imageFilter
 });
 
-// Handle multer errors
+// Error handling middleware for multer errors
 const handleUploadError = (error, req, res, next) => {
-    if (error instanceof multer.MulterError) {
-        if (error.code === 'LIMIT_FILE_SIZE') {
-            return res.status(400).json({
-                success: false,
-                message: 'File too large. Maximum size is 10MB.'
-            });
-        }
-        if (error.code === 'LIMIT_FILE_COUNT') {
-            return res.status(400).json({
-                success: false,
-                message: 'Too many files. Maximum is 10 files.'
-            });
-        }
-        if (error.code === 'LIMIT_UNEXPECTED_FILE') {
-            return res.status(400).json({
-                success: false,
-                message: 'Unexpected field name for file upload.'
-            });
-        }
-    }
-    
-    if (error.message.includes('File type')) {
+  if (error instanceof multer.MulterError) {
+    switch (error.code) {
+      case 'LIMIT_FILE_SIZE':
         return res.status(400).json({
-            success: false,
-            message: error.message
+          success: false,
+          message: 'File too large. Maximum size is 5MB.',
+          error: 'FILE_TOO_LARGE'
+        });
+      case 'LIMIT_FILE_COUNT':
+        return res.status(400).json({
+          success: false,
+          message: 'Too many files. Maximum 1 file allowed.',
+          error: 'TOO_MANY_FILES'
+        });
+      case 'LIMIT_UNEXPECTED_FILE':
+        return res.status(400).json({
+          success: false,
+          message: 'Unexpected file field.',
+          error: 'UNEXPECTED_FIELD'
+        });
+      default:
+        return res.status(400).json({
+          success: false,
+          message: 'File upload error.',
+          error: error.code
         });
     }
-    
-    next(error);
+  }
+  
+  // Handle custom file filter errors
+  if (error.message.includes('Only image files') || error.message.includes('Invalid file type')) {
+    return res.status(400).json({
+      success: false,
+      message: error.message,
+      error: 'INVALID_FILE_TYPE'
+    });
+  }
+  
+  // Pass other errors to default error handler
+  next(error);
 };
 
-module.exports = {
-    upload,
-    handleUploadError
-};
+// Export the configured multer instance and error handler
+module.exports = upload;
+module.exports.handleUploadError = handleUploadError;
