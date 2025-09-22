@@ -1,12 +1,10 @@
 const nodemailer = require('nodemailer');
-const twilio = require('twilio');
-const logger = require('../utils/logger.util');
-const emailTemplates = require('../templates/email.templates');
+const Notification = require('../models/notification.model');
+const { asyncErrorHandler } = require('../middlewares/errorHandler.middleware');
 
 class NotificationService {
   constructor() {
-    // Initialize email transporter
-    this.emailTransporter = nodemailer.createTransport({
+    this.transporter = nodemailer.createTransporter({
       host: process.env.SMTP_HOST,
       port: process.env.SMTP_PORT,
       secure: process.env.SMTP_SECURE === 'true',
@@ -15,17 +13,9 @@ class NotificationService {
         pass: process.env.SMTP_PASS
       }
     });
-
-    // Initialize SMS client
-    if (process.env.SMS_ENABLED === 'true') {
-      this.smsClient = twilio(
-        process.env.TWILIO_ACCOUNT_SID,
-        process.env.TWILIO_AUTH_TOKEN
-      );
-    }
   }
 
-  // Email notification methods
+  // ========== EMAIL NOTIFICATIONS ==========
   async sendEmail(to, subject, html, text = null) {
     try {
       const mailOptions = {
@@ -33,584 +23,587 @@ class NotificationService {
         to,
         subject,
         html,
-        text: text || this.stripHtml(html)
+        text: text || html.replace(/<[^>]*>/g, '') // Strip HTML for text version
       };
 
-      const result = await this.emailTransporter.sendMail(mailOptions);
-      
-      logger.info('Email sent successfully', {
-        to,
-        subject,
-        messageId: result.messageId
-      });
-
+      const result = await this.transporter.sendMail(mailOptions);
+      console.log('Email sent successfully:', result.messageId);
       return result;
     } catch (error) {
-      logger.error('Email sending failed:', error);
+      console.error('Email sending failed:', error);
       throw error;
     }
   }
 
-  async sendEmailVerification(user, token) {
-    const verificationUrl = `${process.env.FRONTEND_URL}/verify-email?token=${token}`;
-    
-    const html = emailTemplates.emailVerification({
-      name: user.displayName,
-      verificationUrl,
-      supportEmail: process.env.FROM_EMAIL
-    });
+  async sendWelcomeEmail(email, firstName) {
+    const subject = 'Welcome to Telitrip - Your Travel Journey Begins!';
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <title>Welcome to Telitrip</title>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+            .content { background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px; }
+            .btn { display: inline-block; background: #007bff; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+            .footer { text-align: center; margin-top: 30px; color: #666; font-size: 14px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>Welcome to Telitrip!</h1>
+              <p>Your gateway to amazing travel experiences</p>
+            </div>
+            <div class="content">
+              <h2>Hello ${firstName}!</h2>
+              <p>Thank you for joining Telitrip! We're excited to help you discover and book incredible hotels around the world.</p>
+              
+              <h3>What you can do with Telitrip:</h3>
+              <ul>
+                <li>🏨 Search and book hotels worldwide</li>
+                <li>💳 Secure payments with HBL Pay</li>
+                <li>⭐ Read and write honest reviews</li>
+                <li>📱 Manage bookings on the go</li>
+                <li>🎯 Get personalized recommendations</li>
+                <li>🏆 Earn loyalty points and rewards</li>
+              </ul>
+              
+              <a href="${process.env.FRONTEND_URL}/dashboard" class="btn">Explore Your Dashboard</a>
+              
+              <p>If you have any questions, our support team is here to help 24/7.</p>
+              
+              <p>Happy travels!<br>The Telitrip Team</p>
+            </div>
+            <div class="footer">
+              <p>&copy; 2025 Telitrip Travel & Tours. All rights reserved.</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
 
-    return await this.sendEmail(
-      user.email,
-      'Verify Your Email Address - Telitrip',
-      html
-    );
+    return await this.sendEmail(email, subject, html);
   }
 
-  async sendWelcomeEmail(user) {
-    const html = emailTemplates.welcome({
-      name: user.displayName,
-      dashboardUrl: `${process.env.FRONTEND_URL}/dashboard`,
-      supportEmail: process.env.FROM_EMAIL
-    });
+  async sendBookingConfirmation(email, booking) {
+    const subject = `Booking Confirmed - ${booking.bookingReference}`;
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <title>Booking Confirmation</title>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: #28a745; color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+            .content { background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px; }
+            .booking-details { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; }
+            .detail-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; }
+            .btn { display: inline-block; background: #007bff; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>✅ Booking Confirmed!</h1>
+              <p>Reference: ${booking.bookingReference}</p>
+            </div>
+            <div class="content">
+              <h2>Hello ${booking.userId.firstName}!</h2>
+              <p>Great news! Your booking has been confirmed. Here are your details:</p>
+              
+              <div class="booking-details">
+                <h3>${booking.hotelId.name}</h3>
+                <div class="detail-row">
+                  <span><strong>Check-in:</strong></span>
+                  <span>${new Date(booking.checkInDate).toLocaleDateString()}</span>
+                </div>
+                <div class="detail-row">
+                  <span><strong>Check-out:</strong></span>
+                  <span>${new Date(booking.checkOutDate).toLocaleDateString()}</span>
+                </div>
+                <div class="detail-row">
+                  <span><strong>Guests:</strong></span>
+                  <span>${booking.guests}</span>
+                </div>
+                <div class="detail-row">
+                  <span><strong>Rooms:</strong></span>
+                  <span>${booking.rooms}</span>
+                </div>
+                <div class="detail-row">
+                  <span><strong>Total Amount:</strong></span>
+                  <span>PKR ${booking.totalAmount}</span>
+                </div>
+              </div>
+              
+              <a href="${process.env.FRONTEND_URL}/bookings/${booking._id}" class="btn">View Booking Details</a>
+              
+              <p><strong>Important:</strong> Please arrive at the hotel with a valid ID and this confirmation.</p>
+              
+              <p>Have a wonderful stay!<br>The Telitrip Team</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
 
-    return await this.sendEmail(
-      user.email,
-      'Welcome to Telitrip - Your Journey Begins Here!',
-      html
-    );
+    return await this.sendEmail(email, subject, html);
   }
 
-  async sendPasswordReset(user, token) {
-    const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
-    
-    const html = emailTemplates.passwordReset({
-      name: user.displayName,
-      resetUrl,
-      supportEmail: process.env.FROM_EMAIL
-    });
+  async sendBookingCancellation(email, booking) {
+    const subject = `Booking Cancelled - ${booking.bookingReference}`;
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <title>Booking Cancellation</title>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: #dc3545; color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+            .content { background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px; }
+            .cancellation-details { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; }
+            .detail-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>Booking Cancelled</h1>
+              <p>Reference: ${booking.bookingReference}</p>
+            </div>
+            <div class="content">
+              <h2>Hello ${booking.userId.firstName},</h2>
+              <p>Your booking has been cancelled as requested.</p>
+              
+              <div class="cancellation-details">
+                <div class="detail-row">
+                  <span><strong>Hotel:</strong></span>
+                  <span>${booking.hotelId.name}</span>
+                </div>
+                <div class="detail-row">
+                  <span><strong>Original Amount:</strong></span>
+                  <span>PKR ${booking.totalAmount}</span>
+                </div>
+                <div class="detail-row">
+                  <span><strong>Cancellation Fee:</strong></span>
+                  <span>PKR ${booking.cancellation.fee}</span>
+                </div>
+                <div class="detail-row">
+                  <span><strong>Refund Amount:</strong></span>
+                  <span>PKR ${booking.cancellation.refundAmount}</span>
+                </div>
+              </div>
+              
+              <p>If applicable, your refund will be processed within 5-7 business days.</p>
+              
+              <p>We're sorry to see you go. We hope to serve you again in the future!</p>
+              
+              <p>Best regards,<br>The Telitrip Team</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
 
-    return await this.sendEmail(
-      user.email,
-      'Password Reset Request - Telitrip',
-      html
-    );
+    return await this.sendEmail(email, subject, html);
   }
 
-  async sendPasswordResetConfirmation(user) {
-    const html = emailTemplates.passwordResetConfirmation({
-      name: user.displayName,
-      loginUrl: `${process.env.FRONTEND_URL}/login`,
-      supportEmail: process.env.FROM_EMAIL
-    });
+  async sendPasswordChangeNotification(email, firstName) {
+    const subject = 'Password Changed Successfully';
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <title>Password Changed</title>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: #17a2b8; color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+            .content { background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px; }
+            .security-notice { background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 5px; margin: 20px 0; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>🔐 Password Changed</h1>
+            </div>
+            <div class="content">
+              <h2>Hello ${firstName},</h2>
+              <p>Your password has been successfully changed.</p>
+              
+              <div class="security-notice">
+                <strong>Security Notice:</strong> If you didn't make this change, please contact our support team immediately.
+              </div>
+              
+              <p>For your security, we recommend:</p>
+              <ul>
+                <li>Using a strong, unique password</li>
+                <li>Not sharing your login credentials</li>
+                <li>Logging out from shared devices</li>
+              </ul>
+              
+              <p>Best regards,<br>The Telitrip Security Team</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
 
-    return await this.sendEmail(
-      user.email,
-      'Password Successfully Reset - Telitrip',
-      html
-    );
+    return await this.sendEmail(email, subject, html);
   }
 
-  async sendPasswordChangeConfirmation(user) {
-    const html = emailTemplates.passwordChangeConfirmation({
-      name: user.displayName,
-      accountUrl: `${process.env.FRONTEND_URL}/account`,
-      supportEmail: process.env.FROM_EMAIL
-    });
-
-    return await this.sendEmail(
-      user.email,
-      'Password Changed Successfully - Telitrip',
-      html
-    );
-  }
-
-  async send2FAEnabledNotification(user) {
-    const html = emailTemplates.twoFactorEnabled({
-      name: user.displayName,
-      accountUrl: `${process.env.FRONTEND_URL}/account/security`,
-      supportEmail: process.env.FROM_EMAIL
-    });
-
-    return await this.sendEmail(
-      user.email,
-      'Two-Factor Authentication Enabled - Telitrip',
-      html
-    );
-  }
-
-  async send2FADisabledNotification(user) {
-    const html = emailTemplates.twoFactorDisabled({
-      name: user.displayName,
-      accountUrl: `${process.env.FRONTEND_URL}/account/security`,
-      supportEmail: process.env.FROM_EMAIL
-    });
-
-    return await this.sendEmail(
-      user.email,
-      'Two-Factor Authentication Disabled - Telitrip',
-      html
-    );
-  }
-
-  // Booking-related notifications
-  async sendBookingConfirmation(user, booking, payment) {
-    const html = emailTemplates.bookingConfirmation({
-      name: user.displayName,
-      booking: {
-        reference: booking.bookingReference,
-        type: booking.bookingType,
-        hotelName: booking.hotelBooking?.hotelName,
-        checkIn: booking.hotelBooking?.checkIn,
-        checkOut: booking.hotelBooking?.checkOut,
-        totalAmount: booking.pricing.totalAmount,
-        currency: booking.pricing.currency,
-        rooms: booking.hotelBooking?.rooms,
-        guests: booking.guestInfo
-      },
-      bookingUrl: `${process.env.FRONTEND_URL}/bookings/${booking._id}`,
-      supportEmail: process.env.FROM_EMAIL
-    });
-
-    return await this.sendEmail(
-      user.email,
-      `Booking Confirmation - ${booking.bookingReference}`,
-      html
-    );
-  }
-
-  async sendBookingCancellation(user, booking, reason) {
-    const html = emailTemplates.bookingCancellation({
-      name: user.displayName,
-      booking: {
-        reference: booking.bookingReference,
-        type: booking.bookingType,
-        hotelName: booking.hotelBooking?.hotelName,
-        refundAmount: booking.cancellation?.refundAmount,
-        currency: booking.pricing.currency,
-        reason
-      },
-      bookingUrl: `${process.env.FRONTEND_URL}/bookings/${booking._id}`,
-      supportEmail: process.env.FROM_EMAIL
-    });
-
-    return await this.sendEmail(
-      user.email,
-      `Booking Cancelled - ${booking.bookingReference}`,
-      html
-    );
-  }
-
-  async sendBookingReminder(user, booking) {
-    const html = emailTemplates.bookingReminder({
-      name: user.displayName,
-      booking: {
-        reference: booking.bookingReference,
-        type: booking.bookingType,
-        hotelName: booking.hotelBooking?.hotelName,
-        checkIn: booking.hotelBooking?.checkIn,
-        checkOut: booking.hotelBooking?.checkOut
-      },
-      bookingUrl: `${process.env.FRONTEND_URL}/bookings/${booking._id}`,
-      supportEmail: process.env.FROM_EMAIL
-    });
-
-    return await this.sendEmail(
-      user.email,
-      `Travel Reminder - ${booking.bookingReference}`,
-      html
-    );
-  }
-
-  // Payment-related notifications
-  async sendPaymentConfirmation(user, booking, payment) {
-    const html = emailTemplates.paymentConfirmation({
-      name: user.displayName,
-      payment: {
-        amount: payment.amount,
-        currency: payment.currency,
-        method: payment.method,
-        transactionId: payment._id,
-        date: payment.completedAt
-      },
-      booking: {
-        reference: booking.bookingReference,
-        type: booking.bookingType
-      },
-      receiptUrl: `${process.env.FRONTEND_URL}/payments/${payment._id}/receipt`,
-      supportEmail: process.env.FROM_EMAIL
-    });
-
-    return await this.sendEmail(
-      user.email,
-      `Payment Confirmation - ${payment._id}`,
-      html
-    );
-  }
-
-  async sendPaymentFailure(user, booking, payment) {
-    const html = emailTemplates.paymentFailure({
-      name: user.displayName,
-      payment: {
-        amount: payment.amount,
-        currency: payment.currency,
-        method: payment.method,
-        failureReason: payment.failureReason
-      },
-      booking: {
-        reference: booking.bookingReference,
-        type: booking.bookingType
-      },
-      retryUrl: `${process.env.FRONTEND_URL}/bookings/${booking._id}/payment`,
-      supportEmail: process.env.FROM_EMAIL
-    });
-
-    return await this.sendEmail(
-      user.email,
-      `Payment Failed - ${booking.bookingReference}`,
-      html
-    );
-  }
-
-  async sendPaymentCancellation(user, booking, payment) {
-    const html = emailTemplates.paymentCancellation({
-      name: user.displayName,
-      payment: {
-        amount: payment.amount,
-        currency: payment.currency,
-        method: payment.method
-      },
-      booking: {
-        reference: booking.bookingReference,
-        type: booking.bookingType
-      },
-      retryUrl: `${process.env.FRONTEND_URL}/bookings/${booking._id}/payment`,
-      supportEmail: process.env.FROM_EMAIL
-    });
-
-    return await this.sendEmail(
-      user.email,
-      `Payment Cancelled - ${booking.bookingReference}`,
-      html
-    );
-  }
-
-  async sendRefundConfirmation(user, booking, payment, refundAmount) {
-    const html = emailTemplates.refundConfirmation({
-      name: user.displayName,
-      refund: {
-        amount: refundAmount,
-        currency: payment.currency,
-        originalAmount: payment.amount,
-        processingTime: '5-7 business days'
-      },
-      booking: {
-        reference: booking.bookingReference,
-        type: booking.bookingType
-      },
-      bookingUrl: `${process.env.FRONTEND_URL}/bookings/${booking._id}`,
-      supportEmail: process.env.FROM_EMAIL
-    });
-
-    return await this.sendEmail(
-      user.email,
-      `Refund Processed - ${booking.bookingReference}`,
-      html
-    );
-  }
-
-  // SMS notification methods
-  async sendSMS(phoneNumber, message) {
-    if (!this.smsClient) {
-      logger.warn('SMS service not configured');
-      return;
-    }
-
-    try {
-      const result = await this.smsClient.messages.create({
-        body: message,
-        from: process.env.TWILIO_PHONE_NUMBER,
-        to: phoneNumber
-      });
-
-      logger.info('SMS sent successfully', {
-        to: phoneNumber,
-        sid: result.sid
-      });
-
-      return result;
-    } catch (error) {
-      logger.error('SMS sending failed:', error);
-      throw error;
-    }
-  }
-
-  async sendBookingConfirmationSMS(user, booking) {
-    if (!user.phone || !user.preferences?.notifications?.sms?.bookingUpdates) {
-      return;
-    }
-
-    const message = `Hi ${user.fullname.firstname}, your booking ${booking.bookingReference} is confirmed! Check-in: ${booking.hotelBooking?.checkIn ? new Date(booking.hotelBooking.checkIn).toLocaleDateString() : 'N/A'}. Have a great trip!`;
-
-    return await this.sendSMS(user.phone, message);
-  }
-
-  async sendBookingReminderSMS(user, booking) {
-    if (!user.phone || !user.preferences?.notifications?.sms?.bookingUpdates) {
-      return;
-    }
-
-    const checkInDate = booking.hotelBooking?.checkIn ? new Date(booking.hotelBooking.checkIn) : null;
-    const daysUntil = checkInDate ? Math.ceil((checkInDate - new Date()) / (1000 * 60 * 60 * 24)) : 0;
-
-    const message = `Reminder: Your trip ${booking.bookingReference} is in ${daysUntil} day(s)! Check-in: ${checkInDate?.toLocaleDateString() || 'N/A'}. Safe travels!`;
-
-    return await this.sendSMS(user.phone, message);
-  }
-
-  async sendPaymentConfirmationSMS(user, booking, payment) {
-    if (!user.phone || !user.preferences?.notifications?.sms?.bookingUpdates) {
-      return;
-    }
-
-    const message = `Payment confirmed! ${payment.currency} ${payment.amount} for booking ${booking.bookingReference}. Transaction ID: ${payment._id.toString().slice(-8)}`;
-
-    return await this.sendSMS(user.phone, message);
-  }
-
-  // Push notification methods (placeholder for future implementation)
-  async sendPushNotification(user, title, body, data = {}) {
-    // Implement push notification logic using FCM or similar service
-    logger.info('Push notification would be sent', {
-      userId: user._id,
-      title,
-      body,
-      data
-    });
-  }
-
-  // Bulk notification methods
-  async sendBulkEmail(recipients, subject, template, templateData) {
-    const promises = recipients.map(recipient => {
-      const personalizedData = { ...templateData, ...recipient };
-      const html = template(personalizedData);
-      return this.sendEmail(recipient.email, subject, html);
-    });
-
-    try {
-      const results = await Promise.allSettled(promises);
-      const successful = results.filter(r => r.status === 'fulfilled').length;
-      const failed = results.filter(r => r.status === 'rejected').length;
-
-      logger.info('Bulk email completed', {
-        total: recipients.length,
-        successful,
-        failed
-      });
-
-      return { successful, failed, results };
-    } catch (error) {
-      logger.error('Bulk email failed:', error);
-      throw error;
-    }
-  }
-
-  // Administrative notifications
-  async sendAdminAlert(subject, message, data = {}) {
-    const adminEmails = process.env.ADMIN_EMAILS?.split(',') || [];
-    
-    if (adminEmails.length === 0) {
-      logger.warn('No admin emails configured for alerts');
-      return;
-    }
-
-    const html = emailTemplates.adminAlert({
-      subject,
-      message,
-      data,
-      timestamp: new Date().toISOString(),
-      environment: process.env.NODE_ENV
-    });
-
-    const promises = adminEmails.map(email => 
-      this.sendEmail(email.trim(), `[ALERT] ${subject}`, html)
-    );
-
-    return await Promise.allSettled(promises);
-  }
-
-  async sendSystemAlert(type, details) {
-    const subject = `System Alert: ${type}`;
-    const message = `A system alert has been triggered:\n\nType: ${type}\nDetails: ${JSON.stringify(details, null, 2)}`;
-
-    return await this.sendAdminAlert(subject, message, details);
-  }
-
-  // Scheduled notification methods
-  async scheduleBookingReminders() {
-    // This would typically be called by a job scheduler
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    tomorrow.setHours(0, 0, 0, 0);
-
-    const nextDay = new Date(tomorrow);
-    nextDay.setDate(nextDay.getDate() + 1);
-
-    try {
-      const Booking = require('../models/booking.model');
-      const User = require('../models/user.model');
-
-      // Find bookings with check-in tomorrow that haven't been reminded
-      const upcomingBookings = await Booking.find({
-        'hotelBooking.checkIn': {
-          $gte: tomorrow,
-          $lt: nextDay
-        },
-        status: 'confirmed',
-        'notifications.reminderSent': false
-      }).populate('user');
-
-      for (const booking of upcomingBookings) {
-        try {
-          await this.sendBookingReminder(booking.user, booking);
-          await this.sendBookingReminderSMS(booking.user, booking);
-
-          // Mark reminder as sent
-          booking.notifications.reminderSent = true;
-          await booking.save();
-
-          logger.info('Booking reminder sent', {
-            bookingId: booking._id,
-            userId: booking.user._id
-          });
-        } catch (error) {
-          logger.error('Failed to send booking reminder:', error);
-        }
-      }
-
-      logger.info('Booking reminders processing completed', {
-        total: upcomingBookings.length
-      });
-
-    } catch (error) {
-      logger.error('Scheduled booking reminders failed:', error);
-      await this.sendSystemAlert('Booking Reminders Failed', { error: error.message });
-    }
-  }
-
-  async scheduleFeedbackRequests() {
-    // Send feedback requests for completed bookings
-    const threeDaysAgo = new Date();
-    threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
-
-    try {
-      const Booking = require('../models/booking.model');
-
-      const completedBookings = await Booking.find({
-        'hotelBooking.checkOut': {
-          $lte: threeDaysAgo
-        },
-        status: 'confirmed',
-        'notifications.feedbackRequestSent': false
-      }).populate('user');
-
-      for (const booking of completedBookings) {
-        try {
-          await this.sendFeedbackRequest(booking.user, booking);
-
-          // Mark feedback request as sent
-          booking.notifications.feedbackRequestSent = true;
-          await booking.save();
-
-          logger.info('Feedback request sent', {
-            bookingId: booking._id,
-            userId: booking.user._id
-          });
-        } catch (error) {
-          logger.error('Failed to send feedback request:', error);
-        }
-      }
-
-      logger.info('Feedback requests processing completed', {
-        total: completedBookings.length
-      });
-
-    } catch (error) {
-      logger.error('Scheduled feedback requests failed:', error);
-      await this.sendSystemAlert('Feedback Requests Failed', { error: error.message });
-    }
-  }
-
-  async sendFeedbackRequest(user, booking) {
-    const html = emailTemplates.feedbackRequest({
-      name: user.displayName,
-      booking: {
-        reference: booking.bookingReference,
-        hotelName: booking.hotelBooking?.hotelName,
-        checkOut: booking.hotelBooking?.checkOut
-      },
-      reviewUrl: `${process.env.FRONTEND_URL}/bookings/${booking._id}/review`,
-      supportEmail: process.env.FROM_EMAIL
-    });
-
-    return await this.sendEmail(
-      user.email,
-      `How was your stay? Share your experience - ${booking.bookingReference}`,
-      html
-    );
-  }
-
-  // Newsletter and promotional emails
-  async sendNewsletter(recipients, subject, content) {
-    return await this.sendBulkEmail(
-      recipients,
-      subject,
-      emailTemplates.newsletter,
-      { content }
-    );
-  }
-
-  async sendPromotionalEmail(recipients, promotion) {
-    return await this.sendBulkEmail(
-      recipients,
-      `Special Offer: ${promotion.title}`,
-      emailTemplates.promotional,
-      { promotion }
-    );
-  }
-
-  // Utility methods
-  stripHtml(html) {
-    return html.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
-  }
-
-  async verifyEmailService() {
-    try {
-      await this.emailTransporter.verify();
-      logger.info('Email service verified successfully');
-      return true;
-    } catch (error) {
-      logger.error('Email service verification failed:', error);
-      return false;
-    }
-  }
-
-  async getEmailServiceStatus() {
-    const isEmailVerified = await this.verifyEmailService();
-    const isSmsEnabled = !!this.smsClient;
-
-    return {
-      email: {
-        enabled: true,
-        verified: isEmailVerified,
-        host: process.env.SMTP_HOST,
-        port: process.env.SMTP_PORT
-      },
-      sms: {
-        enabled: isSmsEnabled,
-        provider: isSmsEnabled ? 'twilio' : null
-      }
+  async sendBookingStatusUpdate(email, booking) {
+    const subject = `Booking Update - ${booking.bookingReference}`;
+    const statusColors = {
+      confirmed: '#28a745',
+      completed: '#17a2b8',
+      cancelled: '#dc3545'
     };
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <title>Booking Status Update</title>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: ${statusColors[booking.status] || '#6c757d'}; color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+            .content { background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px; }
+            .status-badge { background: ${statusColors[booking.status] || '#6c757d'}; color: white; padding: 5px 15px; border-radius: 20px; display: inline-block; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>Booking Status Update</h1>
+              <p>Reference: ${booking.bookingReference}</p>
+            </div>
+            <div class="content">
+              <h2>Hello ${booking.userId.firstName},</h2>
+              <p>Your booking status has been updated:</p>
+              
+              <p><strong>New Status:</strong> <span class="status-badge">${booking.status.toUpperCase()}</span></p>
+              
+              <p><strong>Hotel:</strong> ${booking.hotelId.name}</p>
+              
+              ${booking.adminNotes ? `<p><strong>Notes:</strong> ${booking.adminNotes}</p>` : ''}
+              
+              <a href="${process.env.FRONTEND_URL}/bookings/${booking._id}" style="display: inline-block; background: #007bff; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0;">View Booking</a>
+              
+              <p>Best regards,<br>The Telitrip Team</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+
+    return await this.sendEmail(email, subject, html);
+  }
+
+  async sendSupportTicketNotification(ticket) {
+    const subject = `New Support Ticket - ${ticket.ticketNumber}`;
+    // This would typically go to the admin/support team
+    const adminEmail = process.env.ADMIN_EMAIL;
+    
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <title>New Support Ticket</title>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: #ffc107; color: #333; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+            .content { background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px; }
+            .priority-high { color: #dc3545; font-weight: bold; }
+            .priority-urgent { color: #dc3545; font-weight: bold; background: #f8d7da; padding: 5px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>🎫 New Support Ticket</h1>
+              <p>Ticket #${ticket.ticketNumber}</p>
+            </div>
+            <div class="content">
+              <h2>Ticket Details</h2>
+              
+              <p><strong>User:</strong> ${ticket.userId?.firstName} ${ticket.userId?.lastName}</p>
+              <p><strong>Email:</strong> ${ticket.userId?.email}</p>
+              <p><strong>Subject:</strong> ${ticket.subject}</p>
+              <p><strong>Category:</strong> ${ticket.category}</p>
+              <p><strong>Priority:</strong> 
+                <span class="${ticket.priority === 'high' || ticket.priority === 'urgent' ? 'priority-' + ticket.priority : ''}">${ticket.priority.toUpperCase()}</span>
+              </p>
+              
+              <h3>Description:</h3>
+              <p>${ticket.description}</p>
+              
+              ${ticket.bookingId ? `<p><strong>Related Booking:</strong> ${ticket.bookingId}</p>` : ''}
+              
+              <a href="${process.env.FRONTEND_URL}/admin/support/tickets/${ticket._id}" style="display: inline-block; background: #007bff; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0;">View Ticket</a>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+
+    return await this.sendEmail(adminEmail, subject, html);
+  }
+
+  async sendTicketResponseNotification(ticket) {
+    const user = ticket.userId;
+    const subject = `Response to your ticket - ${ticket.ticketNumber}`;
+    
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <title>Ticket Response</title>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: #28a745; color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+            .content { background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>💬 Support Response</h1>
+              <p>Ticket #${ticket.ticketNumber}</p>
+            </div>
+            <div class="content">
+              <h2>Hello ${user.firstName},</h2>
+              <p>We've responded to your support ticket regarding: <strong>${ticket.subject}</strong></p>
+              
+              <a href="${process.env.FRONTEND_URL}/support/tickets/${ticket._id}" style="display: inline-block; background: #007bff; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0;">View Response</a>
+              
+              <p>If you need further assistance, please reply to this ticket.</p>
+              
+              <p>Best regards,<br>The Telitrip Support Team</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+
+    return await this.sendEmail(user.email, subject, html);
+  }
+
+  async sendAccountSuspensionNotification(email, reason) {
+    const subject = 'Account Suspended - Telitrip';
+    
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <title>Account Suspended</title>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: #dc3545; color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+            .content { background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px; }
+            .warning { background: #f8d7da; border: 1px solid #f5c6cb; padding: 15px; border-radius: 5px; margin: 20px 0; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>⚠️ Account Suspended</h1>
+            </div>
+            <div class="content">
+              <div class="warning">
+                <strong>Your Telitrip account has been suspended.</strong>
+              </div>
+              
+              <p><strong>Reason:</strong> ${reason}</p>
+              
+              <p>If you believe this is an error or would like to appeal this decision, please contact our support team.</p>
+              
+              <p>Email: ${process.env.FROM_EMAIL}<br>
+              Phone: ${process.env.COMPANY_PHONE || 'N/A'}</p>
+              
+              <p>Best regards,<br>The Telitrip Team</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+
+    return await this.sendEmail(email, subject, html);
+  }
+
+  async sendAccountReactivationNotification(email) {
+    const subject = 'Account Reactivated - Welcome Back!';
+    
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <title>Account Reactivated</title>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: #28a745; color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+            .content { background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px; }
+            .success { background: #d1edff; border: 1px solid #bee5eb; padding: 15px; border-radius: 5px; margin: 20px 0; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>🎉 Welcome Back!</h1>
+            </div>
+            <div class="content">
+              <div class="success">
+                <strong>Your Telitrip account has been reactivated!</strong>
+              </div>
+              
+              <p>You can now access all features and services again.</p>
+              
+              <a href="${process.env.FRONTEND_URL}/login" style="display: inline-block; background: #007bff; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0;">Login to Your Account</a>
+              
+              <p>Thank you for being a valued member of Telitrip!</p>
+              
+              <p>Best regards,<br>The Telitrip Team</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+
+    return await this.sendEmail(email, subject, html);
+  }
+
+  // ========== IN-APP NOTIFICATIONS ==========
+  async createNotification(userId, title, message, type = 'info', relatedId = null, relatedModel = null) {
+    try {
+      const notification = new Notification({
+        userId,
+        title,
+        message,
+        type,
+        relatedId,
+        relatedModel,
+        isRead: false
+      });
+
+      await notification.save();
+      return notification;
+    } catch (error) {
+      console.error('Failed to create notification:', error);
+      throw error;
+    }
+  }
+
+  async sendBookingNotification(userId, booking, type) {
+    const titles = {
+      confirmed: 'Booking Confirmed',
+      cancelled: 'Booking Cancelled',
+      completed: 'Stay Completed',
+      reminder: 'Upcoming Stay Reminder'
+    };
+
+    const messages = {
+      confirmed: `Your booking at ${booking.hotelId.name} has been confirmed. Reference: ${booking.bookingReference}`,
+      cancelled: `Your booking at ${booking.hotelId.name} has been cancelled. Reference: ${booking.bookingReference}`,
+      completed: `Thank you for staying at ${booking.hotelId.name}. We hope you had a great experience!`,
+      reminder: `Reminder: Your stay at ${booking.hotelId.name} starts tomorrow. Reference: ${booking.bookingReference}`
+    };
+
+    return await this.createNotification(
+      userId,
+      titles[type],
+      messages[type],
+      type === 'cancelled' ? 'warning' : 'info',
+      booking._id,
+      'Booking'
+    );
+  }
+
+  async sendPaymentNotification(userId, payment, type) {
+    const titles = {
+      completed: 'Payment Successful',
+      failed: 'Payment Failed',
+      refunded: 'Refund Processed'
+    };
+
+    const messages = {
+      completed: `Your payment of PKR ${payment.amount} has been processed successfully.`,
+      failed: `Your payment of PKR ${payment.amount} could not be processed. Please try again.`,
+      refunded: `A refund of PKR ${payment.refundAmount || payment.amount} has been processed to your account.`
+    };
+
+    return await this.createNotification(
+      userId,
+      titles[type],
+      messages[type],
+      type === 'failed' ? 'error' : type === 'refunded' ? 'warning' : 'success',
+      payment._id,
+      'Payment'
+    );
+  }
+
+  // ========== BULK NOTIFICATIONS ==========
+  async sendBulkNotification(userIds, title, message, type = 'info') {
+    try {
+      const notifications = userIds.map(userId => ({
+        userId,
+        title,
+        message,
+        type,
+        isRead: false
+      }));
+
+      await Notification.insertMany(notifications);
+      return notifications.length;
+    } catch (error) {
+      console.error('Failed to send bulk notifications:', error);
+      throw error;
+    }
+  }
+
+  // ========== SMS NOTIFICATIONS (if SMS service is configured) ==========
+  async sendSMS(phone, message) {
+    if (!process.env.SMS_ENABLED || process.env.SMS_ENABLED !== 'true') {
+      console.log('SMS service not enabled');
+      return;
+    }
+
+    try {
+      // Implement SMS sending logic here (Twilio, etc.)
+      console.log(`SMS would be sent to ${phone}: ${message}`);
+      return { success: true, phone, message };
+    } catch (error) {
+      console.error('SMS sending failed:', error);
+      throw error;
+    }
+  }
+
+  async sendBookingSMS(phone, booking, type) {
+    const messages = {
+      confirmed: `Telitrip: Your booking ${booking.bookingReference} at ${booking.hotelId.name} is confirmed. Check-in: ${new Date(booking.checkInDate).toLocaleDateString()}`,
+      cancelled: `Telitrip: Your booking ${booking.bookingReference} has been cancelled. Contact support for assistance.`,
+      reminder: `Telitrip: Reminder - Your stay at ${booking.hotelId.name} starts tomorrow. Ref: ${booking.bookingReference}`
+    };
+
+    return await this.sendSMS(phone, messages[type]);
   }
 }
 

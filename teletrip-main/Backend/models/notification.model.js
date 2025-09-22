@@ -1,62 +1,57 @@
 const mongoose = require('mongoose');
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
-
-
-
-
+const mongoosePaginate = require('mongoose-paginate-v2');
 
 const notificationSchema = new mongoose.Schema({
-  user: {
+  userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true
-  },
-  type: {
-    type: String,
-    enum: ['booking_confirmation', 'payment_success', 'payment_failed', 'booking_cancelled', 'booking_reminder', 'system_announcement'],
-    required: true
+    required: true,
+    index: true
   },
   title: {
     type: String,
-    required: true
+    required: true,
+    trim: true,
+    maxLength: 200
   },
   message: {
     type: String,
-    required: true
+    required: true,
+    trim: true,
+    maxLength: 1000
   },
-  data: mongoose.Schema.Types.Mixed, // Additional data for the notification
-  channels: {
-    email: {
-      sent: { type: Boolean, default: false },
-      sentAt: Date,
-      error: String
-    },
-    sms: {
-      sent: { type: Boolean, default: false },
-      sentAt: Date,
-      error: String
-    },
-    push: {
-      sent: { type: Boolean, default: false },
-      sentAt: Date,
-      error: String
-    },
-    inApp: {
-      read: { type: Boolean, default: false },
-      readAt: Date
-    }
-  },
-  priority: {
+  type: {
     type: String,
-    enum: ['low', 'medium', 'high', 'urgent'],
-    default: 'medium'
+    enum: ['info', 'success', 'warning', 'error'],
+    default: 'info'
   },
-  expiresAt: Date
+  isRead: {
+    type: Boolean,
+    default: false,
+    index: true
+  },
+  readAt: {
+    type: Date
+  },
+  relatedId: {
+    type: mongoose.Schema.Types.ObjectId,
+    index: true
+  },
+  relatedModel: {
+    type: String,
+    enum: ['Booking', 'Payment', 'Hotel', 'User', 'SupportTicket']
+  },
+  metadata: {
+    type: mongoose.Schema.Types.Mixed
+  }
 }, {
   timestamps: true
 });
 
-const Notification = mongoose.model('Notification', notificationSchema);
+notificationSchema.plugin(mongoosePaginate);
 
+notificationSchema.index({ userId: 1, createdAt: -1 });
+notificationSchema.index({ userId: 1, isRead: 1 });
+
+const Notification = mongoose.model('Notification', notificationSchema);
 module.exports = Notification;

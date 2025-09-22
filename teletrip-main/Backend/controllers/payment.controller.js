@@ -195,74 +195,129 @@ function decryptHBLResponse(encryptedData) {
 
 // ==================== UPDATED SUCCESS HANDLER ====================
 module.exports.handlePaymentSuccess = asyncErrorHandler(async (req, res) => {
- const { data } = req.query;
-
-    if (!data) {
-      return res.status(400).json(
-        ApiResponse.error('Missing payment data')
-      );
-    }
-
-    try {
-      // Decrypt the payment response using the updated method from bank
-      const decryptedData = await hblPayService.decryptPaymentResponse(data);
+ console.log('\n🎉 ========== PAYMENT SUCCESS CALLBACK (NATIVE) ==========');
+  console.log('🔗 Full URL:', req.url);
+  console.log('🌐 Environment:', process.env.NODE_ENV);
+  console.log('📦 Platform:', process.platform);
+  console.log('🔍 Query params:', req.query);
+  console.log('🔍 Body params:', req.body);
+  
+  try {
+    // Extract encrypted data from raw URL (exact same logic as your version)
+    let encryptedData;
+    
+    if (req.url.includes('data=')) {
+      const rawUrl = req.url;
+      const dataStart = rawUrl.indexOf('data=') + 5;
+      const dataEnd = rawUrl.indexOf('&', dataStart);
+      encryptedData = dataEnd === -1 ? 
+        rawUrl.substring(dataStart) : 
+        rawUrl.substring(dataStart, dataEnd);
       
-      if (!decryptedData) {
-        logger.error('Failed to decrypt payment response', { data });
-        return res.status(400).json(
-          ApiResponse.error('Invalid payment response data')
-        );
-      }
-
-      logger.info('Decrypted payment response:', decryptedData);
-
-      // Parse the decrypted response
-      const responseParams = this.parsePaymentResponse(decryptedData);
-      
-      const {
-        RESPONSE_CODE,
-        RESPONSE_MESSAGE,
-        ORDER_REF_NUMBER,
-        PAYMENT_TYPE,
-        CS_RESP_TOKEN,
-        CARD_NUM_MASKED
-      } = responseParams;
-
-      // Find payment by order reference
-      const payment = await Payment.findOne({
-        orderReference: ORDER_REF_NUMBER
-      }).populate('booking user');
-
-      if (!payment) {
-        logger.error('Payment not found for order reference:', ORDER_REF_NUMBER);
-        return res.status(404).json(
-          ApiResponse.error('Payment not found')
-        );
-      }
-
-      // Process successful payment
-      if (RESPONSE_CODE === '0' || RESPONSE_CODE === '100') {
-        await this.processSuccessfulPayment(payment, responseParams);
-        
-        // Redirect to success page
-        const redirectUrl = `${process.env.FRONTEND_URL}/payment/success?booking=${payment.booking._id}`;
-        return res.redirect(redirectUrl);
-      } else {
-        // Handle failed payment
-        await this.processFailedPayment(payment, responseParams);
-        
-        // Redirect to failure page
-        const redirectUrl = `${process.env.FRONTEND_URL}/payment/failed?booking=${payment.booking._id}&error=${encodeURIComponent(RESPONSE_MESSAGE)}`;
-        return res.redirect(redirectUrl);
-      }
-
-    } catch (error) {
-      logger.error('Payment success callback error:', error);
-      res.status(500).json(
-        ApiResponse.error('Payment processing failed', error.message)
-      );
+      console.log('🔧 [SUCCESS-NATIVE] Extracted from raw URL:', encryptedData?.length, 'chars');
     }
-  });
+    
+    // Fallback to Express parsing
+    if (!encryptedData) {
+      encryptedData = req.query?.data || req.body?.data;
+    }
+    
+    if (!encryptedData) {
+      console.log('❌ [SUCCESS-NATIVE] No encrypted data found');
+      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/payment/failed?reason=missing_data`);
+    }
+    
+    console.log('📥 [SUCCESS-NATIVE] Processing encrypted data...');
+    console.log('📥 [SUCCESS-NATIVE] Data length:', encryptedData.length);
+    console.log('📥 [SUCCESS-NATIVE] Data sample:', encryptedData.substring(0, 50) + '...');
+    
+    // Get private key from environment
+    const privateKeyPem = process.env.MERCHANT_PRIVATE_KEY_PEM;
+    
+    if (!privateKeyPem) {
+      console.log('❌ [SUCCESS-NATIVE] No private key found in environment');
+      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/payment/failed?reason=config_error`);
+    }
+    
+    console.log('🔑 [SUCCESS-NATIVE] Private key loaded, length:', privateKeyPem.length);
+    
+    // Use enhanced native decryption
+    const decryptedResponse = enhancedDecryptionNative(encryptedData, privateKeyPem);
+    
+    if (!decryptedResponse || Object.keys(decryptedResponse).length === 0) {
+      console.log('💥 [SUCCESS-NATIVE] Decryption failed completely');
+      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/payment/failed?reason=decrypt_failed`);
+    }
+    
+    console.log('🎊 [SUCCESS-NATIVE] NATIVE DECRYPTION SUCCESSFUL!');
+    console.log('📋 [SUCCESS-NATIVE] Decrypted parameters:', JSON.stringify(decryptedResponse, null, 2));
+    
+    const responseCode = decryptedResponse.RESPONSE_CODE;
+    const orderRefNumber = decryptedResponse.ORDER_REF_NUMBER || decryptedResponse.REFERENCE_NUMBER;
+    
+    console.log('🔍 [SUCCESS-NATIVE] Response code:', responseCode);
+    console.log('🔍 [SUCCESS-NATIVE] Order ref:', orderRefNumber);
+    
+    // Update database if we have order reference (same as your version)
+    if (orderRefNumber) {
+      try {
+        const payment = await paymentModel.findOne({ orderRefNumber });
+        if (payment) {
+          const isActualSuccess = responseCode === '0' || responseCode === '100' || responseCode === 0 || responseCode === 100;
+          
+          await payment.updateOne({
+            status: isActualSuccess ? 'completed' : 'failed',
+            completedAt: isActualSuccess ? new Date() : null,
+            gatewayResponse: decryptedResponse,
+            transactionId: decryptedResponse.TRANSACTION_ID || decryptedResponse.TXN_ID || decryptedResponse.GUID,
+            updatedAt: new Date()
+          });
+          
+          if (payment.bookingId && isActualSuccess) {
+            await bookingModel.findByIdAndUpdate(payment.bookingId, {
+              paymentStatus: 'paid',
+              status: 'confirmed',
+              confirmedAt: new Date(),
+              updatedAt: new Date()
+            });
+          }
+          
+          console.log('✅ [SUCCESS-NATIVE] Database records updated');
+        }
+      } catch (dbError) {
+        console.error('❌ [SUCCESS-NATIVE] Database update failed:', dbError.message);
+      }
+    }
+    
+    // BUILD SUCCESS PAGE URL WITH ALL HBL DATA (exact same as your version)
+    const successParams = new URLSearchParams({
+      RESPONSE_CODE: decryptedResponse.RESPONSE_CODE || '',
+      RESPONSE_MESSAGE: encodeURIComponent(decryptedResponse.RESPONSE_MESSAGE || ''),
+      ORDER_REF_NUMBER: decryptedResponse.ORDER_REF_NUMBER || '',
+      PAYMENT_TYPE: decryptedResponse.PAYMENT_TYPE || '',
+      CARD_NUM_MASKED: decryptedResponse.CARD_NUM_MASKED || '',
+      DISCOUNTED_AMOUNT: decryptedResponse.DISCOUNTED_AMOUNT || '0',
+      DISCOUNT_CAMPAIGN_ID: decryptedResponse.DISCOUNT_CAMPAIGN_ID || '0',
+      GUID: decryptedResponse.GUID || '',
+      amount: '66.53', // You can get this from payment record
+      currency: 'PKR',
+      transactionId: decryptedResponse.TRANSACTION_ID || decryptedResponse.TXN_ID || decryptedResponse.GUID || ''
+    });
+    
+    const successUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/payment/success?${successParams.toString()}`;
+    
+    console.log('🎯 [SUCCESS-NATIVE] Redirecting to:', successUrl);
+    console.log('🎯 [SUCCESS-NATIVE] URL length:', successUrl.length);
+    
+    return res.redirect(successUrl);
+    
+  } catch (error) {
+    console.error('💥 [SUCCESS-NATIVE] Handler error:', error);
+    console.error('💥 [SUCCESS-NATIVE] Stack trace:', error.stack);
+    return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/payment/failed?reason=server_error`);
+  }
+});
+
   /**
    * @swagger
    * /api/v1/payments/cancel:
@@ -285,70 +340,99 @@ module.exports.handlePaymentSuccess = asyncErrorHandler(async (req, res) => {
 
 // ==================== ENHANCED PAYMENT CANCEL HANDLER ====================
 module.exports.handlePaymentCancel = asyncErrorHandler(async (req, res) => {
-  const { data } = req.query;
-
-    if (!data) {
-      return res.status(400).json(
-        ApiResponse.error('Missing payment data')
-      );
-    }
-
-    try {
-      // Decrypt the payment response
-      const decryptedData = await hblPayService.decryptPaymentResponse(data);
+   console.log('\n🚫 ========== PAYMENT CANCEL CALLBACK ==========');
+  console.log('🔗 Full URL:', req.url);
+  
+  try {
+    // Extract encrypted data from raw URL (same as success handler)
+    let encryptedData;
+    
+    if (req.url.includes('data=')) {
+      const rawUrl = req.url;
+      const dataStart = rawUrl.indexOf('data=') + 5;
+      const dataEnd = rawUrl.indexOf('&', dataStart);
+      encryptedData = dataEnd === -1 ? 
+        rawUrl.substring(dataStart) : 
+        rawUrl.substring(dataStart, dataEnd);
       
-      if (!decryptedData) {
-        logger.error('Failed to decrypt payment cancellation response', { data });
-        return res.status(400).json(
-          ApiResponse.error('Invalid payment response data')
-        );
-      }
-
-      // Parse the decrypted response
-      const responseParams = this.parsePaymentResponse(decryptedData);
-      const { ORDER_REF_NUMBER, RESPONSE_MESSAGE } = responseParams;
-
-      // Find payment by order reference
-      const payment = await Payment.findOne({
-        orderReference: ORDER_REF_NUMBER
-      }).populate('booking user');
-
-      if (payment) {
-        // Update payment status
-        payment.status = 'cancelled';
-        payment.cancelledAt = new Date();
-        payment.gatewayResponse = responseParams;
-        await payment.save();
-
-        // Update booking status
-        const booking = payment.booking;
-        booking.status = 'cancelled';
-        booking.payment.status = 'cancelled';
-        booking.cancellation.cancelledAt = new Date();
-        booking.cancellation.cancellationReason = 'Payment cancelled by user';
-        await booking.save();
-
-        logger.info('Payment cancelled:', {
-          paymentId: payment._id,
-          bookingId: booking._id,
-          orderRef: ORDER_REF_NUMBER
-        });
-
-        // Send cancellation notification
-        await notificationService.sendPaymentCancellation(payment.user, booking, payment);
-      }
-
-      // Redirect to cancellation page
-      const redirectUrl = `${process.env.FRONTEND_URL}/payment/cancelled?booking=${payment?.booking._id || ''}`;
-      return res.redirect(redirectUrl);
-
-    } catch (error) {
-      logger.error('Payment cancel callback error:', error);
-      res.status(500).json(
-        ApiResponse.error('Payment cancellation processing failed', error.message)
-      );
+      console.log('🔧 [CANCEL] Extracted from raw URL:', encryptedData?.length, 'chars');
     }
-  });
+    
+    // Fallback to Express parsing
+    if (!encryptedData) {
+      encryptedData = req.query?.data || req.body?.data;
+    }
+    
+    if (!encryptedData) {
+      console.log('❌ [CANCEL] No encrypted data found - redirecting with basic info');
+      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/payment/cancel?reason=no_data&timestamp=${Date.now()}`);
+    }
+    
+    console.log('📥 [CANCEL] Processing encrypted data...');
+    
+    // Use the same enhanced decryption as success handler
+    const decryptedResponse = enhancedDecryption(encryptedData, privateKeyPem);
+    
+    if (!decryptedResponse || Object.keys(decryptedResponse).length === 0) {
+      console.log('💥 [CANCEL] Decryption failed - redirecting with basic cancel info');
+      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/payment/cancel?reason=decrypt_failed&timestamp=${Date.now()}`);
+    }
+    
+    console.log('🎊 [CANCEL] DECRYPTION SUCCESSFUL!');
+    console.log('📋 [CANCEL] Decrypted parameters:', decryptedResponse);
+    
+    const orderRefNumber = decryptedResponse.ORDER_REF_NUMBER || decryptedResponse.REFERENCE_NUMBER;
+    
+    // Update database records
+    if (orderRefNumber) {
+      try {
+        const payment = await paymentModel.findOne({ orderRefNumber });
+        if (payment) {
+          await payment.updateOne({
+            status: 'cancelled',
+            cancelledAt: new Date(),
+            gatewayResponse: decryptedResponse,
+            responseCode: decryptedResponse.RESPONSE_CODE,
+            responseMessage: decryptedResponse.RESPONSE_MESSAGE,
+            updatedAt: new Date()
+          });
+          
+          console.log('✅ [CANCEL] Payment record updated to cancelled');
+        }
+      } catch (dbError) {
+        console.error('❌ [CANCEL] Database update failed:', dbError.message);
+      }
+    }
+    
+    // BUILD CANCEL PAGE URL WITH ALL HBL DATA (same as success page approach)
+    const cancelParams = new URLSearchParams({
+      RESPONSE_CODE: decryptedResponse.RESPONSE_CODE || '',
+      RESPONSE_MESSAGE: encodeURIComponent(decryptedResponse.RESPONSE_MESSAGE || 'Payment was cancelled'),
+      ORDER_REF_NUMBER: decryptedResponse.ORDER_REF_NUMBER || '',
+      PAYMENT_TYPE: decryptedResponse.PAYMENT_TYPE || '',
+      CARD_NUM_MASKED: decryptedResponse.CARD_NUM_MASKED || '',
+      DISCOUNTED_AMOUNT: decryptedResponse.DISCOUNTED_AMOUNT || '0',
+      DISCOUNT_CAMPAIGN_ID: decryptedResponse.DISCOUNT_CAMPAIGN_ID || '0',
+      GUID: decryptedResponse.GUID || '',
+      amount: '66.53', // You can get this from payment record if available
+      currency: 'PKR',
+      transactionId: decryptedResponse.TRANSACTION_ID || decryptedResponse.TXN_ID || decryptedResponse.GUID || '',
+      status: 'cancelled',
+      timestamp: Date.now()
+    });
+    
+    const cancelUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/payment/cancel?${cancelParams.toString()}`;
+    
+    console.log('🎯 [CANCEL] Redirecting to:', cancelUrl);
+    console.log('🎯 [CANCEL] URL length:', cancelUrl.length);
+    
+    return res.redirect(cancelUrl);
+    
+  } catch (error) {
+    console.error('💥 [CANCEL] Handler error:', error);
+    return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/payment/cancel?reason=server_error&timestamp=${Date.now()}`);
+  }
+});
 
 
 
