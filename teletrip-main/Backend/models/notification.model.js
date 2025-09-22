@@ -1,51 +1,58 @@
+// ========== CREATE FILE: models/notification.model.js ==========
 const mongoose = require('mongoose');
 const mongoosePaginate = require('mongoose-paginate-v2');
 
 const notificationSchema = new mongoose.Schema({
-  userId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true,
-    index: true
-  },
-  title: {
-    type: String,
-    required: true,
-    trim: true,
-    maxLength: 200
-  },
-  message: {
-    type: String,
-    required: true,
-    trim: true,
-    maxLength: 1000
-  },
-  type: {
-    type: String,
-    enum: ['info', 'success', 'warning', 'error'],
-    default: 'info'
-  },
-  isRead: {
-    type: Boolean,
-    default: false,
-    index: true
-  },
-  readAt: {
-    type: Date
-  },
-  relatedId: {
-    type: mongoose.Schema.Types.ObjectId,
-    index: true
-  },
-  relatedModel: {
-    type: String,
-    enum: ['Booking', 'Payment', 'Hotel', 'User', 'SupportTicket']
-  },
-  metadata: {
-    type: mongoose.Schema.Types.Mixed
-  }
+    userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true,
+        index: true
+    },
+    title: {
+        type: String,
+        required: true,
+        trim: true,
+        maxLength: 200
+    },
+    message: {
+        type: String,
+        required: true,
+        trim: true,
+        maxLength: 1000
+    },
+    type: {
+        type: String,
+        enum: ['info', 'success', 'warning', 'error', 'booking', 'payment'],
+        default: 'info'
+    },
+    isRead: {
+        type: Boolean,
+        default: false,
+        index: true
+    },
+    readAt: {
+        type: Date
+    },
+    relatedId: {
+        type: mongoose.Schema.Types.ObjectId,
+        index: true
+    },
+    relatedModel: {
+        type: String,
+        enum: ['Booking', 'Payment', 'User', 'SupportTicket']
+    },
+    metadata: {
+        type: mongoose.Schema.Types.Mixed
+    },
+    actionUrl: {
+        type: String
+    },
+    actionText: {
+        type: String
+    }
 }, {
-  timestamps: true
+    timestamps: true
 });
 
 notificationSchema.plugin(mongoosePaginate);

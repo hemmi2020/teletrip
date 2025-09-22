@@ -10,7 +10,14 @@ const bookingRoutes = require('./routes/booking.route');
 const { globalErrorHandler } = require('./middlewares/errorHandler.middleware');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const compression = require('compression');
+const mongoSanitize = require('express-mongo-sanitize');
+const xss = require('xss-clean');
+const userDashboardRoutes = require('./routes/userdashboard.route');
+const adminDashboardRoutes = require('./routes/admindashboard.route');
 
+// Import middlewares
+const { globalErrorHandler, notFound } = require('./middlewares/errorHandler.middleware');
 
   
 
@@ -20,6 +27,21 @@ const app = express();
 
 // Security middleware
 app.use(helmet());
+// Data sanitization
+app.use(mongoSanitize());
+app.use(xss());
+
+// Compression
+app.use(compression());
+
+// Body parsing middleware
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Cookie parser (if you use cookies)
+const cookieParser = require('cookie-parser');
+app.use(cookieParser());
+
 
 app.set('trust proxy', 1);
 
@@ -49,6 +71,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true })); 
 
 
+
+app.use('/uploads', express.static('./uploads'));
+
 // Root route
 app.get('/', (req, res) => {
     res.json({ 
@@ -77,6 +102,9 @@ console.log('userRoutes:', typeof userRoutes);
 console.log('hotelRoutes:', typeof hotelRoutes);
 console.log('paymentRoutes:', typeof paymentRoutes);
 console.log('bookingRoutes:', typeof bookingRoutes);
+// New dashboard routes
+app.use('/api/user', userDashboardRoutes);
+app.use('/api/admin', adminDashboardRoutes);
 
 // Error handling middleware (MUST be last)
 // Handle 404s

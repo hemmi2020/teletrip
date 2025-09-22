@@ -54,5 +54,54 @@ const authUser = async (req, res, next) => {
         return res.status(401).json({ message: 'Authentication failed' });
     }
 };
+
+const requireRole = (roles) => {
+    return (req, res, next) => {
+        if (!req.user) {
+            return res.status(401).json({ message: 'Access denied. Authentication required.' });
+        }
+
+        // Check if user has role field, if not assume 'user' role
+        const userRole = req.user.role || 'user';
+        
+        if (!roles.includes(userRole)) {
+            return res.status(403).json({ 
+                message: 'Access denied. Insufficient permissions.',
+                required: roles,
+                current: userRole
+            });
+        }
+
+        next();
+    };
+};
+
+// Add optional authentication (doesn't fail if no token)
+const optionalAuth = async (req, res, next) => {
+    try {
+        const token = (req.cookies?.token) || 
+                      (req.headers.authorization?.startsWith('Bearer ') ?
+                       req.headers.authorization.split(' ')[1] : null);
+
+        if (token && typeof token === 'string' && token.split('.').length === 3) {
+            // Check if token is blacklisted
+            const isBlacklisted = await blacklistTokenModel.findOne({ token });
+            if (!isBlacklisted) {
+                // Verify token and get user
+                const decoded = jwt.verify(token, process.env.JWT_SECRET);
+                const user = await userModel.findById(decoded._id);
+                
+                if (user) {
+                    req.user = user;
+                }
+            }
+        }
+    } catch (error) {
+        // Ignore errors for optional auth
+        console.log('Optional auth failed:', error.message);
+    }
+    
+    next();
+};
  
-module.exports = { authUser };
+module.exports = { authUser, requireRole, optionalAuth };
