@@ -1199,10 +1199,33 @@ const callHBLPayAPI = async (requestData) => {
 
 // Build redirect URL
 const buildRedirectUrl = (sessionId) => {
-  const baseUrl = isProduction ? HBL_PRODUCTION_REDIRECT : HBL_SANDBOX_REDIRECT;
-  // Encode session ID for URL
-  const encodedSessionId = Buffer.from(sessionId).toString('base64');
-  return `${baseUrl}${encodedSessionId}`;
+  try {
+    const baseUrl = isProduction ? HBL_PRODUCTION_REDIRECT : HBL_SANDBOX_REDIRECT;
+    
+    if (!baseUrl) {
+      throw new Error('Redirect base URL not configured');
+    }
+    
+    if (!sessionId || typeof sessionId !== 'string') {
+      throw new Error('Invalid session ID provided');
+    }
+    
+    // DON'T encode - HBL session ID is already properly formatted
+    // The session ID from HBL is already base64 encoded
+    const redirectUrl = `${baseUrl}${sessionId}`;
+    
+    console.log('🔗 Redirect URL built successfully:', {
+      baseUrl: baseUrl,
+      sessionIdLength: sessionId.length,
+      finalUrlLength: redirectUrl.length
+    });
+    
+    return redirectUrl;
+    
+  } catch (error) {
+    console.error('❌ buildRedirectUrl error:', error);
+    throw new Error(`Failed to build redirect URL: ${error.message}`);
+  }
 };
 
 
@@ -1242,8 +1265,8 @@ module.exports.initiateHBLPayPayment = asyncErrorHandler(async (req, res) => {
   let bookingRecord = null;
   try {
     bookingRecord = await bookingModel.findOne({
-      $or: [{ _id: bookingId }, { bookingReference: bookingId }],
-      user: userId  // Make sure this matches your booking schema field name
+      $or: [{ _id: bookingId }, { bookingId: bookingId }],
+      userId: userId
     });
 
     if (!bookingRecord) {
@@ -1267,198 +1290,102 @@ module.exports.initiateHBLPayPayment = asyncErrorHandler(async (req, res) => {
       return ApiResponse.error(res, `Invalid payment amount: ${paymentAmount}`, 400);
     }
 
-    // 🔥 FIX: Create payment record with proper billing structure
+    // Create payment record
     const payment = new paymentModel({
       paymentId,
-      userId: userId,              // ✅ Fixed: Direct ObjectId reference
-      bookingId: bookingRecord._id, // ✅ Fixed: Use actual booking ObjectId
+      userId,
+      bookingId: bookingRecord._id,
       amount: paymentAmount,
-      currency: currency.toUpperCase(),
-      paymentMethod: 'HBLPay',
+      currency,
       status: 'pending',
-      
-      // 🔥 FIX: Proper billing structure that matches the schema
-      billing: {
-        firstName: userData.firstName || 'John',
-        lastName: userData.lastName || 'Doe', 
-        email: userData.email || 'test@example.com',
-        phone: userData.phone || '+92300000000',
-        address: {
-          street: userData.address || '1 Card Lane',
-          city: userData.city || 'Karachi',
-          state: userData.state || 'Sindh',
-          country: userData.country || 'PK',
-          postalCode: userData.postalCode || '12345'
-        }
-      },
-      
-      // Gateway details
-      gateway: {
-        provider: 'HBLPay',
-        orderRefNumber: finalOrderId,
-        merchantId: HBLPAY_USER_ID
-      },
-      
-      // Metadata
-      metadata: {
-        ipAddress: req.ip || req.connection.remoteAddress,
-        userAgent: req.get('User-Agent'),
-        source: 'web'
-      }
+      paymentMethod: 'HBLPay',
+      orderId: finalOrderId,
+      userDetails: userData,
+      bookingDetails: bookingData,
+      createdAt: new Date(),
+      expiresAt: new Date(Date.now() + 30 * 60 * 1000)
     });
 
-    // 🔥 FIX: Save payment first to validate all required fields
-    const savedPayment = await payment.save();
-    console.log('✅ Payment record created successfully:', savedPayment.paymentId);
+    await payment.save();
+    console.log('💾 Payment record created:', paymentId);
 
-    // Build HBLPay request with validated data
-    const hblRequest = {
-      "USER_ID": HBLPAY_USER_ID,
-      "PASSWORD": HBLPAY_PASSWORD,
-      "RETURN_URL": `${process.env.BACKEND_URL || 'https://telitrip.onrender.com'}/api/payments/success`,
-      "CANCEL_URL": `${process.env.BACKEND_URL || 'https://telitrip.onrender.com'}/api/payments/cancel`,
-      "CHANNEL": HBL_CHANNEL,
-      "TYPE_ID": HBL_TYPE_ID,
-      "ORDER": {
-        "DISCOUNT_ON_TOTAL": "0",
-        "SUBTOTAL": paymentAmount.toFixed(2),
-        "OrderSummaryDescription": [
-          {
-            "ITEM_NAME": bookingData?.hotelName || "HOTEL BOOKING",
-            "QUANTITY": "1",
-            "UNIT_PRICE": paymentAmount.toFixed(2),
-            "OLD_PRICE": null,
-            "CATEGORY": "Hotel",
-            "SUB_CATEGORY": "Room Booking"
-          }
-        ]
-      },
-      "SHIPPING_DETAIL": {
-        "NAME": "DHL SERVICE",
-        "ICON_PATH": null,
-        "DELIEVERY_DAYS": "0",
-        "SHIPPING_COST": "0"
-      },
-      "ADDITIONAL_DATA": {
-        "REFERENCE_NUMBER": finalOrderId,
-        "CUSTOMER_ID": userId.toString(),
-        "CURRENCY": "PKR",
-        
-        // 🔥 FIX: Use the validated billing data from payment record
-        "BILL_TO_FORENAME": savedPayment.billing.firstName,
-        "BILL_TO_SURNAME": savedPayment.billing.lastName,
-        "BILL_TO_EMAIL": savedPayment.billing.email,
-        "BILL_TO_PHONE": savedPayment.billing.phone,
-        "BILL_TO_ADDRESS_LINE": savedPayment.billing.address.street,
-        "BILL_TO_ADDRESS_CITY": savedPayment.billing.address.city,
-        "BILL_TO_ADDRESS_STATE": savedPayment.billing.address.state,
-        "BILL_TO_ADDRESS_COUNTRY": savedPayment.billing.address.country,
-        "BILL_TO_ADDRESS_POSTAL_CODE": savedPayment.billing.address.postalCode,
-        
-        // Shipping info (same as billing for simplicity)
-        "SHIP_TO_FORENAME": savedPayment.billing.firstName,
-        "SHIP_TO_SURNAME": savedPayment.billing.lastName,
-        "SHIP_TO_EMAIL": savedPayment.billing.email,
-        "SHIP_TO_PHONE": savedPayment.billing.phone,
-        "SHIP_TO_ADDRESS_LINE": savedPayment.billing.address.street,
-        "SHIP_TO_ADDRESS_CITY": savedPayment.billing.address.city,
-        "SHIP_TO_ADDRESS_STATE": savedPayment.billing.address.state,
-        "SHIP_TO_ADDRESS_COUNTRY": savedPayment.billing.address.country,
-        "SHIP_TO_ADDRESS_POSTAL_CODE": savedPayment.billing.address.postalCode,
-        
-        "MerchantFields": {
-          "MDD1": HBL_CHANNEL, // Channel of Operation (Required)
-          "MDD2": "N", // 3D Secure Registration
-          "MDD3": "Hotel", // Product Category
-          "MDD4": bookingData?.hotelName || "Hotel Booking", // Product Name
-          "MDD5": userData?.customerId ? "Y" : "N", // Previous Customer
-          "MDD6": "Standard", // Shipping Method
-          "MDD7": "1", // Number of Items
-          "MDD8": "PK", // Product Shipping Country
-          "MDD9": "24", // Hours Till Departure
-          "MDD10": "N/A", // Flight Type
-          "MDD11": bookingData?.itinerary || "Hotel Stay", // Full Journey
-          "MDD12": "N", // 3rd Party Booking
-          "MDD13": bookingData?.hotelName || "Hotel", // Hotel Name
-          "MDD14": new Date().toISOString().split('T')[0], // Date of Booking
-          "MDD15": "",
-          "MDD16": "",
-          "MDD17": "",
-          "MDD18": "",
-          "MDD19": "",
-          "MDD20": ""
-        }
-      }
-    };
+    // Build and call HBL API
+    const hblRequest = buildHBLPayRequest({
+      amount: paymentAmount,
+      currency: currency,
+      orderId: finalOrderId,
+      bookingData: bookingData,
+      userData: userData
+    }, userId);
 
-    console.log('🔄 Sending request to HBLPay...');
-    
-    // Call HBLPay API
     const hblResponse = await callHBLPayAPI(hblRequest);
-    
-    if (!hblResponse || !hblResponse.success) {
-      // Update payment status to failed
-      await paymentModel.findByIdAndUpdate(savedPayment._id, {
+
+    if (!hblResponse.IsSuccess) {
+      await payment.updateOne({
         status: 'failed',
-        errorMessage: hblResponse?.message || 'HBLPay API failed',
-        failedAt: new Date()
+        failureReason: `${hblResponse.ResponseCode}: ${hblResponse.ResponseMessage}`,
+        gatewayResponse: hblResponse,
+        updatedAt: new Date()
       });
-      
+
+      console.error('❌ HBLPay request failed:', {
+        responseCode: hblResponse.ResponseCode,
+        responseMessage: hblResponse.ResponseMessage
+      });
+
       return ApiResponse.error(res, 
-        hblResponse?.message || 'Payment gateway error', 
-        500
+        `Payment gateway error: ${hblResponse.ResponseMessage}`, 
+        502
       );
     }
 
-    // Update payment with session details
-    const updatedPayment = await paymentModel.findByIdAndUpdate(
-      savedPayment._id,
-      {
-        'gateway.sessionId': hblResponse.sessionId,
-        'gateway.responseCode': hblResponse.responseCode,
-        'gateway.responseMessage': hblResponse.message,
-        status: 'processing'
-      },
-      { new: true }
-    );
+    if (!hblResponse.Data || !hblResponse.Data.SESSION_ID) {
+      await payment.updateOne({
+        status: 'failed',
+        failureReason: 'NO_SESSION_ID',
+        gatewayResponse: hblResponse,
+        updatedAt: new Date()
+      });
+
+      console.error('❌ No SESSION_ID in HBLPay response:', hblResponse);
+      return ApiResponse.error(res, 'Failed to create payment session', 502);
+    }
+
+    const sessionId = hblResponse.Data.SESSION_ID;
+
+    // Update payment with session ID
+    await payment.updateOne({
+      sessionId: sessionId,
+      transactionId: sessionId,
+      orderRefNumber: finalOrderId,
+      gatewayResponse: hblResponse,
+      updatedAt: new Date()
+    });
 
     // Build redirect URL
-    const redirectUrl = buildRedirectUrl(hblResponse.sessionId);
+    const paymentUrl = buildRedirectUrl(sessionId);
 
-    console.log('✅ Payment initiated successfully:', {
-      paymentId: savedPayment.paymentId,
-      sessionId: hblResponse.sessionId,
-      redirectUrl
+    console.log('✅ Payment session created successfully:', {
+      paymentId,
+      sessionId: sessionId,
+      paymentUrl,
+      bookingId: bookingRecord._id
     });
 
     return ApiResponse.success(res, {
-      paymentId: savedPayment.paymentId,
-      sessionId: hblResponse.sessionId,
-      redirectUrl,
+      sessionId: sessionId,
+      paymentUrl,
+      paymentId,
+      orderId: finalOrderId,
       amount: paymentAmount,
       currency,
-      status: 'processing'
-    }, 'Payment initiated successfully', 200);
+      expiresAt: payment.expiresAt,
+      bookingId: bookingRecord._id
+    }, 'Payment session created successfully');
 
   } catch (error) {
     console.error('❌ Payment initiation error:', error);
-    
-    // If payment record was created but API failed, mark as failed
-    if (error.paymentId) {
-      await paymentModel.findOneAndUpdate(
-        { paymentId: error.paymentId },
-        { 
-          status: 'failed', 
-          errorMessage: error.message,
-          failedAt: new Date()
-        }
-      );
-    }
-    
-    return ApiResponse.error(res, 
-      error.message || 'Payment initiation failed', 
-      500
-    );
+    return ApiResponse.error(res, error.message || 'Failed to initiate payment', 500);
   }
 });
 
