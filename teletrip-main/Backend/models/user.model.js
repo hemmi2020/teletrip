@@ -198,10 +198,12 @@ const userSchema = new mongoose.Schema({
   preferences: {
     language: {
       type: String,
+      enum: ['en', 'ur'],
       default: 'en'
     },
     currency: {
       type: String,
+      enum: ['PKR', 'USD', 'EUR', 'GBP'],
       default: 'PKR'
     },
     timezone: {
@@ -210,28 +212,30 @@ const userSchema = new mongoose.Schema({
     },
     notifications: {
       email: {
-        bookingUpdates: { type: Boolean, default: true },
-        promotions: { type: Boolean, default: true },
-        newsletter: { type: Boolean, default: false }
+        type: Boolean,
+        default: true
       },
       sms: {
-        bookingUpdates: { type: Boolean, default: true },
-        promotions: { type: Boolean, default: false }
+        type: Boolean,
+        default: true
       },
       push: {
-        bookingUpdates: { type: Boolean, default: true },
-        promotions: { type: Boolean, default: true }
+        type: Boolean,
+        default: true
+      },
+      marketing: {
+        type: Boolean,
+        default: false
+      },
+      bookingUpdates: {
+        type: Boolean,
+        default: true
+      },
+      paymentAlerts: {
+        type: Boolean,
+        default: true
       }
     },
-    privacy: {
-      profileVisibility: {
-        type: String,
-        enum: ['public', 'private'],
-        default: 'private'
-      },
-      dataSharing: { type: Boolean, default: false }
-    }
-  },
   
   // Travel preferences
   travelPreferences: {
@@ -255,8 +259,103 @@ const userSchema = new mongoose.Schema({
       type: String,
       enum: ['single', 'double', 'twin', 'suite', 'any'],
       default: 'any'
-    }
+    },
+    roomPreferences: {
+      bedType: {
+        type: String,
+        enum: ['single', 'double', 'twin', 'king', 'queen'],
+        default: 'double'
+      },
+      smokingPreference: {
+        type: String,
+        enum: ['non_smoking', 'smoking', 'no_preference'],
+        default: 'non_smoking'
+      },
+      floorPreference: {
+        type: String,
+        enum: ['low', 'high', 'no_preference'],
+        default: 'no_preference'
+      },
+      viewPreference: {
+        type: String,
+        enum: ['sea', 'city', 'garden', 'mountain', 'no_preference'],
+        default: 'no_preference'
+      },
+    },
   },
+  preferredAmenities: [{
+      type: String,
+      enum: [
+        'wifi', 'parking', 'pool', 'gym', 'spa', 'restaurant', 'bar',
+        'room_service', 'laundry', 'concierge', 'business_center',
+        'conference_rooms', 'elevator', 'ac', 'heating', 'pet_friendly'
+      ]
+    }],
+    
+    // 🔥 FIX: Add the missing favoriteHotels field
+    favoriteHotels: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Hotel'
+    }],
+    
+    // Dietary and accessibility preferences
+    dietaryRequirements: [{
+      type: String,
+      enum: ['vegetarian', 'vegan', 'halal', 'kosher', 'gluten_free', 'dairy_free', 'nut_free']
+    }],
+    
+    accessibilityNeeds: [{
+      type: String,
+      enum: ['wheelchair_accessible', 'hearing_impaired', 'visually_impaired', 'mobility_assistance']
+    }],
+    
+    // Budget preferences
+    budgetRange: {
+      min: {
+        type: Number,
+        min: 0,
+        default: 0
+      },
+      max: {
+        type: Number,
+        min: 0,
+        default: 50000
+      }
+    },
+    
+    // Privacy settings
+    privacy: {
+      profileVisibility: {
+        type: String,
+        enum: ['public', 'friends', 'private'],
+        default: 'private'
+      },
+      showBookingHistory: {
+        type: Boolean,
+        default: false
+      },
+      allowDataSharing: {
+        type: Boolean,
+        default: false
+      }
+    },
+    
+    // Marketing preferences
+    marketing: {
+      emailOffers: {
+        type: Boolean,
+        default: false
+      },
+      smsOffers: {
+        type: Boolean,
+        default: false
+      },
+      personalizedRecommendations: {
+        type: Boolean,
+        default: true
+      }
+    }
+},
   
   // Loyalty program
   loyaltyProgram: {

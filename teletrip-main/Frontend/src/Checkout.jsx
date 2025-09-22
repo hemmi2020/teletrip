@@ -5,6 +5,7 @@ import { UserDataContext } from './components/CartSystem';
 import { useCart } from './components/CartSystem';
 import { AuthModal } from './components/CartSystem';
 import Header from './components/Header';
+import axios from 'axios';
 import { 
   User, 
   Mail, 
@@ -16,7 +17,44 @@ import {
   AlertCircle,
   Loader2
 } from 'lucide-react';
-import axios from 'axios';
+
+// Set up axios interceptor for authentication
+const setupAxiosInterceptors = () => {
+  // Request interceptor to add auth token
+  axios.interceptors.request.use(
+    (config) => {
+      const token = localStorage.getItem('authToken');
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      return config;
+    },
+    (error) => {
+      return Promise.reject(error);
+    }
+  );
+
+  // Response interceptor to handle auth errors
+  axios.interceptors.response.use(
+    (response) => response,
+    (error) => {
+      if (error.response?.status === 401) {
+        // Clear invalid tokens
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('user');
+        // Optionally redirect to login
+        window.location.href = '/login';
+      }
+      return Promise.reject(error);
+    }
+  );
+};
+
+// Call this when your app starts (in main.jsx or App.jsx)
+setupAxiosInterceptors();
+
+
+
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -48,6 +86,33 @@ const Checkout = () => {
     postalCode: ''
   });
 
+  const checkAuthentication = () => {
+    const token = localStorage.getItem('authToken');
+    const userData = localStorage.getItem('user');
+    
+    console.log('🔍 Authentication check:', {
+      hasToken: !!token,
+      hasUserData: !!userData,
+      tokenPreview: token?.substring(0, 20) + '...',
+      user: userData ? JSON.parse(userData).email : 'No user'
+    });
+
+    if (!token || !userData) {
+      console.log('❌ No authentication found');
+      return false;
+    }
+
+    try {
+      const parsedUser = JSON.parse(userData);
+      return { token, user: parsedUser };
+    } catch (error) {
+      console.error('❌ Invalid user data in localStorage:', error);
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('user');
+      return false;
+    }
+  };
+
   // Populate form with user data if logged in
   useEffect(() => {
     if (user && user.email) {
@@ -69,16 +134,31 @@ const Checkout = () => {
   }, [checkoutItems, navigate]);
 
   const handleInputChange = (field, value) => {
-    setBillingInfo(prev => ({
-      ...prev,
-      [field]: value
-    }));
-    setError(''); // Clear errors when user types
-  };
+  setBillingInfo(prev => ({
+    ...prev,
+    [field]: value
+  }));
+  setError(''); // Clear errors when user types
+  
+  // Real-time validation for specific fields
+  if (field === 'email' && value) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(value)) {
+      setError('Please enter a valid email address');
+    }
+  }
+  
+  if (field === 'phone' && value) {
+    const phoneRegex = /^(\+92|0)?[0-9]{10,11}$/;
+    if (!phoneRegex.test(value.replace(/\s+/g, ''))) {
+      setError('Please enter a valid Pakistani phone number');
+    }
+  }
+};
 
   const validateForm = () => {
     const required = ['firstName', 'lastName', 'email', 'phone', 'address', 'city', 'country', 'state'];
-    const missing = required.filter(field => !billingInfo[field]);
+    const missing = required.filter(field => !billingInfo[field]?.trim());
     
     if (missing.length > 0) {
       setError(`Please fill in all required fields: ${missing.join(', ')}`);
@@ -92,173 +172,198 @@ const Checkout = () => {
       return false;
     }
 
-    // Phone validation for Pakistani format
-    const phoneRegex = /^(\+92|0)?[0-9]{10}$/;
-    if (!phoneRegex.test(billingInfo.phone.replace(/\s/g, ''))) {
-      setError('Please enter a valid Pakistani phone number (e.g., 03001234567 or +923001234567)');
+    // Phone validation
+    const phoneRegex = /^(\+92|0)?[0-9]{10,11}$/;
+    if (!phoneRegex.test(billingInfo.phone.replace(/\s+/g, ''))) {
+      setError('Please enter a valid Pakistani phone number');
+      return false;
+    }
+
+    // Name validation
+    const nameRegex = /^[a-zA-Z\s]+$/;
+    if (!nameRegex.test(billingInfo.firstName) || !nameRegex.test(billingInfo.lastName)) {
+      setError('Names should only contain letters and spaces');
       return false;
     }
 
     return true;
   };
 
+
   const handlePayment = async () => {
+  // Validate form before proceeding
   if (!validateForm()) {
-    return;
-  }
+      return;
+    }
 
-  setIsProcessing(true);
-  setError('');
+    // Check authentication
+    const authData = checkAuthentication();
+    if (!authData) {
+      console.log('❌ Authentication required');
+      setError('Please login to continue with your booking.');
+      setShowAuthModal(true);
+      return;
+    }
 
-  try {
-    console.log('🚀 Starting checkout process...');
+    setIsProcessing(true);
+    setError('');
+    setSuccess('');
 
-    // Step 1: Create booking first (required by backend)
-    const bookingData = {
-      hotelName: checkoutItems[0]?.hotelName || 'Hotel Booking',
-      roomName: checkoutItems.map(item => item.roomName).join(', ') || 'Multiple Rooms',
-      location: checkoutItems[0]?.location || 'Various Locations',
-      checkIn: checkoutItems[0]?.checkIn,
-      checkOut: checkoutItems[0]?.checkOut,
-      guests: checkoutItems.reduce((total, item) => total + (item.guests || 1), 0),
-      totalAmount: parseFloat(totalAmount),
-      boardType: 'Room Only',
-      rateClass: checkoutItems[0]?.rateClass || 'NOR',
-      items: checkoutItems.map(item => ({
-        roomName: item.roomName,
-        hotelName: item.hotelName,
-        quantity: item.quantity,
-        price: item.price,
-        checkIn: item.checkIn,
-        checkOut: item.checkOut
-      }))
-    };
+    try {
+      console.log('🚀 Starting checkout process...');
+      console.log('🔑 Using token:', authData.token.substring(0, 20) + '...');
 
-    console.log('📋 Creating booking with data:', bookingData);
-
-    // Create booking first
-    const bookingResponse = await axios.post(
-      `${import.meta.env.VITE_BASE_URL}/api/bookings/create`,
-      bookingData,
-      {
+      // Create axios instance with authentication
+      const authenticatedAxios = axios.create({
+        baseURL: import.meta.env.VITE_BACKEND_URL,
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${authData.token}`,
           'Content-Type': 'application/json'
         }
-      }
-    );
+      });
 
-    const booking = bookingResponse.data.data;
-    console.log('✅ Booking created successfully:', booking);
-    
-    // 🔍 CRITICAL DEBUG: Check booking ID
-    console.log('🔍 Booking ID type:', typeof booking._id);
-    console.log('🔍 Booking ID value:', booking._id);
-    console.log('🔍 Booking ID length:', booking._id?.length);
-    console.log('🔍 Is valid MongoDB ObjectId?', /^[0-9a-fA-F]{24}$/.test(booking._id));
-
-    // Validate booking ID before proceeding
-    if (!booking._id) {
-      throw new Error('No booking ID returned from booking creation');
-    }
-
-    if (!/^[0-9a-fA-F]{24}$/.test(booking._id)) {
-      throw new Error(`Invalid booking ID format: ${booking._id}`);
-    }
-
-    // Step 2: Prepare payment data with correct structure
-    const paymentData = {
-      amount: parseFloat(totalAmount),
-      currency: 'PKR',
-      bookingId: booking._id, // This should be a valid MongoDB ObjectId
-      userData: {
-        firstName: billingInfo.firstName.trim(),
-        lastName: billingInfo.lastName.trim(),
-        email: billingInfo.email.trim().toLowerCase(),
-        phone: billingInfo.phone.trim().replace(/\s/g, ''), // Remove spaces
-        address: billingInfo.address.trim(),
-        city: billingInfo.city.trim(),
-        state: billingInfo.state, // Use state code (e.g., 'SD')
-        country: billingInfo.country, // Use country code (e.g., 'PK')
-        postalCode: billingInfo.postalCode || ''
-      },
-      bookingData: {
+      // Step 1: Create booking first
+      const bookingPayload = {
         items: checkoutItems.map(item => ({
-          name: `${item.hotelName || 'Hotel'} - ${item.roomName || 'Room'}`,
-          quantity: parseInt(item.quantity) || 1,
-          price: parseFloat(item.price) || 0,
-          category: 'Hotel'
+          hotelName: item.hotelName || 'Hotel Booking',
+          roomName: item.roomName || 'Standard Room',
+          location: item.location || 'Location',
+          checkIn: item.checkIn || new Date().toISOString(),
+          checkOut: item.checkOut || new Date(Date.now() + 86400000).toISOString(),
+          guests: item.guests || 1,
+          totalAmount: parseFloat(item.price || item.totalPrice || 0)
         })),
-        hotelName: checkoutItems[0]?.hotelName,
-        checkIn: checkoutItems[0]?.checkIn,
-        checkOut: checkoutItems[0]?.checkOut,
-        totalAmount: parseFloat(totalAmount)
-      }
-    };
-
-    // 🔍 CRITICAL DEBUG: Log complete payment data
-    console.log('💳 Initiating payment with data:', JSON.stringify(paymentData, null, 2));
-    console.log('🔍 Payment data bookingId:', paymentData.bookingId);
-    console.log('🔍 Payment data amount:', paymentData.amount);
-    console.log('🔍 Payment data userData:', paymentData.userData);
-
-    // Call payment API
-    const response = await axios.post(
-      `${import.meta.env.VITE_BASE_URL}/api/payments/hblpay/initiate`,
-      paymentData,
-      {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json'
+        totalAmount: parseFloat(totalAmount),
+        currency: 'PKR',
+        guestInfo: {
+          primaryGuest: {
+            firstName: billingInfo.firstName,
+            lastName: billingInfo.lastName,
+            email: billingInfo.email,
+            phone: billingInfo.phone
+          }
+        },
+        billingAddress: {
+          street: billingInfo.address,
+          city: billingInfo.city,
+          state: billingInfo.state,
+          country: billingInfo.country,
+          postalCode: billingInfo.postalCode
         }
+      };
+
+      console.log('📋 Creating booking with payload:', bookingPayload);
+
+      const bookingResponse = await authenticatedAxios.post('/api/bookings/create', bookingPayload);
+
+      const bookingId = bookingResponse.data.data?.bookingId || 
+                       bookingResponse.data.data?._id ||
+                       bookingResponse.data.bookingId;
+
+      console.log('✅ Booking created:', bookingId);
+
+      // Step 2: Initiate payment with properly structured data
+      const paymentPayload = {
+        userData: {
+          firstName: billingInfo.firstName.trim(),
+          lastName: billingInfo.lastName.trim(),
+          email: billingInfo.email.trim().toLowerCase(),
+          phone: billingInfo.phone.trim(),
+          address: billingInfo.address.trim(),
+          city: billingInfo.city.trim(),
+          state: billingInfo.state.trim(),
+          country: billingInfo.country.trim(),
+          postalCode: billingInfo.postalCode.trim()
+        },
+        bookingData: {
+          hotelName: checkoutItems[0]?.hotelName || 'Hotel Booking',
+          items: checkoutItems.map(item => ({
+            name: item.hotelName || 'Hotel Booking',
+            quantity: 1,
+            price: item.price || item.totalPrice
+          })),
+          itinerary: checkoutItems.map(item => 
+            `${item.hotelName} - ${item.checkIn} to ${item.checkOut}`
+          ).join('; ')
+        },
+        amount: parseFloat(totalAmount),
+        currency: 'PKR',
+        bookingId: bookingId,
+        orderId: `ORDER_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      };
+
+      console.log('💳 Initiating payment...');
+
+      const paymentResponse = await authenticatedAxios.post('/api/payments/hblpay/initiate', paymentPayload);
+
+      if (paymentResponse.data.success) {
+        const { redirectUrl, paymentId, sessionId } = paymentResponse.data.data;
+        
+        console.log('✅ Payment initiated successfully');
+
+        // Store payment info
+        localStorage.setItem('currentPayment', JSON.stringify({
+          paymentId,
+          bookingId,
+          amount: totalAmount,
+          timestamp: Date.now()
+        }));
+
+        setSuccess('Payment initiated successfully! Redirecting to HBLPay...');
+
+        // Clear cart
+        clearCart();
+
+        // Redirect to HBLPay
+        setTimeout(() => {
+          window.location.href = redirectUrl;
+        }, 1500);
+
+      } else {
+        throw new Error(paymentResponse.data.message || 'Payment initiation failed');
       }
-    );
 
-    console.log('✅ Payment response:', response.data);
-
-    if (response.data.success && response.data.data?.paymentUrl) {
-      // Clear cart and redirect to payment gateway
-      clearCart();
-      window.location.href = response.data.data.paymentUrl;
-    } else {
-      throw new Error(response.data.message || 'Payment initialization failed');
-    }
-
-  } catch (error) {
-    console.error('❌ Payment error:', error);
-    console.error('❌ Response data:', error.response?.data);
-    console.error('❌ Response status:', error.response?.status);
-    
-    // 🔍 ENHANCED ERROR DEBUGGING
-    if (error.response?.data) {
-      console.error('🔍 Detailed error response:', JSON.stringify(error.response.data, null, 2));
+    } catch (error) {
+      console.error('❌ Checkout error:', error);
       
-      if (error.response.data.errors) {
-        console.error('🔍 Validation errors:', error.response.data.errors);
-      }
-    }
-    
-    let errorMessage = 'Payment failed. Please try again.';
-    
-    if (error.response?.data) {
-      if (error.response.data.message) {
+      let errorMessage = 'Payment processing failed. Please try again.';
+      
+      if (error.response?.status === 401) {
+        errorMessage = 'Your session has expired. Please login again.';
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('user');
+        setShowAuthModal(true);
+      } else if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
-      } else if (error.response.data.errors && Array.isArray(error.response.data.errors)) {
-        // Handle validation errors array
-        const validationErrors = error.response.data.errors
-          .map(err => `${err.path || err.field}: ${err.msg || err.message}`)
-          .join('; ');
-        errorMessage = `Validation errors: ${validationErrors}`;
-      } else if (typeof error.response.data === 'string') {
-        errorMessage = error.response.data;
+      } else if (error.message) {
+        errorMessage = error.message;
       }
+      
+      setError(errorMessage);
+    } finally {
+      setIsProcessing(false);
     }
-    
-    setError(errorMessage);
-  } finally {
-    setIsProcessing(false);
-  }
-};
+  };
+
+   useEffect(() => {
+    const authData = checkAuthentication();
+    if (authData?.user) {
+      setBillingInfo(prev => ({
+        ...prev,
+        firstName: authData.user.fullname?.firstname || '',
+        lastName: authData.user.fullname?.lastname || '',
+        email: authData.user.email || '',
+        phone: authData.user.phone || ''
+      }));
+    }
+  }, []);
+
+  // Redirect if no items to checkout
+  useEffect(() => {
+    if (!checkoutItems || checkoutItems.length === 0) {
+      navigate('/home');
+    }
+  }, [checkoutItems, navigate]);
 
   const handleAuthSuccess = (userData) => {
     setShowAuthModal(false);

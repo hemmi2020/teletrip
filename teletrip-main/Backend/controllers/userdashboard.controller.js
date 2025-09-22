@@ -18,79 +18,114 @@ const Booking = bookingModel;
 const getDashboardOverview = asyncErrorHandler(async (req, res) => {
   const userId = req.user.id;
   
-  // Get user statistics
-  const [
-    totalBookings,
-    activeBookings,
-    completedBookings,
-    cancelledBookings,
-    totalSpent,
-    upcomingBookings,
-    recentBookings,
-    paymentHistory,
-    favoriteHotels
-  ] = await Promise.all([
-    Booking.countDocuments({ userId }),
-    Booking.countDocuments({ userId, status: 'confirmed' }),
-    Booking.countDocuments({ userId, status: 'completed' }),
-    Booking.countDocuments({ userId, status: 'cancelled' }),
-    Payment.aggregate([
-      { $match: { userId: userId, status: 'completed' } },
-      { $group: { _id: null, total: { $sum: '$amount' } } }
-    ]),
-    Booking.find({ 
-      userId, 
-      checkInDate: { $gte: new Date() },
-      status: { $in: ['confirmed', 'pending'] }
-    }).limit(3).populate('hotelId', 'name location images'),
-    Booking.find({ userId })
-      .sort({ createdAt: -1 })
-      .limit(5)
-      .populate('hotelId', 'name location images rating'),
-    Payment.find({ userId })
-      .sort({ createdAt: -1 })
-      .limit(5),
-    Booking.aggregate([
-      { $match: { userId } },
-      { $group: { _id: '$hotelId', count: { $sum: 1 } } },
-      { $sort: { count: -1 } },
-      { $limit: 5 },
-      { $lookup: { from: 'hotels', localField: '_id', foreignField: '_id', as: 'hotel' } }
-    ])
-  ]);
+  try {
+    // Get user statistics (fixed aggregation)
+    const [
+      totalBookings,
+      activeBookings,
+      completedBookings,
+      cancelledBookings,
+      totalSpent,
+      upcomingBookings,
+      recentBookings,
+      paymentHistory
+    ] = await Promise.all([
+      Booking.countDocuments({ userId }),
+      Booking.countDocuments({ userId, status: 'confirmed' }),
+      Booking.countDocuments({ userId, status: 'completed' }),
+      Booking.countDocuments({ userId, status: 'cancelled' }),
+      Payment.aggregate([
+        { $match: { userId: userId, status: 'completed' } },
+        { $group: { _id: null, total: { $sum: '$amount' } } }
+      ]),
+      Booking.find({ 
+        userId, 
+        checkInDate: { $gte: new Date() },
+        status: { $in: ['confirmed', 'pending'] }
+      }).limit(3).populate('hotelId', 'name location images'),
+      Booking.find({ userId })
+        .sort({ createdAt: -1 })
+        .limit(5)
+        .populate('hotelId', 'name location images rating'),
+      Payment.find({ userId })
+        .sort({ createdAt: -1 })
+        .limit(5)
+    ]);
 
-  const stats = {
-    bookings: {
-      total: totalBookings,
-      active: activeBookings,
-      completed: completedBookings,
-      cancelled: cancelledBookings
-    },
-    financial: {
-      totalSpent: totalSpent[0]?.total || 0,
-      averageBookingValue: totalBookings > 0 ? (totalSpent[0]?.total || 0) / totalBookings : 0,
-      currency: 'PKR'
-    },
-    upcoming: upcomingBookings,
-    recent: recentBookings,
-    payments: paymentHistory,
-    favorites: favoriteHotels
-  };
+    // ✅ FIXED: Simple favorite hotels without complex aggregation
+    let favoriteHotels = [];
+    try {
+      const user = await User.findById(userId).select('preferences.favoriteHotels');
+      if (user?.preferences?.favoriteHotels?.length > 0) {
+        favoriteHotels = await Hotel.find({
+          _id: { $in: user.preferences.favoriteHotels }
+        }).select('name location images rating').limit(5);
+      }
+    } catch (error) {
+      console.warn('Could not fetch favorite hotels for dashboard:', error.message);
+    }
 
-  return ApiResponse.success(res, stats, 'Dashboard overview retrieved successfully');
+    const stats = {
+      bookings: {
+        total: totalBookings,
+        active: activeBookings,
+        completed: completedBookings,
+        cancelled: cancelledBookings
+      },
+      financial: {
+        totalSpent: totalSpent[0]?.total || 0,
+        averageBookingValue: totalBookings > 0 ?
+          (totalSpent[0]?.total || 0) / totalBookings : 0,
+        currency: 'PKR'
+      },
+      upcoming: upcomingBookings,
+      recent: recentBookings,
+      payments: paymentHistory,
+      favorites: favoriteHotels
+    };
+
+    return ApiResponse.success(res, stats, 'Dashboard overview retrieved successfully');
+  } catch (error) {
+    console.error('Dashboard overview error:', error);
+    return ApiResponse.error(res, 'Failed to fetch dashboard overview', 500);
+  }
 });
 
 // ========== USER PROFILE MANAGEMENT ==========
 const getProfile = asyncErrorHandler(async (req, res) => {
-  const user = await User.findById(req.user.id)
-    .select('-password -refreshTokens')
-    .populate('preferences.favoriteHotels', 'name location images rating');
-  
-  if (!user) {
-    return ApiResponse.error(res, 'User not found', 404);
-  }
+  try {
+    const user = await User.findById(req.user.id)
+      .select('-password -refreshTokens');
+      // ❌ REMOVED: .populate('preferences.favoriteHotels', 'name location images rating');
+    
+    if (!user) {
+      return ApiResponse.error(res, 'User not found', 404);
+    }
 
-  return ApiResponse.success(res, user, 'Profile retrieved successfully');
+    // ✅ ADDED: Safely fetch favorite hotels if they exist
+    let favoriteHotels = [];
+    if (user.preferences?.favoriteHotels?.length > 0) {
+      try {
+        favoriteHotels = await Hotel.find({
+          _id: { $in: user.preferences.favoriteHotels }
+        }).select('name location images rating');
+      } catch (populateError) {
+        console.warn('Could not fetch favorite hotels:', populateError.message);
+        // Continue without favorite hotels data
+      }
+    }
+
+    // Add favorite hotels data to response
+    const userResponse = user.toObject();
+    if (userResponse.preferences) {
+      userResponse.preferences.favoriteHotelsData = favoriteHotels;
+    }
+
+    return ApiResponse.success(res, userResponse, 'Profile retrieved successfully');
+  } catch (error) {
+    console.error('Profile fetch error:', error);
+    return ApiResponse.error(res, 'Failed to fetch profile', 500);
+  }
 });
 
 const updateProfile = asyncErrorHandler(async (req, res) => {
@@ -391,12 +426,29 @@ const searchHotels = asyncErrorHandler(async (req, res) => {
 });
 
 const getFavoriteHotels = asyncErrorHandler(async (req, res) => {
-  const user = await User.findById(req.user.id)
-    .populate('preferences.favoriteHotels', 'name location images rating amenities priceRange')
-    .select('preferences.favoriteHotels');
+  try {
+    const user = await User.findById(req.user.id)
+      .select('preferences.favoriteHotels');
 
-  return ApiResponse.success(res, user.preferences.favoriteHotels, 'Favorite hotels retrieved successfully');
+    if (!user) {
+      return ApiResponse.error(res, 'User not found', 404);
+    }
+
+    // ✅ FIXED: Safe population without strict populate error
+    let favoriteHotels = [];
+    if (user.preferences?.favoriteHotels?.length > 0) {
+      favoriteHotels = await Hotel.find({
+        _id: { $in: user.preferences.favoriteHotels }
+      }).select('name location images rating amenities priceRange');
+    }
+
+    return ApiResponse.success(res, favoriteHotels, 'Favorite hotels retrieved successfully');
+  } catch (error) {
+    console.error('Favorite hotels fetch error:', error);
+    return ApiResponse.error(res, 'Failed to fetch favorite hotels', 500);
+  }
 });
+
 
 const addToFavorites = asyncErrorHandler(async (req, res) => {
   const { hotelId } = req.params;
@@ -406,33 +458,90 @@ const addToFavorites = asyncErrorHandler(async (req, res) => {
     return ApiResponse.error(res, 'Hotel not found', 404);
   }
 
-  await User.findByIdAndUpdate(
-    req.user.id,
-    { $addToSet: { 'preferences.favoriteHotels': hotelId } }
-  );
+  try {
+    // ✅ FIXED: Ensure preferences object exists before updating
+    const user = await User.findById(req.user.id);
+    
+    if (!user.preferences) {
+      user.preferences = { favoriteHotels: [] };
+    }
+    
+    if (!user.preferences.favoriteHotels) {
+      user.preferences.favoriteHotels = [];
+    }
 
-  return ApiResponse.success(res, null, 'Hotel added to favorites');
+    // Add to favorites if not already present
+    if (!user.preferences.favoriteHotels.includes(hotelId)) {
+      user.preferences.favoriteHotels.push(hotelId);
+      await user.save();
+    }
+
+    return ApiResponse.success(res, null, 'Hotel added to favorites');
+  } catch (error) {
+    console.error('Add to favorites error:', error);
+    return ApiResponse.error(res, 'Failed to add hotel to favorites', 500);
+  }
 });
 
 const removeFromFavorites = asyncErrorHandler(async (req, res) => {
   const { hotelId } = req.params;
 
-  await User.findByIdAndUpdate(
-    req.user.id,
-    { $pull: { 'preferences.favoriteHotels': hotelId } }
-  );
+  try {
+    const user = await User.findById(req.user.id);
+    
+    if (user.preferences?.favoriteHotels) {
+      user.preferences.favoriteHotels = user.preferences.favoriteHotels.filter(
+        id => id.toString() !== hotelId
+      );
+      await user.save();
+    }
 
-  return ApiResponse.success(res, null, 'Hotel removed from favorites');
+    return ApiResponse.success(res, null, 'Hotel removed from favorites');
+  } catch (error) {
+    console.error('Remove from favorites error:', error);
+    return ApiResponse.error(res, 'Failed to remove hotel from favorites', 500);
+  }
 });
+
 
 // ========== TRAVEL PREFERENCES ==========
 const getPreferences = asyncErrorHandler(async (req, res) => {
-  const user = await User.findById(req.user.id)
-    .select('preferences')
-    .populate('preferences.favoriteHotels', 'name location images');
+  try {
+    const user = await User.findById(req.user.id)
+      .select('preferences');
 
-  return ApiResponse.success(res, user.preferences, 'Preferences retrieved successfully');
+    if (!user) {
+      return ApiResponse.error(res, 'User not found', 404);
+    }
+
+    // ✅ FIXED: Safe handling of preferences
+    let preferences = user.preferences || {};
+    
+    // Fetch favorite hotels data separately if they exist
+    let favoriteHotelsData = [];
+    if (preferences.favoriteHotels?.length > 0) {
+      try {
+        favoriteHotelsData = await Hotel.find({
+          _id: { $in: preferences.favoriteHotels }
+        }).select('name location images');
+      } catch (populateError) {
+        console.warn('Could not fetch favorite hotels:', populateError.message);
+      }
+    }
+
+    // Add favorite hotels data to preferences
+    const preferencesResponse = {
+      ...preferences.toObject(),
+      favoriteHotelsData
+    };
+
+    return ApiResponse.success(res, preferencesResponse, 'Preferences retrieved successfully');
+  } catch (error) {
+    console.error('Preferences fetch error:', error);
+    return ApiResponse.error(res, 'Failed to fetch preferences', 500);
+  }
 });
+
 
 const updatePreferences = asyncErrorHandler(async (req, res) => {
   const user = await User.findByIdAndUpdate(
