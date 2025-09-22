@@ -1,269 +1,361 @@
+// Fixed Payment Model - models/payment.model.js
 const mongoose = require('mongoose');
+const mongoosePaginate = require('mongoose-paginate-v2');
 
 const paymentSchema = new mongoose.Schema({
-  transactionId: {
+  // ✅ FIXED: Make paymentId required and auto-generate with unique value
+  paymentId: {
     type: String,
     required: true,
-    unique: true
+    unique: true,
+    index: true
   },
-  booking: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Booking',
-    required: true
+  
+  // Core payment fields
+  transactionId: {
+    type: String,
+    unique: true,
+    sparse: true // Allow null values but ensure uniqueness when present
   },
-  user: {
+  
+  userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true
+    required: true,
+    index: true
   },
+  
+  bookingId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Booking',
+    required: true,
+    index: true
+  },
+  
+  // Financial details
   amount: {
     type: Number,
-    required: true
+    required: true,
+    min: [0.01, 'Amount must be greater than 0'],
+    validate: {
+      validator: function(value) {
+        return Number.isFinite(value) && value > 0;
+      },
+      message: 'Amount must be a valid positive number'
+    }
   },
+  
   currency: {
     type: String,
-    default: 'PKR'
+    required: true,
+    default: 'PKR',
+    enum: ['PKR', 'USD', 'EUR', 'GBP'],
+    uppercase: true
   },
+  
+  // Payment processing
   paymentMethod: {
     type: String,
-    enum: ['credit_card', 'debit_card', 'hbl_account', 'union_pay', 'HBLPay'],
-    required: true
+    required: true,
+    enum: ['credit_card', 'debit_card', 'hbl_account', 'HBLPay', 'union_pay', 'bank_transfer'],
+    default: 'credit_card'
   },
+  
   status: {
     type: String,
-    enum: ['pending', 'processing', 'completed', 'failed', 'cancelled', 'refunded'],
-    default: 'pending'
+    required: true,
+    enum: ['pending', 'processing', 'completed', 'failed', 'cancelled', 'refunded', 'expired'],
+    default: 'pending',
+    index: true
   },
+  
+  // Gateway integration (HBLPay)
   gateway: {
     provider: {
       type: String,
       default: 'HBLPay'
     },
-    sessionId: String,
+    sessionId: {
+      type: String,
+      sparse: true,
+      index: true
+    },
+    orderRefNumber: {
+      type: String,
+      sparse: true,
+      index: true
+    },
     responseCode: String,
     responseMessage: String,
     authCode: String,
-    orderRefNumber: String
+    merchantId: String,
+    terminalId: String
   },
+  
+  // Card tokenization
   tokenization: {
     token: String,
     maskedCardNumber: String,
-    expiryDate: String
+    cardType: String, // visa, mastercard, etc.
+    expiryDate: String,
+    holderName: String
   },
+  
+  // Billing information
   billing: {
-    firstName: String,
-    lastName: String,
-    email: String,
-    phone: String,
-    address: String,
-    city: String,
-    state: String,
-    country: String,
-    postalCode: String
+    firstName: {
+      type: String,
+      required: true,
+      trim: true
+    },
+    lastName: {
+      type: String,
+      required: true,
+      trim: true
+    },
+    email: {
+      type: String,
+      required: true,
+      lowercase: true,
+      trim: true
+    },
+    phone: {
+      type: String,
+      required: true,
+      trim: true
+    },
+    address: {
+      street: String,
+      city: String,
+      state: String,
+      country: {
+        type: String,
+        default: 'PK'
+      },
+      postalCode: String
+    }
   },
+  
+  // Fees and charges
   fees: {
     processingFee: {
       type: Number,
-      default: 0
+      default: 0,
+      min: 0
     },
     gatewayFee: {
       type: Number,
-      default: 0
+      default: 0,
+      min: 0
+    },
+    serviceFee: {
+      type: Number,
+      default: 0,
+      min: 0
+    },
+    totalFees: {
+      type: Number,
+      default: 0,
+      min: 0
     }
   },
+  
+  // Refund information
   refund: {
-    amount: Number,
+    amount: {
+      type: Number,
+      min: 0,
+      default: 0
+    },
     reason: String,
     refundedAt: Date,
     refundTransactionId: String,
     refundStatus: {
       type: String,
-      enum: ['pending', 'processed', 'failed']
+      enum: ['pending', 'processed', 'failed', 'cancelled']
+    },
+    refundedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
     }
   },
+  
+  // Important timestamps
+  initiatedAt: {
+    type: Date,
+    default: Date.now,
+    index: true
+  },
+  
+  completedAt: {
+    type: Date,
+    index: true
+  },
+  
+  failedAt: Date,
+  cancelledAt: Date,
+  expiredAt: Date,
+  
+  // Error handling
+  errorCode: String,
+  errorMessage: String,
+  retryCount: {
+    type: Number,
+    default: 0,
+    min: 0
+  },
+  
+  // Metadata
   metadata: {
     ipAddress: String,
     userAgent: String,
     deviceId: String,
     location: {
       country: String,
-      city: String
+      city: String,
+      latitude: Number,
+      longitude: Number
+    },
+    source: {
+      type: String,
+      enum: ['web', 'mobile', 'api'],
+      default: 'web'
     }
   },
+  
+  // Security and fraud prevention
+  riskScore: {
+    type: Number,
+    min: 0,
+    max: 100,
+    default: 0
+  },
+  
+  fraudChecks: {
+    cvvCheck: {
+      type: String,
+      enum: ['pass', 'fail', 'not_checked']
+    },
+    avsCheck: {
+      type: String,
+      enum: ['pass', 'fail', 'not_checked']
+    },
+    velocityCheck: {
+      type: String,
+      enum: ['pass', 'fail', 'not_checked']
+    }
+  },
+  
+  // Audit trail
   auditLog: [{
-    action: String,
+    action: {
+      type: String,
+      required: true
+    },
     timestamp: {
       type: Date,
       default: Date.now
     },
-    details: mongoose.Schema.Types.Mixed
-  }]
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    details: mongoose.Schema.Types.Mixed,
+    ipAddress: String,
+    userAgent: String
+  }],
+  
+  // Soft delete
+  isDeleted: {
+    type: Boolean,
+    default: false,
+    index: true
+  },
+  
+  deletedAt: Date,
+  deletedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  
+  // Additional tracking
+  updatedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  
+  // Notification tracking
+  notificationsSent: {
+    email: {
+      sent: { type: Boolean, default: false },
+      sentAt: Date,
+      attempts: { type: Number, default: 0 }
+    },
+    sms: {
+      sent: { type: Boolean, default: false },
+      sentAt: Date,
+      attempts: { type: Number, default: 0 }
+    },
+    webhook: {
+      sent: { type: Boolean, default: false },
+      sentAt: Date,
+      attempts: { type: Number, default: 0 }
+    }
+  }
 }, {
-  timestamps: true
+  timestamps: true,
+  versionKey: false
 });
 
-// Compound indexes
+// ✅ CRITICAL: Add mongoose-paginate plugin
+paymentSchema.plugin(mongoosePaginate);
 
+// ✅ INDEXES for performance
+paymentSchema.index({ userId: 1, status: 1 });
+paymentSchema.index({ userId: 1, createdAt: -1 });
+// paymentSchema.index({ bookingId: 1 });
+// paymentSchema.index({ 'gateway.sessionId': 1 }, { sparse: true });
+// paymentSchema.index({ 'gateway.orderRefNumber': 1 }, { sparse: true });
+// paymentSchema.index({ status: 1, createdAt: -1 });
+// paymentSchema.index({ createdAt: -1 });
+// paymentSchema.index({ isDeleted: 1, status: 1 });
 
-// Virtual for payment duration
+// ✅ VIRTUALS
+paymentSchema.virtual('formattedAmount').get(function() {
+  return new Intl.NumberFormat('en-PK', {
+    style: 'currency',
+    currency: this.currency || 'PKR',
+    minimumFractionDigits: 2
+  }).format(this.amount);
+});
+
+paymentSchema.virtual('netAmount').get(function() {
+  return this.amount + (this.fees.totalFees || 0);
+});
+
 paymentSchema.virtual('duration').get(function() {
   if (this.completedAt && this.initiatedAt) {
-    return this.completedAt - this.initiatedAt;
+    return Math.round((this.completedAt - this.initiatedAt) / 1000); // in seconds
   }
   return null;
 });
 
-// Virtual for formatted amount
-paymentSchema.virtual('formattedAmount').get(function() {
-  const formatter = new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: this.currency,
-    minimumFractionDigits: 2
-  });
-  
-  try {
-    return formatter.format(this.amount);
-  } catch (error) {
-    return `${this.currency} ${this.amount.toFixed(2)}`;
+paymentSchema.virtual('isExpired').get(function() {
+  if (this.status === 'pending' && this.expiredAt) {
+    return new Date() > this.expiredAt;
   }
+  return false;
 });
 
-// Virtual for total refunded amount
-paymentSchema.virtual('totalRefunded').get(function() {
-  if (this.refunds && this.refunds.length > 0) {
-    return this.refunds
-      .filter(refund => refund.status === 'completed')
-      .reduce((total, refund) => total + refund.amount, 0);
-  }
-  return this.refundAmount || 0;
+paymentSchema.virtual('canRefund').get(function() {
+  return this.status === 'completed' && !this.refund.amount;
 });
 
-// Virtual for remaining refundable amount
 paymentSchema.virtual('refundableAmount').get(function() {
-  if (this.status !== 'completed') return 0;
-  return this.amount - this.totalRefunded;
+  return this.amount - (this.refund.amount || 0);
 });
 
-// Virtual for payment age in hours
-paymentSchema.virtual('ageInHours').get(function() {
-  return Math.floor((Date.now() - this.initiatedAt) / (1000 * 60 * 60));
-});
-
-// Instance methods
-paymentSchema.methods.markAsCompleted = function(gatewayResponse = {}) {
-  this.status = 'completed';
-  this.completedAt = new Date();
-  this.gatewayResponse = { ...this.gatewayResponse, ...gatewayResponse };
-  this.errorCode = undefined;
-  this.errorMessage = undefined;
-  this.failureReason = undefined;
-  return this.save();
-};
-
-paymentSchema.methods.markAsFailed = function(errorCode, errorMessage, gatewayResponse = {}) {
-  this.status = 'failed';
-  this.failedAt = new Date();
-  this.errorCode = errorCode;
-  this.errorMessage = errorMessage;
-  this.failureReason = errorMessage;
-  this.gatewayResponse = { ...this.gatewayResponse, ...gatewayResponse };
-  return this.save();
-};
-
-paymentSchema.methods.markAsCancelled = function(reason, gatewayResponse = {}) {
-  this.status = 'cancelled';
-  this.cancelledAt = new Date();
-  this.failureReason = reason;
-  this.gatewayResponse = { ...this.gatewayResponse, ...gatewayResponse };
-  return this.save();
-};
-
-paymentSchema.methods.markAsRefunded = function(refundAmount, refundReason, transactionId = null) {
-  const refundAmt = refundAmount || this.amount;
-  
-  // Add to refunds array
-  this.refunds.push({
-    amount: refundAmt,
-    reason: refundReason,
-    refundedAt: new Date(),
-    transactionId: transactionId,
-    status: 'completed'
-  });
-  
-  // Update main refund fields
-  this.refundAmount = (this.refundAmount || 0) + refundAmt;
-  this.refundReason = refundReason;
-  this.refundedAt = new Date();
-  this.refundTransactionId = transactionId;
-  
-  // Update status
-  if (this.refundAmount >= this.amount) {
-    this.status = 'refunded';
-  } else {
-    this.status = 'partial_refund';
-  }
-  
-  return this.save();
-};
-
-paymentSchema.methods.addPartialRefund = function(amount, reason, transactionId = null) {
-  if (amount <= 0) {
-    throw new Error('Refund amount must be positive');
-  }
-  
-  if (amount > this.refundableAmount) {
-    throw new Error('Refund amount exceeds refundable amount');
-  }
-  
-  return this.markAsRefunded(amount, reason, transactionId);
-};
-
-paymentSchema.methods.updateCardInfo = function(cardData) {
-  if (cardData.last4Digits) {
-    this.cardInfo.last4Digits = cardData.last4Digits;
-  }
-  if (cardData.cardType) {
-    this.cardInfo.cardType = cardData.cardType;
-  }
-  if (cardData.maskedCardNumber) {
-    this.cardInfo.maskedCardNumber = cardData.maskedCardNumber;
-  }
-  if (cardData.expiryMonth) {
-    this.cardInfo.expiryMonth = cardData.expiryMonth;
-  }
-  if (cardData.expiryYear) {
-    this.cardInfo.expiryYear = cardData.expiryYear;
-  }
-  return this.save();
-};
-
-paymentSchema.methods.canBeRefunded = function() {
-  return this.status === 'completed' && this.refundableAmount > 0;
-};
-
-paymentSchema.methods.isExpired = function() {
-  // Consider payment expired if pending for more than 30 minutes
-  const expiryTime = 30 * 60 * 1000; // 30 minutes in milliseconds
-  return this.status === 'pending' && (Date.now() - this.initiatedAt) > expiryTime;
-};
-
-paymentSchema.methods.toSafeObject = function() {
-  const obj = this.toObject();
-  
-  // Remove sensitive information
-  delete obj.gatewayResponse;
-  if (obj.cardInfo) {
-    delete obj.cardInfo.maskedCardNumber;
-  }
-  
-  return obj;
-};
-
-// Static methods
-paymentSchema.statics.findBySessionId = function(sessionId) {
-  return this.findOne({ sessionId, isDeleted: false });
-};
-
+// ✅ STATIC METHODS
 paymentSchema.statics.findByPaymentId = function(paymentId) {
   return this.findOne({ paymentId, isDeleted: false });
 };
@@ -272,24 +364,55 @@ paymentSchema.statics.findByTransactionId = function(transactionId) {
   return this.findOne({ transactionId, isDeleted: false });
 };
 
-paymentSchema.statics.getUserPayments = function(userId, status = null, options = {}) {
-  const query = { userId, isDeleted: false };
-  if (status) query.status = status;
-  
-  const {
-    page = 1,
-    limit = 10,
-    sort = { createdAt: -1 }
-  } = options;
-  
-  return this.find(query)
-    .populate('bookingId', 'hotelName checkIn checkOut bookingId')
-    .sort(sort)
-    .limit(limit * 1)
-    .skip((page - 1) * limit);
+paymentSchema.statics.findBySessionId = function(sessionId) {
+  return this.findOne({ 'gateway.sessionId': sessionId, isDeleted: false });
 };
 
-paymentSchema.statics.getPaymentStats = function(userId, startDate, endDate) {
+paymentSchema.statics.findByOrderRef = function(orderRefNumber) {
+  return this.findOne({ 'gateway.orderRefNumber': orderRefNumber, isDeleted: false });
+};
+
+paymentSchema.statics.getUserPayments = function(userId, options = {}) {
+  const {
+    status,
+    page = 1,
+    limit = 10,
+    sort = { createdAt: -1 },
+    dateFrom,
+    dateTo
+  } = options;
+  
+  const query = { userId, isDeleted: false };
+  
+  if (status) query.status = status;
+  
+  if (dateFrom || dateTo) {
+    query.createdAt = {};
+    if (dateFrom) query.createdAt.$gte = new Date(dateFrom);
+    if (dateTo) query.createdAt.$lte = new Date(dateTo);
+  }
+  
+  const paginateOptions = {
+    page: parseInt(page),
+    limit: parseInt(limit),
+    sort,
+    populate: [
+      {
+        path: 'bookingId',
+        select: 'bookingReference hotelName checkInDate checkOutDate status'
+      },
+      {
+        path: 'userId',
+        select: 'fullname email phone'
+      }
+    ]
+  };
+  
+  return this.paginate(query, paginateOptions);
+};
+
+paymentSchema.statics.getPaymentStats = function(userId, dateRange = {}) {
+  const { startDate, endDate } = dateRange;
   const matchStage = {
     userId: new mongoose.Types.ObjectId(userId),
     isDeleted: false
@@ -314,7 +437,7 @@ paymentSchema.statics.getPaymentStats = function(userId, startDate, endDate) {
     {
       $group: {
         _id: null,
-        stats: {
+        byStatus: {
           $push: {
             status: '$_id',
             count: '$count',
@@ -323,107 +446,167 @@ paymentSchema.statics.getPaymentStats = function(userId, startDate, endDate) {
           }
         },
         totalPayments: { $sum: '$count' },
-        grandTotal: { $sum: '$totalAmount' }
+        totalAmount: { $sum: '$totalAmount' },
+        avgAmount: { $avg: '$totalAmount' }
       }
     }
   ]);
 };
 
-paymentSchema.statics.findExpiredPayments = function() {
-  const expiryTime = new Date(Date.now() - 30 * 60 * 1000); // 30 minutes ago
+paymentSchema.statics.findExpiredPayments = function(minutesAgo = 30) {
+  const cutoffTime = new Date(Date.now() - minutesAgo * 60 * 1000);
+  
   return this.find({
     status: 'pending',
-    initiatedAt: { $lt: expiryTime },
+    initiatedAt: { $lt: cutoffTime },
     isDeleted: false
   });
 };
 
-paymentSchema.statics.getTotalsByStatus = function(userId = null) {
-  const matchStage = { isDeleted: false };
-  if (userId) {
-    matchStage.userId = new mongoose.Types.ObjectId(userId);
+// ✅ INSTANCE METHODS
+paymentSchema.methods.addAuditLog = function(action, details = {}, userId = null) {
+  this.auditLog.push({
+    action,
+    details,
+    userId,
+    timestamp: new Date(),
+    ipAddress: details.ipAddress,
+    userAgent: details.userAgent
+  });
+  return this;
+};
+
+paymentSchema.methods.updateStatus = function(newStatus, details = {}, userId = null) {
+  const oldStatus = this.status;
+  this.status = newStatus;
+  
+  // Set appropriate timestamps
+  switch (newStatus) {
+    case 'completed':
+      this.completedAt = new Date();
+      break;
+    case 'failed':
+      this.failedAt = new Date();
+      break;
+    case 'cancelled':
+      this.cancelledAt = new Date();
+      break;
+    case 'expired':
+      this.expiredAt = new Date();
+      break;
   }
   
-  return this.aggregate([
-    { $match: matchStage },
-    {
-      $group: {
-        _id: '$status',
-        count: { $sum: 1 },
-        totalAmount: { $sum: '$amount' }
-      }
-    }
-  ]);
+  // Add audit log
+  this.addAuditLog(`Status changed from ${oldStatus} to ${newStatus}`, details, userId);
+  
+  return this;
 };
 
-paymentSchema.statics.getRecentPayments = function(limit = 10) {
-  return this.find({ isDeleted: false })
-    .populate('userId', 'fullname email')
-    .populate('bookingId', 'hotelName bookingId')
-    .sort({ createdAt: -1 })
-    .limit(limit);
+paymentSchema.methods.processRefund = function(refundAmount, reason, refundedBy) {
+  if (this.status !== 'completed') {
+    throw new Error('Can only refund completed payments');
+  }
+  
+  if (refundAmount > this.refundableAmount) {
+    throw new Error('Refund amount exceeds refundable amount');
+  }
+  
+  this.refund = {
+    amount: refundAmount,
+    reason,
+    refundedAt: new Date(),
+    refundStatus: 'pending',
+    refundedBy,
+    refundTransactionId: `REF_${this.paymentId}_${Date.now()}`
+  };
+  
+  if (refundAmount === this.amount) {
+    this.status = 'refunded';
+  }
+  
+  this.addAuditLog('Refund initiated', { refundAmount, reason }, refundedBy);
+  
+  return this;
 };
 
-// Pre-save middleware
+paymentSchema.methods.softDelete = function(deletedBy = null) {
+  this.isDeleted = true;
+  this.deletedAt = new Date();
+  this.deletedBy = deletedBy;
+  this.addAuditLog('Payment soft deleted', {}, deletedBy);
+  return this.save();
+};
+
+paymentSchema.methods.restore = function(restoredBy = null) {
+  this.isDeleted = false;
+  this.deletedAt = undefined;
+  this.deletedBy = undefined;
+  this.addAuditLog('Payment restored', {}, restoredBy);
+  return this.save();
+};
+
+// ✅ PRE-SAVE MIDDLEWARE - CRITICAL FIX
 paymentSchema.pre('save', function(next) {
-  // Set updatedBy if in context
-  if (this.isModified() && this.$locals && this.$locals.userId) {
-    this.updatedBy = this.$locals.userId;
+  // ✅ AUTO-GENERATE UNIQUE PAYMENT ID
+  if (this.isNew && !this.paymentId) {
+    this.paymentId = generatePaymentId();
   }
   
-  // Auto-generate paymentId if not set
-  if (this.isNew && !this.paymentId) {
-    this.paymentId = `PAY_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  // ✅ Ensure paymentId is never null
+  if (!this.paymentId) {
+    this.paymentId = generatePaymentId();
   }
   
   // Validate refund amount
-  if (this.refundAmount > this.amount) {
+  if (this.refund && this.refund.amount > this.amount) {
     return next(new Error('Refund amount cannot exceed payment amount'));
   }
   
-  // Auto-set completedAt when status changes to completed
-  if (this.isModified('status') && this.status === 'completed' && !this.completedAt) {
-    this.completedAt = new Date();
+  // Calculate total fees
+  if (this.fees) {
+    this.fees.totalFees = (this.fees.processingFee || 0) + 
+                         (this.fees.gatewayFee || 0) + 
+                         (this.fees.serviceFee || 0);
   }
   
-  // Auto-set failedAt when status changes to failed
-  if (this.isModified('status') && this.status === 'failed' && !this.failedAt) {
-    this.failedAt = new Date();
+  // Set expiry for pending payments (30 minutes)
+  if (this.isNew && this.status === 'pending' && !this.expiredAt) {
+    this.expiredAt = new Date(Date.now() + 30 * 60 * 1000);
   }
   
-  // Auto-set cancelledAt when status changes to cancelled
-  if (this.isModified('status') && this.status === 'cancelled' && !this.cancelledAt) {
-    this.cancelledAt = new Date();
+  // Auto-generate order reference number for gateway
+  if (this.isNew && !this.gateway.orderRefNumber) {
+    this.gateway.orderRefNumber = `ORD_${this.paymentId}_${Date.now()}`;
   }
   
   next();
 });
 
-// Pre-validate middleware
+// ✅ PRE-VALIDATE MIDDLEWARE
 paymentSchema.pre('validate', function(next) {
   // Ensure currency is uppercase
   if (this.currency) {
     this.currency = this.currency.toUpperCase();
   }
   
-  // Validate amount precision based on currency
+  // Round amount to 2 decimal places for currency precision
   if (this.amount) {
-    if (this.currency === 'PKR') {
-      // PKR allows up to 2 decimal places
-      this.amount = Math.round(this.amount * 100) / 100;
-    } else {
-      // USD, EUR allow up to 2 decimal places
-      this.amount = Math.round(this.amount * 100) / 100;
+    this.amount = Math.round(this.amount * 100) / 100;
+  }
+  
+  // Validate email format
+  if (this.billing && this.billing.email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(this.billing.email)) {
+      return next(new Error('Invalid email format'));
     }
   }
   
   next();
 });
 
-// Post-save middleware for logging
+// ✅ POST-SAVE MIDDLEWARE
 paymentSchema.post('save', function(doc) {
-  console.log(`Payment ${doc.paymentId} status updated to: ${doc.status}`);
-  
   // Log important status changes
   if (doc.status === 'completed') {
     console.log(`✅ Payment completed: ${doc.paymentId} - ${doc.formattedAmount}`);
@@ -434,41 +617,22 @@ paymentSchema.post('save', function(doc) {
   }
 });
 
-// Post-update middleware
-paymentSchema.post('findOneAndUpdate', function(doc) {
-  if (doc) {
-    console.log(`Payment ${doc.paymentId} updated via findOneAndUpdate`);
-  }
-});
-
-// Error handling middleware
+// ✅ ERROR HANDLING MIDDLEWARE
 paymentSchema.post('save', function(error, doc, next) {
   if (error.name === 'MongoError' && error.code === 11000) {
-    next(new Error('Payment ID already exists'));
+    if (error.message.includes('paymentId')) {
+      next(new Error('Payment ID already exists. Please try again.'));
+    } else if (error.message.includes('transactionId')) {
+      next(new Error('Transaction ID already exists.'));
+    } else {
+      next(new Error('Duplicate payment detected.'));
+    }
   } else {
     next(error);
   }
 });
 
-// Soft delete method
-paymentSchema.methods.softDelete = function(deletedBy = null) {
-  this.isDeleted = true;
-  this.deletedAt = new Date();
-  if (deletedBy) {
-    this.deletedBy = deletedBy;
-  }
-  return this.save();
-};
-
-// Restore soft deleted document
-paymentSchema.methods.restore = function() {
-  this.isDeleted = false;
-  this.deletedAt = undefined;
-  this.deletedBy = undefined;
-  return this.save();
-};
-
-// Query helpers
+// ✅ QUERY HELPERS
 paymentSchema.query.active = function() {
   return this.where({ isDeleted: false });
 };
@@ -487,7 +651,22 @@ paymentSchema.query.recent = function(days = 30) {
   return this.where({ createdAt: { $gte: startDate } });
 };
 
-// Ensure virtual fields are serialized
+paymentSchema.query.completed = function() {
+  return this.where({ status: 'completed' });
+};
+
+paymentSchema.query.pending = function() {
+  return this.where({ status: 'pending' });
+};
+
+// ✅ HELPER FUNCTION TO GENERATE UNIQUE PAYMENT ID
+function generatePaymentId() {
+  const timestamp = Date.now();
+  const random = Math.random().toString(36).substr(2, 9);
+  return `PAY_${timestamp}_${random}`.toUpperCase();
+}
+
+// ✅ ENSURE VIRTUAL FIELDS ARE SERIALIZED
 paymentSchema.set('toJSON', { 
   virtuals: true,
   transform: function(doc, ret) {
@@ -499,6 +678,6 @@ paymentSchema.set('toJSON', {
 
 paymentSchema.set('toObject', { virtuals: true });
 
-const paymentModel = mongoose.model('payment', paymentSchema);
+const Payment = mongoose.model('Payment', paymentSchema);
 
-module.exports = paymentModel;
+module.exports = Payment;
