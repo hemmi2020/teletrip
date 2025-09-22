@@ -1265,18 +1265,29 @@ module.exports.initiateHBLPayPayment = asyncErrorHandler(async (req, res) => {
   let bookingRecord = null;
   try {
     bookingRecord = await bookingModel.findOne({
-      $or: [{ _id: bookingId }, { bookingId: bookingId }],
+      $or: [{ _id: bookingId }, { bookingReference: bookingId }],
       userId: userId
     });
 
     if (!bookingRecord) {
-      return ApiResponse.error(res, 'Booking not found', 404);
-    }
+    console.error('❌ Booking not found:', {
+      bookingId,
+      userId: userId.toString(),
+      searchQuery: { _id: bookingId, user: userId }
+    });
+    return ApiResponse.error(res, 'Booking not found', 404);
+  }
 
-    if (bookingRecord.paymentStatus === 'paid') {
-      return ApiResponse.error(res, 'This booking is already paid', 400);
-    }
-  } catch (error) {
+  console.log('✅ Booking found:', {
+    bookingId: bookingRecord._id,
+    status: bookingRecord.status,
+    user: bookingRecord.user
+  });
+
+  if (bookingRecord.payment?.status === 'paid' || bookingRecord.paymentStatus === 'paid') {
+    return ApiResponse.error(res, 'This booking is already paid', 400);
+  }
+}  catch (error) {
     console.error('Error validating booking:', error);
     return ApiResponse.error(res, 'Invalid booking ID format', 400);
   }
