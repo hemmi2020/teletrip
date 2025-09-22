@@ -17,7 +17,7 @@ const userDashboardRoutes = require('./routes/userdashboard.route');
 const adminDashboardRoutes = require('./routes/admindashboard.route');
 
 // Import middlewares
-const { globalErrorHandler, notFound } = require('./middlewares/errorHandler.middleware');
+
 
   
 
@@ -39,7 +39,7 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Cookie parser (if you use cookies)
-const cookieParser = require('cookie-parser');
+
 app.use(cookieParser());
 
 
