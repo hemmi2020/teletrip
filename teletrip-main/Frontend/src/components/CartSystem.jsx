@@ -338,6 +338,12 @@ export const AuthModal = ({
         localStorage.setItem("token", token);
         localStorage.setItem("userData", JSON.stringify(user));
         setUser(user);
+        // In your login success handler
+console.log("🔍 Token verification:", {
+  storedToken: localStorage.getItem("token"),
+  tokenExists: !!localStorage.getItem("authToken"),
+  tokenLength: localStorage.getItem("authToken")?.length
+});
 
         console.log("✅ Login successful:", {
           userEmail: user.email,

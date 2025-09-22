@@ -23,7 +23,7 @@ const setupAxiosInterceptors = () => {
   // Request interceptor to add auth token
   axios.interceptors.request.use(
     (config) => {
-      const token = localStorage.getItem('authToken');
+      const token = localStorage.getItem('token');
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
@@ -40,7 +40,7 @@ const setupAxiosInterceptors = () => {
     (error) => {
       if (error.response?.status === 401) {
         // Clear invalid tokens
-        localStorage.removeItem('authToken');
+        localStorage.removeItem('token');
         localStorage.removeItem('user');
         // Optionally redirect to login
         window.location.href = '/login';
@@ -87,8 +87,8 @@ const Checkout = () => {
   });
 
   const checkAuthentication = () => {
-    const token = localStorage.getItem('authToken');
-    const userData = localStorage.getItem('user');
+    const token = localStorage.getItem('token');
+    const userData = localStorage.getItem('userData');
     
     console.log('🔍 Authentication check:', {
       hasToken: !!token,
@@ -215,7 +215,7 @@ const Checkout = () => {
 
       // Create axios instance with authentication
       const authenticatedAxios = axios.create({
-        baseURL: import.meta.env.VITE_BACKEND_URL,
+        baseURL: import.meta.env.VITE_BASE_URL,
         headers: {
           'Authorization': `Bearer ${authData.token}`,
           'Content-Type': 'application/json'
