@@ -15,6 +15,9 @@ const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
 const userDashboardRoutes = require('./routes/userdashboard.route');
 const adminDashboardRoutes = require('./routes/admindashboard.route');
+require('./models/blacklistToken.model');
+require('./models/notification.model');
+require('./models/review.model');
 
 // Import middlewares
 

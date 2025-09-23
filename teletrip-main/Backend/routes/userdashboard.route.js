@@ -247,12 +247,12 @@ router.get('/payments',
  * @desc    Get specific payment details
  * @access  Private
  */
-router.get('/payments/:paymentId', 
-  authUser, 
-  [param('paymentId').isMongoId().withMessage('Valid payment ID is required')],
-  validateRequest, 
-  userDashboardController.getPaymentDetails
-);
+// router.get('/payments/:paymentId', 
+//   authUser, 
+//   [param('paymentId').isMongoId().withMessage('Valid payment ID is required')],
+//   validateRequest, 
+//   userDashboardController.getPaymentDetails
+// );
 
 // ========== HOTEL SEARCH & FAVORITES ==========
 /**
@@ -426,5 +426,8 @@ router.get('/insights/travel',
   validateRequest, 
   userDashboardController.getTravelInsights
 );
+
+
+router.get('/test-queries', authUser, userDashboardController.testQueries); 
 
 module.exports = router;

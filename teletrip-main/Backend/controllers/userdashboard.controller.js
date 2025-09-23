@@ -16,80 +16,107 @@ const Booking = bookingModel;
 
 // ========== DASHBOARD OVERVIEW ==========
 const getDashboardOverview = asyncErrorHandler(async (req, res) => {
-  const userId = req.user.id;
+  const userId = req.user._id || req.user.id;
+  console.log('Fetching dashboard overview for user:', userId);
   
   try {
-    // Get user statistics (fixed aggregation)
     const [
       totalBookings,
-      activeBookings,
+      totalPayments,
+      pendingBookings,
       completedBookings,
       cancelledBookings,
-      totalSpent,
-      upcomingBookings,
-      recentBookings,
-      paymentHistory
-    ] = await Promise.all([
-      Booking.countDocuments({ userId }),
-      Booking.countDocuments({ userId, status: 'confirmed' }),
-      Booking.countDocuments({ userId, status: 'completed' }),
-      Booking.countDocuments({ userId, status: 'cancelled' }),
-      Payment.aggregate([
-        { $match: { userId: userId, status: 'completed' } },
-        { $group: { _id: null, total: { $sum: '$amount' } } }
+      failedPayments,
+      successfulPayments,
+      recentBookingsRaw,
+      recentPaymentsRaw,
+      totalSpentResult,
+      avgBookingValueResult
+    ] = await Promise.allSettled([
+      Booking.countDocuments({ user: userId }),
+      Payment.countDocuments({ userId: userId }),
+      Booking.countDocuments({ user: userId, status: 'pending' }),
+      Booking.countDocuments({ user: userId, status: 'confirmed' }),
+      Booking.countDocuments({ user: userId, status: 'cancelled' }),
+      Payment.countDocuments({ userId: userId, status: 'failed' }),
+      Payment.countDocuments({ userId: userId, status: 'completed' }),
+      Booking.find({ user: userId }).sort({ createdAt: -1 }).limit(5).lean(),
+      Payment.find({ userId: userId }).sort({ createdAt: -1 }).limit(5).lean(),
+      Booking.aggregate([
+        { $match: { user: userId, status: { $ne: 'cancelled' } } },
+        { $group: { _id: null, total: { $sum: '$pricing.totalAmount' } } }
       ]),
-      Booking.find({ 
-        userId, 
-        checkInDate: { $gte: new Date() },
-        status: { $in: ['confirmed', 'pending'] }
-      }).limit(3).populate('hotelId', 'name location images'),
-      Booking.find({ userId })
-        .sort({ createdAt: -1 })
-        .limit(5)
-        .populate('hotelId', 'name location images rating'),
-      Payment.find({ userId })
-        .sort({ createdAt: -1 })
-        .limit(5)
+      Booking.aggregate([
+        { $match: { user: userId, status: { $ne: 'cancelled' } } },
+        { $group: { _id: null, average: { $avg: '$pricing.totalAmount' } } }
+      ])
     ]);
 
-    // ✅ FIXED: Simple favorite hotels without complex aggregation
-    let favoriteHotels = [];
-    try {
-      const user = await User.findById(userId).select('preferences.favoriteHotels');
-      if (user?.preferences?.favoriteHotels?.length > 0) {
-        favoriteHotels = await Hotel.find({
-          _id: { $in: user.preferences.favoriteHotels }
-        }).select('name location images rating').limit(5);
-      }
-    } catch (error) {
-      console.warn('Could not fetch favorite hotels for dashboard:', error.message);
-    }
+    // Extract values safely
+    const totalBookingsCount = totalBookings.status === 'fulfilled' ? totalBookings.value : 0;
+    const totalPaymentsCount = totalPayments.status === 'fulfilled' ? totalPayments.value : 0;
+    const pendingBookingsCount = pendingBookings.status === 'fulfilled' ? pendingBookings.value : 0;
+    const completedBookingsCount = completedBookings.status === 'fulfilled' ? completedBookings.value : 0;
+    const cancelledBookingsCount = cancelledBookings.status === 'fulfilled' ? cancelledBookings.value : 0;
+    const failedPaymentsCount = failedPayments.status === 'fulfilled' ? failedPayments.value : 0;
+    const successfulPaymentsCount = successfulPayments.status === 'fulfilled' ? successfulPayments.value : 0;
+    
+    const totalSpent = (totalSpentResult.status === 'fulfilled' && totalSpentResult.value[0]) ? 
+      totalSpentResult.value[0].total : 0;
+    
+    const avgBookingValue = (avgBookingValueResult.status === 'fulfilled' && avgBookingValueResult.value[0]) ? 
+      avgBookingValueResult.value[0].average : 0;
 
-    const stats = {
+    // Transform recent data
+    const recentBookings = recentBookingsRaw.status === 'fulfilled' ? 
+      recentBookingsRaw.value.map(transformBookingData) : [];
+    
+    const recentPayments = recentPaymentsRaw.status === 'fulfilled' ? 
+      recentPaymentsRaw.value.map(transformPaymentData) : [];
+
+    // ✅ FORMAT RESPONSE TO MATCH FRONTEND EXPECTATIONS
+    const dashboardData = {
+      // Frontend expects this structure:
       bookings: {
-        total: totalBookings,
-        active: activeBookings,
-        completed: completedBookings,
-        cancelled: cancelledBookings
+        total: totalBookingsCount,
+        active: completedBookingsCount, // "active" means confirmed/completed bookings
+        pending: pendingBookingsCount,
+        cancelled: cancelledBookingsCount
       },
       financial: {
-        totalSpent: totalSpent[0]?.total || 0,
-        averageBookingValue: totalBookings > 0 ?
-          (totalSpent[0]?.total || 0) / totalBookings : 0,
+        totalSpent: totalSpent || 0,
+        averageBookingValue: avgBookingValue || 0,
         currency: 'PKR'
       },
-      upcoming: upcomingBookings,
-      recent: recentBookings,
-      payments: paymentHistory,
-      favorites: favoriteHotels
+      payments: recentPayments, // Recent payments for the payments section
+      upcoming: recentBookings,  // Upcoming/recent bookings
+      recent: recentBookings,    // Same as upcoming but different key
+      
+      // Additional stats that might be used
+      stats: {
+        totalPayments: totalPaymentsCount,
+        failedPayments: failedPaymentsCount,
+        successfulPayments: successfulPaymentsCount
+      }
     };
 
-    return ApiResponse.success(res, stats, 'Dashboard overview retrieved successfully');
+    console.log('Dashboard Data being sent to frontend:', {
+      totalBookings: totalBookingsCount,
+      activeBookings: completedBookingsCount,
+      totalSpent: totalSpent,
+      avgBookingValue: avgBookingValue,
+      recentBookingsLength: recentBookings.length,
+      recentPaymentsLength: recentPayments.length
+    });
+    
+    return ApiResponse.success(res, dashboardData, 'Dashboard overview retrieved successfully');
   } catch (error) {
     console.error('Dashboard overview error:', error);
-    return ApiResponse.error(res, 'Failed to fetch dashboard overview', 500);
+    return ApiResponse.error(res, 'Failed to retrieve dashboard data: ' + error.message, 500);
   }
 });
+
+
 
 // ========== USER PROFILE MANAGEMENT ==========
 const getProfile = asyncErrorHandler(async (req, res) => {
@@ -190,33 +217,82 @@ const uploadProfilePicture = asyncErrorHandler(async (req, res) => {
 });
 
 // ========== BOOKING MANAGEMENT ==========
-const getBookings = asyncErrorHandler(async (req, res) => {
-  const { page = 1, limit = 10, status, dateFrom, dateTo, sortBy = 'createdAt', sortOrder = 'desc' } = req.query;
-  
-  const query = { userId: req.user.id };
-  
-  // Add filters
-  if (status) query.status = status;
-  if (dateFrom || dateTo) {
-    query.createdAt = {};
-    if (dateFrom) query.createdAt.$gte = new Date(dateFrom);
-    if (dateTo) query.createdAt.$lte = new Date(dateTo);
-  }
 
-  const options = {
-    page: parseInt(page),
-    limit: parseInt(limit),
-    sort: { [sortBy]: sortOrder === 'desc' ? -1 : 1 },
-    populate: [
-      { path: 'hotelId', select: 'name location images rating amenities' },
-      { path: 'payments', select: 'amount status paymentMethod transactionId' }
-    ]
+const transformBookingData = (booking) => {
+  return {
+    _id: booking._id,
+    bookingReference: booking.bookingReference,
+    
+    // Frontend expects these fields:
+    hotelId: {
+      name: booking.hotelBooking?.hotelName || 'Hotel Name',
+      location: {
+        city: booking.hotelBooking?.hotelAddress?.city || 'Location'
+      },
+      images: booking.hotelBooking?.images || []
+    },
+    
+    // Map date fields
+    checkInDate: booking.hotelBooking?.checkIn || booking.travelDates?.departureDate,
+    checkOutDate: booking.hotelBooking?.checkOut || booking.travelDates?.returnDate,
+    
+    // Map amount
+    totalAmount: booking.pricing?.totalAmount || 0,
+    
+    // Map other fields
+    status: booking.status,
+    guests: booking.hotelBooking?.rooms?.[0]?.adults || 
+            booking.guestInfo?.totalGuests?.adults || 1,
+    roomType: booking.hotelBooking?.rooms?.[0]?.roomName || 'Standard',
+    
+    // Add other fields the frontend might need
+    createdAt: booking.createdAt,
+    bookedAt: booking.bookedAt,
+    nights: booking.hotelBooking?.nights || booking.travelDates?.duration || 1
   };
+};
 
-     const filter = { user: req.user._id };
-  const bookings = await Booking.paginate(query, filter, options);
+
+const getBookings = asyncErrorHandler(async (req, res) => {
+  const { page = 1, limit = 10, status, sortBy = 'createdAt', sortOrder = 'desc' } = req.query;
   
-  return ApiResponse.success(res, bookings, 'Bookings retrieved successfully');
+  const userId = req.user._id || req.user.id;
+  console.log('Fetching bookings for user:', userId);
+  
+  const query = { user: userId };
+  if (status) query.status = status;
+
+  try {
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    
+    const bookingData = await Booking.find(query)
+      .sort({ [sortBy]: sortOrder === 'desc' ? -1 : 1 })
+      .skip(skip)
+      .limit(parseInt(limit))
+      .lean();
+    
+    const total = await Booking.countDocuments(query);
+    console.log('Raw bookings found:', bookingData.length);
+    
+    // Transform the data for frontend
+    const transformedBookings = bookingData.map(transformBookingData);
+    console.log('Transformed booking sample:', transformedBookings[0]);
+    
+    const result = {
+      docs: transformedBookings,
+      totalDocs: total,
+      limit: parseInt(limit),
+      page: parseInt(page),
+      totalPages: Math.ceil(total / parseInt(limit)),
+      hasNextPage: parseInt(page) < Math.ceil(total / parseInt(limit)),
+      hasPrevPage: parseInt(page) > 1
+    };
+    
+    return ApiResponse.success(res, result, 'Bookings retrieved successfully');
+  } catch (error) {
+    console.error('Bookings query error:', error);
+    return ApiResponse.error(res, 'Failed to retrieve bookings: ' + error.message, 500);
+  }
 });
 
 const getBookingDetails = asyncErrorHandler(async (req, res) => {
@@ -306,11 +382,36 @@ const cancelBooking = asyncErrorHandler(async (req, res) => {
 });
 
 // ========== PAYMENT MANAGEMENT ==========
+
+const transformPaymentData = (payment) => {
+  return {
+    _id: payment._id,
+    paymentId: payment.paymentId,
+    amount: payment.amount,
+    currency: payment.currency,
+    paymentMethod: payment.paymentMethod,
+    status: payment.status,
+    createdAt: payment.createdAt,
+    
+    // Map booking reference if available
+    bookingReference: payment.bookingId ? 'Loading...' : null, // Will be populated separately
+    
+    // Other relevant fields
+    gateway: payment.gateway,
+    billing: payment.billing,
+    errorMessage: payment.errorMessage
+  };
+};
+
+
+
 const getPaymentHistory = asyncErrorHandler(async (req, res) => {
   const { page = 1, limit = 10, status, method, dateFrom, dateTo } = req.query;
   
-  const query = { userId: req.user.id };
+  const userId = req.user._id || req.user.id;
+  console.log('Fetching payments for user:', userId);
   
+  const query = { userId: userId };
   if (status) query.status = status;
   if (method) query.paymentMethod = method;
   if (dateFrom || dateTo) {
@@ -319,34 +420,37 @@ const getPaymentHistory = asyncErrorHandler(async (req, res) => {
     if (dateTo) query.createdAt.$lte = new Date(dateTo);
   }
 
-  const options = {
-    page: parseInt(page),
-    limit: parseInt(limit),
-    sort: { createdAt: -1 },
-    populate: [
-      { path: 'bookingId', select: 'bookingReference hotelId checkInDate checkOutDate' }
-    ]
-  };
-
-  const payments = await Payment.paginate(query, options);
-  
-  return ApiResponse.success(res, payments, 'Payment history retrieved successfully');
-});
-
-const getPaymentDetails = asyncErrorHandler(async (req, res) => {
-  const payment = await Payment.findOne({
-    _id: req.params.paymentId,
-    userId: req.user.id
-  }).populate([
-    { path: 'bookingId', select: 'bookingReference hotelId checkInDate checkOutDate' },
-    { path: 'userId', select: 'firstName lastName email' }
-  ]);
-
-  if (!payment) {
-    return ApiResponse.error(res, 'Payment not found', 404);
+  try {
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    
+    const paymentData = await Payment.find(query)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit))
+      .lean();
+    
+    const total = await Payment.countDocuments(query);
+    console.log('Raw payments found:', paymentData.length);
+    
+    // Transform the data for frontend
+    const transformedPayments = paymentData.map(transformPaymentData);
+    console.log('Transformed payment sample:', transformedPayments[0]);
+    
+    const result = {
+      docs: transformedPayments,
+      totalDocs: total,
+      limit: parseInt(limit),
+      page: parseInt(page),
+      totalPages: Math.ceil(total / parseInt(limit)),
+      hasNextPage: parseInt(page) < Math.ceil(total / parseInt(limit)),
+      hasPrevPage: parseInt(page) > 1
+    };
+    
+    return ApiResponse.success(res, result, 'Payment history retrieved successfully');
+  } catch (error) {
+    console.error('Payment query error:', error);
+    return ApiResponse.error(res, 'Failed to retrieve payments: ' + error.message, 500);
   }
-
-  return ApiResponse.success(res, payment, 'Payment details retrieved successfully');
 });
 
 // ========== HOTEL SEARCH & FAVORITES ==========
@@ -747,18 +851,52 @@ const getTravelInsights = asyncErrorHandler(async (req, res) => {
   return ApiResponse.success(res, result, 'Travel insights retrieved successfully');
 });
 
+
+const testQueries = asyncErrorHandler(async (req, res) => {
+  const userId = req.user._id || req.user.id;
+  
+  try {
+    console.log('Testing queries for user:', userId, 'Type:', typeof userId);
+    
+    // Test booking query without populate
+    const bookings = await Booking.find({ user: userId }).limit(3).lean();
+    console.log('Bookings found:', bookings.length);
+    
+    // Test payment query without populate
+    const payments = await Payment.find({ userId: userId }).limit(3).lean();
+    console.log('Payments found:', payments.length);
+    
+    return res.json({
+      success: true,
+      userId: userId,
+      userIdType: typeof userId,
+      bookingsFound: bookings.length,
+      paymentsFound: payments.length,
+      bookingSample: bookings[0] || null,
+      paymentSample: payments[0] || null
+    });
+  } catch (error) {
+    return res.json({
+      success: false,
+      error: error.message,
+      userId: userId
+    });
+  }
+});
+
 module.exports = {
   getDashboardOverview,
   getProfile,
   updateProfile,
   updatePassword,
   uploadProfilePicture,
+  transformBookingData,
   getBookings,
   getBookingDetails,
   createBooking,
   cancelBooking,
+  transformPaymentData,
   getPaymentHistory,
-  getPaymentDetails,
   searchHotels,
   getFavoriteHotels,
   addToFavorites,
@@ -771,5 +909,6 @@ module.exports = {
   createReview,
   createSupportTicket,
   getMySupportTickets,
-  getTravelInsights
+  getTravelInsights,
+  testQueries
 };
