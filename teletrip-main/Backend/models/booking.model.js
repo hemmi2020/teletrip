@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const mongoosePaginate = require('mongoose-paginate-v2');
 
 /**
  * @swagger
@@ -630,7 +631,7 @@ bookingSchema.statics.getBookingsByType = async function() {
     { $sort: { count: -1 } }
   ]);
 };
-
+bookingSchema.plugin(mongoosePaginate);
 const bookingModel = mongoose.model('booking', bookingSchema);
 
 module.exports = bookingModel;

@@ -221,14 +221,14 @@ const Checkout = () => {
 
       // Check if payment initiation was successful
       if (paymentResponse.data.success && paymentResponse.data.data) {
-        const { redirectUrl, paymentId, sessionId } = paymentResponse.data.data;
-        
-        if (!redirectUrl) {
-          throw new Error('No redirect URL received from payment gateway');
+        const { paymentUrl , paymentId, sessionId } = paymentResponse.data.data;
+
+        if (!paymentUrl) {
+          throw new Error('No payment URL received from payment gateway');
         }
 
         console.log('✅ Payment initiated successfully');
-        console.log('🔗 Redirecting to:', redirectUrl);
+        console.log('🔗 Redirecting to:', paymentUrl);
 
         // Store payment info for tracking
         localStorage.setItem('currentPayment', JSON.stringify({
@@ -246,7 +246,7 @@ const Checkout = () => {
 
         // Small delay to show success message, then redirect
         setTimeout(() => {
-          window.location.href = redirectUrl;
+          window.location.href = paymentUrl ;
         }, 1000);
 
       } else {

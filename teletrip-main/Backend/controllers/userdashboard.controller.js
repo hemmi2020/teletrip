@@ -213,7 +213,8 @@ const getBookings = asyncErrorHandler(async (req, res) => {
     ]
   };
 
-  const bookings = await Booking.paginate(query, options);
+     const filter = { user: req.user._id };
+  const bookings = await Booking.paginate(query, filter, options);
   
   return ApiResponse.success(res, bookings, 'Bookings retrieved successfully');
 });

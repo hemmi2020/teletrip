@@ -1199,33 +1199,9 @@ const callHBLPayAPI = async (requestData) => {
 
 // Build redirect URL
 const buildRedirectUrl = (sessionId) => {
-  try {
-    const baseUrl = isProduction ? HBL_PRODUCTION_REDIRECT : HBL_SANDBOX_REDIRECT;
-    
-    if (!baseUrl) {
-      throw new Error('Redirect base URL not configured');
-    }
-    
-    if (!sessionId || typeof sessionId !== 'string') {
-      throw new Error('Invalid session ID provided');
-    }
-    
-    // DON'T encode - HBL session ID is already properly formatted
-    // The session ID from HBL is already base64 encoded
-    const redirectUrl = `${baseUrl}${sessionId}`;
-    
-    console.log('🔗 Redirect URL built successfully:', {
-      baseUrl: baseUrl,
-      sessionIdLength: sessionId.length,
-      finalUrlLength: redirectUrl.length
-    });
-    
-    return redirectUrl;
-    
-  } catch (error) {
-    console.error('❌ buildRedirectUrl error:', error);
-    throw new Error(`Failed to build redirect URL: ${error.message}`);
-  }
+  const baseUrl = isProduction ? HBL_PRODUCTION_REDIRECT : HBL_SANDBOX_REDIRECT;
+  const encodedSessionId = Buffer.from(sessionId).toString('base64');
+  return `${baseUrl}${encodedSessionId}`;
 };
 
 
@@ -1264,33 +1240,59 @@ module.exports.initiateHBLPayPayment = asyncErrorHandler(async (req, res) => {
   // Verify booking
   let bookingRecord = null;
   try {
-    bookingRecord = await bookingModel.findOne({
-      $or: [{ _id: bookingId }, { bookingReference: bookingId }],
-      userId: userId
-    });
+  console.log('🔍 Looking for booking:', {
+    bookingId,
+    userId: userId.toString(),
+    userIdType: typeof userId
+  });
+
+  // ✅ CORRECT: Use userId field consistently
+  bookingRecord = await bookingModel.findOne({
+    _id: bookingId,
+     $or: [
+    { userId: userId },  // New field name
+    { user: userId }     // Old field name (what's actually in your DB)
+  ] // Using userId field name
+  });
 
     if (!bookingRecord) {
     console.error('❌ Booking not found:', {
       bookingId,
       userId: userId.toString(),
-      searchQuery: { _id: bookingId, user: userId }
+      searchQuery: { _id: bookingId, userId: userId }  // ✅ FIXED: Changed from "user" to "userId"
     });
-    return ApiResponse.error(res, 'Booking not found', 404);
+    const bookingWithoutUser = await bookingModel.findOne({ _id: bookingId });
+    if (bookingWithoutUser) {
+      console.error('❌ Booking exists but belongs to different user:', {
+        bookingUserId: bookingWithoutUser.userId?.toString(),  // ✅ FIXED: Changed from "user" to "userId"
+        requestUserId: userId.toString(),
+        match: bookingWithoutUser.userId?.toString() === userId.toString()
+      });
+      return ApiResponse.error(res, 'Booking access denied - belongs to different user', 403);
+    } else { 
+      console.error('❌ Booking does not exist at all');
+      return ApiResponse.error(res, 'Booking not found', 404);
+    }
   }
 
   console.log('✅ Booking found:', {
-    bookingId: bookingRecord._id,
+    bookingId: bookingRecord._id.toString(),
     status: bookingRecord.status,
-    user: bookingRecord.user
+    userId: bookingRecord.userId?.toString(),  // ✅ FIXED: Changed from "user" to "userId"
+    paymentStatus: bookingRecord.payment?.status || bookingRecord.paymentStatus
   });
 
+  // Check if booking is already paid
   if (bookingRecord.payment?.status === 'paid' || bookingRecord.paymentStatus === 'paid') {
     return ApiResponse.error(res, 'This booking is already paid', 400);
   }
-}  catch (error) {
-    console.error('Error validating booking:', error);
-    return ApiResponse.error(res, 'Invalid booking ID format', 400);
-  }
+
+} catch (error) {
+  console.error('❌ Error finding booking:', error);
+  return ApiResponse.error(res, 'Database error while finding booking: ' + error.message, 500);
+}
+
+ 
 
   try {
     const finalOrderId = orderId || generateOrderId();
@@ -1311,10 +1313,38 @@ module.exports.initiateHBLPayPayment = asyncErrorHandler(async (req, res) => {
       status: 'pending',
       paymentMethod: 'HBLPay',
       orderId: finalOrderId,
+      billing: {
+      firstName: userData.firstName,
+      lastName: userData.lastName,
+      email: userData.email,
+      phone: userData.phone,
+      address: {
+        street: userData.address,
+        city: userData.city,
+        state: userData.state,
+        country: userData.country || 'PK',
+        postalCode: userData.postalCode
+      }
+    },
       userDetails: userData,
       bookingDetails: bookingData,
       createdAt: new Date(),
-      expiresAt: new Date(Date.now() + 30 * 60 * 1000)
+      expiresAt: new Date(Date.now() + 30 * 60 * 1000),
+      gateway: {
+      provider: 'HBLPay',
+      orderRefNumber: finalOrderId
+    },
+    
+    // Metadata
+    metadata: {
+      source: 'web',
+      ipAddress: req.ip,
+      userAgent: req.get('User-Agent')
+    },
+    
+    // Timestamps
+    initiatedAt: new Date(),
+    expiredAt: new Date(Date.now() + 30 * 60 * 1000) // 30 minutes
     });
 
     await payment.save();
