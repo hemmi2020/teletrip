@@ -108,6 +108,11 @@ const userSchema = new mongoose.Schema({
     enum: ['male', 'female', 'other', 'prefer_not_to_say'],
     default: 'prefer_not_to_say'
   },
+  customerId: {
+  type: Number,
+  unique: true,
+  default: () => Math.floor(Math.random() * 1000000000) // 9-digit random number
+},
   
   avatar: {
     type: String,

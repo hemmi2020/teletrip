@@ -87,7 +87,7 @@ const Home = () => {
       </Helmet>
       <Header />
       <Slider />
-      <Row01 />
+              
 
       <div className="hotel-app ">
         {/* Hero Section */}
@@ -96,39 +96,41 @@ const Home = () => {
         <section className="py-16 bg-gray-50">
           <div className="container mx-auto px-4">
             <h2 className="text-3xl font-bold text-center mb-12">
-              Popular Destinations
+              Our Deals
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {featuredDestinations.map((destination) => (
                 <DestinationCard
-                  key={destination.id}
-                  name={destination.name}
-                  image={destination.image}
-                  description={destination.description}
-                />
+                key={destination.id}
+                name={destination.name}
+                image={destination.image}
+                description={destination.description}
+                  />
               ))}
             </div>
           </div>
         </section>
+        
 
         {/* Special Offers */}
         {/* <section className="py-16">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-12">Special Offers</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {specialOffers.map((offer) => (
-              <OfferCard 
-                key={offer.id}
-                title={offer.title}
-                discount={offer.discount}
-                image={offer.image}
-                description={offer.description}
-              />
-            ))}
+        <h2 className="text-3xl font-bold text-center mb-12">Special Offers</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {specialOffers.map((offer) => (
+          <OfferCard 
+          key={offer.id}
+          title={offer.title}
+          discount={offer.discount}
+          image={offer.image}
+          description={offer.description}
+          />
+          ))}
           </div>
         </div>
       </section> */}
         <Accommodation />
+        
 
         {/* Testimonials */}
         <section className="py-16 bg-gray-50">
@@ -150,6 +152,7 @@ const Home = () => {
           </div>
         </section>
         <Services />
+        <Row01 />
 
         <Footer />
       </div>

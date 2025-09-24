@@ -1030,6 +1030,20 @@ const buildHBLPayRequest = (paymentData, userId) => {
     throw new Error(`Invalid amount parameter: ${amount} (type: ${typeof amount})`);
   }
 
+  const hashUserId = (userId) => {
+  if (!userId) return Date.now().toString();
+  
+  // Simple numeric hash of ObjectId
+  let hash = 0;
+  const str = userId.toString();
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32-bit integer
+  }
+  return Math.abs(hash).toString();
+};
+
   // Build request matching HBL documentation sample EXACTLY - MINIMAL VERSION
   const request = {
     "USER_ID": HBLPAY_USER_ID,
@@ -1060,7 +1074,7 @@ const buildHBLPayRequest = (paymentData, userId) => {
     },
     "ADDITIONAL_DATA": {
       "REFERENCE_NUMBER": orderId || "TEST123456789",
-      "CUSTOMER_ID": userId?.toString() || "GUEST_USER_" + Date.now(), // Provide actual customer ID
+      "CUSTOMER_ID": userData?.customerId?.toString() || Date.now().toString(),
       "CURRENCY": "PKR",
       "BILL_TO_FORENAME": userData?.firstName || "John",
       "BILL_TO_SURNAME": userData?.lastName || "Doe",
@@ -1113,7 +1127,8 @@ const buildHBLPayRequest = (paymentData, userId) => {
     TYPE_ID: request.TYPE_ID,
     SUBTOTAL: request.ORDER.SUBTOTAL,
     CURRENCY: request.ADDITIONAL_DATA.CURRENCY,
-    REFERENCE_NUMBER: request.ADDITIONAL_DATA.REFERENCE_NUMBER
+    REFERENCE_NUMBER: request.ADDITIONAL_DATA.REFERENCE_NUMBER,
+    CUSTOMER_ID: request.ADDITIONAL_DATA.CUSTOMER_ID
   });
 
   return request;
