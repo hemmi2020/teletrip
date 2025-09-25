@@ -1074,7 +1074,7 @@ const buildHBLPayRequest = (paymentData, userId) => {
     },
     "ADDITIONAL_DATA": {
       "REFERENCE_NUMBER": orderId || "TEST123456789",
-      "CUSTOMER_ID": userData?.customerId?.toString() || Date.now().toString(),
+      "CUSTOMER_ID": String(Math.floor(10000000 + Math.random() * 90000000)),
       "CURRENCY": "PKR",
       "BILL_TO_FORENAME": userData?.firstName || "John",
       "BILL_TO_SURNAME": userData?.lastName || "Doe",
