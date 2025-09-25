@@ -67,13 +67,25 @@ const ticketResponseValidation = [
 ];
 
 const paginationValidation = [
-  query('page').optional().isInt({ min: 1 }).withMessage('Page must be a positive integer'),
-  query('limit').optional().isInt({ min: 1, max: 100 }).withMessage('Limit must be between 1 and 100')
+  query('page')
+    .optional({ checkFalsy: true })  // Added checkFalsy
+    .isInt({ min: 1 })
+    .withMessage('Page must be a positive integer'),
+  query('limit')
+    .optional({ checkFalsy: true })  // Added checkFalsy
+    .isInt({ min: 1, max: 100 })
+    .withMessage('Limit must be between 1 and 100')
 ];
 
 const dateRangeValidation = [
-  query('startDate').optional().isISO8601().withMessage('Valid start date required'),
-  query('endDate').optional().isISO8601().withMessage('Valid end date required')
+  query('startDate')
+    .optional({ checkFalsy: true })
+    .isISO8601()
+    .withMessage('Valid start date required'),
+  query('endDate')
+    .optional({ checkFalsy: true })
+    .isISO8601()
+    .withMessage('Valid end date required')
 ];
 
 // ========== DASHBOARD OVERVIEW ==========
@@ -85,7 +97,10 @@ const dateRangeValidation = [
 router.get('/dashboard', 
   ...requireAdmin,
   [
-    query('period').optional().isIn(['7d', '30d', '90d', '1y']).withMessage('Invalid period')
+    query('period')
+      .optional({ checkFalsy: true })
+      .isIn(['7d', '30d', '90d', '1y'])
+      .withMessage('Invalid period')
   ],
   validateRequest,
   adminDashboardController.getDashboardOverview
@@ -101,9 +116,26 @@ router.get('/users',
   ...requireAdmin,
   [
     ...paginationValidation,
-    query('status').optional().isIn(['active', 'inactive']).withMessage('Invalid status'),
-    query('role').optional().isIn(['user', 'admin', 'super_admin']).withMessage('Invalid role'),
-    query('search').optional().trim().isLength({ min: 2 }).withMessage('Search term must be at least 2 characters')
+    query('status')
+      .optional({ checkFalsy: true })
+      .isIn(['active', 'inactive'])
+      .withMessage('Invalid status'),
+    query('role')
+      .optional({ checkFalsy: true })
+      .isIn(['user', 'admin', 'super_admin'])
+      .withMessage('Invalid role'),
+    query('search')
+      .optional({ checkFalsy: true })
+      .trim()
+      .isLength({ min: 2 })
+      .withMessage('Search term must be at least 2 characters'),
+    query('sortBy')
+      .optional({ checkFalsy: true })
+      .isString(),
+    query('sortOrder')
+      .optional({ checkFalsy: true })
+      .isIn(['asc', 'desc'])
+      .withMessage('Sort order must be asc or desc')
   ],
   validateRequest,
   adminDashboardController.getAllUsers
@@ -157,10 +189,27 @@ router.get('/bookings',
   [
     ...paginationValidation,
     ...dateRangeValidation,
-    query('status').optional().isIn(['pending', 'confirmed', 'completed', 'cancelled']).withMessage('Invalid status'),
-    query('hotelId').optional().isMongoId().withMessage('Valid hotel ID required'),
-    query('userId').optional().isMongoId().withMessage('Valid user ID required'),
-    query('search').optional().trim().isLength({ min: 2 }).withMessage('Search term must be at least 2 characters')
+    query('status')
+      .optional({ checkFalsy: true })
+      .isIn(['pending', 'confirmed', 'completed', 'cancelled'])
+      .withMessage('Invalid status'),
+    query('hotelId')
+      .optional({ checkFalsy: true })
+      .isMongoId()
+      .withMessage('Valid hotel ID required'),
+    query('userId')
+      .optional({ checkFalsy: true })
+      .isMongoId()
+      .withMessage('Valid user ID required'),
+    query('search')
+      .optional({ checkFalsy: true })
+      .trim(),
+    query('sortBy')
+      .optional({ checkFalsy: true })
+      .isString(),
+    query('sortOrder')
+      .optional({ checkFalsy: true })
+      .isIn(['asc', 'desc'])
   ],
   validateRequest,
   adminDashboardController.getAllBookings
@@ -200,10 +249,26 @@ router.get('/hotels',
   ...requireAdmin,
   [
     ...paginationValidation,
-    query('status').optional().isIn(['active', 'inactive']).withMessage('Invalid status'),
-    query('city').optional().trim().isLength({ min: 2 }).withMessage('City must be at least 2 characters'),
-    query('rating').optional().isFloat({ min: 1, max: 5 }).withMessage('Rating must be between 1 and 5'),
-    query('search').optional().trim().isLength({ min: 2 }).withMessage('Search term must be at least 2 characters')
+    query('search')
+      .optional({ checkFalsy: true })
+      .trim(),
+    query('status')
+      .optional({ checkFalsy: true })
+      .isIn(['active', 'inactive'])
+      .withMessage('Invalid status'),
+    query('city')
+      .optional({ checkFalsy: true })
+      .trim(),
+    query('rating')
+      .optional({ checkFalsy: true })
+      .isInt({ min: 1, max: 5 })
+      .withMessage('Rating must be between 1 and 5'),
+    query('sortBy')
+      .optional({ checkFalsy: true })
+      .isString(),
+    query('sortOrder')
+      .optional({ checkFalsy: true })
+      .isIn(['asc', 'desc'])
   ],
   validateRequest,
   adminDashboardController.getAllHotels
@@ -271,9 +336,26 @@ router.get('/payments',
   [
     ...paginationValidation,
     ...dateRangeValidation,
-    query('status').optional().isIn(['pending', 'completed', 'failed', 'refunded', 'partially_refunded']).withMessage('Invalid status'),
-    query('method').optional().isIn(['card', 'bank_transfer', 'digital_wallet']).withMessage('Invalid payment method'),
-    query('userId').optional().isMongoId().withMessage('Valid user ID required')
+    query('status')
+      .optional({ checkFalsy: true })
+      .isIn(['pending', 'completed', 'failed', 'refunded', 'cancelled'])
+      .withMessage('Invalid payment status'),
+    query('method')
+      .optional({ checkFalsy: true })
+      .trim(),
+    query('userId')
+      .optional({ checkFalsy: true })
+      .isMongoId()
+      .withMessage('Valid user ID required'),
+    query('search')
+      .optional({ checkFalsy: true })
+      .trim(),
+    query('sortBy')
+      .optional({ checkFalsy: true })
+      .isString(),
+    query('sortOrder')
+      .optional({ checkFalsy: true })
+      .isIn(['asc', 'desc'])
   ],
   validateRequest,
   adminDashboardController.getAllPayments

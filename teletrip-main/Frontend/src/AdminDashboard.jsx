@@ -173,8 +173,9 @@ const AdminDashboard = () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('userData');
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('adminToken');
+    localStorage.removeItem('adminData');
     navigate('/admin/login');
   };
 
@@ -346,7 +347,7 @@ const AdminDashboard = () => {
           showToast(result.error, 'error');
         }
       }
-    } catch (error) {
+    } catch  {
       showToast('Ticket action failed', 'error');
     }
   };

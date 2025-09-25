@@ -10,7 +10,7 @@ const { asyncErrorHandler } = require('../middlewares/errorHandler.middleware');
 const notificationService = require('../services/notification.service');
 const moment = require('moment');
 
-const User = userModel;
+const User = userModel; 
 const Booking = bookingModel;
 
 // ========== ADMIN DASHBOARD OVERVIEW ==========
@@ -215,35 +215,62 @@ const getAllUsers = asyncErrorHandler(async (req, res) => {
   const query = {};
   
   // Search functionality
-  if (search) {
+  if (search && search.trim()) {
     query.$or = [
-      { firstName: { $regex: search, $options: 'i' } },
-      { lastName: { $regex: search, $options: 'i' } },
+      { 'fullname.firstname': { $regex: search, $options: 'i' } },
+      { 'fullname.lastname': { $regex: search, $options: 'i' } },
       { email: { $regex: search, $options: 'i' } },
       { phone: { $regex: search, $options: 'i' } }
     ];
   }
 
   // Filters
-  if (status) query.isActive = status === 'active';
-  if (role) query.role = role;
+  if (status && status.trim()) {
+    query.status = status;
+  }
+  if (role && role.trim()) {
+    query.role = role;
+  }
   if (dateFrom || dateTo) {
     query.createdAt = {};
     if (dateFrom) query.createdAt.$gte = new Date(dateFrom);
     if (dateTo) query.createdAt.$lte = new Date(dateTo);
   }
 
-  const options = {
-    page: parseInt(page),
-    limit: parseInt(limit),
-    sort: { [sortBy]: sortOrder === 'desc' ? -1 : 1 },
-    select: '-password -refreshTokens'
+  const pageNum = parseInt(page);
+  const limitNum = parseInt(limit);
+  const skip = (pageNum - 1) * limitNum;
+  const sort = { [sortBy]: sortOrder === 'desc' ? -1 : 1 };
+
+  // Execute queries
+  const [users, totalUsers] = await Promise.all([
+    userModel
+      .find(query)
+      .select('-password -refreshTokens -resetPasswordToken -emailVerificationToken')
+      .sort(sort)
+      .skip(skip)
+      .limit(limitNum)
+      .lean(),
+    userModel.countDocuments(query)
+  ]);
+
+  const totalPages = Math.ceil(totalUsers / limitNum);
+
+  const result = {
+    users,
+    pagination: {
+      page: pageNum,
+      limit: limitNum,
+      total: totalUsers,
+      pages: totalPages,
+      hasNext: pageNum < totalPages,
+      hasPrev: pageNum > 1
+    }
   };
 
-  const users = await User.paginate(query, options);
-  
-  return ApiResponse.success(res, users, 'Users retrieved successfully');
+  return ApiResponse.success(res, result, 'Users retrieved successfully');
 });
+
 
 const getUserDetails = asyncErrorHandler(async (req, res) => {
   const { userId } = req.params;
@@ -351,47 +378,65 @@ const getAllBookings = asyncErrorHandler(async (req, res) => {
     page = 1, 
     limit = 20, 
     status, 
-    hotelId, 
+    hotelId,
     userId,
-    dateFrom, 
+    search,
+    dateFrom,
     dateTo,
     sortBy = 'createdAt', 
-    sortOrder = 'desc',
-    search
+    sortOrder = 'desc'
   } = req.query;
 
   const query = {};
   
-  if (status) query.status = status;
-  if (hotelId) query.hotelId = hotelId;
-  if (userId) query.userId = userId;
+  if (status && status.trim()) query.status = status;
+  if (hotelId && hotelId.trim()) query.hotelId = hotelId;
+  if (userId && userId.trim()) query.userId = userId;
   
+  if (search && search.trim()) {
+    query.$or = [
+      { bookingId: { $regex: search, $options: 'i' } },
+      { hotelName: { $regex: search, $options: 'i' } }
+    ];
+  }
+
   if (dateFrom || dateTo) {
     query.createdAt = {};
     if (dateFrom) query.createdAt.$gte = new Date(dateFrom);
     if (dateTo) query.createdAt.$lte = new Date(dateTo);
   }
 
-  if (search) {
-    query.$or = [
-      { bookingReference: { $regex: search, $options: 'i' } }
-    ];
-  }
+  const pageNum = parseInt(page);
+  const limitNum = parseInt(limit);
+  const skip = (pageNum - 1) * limitNum;
+  const sort = { [sortBy]: sortOrder === 'desc' ? -1 : 1 };
 
-  const options = {
-    page: parseInt(page),
-    limit: parseInt(limit),
-    sort: { [sortBy]: sortOrder === 'desc' ? -1 : 1 },
-    populate: [
-      { path: 'userId', select: 'firstName lastName email phone' },
-      { path: 'hotelId', select: 'name location images rating' },
-      { path: 'payments', select: 'amount status paymentMethod' }
-    ]
+  const [bookings, totalBookings] = await Promise.all([
+    bookingModel
+      .find(query)
+      .populate('userId', 'fullname email')
+      .sort(sort)
+      .skip(skip)
+      .limit(limitNum)
+      .lean(),
+    bookingModel.countDocuments(query)
+  ]);
+
+  const totalPages = Math.ceil(totalBookings / limitNum);
+
+  const result = {
+    bookings,
+    pagination: {
+      page: pageNum,
+      limit: limitNum,
+      total: totalBookings,
+      pages: totalPages,
+      hasNext: pageNum < totalPages,
+      hasPrev: pageNum > 1
+    }
   };
 
-  const bookings = await Booking.paginate(query, options);
-  
-  return ApiResponse.success(res, bookings, 'Bookings retrieved successfully');
+  return ApiResponse.success(res, result, 'Bookings retrieved successfully');
 });
 
 const getBookingDetails = asyncErrorHandler(async (req, res) => {
@@ -443,21 +488,17 @@ const getAllHotels = asyncErrorHandler(async (req, res) => {
   const { 
     page = 1, 
     limit = 20, 
-    status, 
-    city, 
+    search, 
+    status,
+    city,
     rating,
     sortBy = 'createdAt', 
-    sortOrder = 'desc',
-    search
+    sortOrder = 'desc'
   } = req.query;
 
   const query = {};
   
-  if (status) query.isActive = status === 'active';
-  if (city) query['location.city'] = { $regex: city, $options: 'i' };
-  if (rating) query.rating = { $gte: Number(rating) };
-  
-  if (search) {
+  if (search && search.trim()) {
     query.$or = [
       { name: { $regex: search, $options: 'i' } },
       { 'location.city': { $regex: search, $options: 'i' } },
@@ -465,15 +506,40 @@ const getAllHotels = asyncErrorHandler(async (req, res) => {
     ];
   }
 
-  const options = {
-    page: parseInt(page),
-    limit: parseInt(limit),
-    sort: { [sortBy]: sortOrder === 'desc' ? -1 : 1 }
+  if (status && status.trim()) query.status = status;
+  if (city && city.trim()) query['location.city'] = { $regex: city, $options: 'i' };
+  if (rating) query.rating = { $gte: parseInt(rating) };
+
+  const pageNum = parseInt(page);
+  const limitNum = parseInt(limit);
+  const skip = (pageNum - 1) * limitNum;
+  const sort = { [sortBy]: sortOrder === 'desc' ? -1 : 1 };
+
+  const [hotels, totalHotels] = await Promise.all([
+    hotelModel
+      .find(query)
+      .sort(sort)
+      .skip(skip)
+      .limit(limitNum)
+      .lean(),
+    hotelModel.countDocuments(query)
+  ]);
+
+  const totalPages = Math.ceil(totalHotels / limitNum);
+
+  const result = {
+    hotels,
+    pagination: {
+      page: pageNum,
+      limit: limitNum,
+      total: totalHotels,
+      pages: totalPages,
+      hasNext: pageNum < totalPages,
+      hasPrev: pageNum > 1
+    }
   };
 
-  const hotels = await Hotel.paginate(query, options);
-  
-  return ApiResponse.success(res, hotels, 'Hotels retrieved successfully');
+  return ApiResponse.success(res, result, 'Hotels retrieved successfully');
 });
 
 const getHotelDetails = asyncErrorHandler(async (req, res) => {
@@ -580,6 +646,7 @@ const getAllPayments = asyncErrorHandler(async (req, res) => {
     status, 
     method, 
     userId,
+    search,
     dateFrom, 
     dateTo,
     sortBy = 'createdAt', 
@@ -588,9 +655,16 @@ const getAllPayments = asyncErrorHandler(async (req, res) => {
 
   const query = {};
   
-  if (status) query.status = status;
-  if (method) query.paymentMethod = method;
-  if (userId) query.userId = userId;
+  if (status && status.trim()) query.status = status;
+  if (method && method.trim()) query.method = method;
+  if (userId && userId.trim()) query.userId = userId;
+
+  if (search && search.trim()) {
+    query.$or = [
+      { paymentId: { $regex: search, $options: 'i' } },
+      { orderId: { $regex: search, $options: 'i' } }
+    ];
+  }
   
   if (dateFrom || dateTo) {
     query.createdAt = {};
@@ -598,19 +672,38 @@ const getAllPayments = asyncErrorHandler(async (req, res) => {
     if (dateTo) query.createdAt.$lte = new Date(dateTo);
   }
 
-  const options = {
-    page: parseInt(page),
-    limit: parseInt(limit),
-    sort: { [sortBy]: sortOrder === 'desc' ? -1 : 1 },
-    populate: [
-      { path: 'userId', select: 'firstName lastName email' },
-      { path: 'bookingId', select: 'bookingReference hotelId' }
-    ]
+  const pageNum = parseInt(page);
+  const limitNum = parseInt(limit);
+  const skip = (pageNum - 1) * limitNum;
+  const sort = { [sortBy]: sortOrder === 'desc' ? -1 : 1 };
+
+  const [payments, totalPayments] = await Promise.all([
+    paymentModel
+      .find(query)
+      .populate('userId', 'fullname email')
+      .populate('bookingId', 'bookingId hotelName')
+      .sort(sort)
+      .skip(skip)
+      .limit(limitNum)
+      .lean(),
+    paymentModel.countDocuments(query)
+  ]);
+
+  const totalPages = Math.ceil(totalPayments / limitNum);
+
+  const result = {
+    payments,
+    pagination: {
+      page: pageNum,
+      limit: limitNum,
+      total: totalPayments,
+      pages: totalPages,
+      hasNext: pageNum < totalPages,
+      hasPrev: pageNum > 1
+    }
   };
 
-  const payments = await Payment.paginate(query, options);
-  
-  return ApiResponse.success(res, payments, 'Payments retrieved successfully');
+  return ApiResponse.success(res, result, 'Payments retrieved successfully');
 });
 
 const getPaymentDetails = asyncErrorHandler(async (req, res) => {
