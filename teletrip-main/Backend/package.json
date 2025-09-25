@@ -11,7 +11,7 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "migrate": "node scripts/migrate.js",
-    "seed": "node scripts/seed.js",
+    "seed:admin": "node scripts/createAdmin.js",
     "backup": "node scripts/backup.js",
     "deploy": "pm2 start ecosystem.config.js"
   },

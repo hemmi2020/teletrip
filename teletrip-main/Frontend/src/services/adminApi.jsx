@@ -14,7 +14,7 @@ const adminApi = axios.create({
 // Request interceptor
 adminApi.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('adminToken'); // Changed from 'token'
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -23,12 +23,14 @@ adminApi.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response interceptor
+// FIXED: Response interceptor with correct redirect
+
 adminApi.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('token');
+      localStorage.removeItem('adminToken');
+      localStorage.removeItem('adminData');
       window.location.href = '/admin/login';
     }
     return Promise.reject(error);

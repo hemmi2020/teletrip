@@ -9,6 +9,8 @@ const DateUtil = require('../utils/date.util');
 const crypto = require('crypto');
 const emailService = require('../services/email.service');
 const { asyncErrorHandler } = require('../middlewares/errorHandler.middleware');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 
 
@@ -55,8 +57,11 @@ module.exports.registerUser = asyncErrorHandler(async (req, res) => {
 
 
 module.exports.loginUser = asyncErrorHandler(async (req, res) => {
+    console.log('🔍 LOGIN REQUEST:', req.body); // ADD THIS
+    
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+        console.log('❌ Validation errors:', errors.array()); // ADD THIS
         const formattedErrors = errors.array().map(error => ({
             field: error.path || error.param,
             message: error.msg,
@@ -66,39 +71,35 @@ module.exports.loginUser = asyncErrorHandler(async (req, res) => {
     }
 
     const { email, password } = req.body;
+    console.log('📧 Looking for user:', email); // ADD THIS
+    
     const user = await userModel.findOne({ email }).select('+password');
+    console.log('👤 User found:', user ? 'YES' : 'NO'); // ADD THIS
 
     if (!user) {
+        console.log('❌ User not found'); // ADD THIS
         return ApiResponse.unauthorized(res, 'Invalid email or password');
     }
 
+    console.log('🔐 Comparing password...'); // ADD THIS
     const isMatch = await user.comparePassword(password);
+    console.log('🔑 Password match:', isMatch ? 'YES' : 'NO'); // ADD THIS
+    
     if (!isMatch) {
+        console.log('❌ Password incorrect'); // ADD THIS
         return ApiResponse.unauthorized(res, 'Invalid email or password');
     }
 
     const token = user.generateAuthToken();
-
-    res.status(200).json({
-      success: true,
-      token,
-      user: {
-        _id: user._id,
-        email: user.email,
-        fullname: user.fullname,
-        role: user.role
-      }
-    });
     res.cookie('token', token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        maxAge: 24 * 60 * 60 * 1000, // 1 day
+        maxAge: 24 * 60 * 60 * 1000,
         sameSite: 'strict'
     });
 
     const userResponse = user.toJSON ? user.toJSON() : user;
     
-    // Add formatted dates using DateUtil
     const responseData = {
         token,
         user: {
@@ -108,6 +109,7 @@ module.exports.loginUser = asyncErrorHandler(async (req, res) => {
         }
     };
 
+    console.log('✅ Login successful, sending response'); // ADD THIS
     return ApiResponse.success(res, responseData, 'Login successful');
 });
 

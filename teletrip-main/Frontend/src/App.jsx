@@ -1,4 +1,4 @@
-// Fixed App.jsx - Complete working version
+// Fixed App.jsx - Complete working version with Admin Routes
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { CartProvider, UserProvider } from './components/CartSystem';
@@ -12,9 +12,12 @@ import HotelDetails from './HotelDetails';
 import Checkout from './Checkout';
 import AccountDashboard from './AccountDashboard';
 import PaymentSuccess from './components/PaymentSuccess';
-
-// Import Payment Components (NEW)
 import PaymentCancel from './components/PaymentCancel';
+
+// Import Admin Components
+import AdminLogin from './components/AdminLogin';
+import AdminDashboard from './AdminDashboard';
+import ProtectedAdminRoute from './components/ProtectedAdminRoute';
 
 // Error Boundary Component
 class ErrorBoundary extends React.Component {
@@ -75,11 +78,27 @@ const App = () => {
               {/* User account routes */}
               <Route path="/account" element={<AccountDashboard />} />
               
-              {/* Checkout route */}
+              {/* Checkout & Payment routes */}
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/payment/success" element={<PaymentSuccess />} />
-              {/* 🚨 CRITICAL: Payment Result Routes (NEW) */}
               <Route path="/payment/cancel" element={<PaymentCancel />} />
+              
+              {/* ===== ADMIN ROUTES ===== */}
+              {/* Admin Login - Public route */}
+              <Route path="/admin/login" element={<AdminLogin />} />
+              
+              {/* Admin Dashboard - Protected route */}
+              <Route 
+                path="/admin/dashboard" 
+                element={
+                  <ProtectedAdminRoute>
+                    <AdminDashboard />
+                  </ProtectedAdminRoute>
+                } 
+              />
+
+              {/* Optional: Redirect /admin to /admin/login */}
+              <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
               
               {/* Catch-all route for 404s */}
               <Route path="*" element={

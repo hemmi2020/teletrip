@@ -12,18 +12,17 @@ const ProtectedAdminRoute = ({ children }) => {
   try {
     const admin = JSON.parse(adminData);
     
-    // Check if user has admin or super_admin role
     if (admin.role !== 'admin' && admin.role !== 'super_admin') {
       localStorage.removeItem('adminToken');
       localStorage.removeItem('adminData');
-      return <Navigate to="/admin/login" replace />;
+      return ;
     }
 
     return children;
-  } catch  {
+  } catch {
     localStorage.removeItem('adminToken');
     localStorage.removeItem('adminData');
-    return <Navigate to="/admin/login" replace />;
+    return ;
   }
 };
 
