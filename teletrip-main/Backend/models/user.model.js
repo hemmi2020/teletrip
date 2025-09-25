@@ -111,7 +111,7 @@ const userSchema = new mongoose.Schema({
   customerId: {
   type: Number,
   unique: true,
-  default: () => Math.floor(Math.random() * 1000000000) // 9-digit random number
+  default: () => Math.floor(Math.random() * 10000000) // 7-digit random number
 },
   
   avatar: {
