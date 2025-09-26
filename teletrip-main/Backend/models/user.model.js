@@ -519,6 +519,11 @@ userSchema.methods.generateAuthToken = function (){
     return token;
   }
 
+  // Static method for hashing password
+userSchema.statics.hashPassword = async function(password) {
+  return await bcrypt.hash(password, 12);
+};
+
 userSchema.methods.generatePasswordResetToken = function() {
   const resetToken = crypto.randomBytes(32).toString('hex');
   this.passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
