@@ -111,58 +111,101 @@ const AdminDashboard = () => {
 
   // FIXED: Complete loadData function
   const loadData = async () => {
-    setLoading(true);
-    try {
-      if (activeTab === 'overview') {
-        const result = await AdminDashboardAPI.getDashboardOverview('30d');
-        if (result.success) {
-          setStats(result.data);
-        } else {
-          showToast(result.error, 'error');
-        }
-      } else if (activeTab === 'users') {
-        const result = await AdminDashboardAPI.getAllUsers(filters);
-        if (result.success) {
-          setData(result.data);
-        } else {
-          showToast(result.error, 'error');
-        }
-      } else if (activeTab === 'bookings') {
-        const result = await AdminDashboardAPI.getAllBookings(filters);
-        if (result.success) {
-          setData(result.data);
-        } else {
-          showToast(result.error, 'error');
-        }
-      } else if (activeTab === 'hotels') {
-        const result = await AdminDashboardAPI.getAllHotels(filters);
-        if (result.success) {
-          setData(result.data);
-        } else {
-          showToast(result.error, 'error');
-        }
-      } else if (activeTab === 'payments') {
-        const result = await AdminDashboardAPI.getAllPayments(filters);
-        if (result.success) {
-          setData(result.data);
-        } else {
-          showToast(result.error, 'error');
-        }
-      } else if (activeTab === 'support') {
-        const result = await AdminDashboardAPI.getAllSupportTickets(filters);
-        if (result.success) {
-          setData(result.data);
-        } else {
-          showToast(result.error, 'error');
-        }
+  setLoading(true);
+  try {
+    if (activeTab === 'overview') {
+      const result = await AdminDashboardAPI.getDashboardOverview('30d');
+      if (result.success && result.data) {
+        const apiData = result.data.stats || result.data;
+        setStats({
+          totalRevenue: apiData.revenue?.total || 0,
+          revenueGrowth: parseFloat(apiData.revenue?.growth || 0),
+          totalBookings: apiData.bookings?.total || 0,
+          bookingGrowth: parseFloat(apiData.bookings?.growth || 0),
+          totalUsers: apiData.users?.total || 0,
+          userGrowth: parseFloat(apiData.users?.growth || 0),
+          totalHotels: apiData.hotels?.total || 0,
+          hotelGrowth: 0,
+        });
       }
-    } catch (error) {
-      console.error('Error loading data:', error);
-      showToast('Failed to load data', 'error');
-    } finally {
-      setLoading(false);
+    } else if (activeTab === 'users') {
+      const result = await AdminDashboardAPI.getAllUsers(filters);
+      if (result.success) {
+        // ✅ FIXED: Map the users array to docs format
+        setData({
+          docs: result.data.users || [],
+          totalDocs: result.data.pagination?.total || 0,
+          totalPages: result.data.pagination?.pages || 1,
+          page: result.data.pagination?.page || 1,
+          limit: result.data.pagination?.limit || 10
+        });
+      } else {
+        showToast(result.error, 'error');
+      }
+    } else if (activeTab === 'bookings') {
+      const result = await AdminDashboardAPI.getAllBookings(filters);
+      if (result.success) {
+        // ✅ FIXED: Map the bookings array to docs format
+        setData({
+          docs: result.data.bookings || [],
+          totalDocs: result.data.pagination?.total || 0,
+          totalPages: result.data.pagination?.pages || 1,
+          page: result.data.pagination?.page || 1,
+          limit: result.data.pagination?.limit || 10
+        });
+      } else {
+        showToast(result.error, 'error');
+      }
+    } else if (activeTab === 'hotels') {
+      const result = await AdminDashboardAPI.getAllHotels(filters);
+      if (result.success) {
+        // ✅ FIXED: Map the hotels array to docs format
+        setData({
+          docs: result.data.hotels || [],
+          totalDocs: result.data.pagination?.total || 0,
+          totalPages: result.data.pagination?.pages || 1,
+          page: result.data.pagination?.page || 1,
+          limit: result.data.pagination?.limit || 10
+        });
+      } else {
+        showToast(result.error, 'error');
+      }
+    } else if (activeTab === 'payments') {
+      const result = await AdminDashboardAPI.getAllPayments(filters);
+      if (result.success) {
+        // ✅ FIXED: Map the payments array to docs format
+        setData({
+          docs: result.data.payments || [],
+          totalDocs: result.data.pagination?.total || 0,
+          totalPages: result.data.pagination?.pages || 1,
+          page: result.data.pagination?.page || 1,
+          limit: result.data.pagination?.limit || 10
+        });
+      } else {
+        showToast(result.error, 'error');
+      }
+    } else if (activeTab === 'support') {
+      const result = await AdminDashboardAPI.getAllSupportTickets(filters);
+      if (result.success) {
+        // ✅ FIXED: Map the tickets array to docs format
+        setData({
+          docs: result.data.tickets || [],
+          totalDocs: result.data.pagination?.total || 0,
+          totalPages: result.data.pagination?.pages || 1,
+          page: result.data.pagination?.page || 1,
+          limit: result.data.pagination?.limit || 10
+        });
+      } else {
+        showToast(result.error, 'error');
+      }
     }
-  };
+  } catch (error) {
+    console.error('Error loading data:', error);
+    showToast('Failed to load data', 'error');
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleFilterChange = (key, value) => {
     setFilters(prev => ({ ...prev, [key]: value, page: 1 }));
@@ -367,7 +410,7 @@ const AdminDashboard = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <StatCard 
               title="Total Revenue" 
-              value={`PKR ${stats.totalRevenue?.toLocaleString() || 0}`}
+              value={` ${stats.totalRevenue?.toLocaleString() || 0}`}
               change={stats.revenueGrowth}
               icon={DollarSign}
               trend={stats.revenueGrowth > 0 ? 'up' : 'down'}

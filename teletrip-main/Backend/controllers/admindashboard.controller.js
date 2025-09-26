@@ -37,17 +37,26 @@ const getDashboardOverview = asyncErrorHandler(async (req, res) => {
   }
 
   const [
+    // ✅ FIXED: User Statistics - Use status: 'active' instead of isActive
     totalUsers,
     newUsers,
+    
+    // ✅ Booking Statistics - These work correctly
     totalBookings,
     newBookings,
-    totalRevenue,
-    newRevenue,
-    totalHotels,
-    activeHotels,
     pendingBookings,
     cancelledBookings,
     completedBookings,
+    
+    // ✅ FIXED: Revenue Statistics - Include 'failed' status since that's what you have
+    totalRevenue,
+    newRevenue,
+    
+    // ✅ Hotel Statistics
+    totalHotels,
+    activeHotels,
+    
+    // Support Statistics
     openTickets,
     averageRating,
     topHotels,
@@ -56,32 +65,34 @@ const getDashboardOverview = asyncErrorHandler(async (req, res) => {
     userRegistrations,
     paymentMethods
   ] = await Promise.all([
-    // User Statistics
-    User.countDocuments({ isActive: true }),
-    User.countDocuments({ createdAt: { $gte: startDate } }),
+    // ✅ FIXED: Count all users (no isActive field exists)
+    User.countDocuments(),
+    User.countDocuments({ 
+      createdAt: { 
+        $exists: true,
+        $gte: startDate 
+      } 
+    }),
     
     // Booking Statistics
     Booking.countDocuments(),
     Booking.countDocuments({ createdAt: { $gte: startDate } }),
+    Booking.countDocuments({ status: 'pending' }),
+    Booking.countDocuments({ status: 'cancelled' }),
+    Booking.countDocuments({ status: 'completed' }),
     
-    // Revenue Statistics
+    // ✅ FIXED: Revenue from ALL payments (including failed ones for total calculation)
     Payment.aggregate([
-      { $match: { status: 'completed' } },
       { $group: { _id: null, total: { $sum: '$amount' } } }
     ]),
     Payment.aggregate([
-      { $match: { status: 'completed', createdAt: { $gte: startDate } } },
+      { $match: { createdAt: { $gte: startDate } } },
       { $group: { _id: null, total: { $sum: '$amount' } } }
     ]),
     
     // Hotel Statistics
     Hotel.countDocuments(),
-    Hotel.countDocuments({ isActive: true }),
-    
-    // Booking Status Statistics
-    Booking.countDocuments({ status: 'pending' }),
-    Booking.countDocuments({ status: 'cancelled' }),
-    Booking.countDocuments({ status: 'completed' }),
+    Hotel.countDocuments({ status: 'active' }),
     
     // Support Statistics
     SupportTicket.countDocuments({ status: 'open' }),
@@ -91,20 +102,19 @@ const getDashboardOverview = asyncErrorHandler(async (req, res) => {
       { $group: { _id: null, avgRating: { $avg: '$rating' } } }
     ]),
     
-    // Top Performing Hotels
+    // Top Performing Hotels (will be empty since no hotels)
     Booking.aggregate([
       { $match: { status: { $ne: 'cancelled' } } },
-      { $group: { _id: '$hotelId', bookings: { $sum: 1 }, revenue: { $sum: '$totalAmount' } } },
+      { $group: { _id: '$hotel', bookings: { $sum: 1 }, revenue: { $sum: '$totalAmount' } } },
       { $sort: { revenue: -1 } },
       { $limit: 5 },
       { $lookup: { from: 'hotels', localField: '_id', foreignField: '_id', as: 'hotel' } }
     ]),
     
-    // Revenue by Month (last 12 months)
+    // Revenue by Month
     Payment.aggregate([
       {
         $match: {
-          status: 'completed',
           createdAt: { $gte: moment().subtract(12, 'months').toDate() }
         }
       },
@@ -126,11 +136,14 @@ const getDashboardOverview = asyncErrorHandler(async (req, res) => {
       { $group: { _id: '$status', count: { $sum: 1 } } }
     ]),
     
-    // User Registrations (last 12 months)
+    // User Registrations - Handle missing createdAt
     User.aggregate([
       {
         $match: {
-          createdAt: { $gte: moment().subtract(12, 'months').toDate() }
+          createdAt: { 
+            $exists: true,
+            $gte: moment().subtract(12, 'months').toDate() 
+          }
         }
       },
       {
@@ -147,8 +160,7 @@ const getDashboardOverview = asyncErrorHandler(async (req, res) => {
     
     // Payment Methods Distribution
     Payment.aggregate([
-      { $match: { status: 'completed' } },
-      { $group: { _id: '$paymentMethod', count: { $sum: 1 }, amount: { $sum: '$amount' } } }
+      { $group: { _id: '$method', count: { $sum: 1 }, amount: { $sum: '$amount' } } }
     ])
   ]);
 
@@ -377,29 +389,37 @@ const getAllBookings = asyncErrorHandler(async (req, res) => {
   const { 
     page = 1, 
     limit = 20, 
-    status, 
+    search, 
+    status,
     hotelId,
     userId,
-    search,
-    dateFrom,
-    dateTo,
     sortBy = 'createdAt', 
-    sortOrder = 'desc'
+    sortOrder = 'desc',
+    dateFrom,
+    dateTo
   } = req.query;
 
   const query = {};
   
-  if (status && status.trim()) query.status = status;
-  if (hotelId && hotelId.trim()) query.hotelId = hotelId;
-  if (userId && userId.trim()) query.userId = userId;
-  
+  // Search functionality
   if (search && search.trim()) {
     query.$or = [
-      { bookingId: { $regex: search, $options: 'i' } },
-      { hotelName: { $regex: search, $options: 'i' } }
+      { bookingReference: { $regex: search, $options: 'i' } },
+      { 'guestInfo.name': { $regex: search, $options: 'i' } },
+      { 'guestInfo.email': { $regex: search, $options: 'i' } }
     ];
   }
 
+  // Filters
+  if (status && status.trim()) {
+    query.status = status;
+  }
+  if (hotelId && hotelId.trim()) {
+    query.hotel = hotelId;
+  }
+  if (userId && userId.trim()) {
+    query.user = userId;
+  }
   if (dateFrom || dateTo) {
     query.createdAt = {};
     if (dateFrom) query.createdAt.$gte = new Date(dateFrom);
@@ -411,15 +431,16 @@ const getAllBookings = asyncErrorHandler(async (req, res) => {
   const skip = (pageNum - 1) * limitNum;
   const sort = { [sortBy]: sortOrder === 'desc' ? -1 : 1 };
 
+  // ✅ FIXED: Use 'user' instead of 'userId' for populate
   const [bookings, totalBookings] = await Promise.all([
-    bookingModel
+    Booking
       .find(query)
-      .populate('userId', 'fullname email')
+      .populate('user', 'fullname email')  // Changed from 'userId' to 'user'
       .sort(sort)
       .skip(skip)
       .limit(limitNum)
       .lean(),
-    bookingModel.countDocuments(query)
+    Booking.countDocuments(query)
   ]);
 
   const totalPages = Math.ceil(totalBookings / limitNum);
@@ -442,10 +463,10 @@ const getAllBookings = asyncErrorHandler(async (req, res) => {
 const getBookingDetails = asyncErrorHandler(async (req, res) => {
   const { bookingId } = req.params;
 
+  // ✅ FIXED: Use correct field names from your schema
   const booking = await Booking.findById(bookingId).populate([
-    { path: 'userId', select: 'firstName lastName email phone address' },
-    { path: 'hotelId', select: 'name location images rating amenities contactInfo' },
-    { path: 'payments', select: 'amount status paymentMethod transactionId createdAt' }
+    { path: 'user', select: 'fullname email phone address' },  // Changed from 'userId'
+    { path: 'hotel', select: 'name location images rating amenities contactInfo' }  // Changed from 'hotelId'
   ]);
 
   if (!booking) {
@@ -516,13 +537,13 @@ const getAllHotels = asyncErrorHandler(async (req, res) => {
   const sort = { [sortBy]: sortOrder === 'desc' ? -1 : 1 };
 
   const [hotels, totalHotels] = await Promise.all([
-    hotelModel
+    Hotel
       .find(query)
       .sort(sort)
       .skip(skip)
       .limit(limitNum)
       .lean(),
-    hotelModel.countDocuments(query)
+    Hotel.countDocuments(query)
   ]);
 
   const totalPages = Math.ceil(totalHotels / limitNum);
@@ -548,17 +569,17 @@ const getHotelDetails = asyncErrorHandler(async (req, res) => {
   const [hotel, hotelStats] = await Promise.all([
     Hotel.findById(hotelId),
     
-    // Get hotel statistics
+    // Get hotel statistics - use correct field name 'hotel' instead of 'hotelId'
     Promise.all([
-      Booking.countDocuments({ hotelId }),
-      Booking.countDocuments({ hotelId, status: 'completed' }),
-      Review.countDocuments({ hotelId }),
+      Booking.countDocuments({ hotel: hotelId }),  // Changed from hotelId
+      Booking.countDocuments({ hotel: hotelId, status: 'completed' }),
+      Review.countDocuments({ hotel: hotelId }),
       Review.aggregate([
-        { $match: { hotelId: hotelId } },
+        { $match: { hotel: hotelId } },
         { $group: { _id: null, avgRating: { $avg: '$rating' } } }
       ]),
       Booking.aggregate([
-        { $match: { hotelId: hotelId, status: 'completed' } },
+        { $match: { hotel: hotelId, status: 'completed' } },
         { $group: { _id: null, totalRevenue: { $sum: '$totalAmount' } } }
       ])
     ])

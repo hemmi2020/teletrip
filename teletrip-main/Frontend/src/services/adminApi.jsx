@@ -1,5 +1,5 @@
 // src/services/adminApi.jsx
-// FIXED Admin Dashboard API Service
+// FIXED: Updated to use /api/admin instead of /api/v1/admin
 
 import axios from 'axios';
 
@@ -50,8 +50,8 @@ export const AdminDashboardAPI = {
   // ========== DASHBOARD OVERVIEW ==========
   getDashboardOverview: async (period = '30d') => {
     try {
-      // FIXED: Correct API path with /api/v1 prefix
-      const response = await adminApi.get(`/api/v1/admin/dashboard?period=${period}`);
+      // ✅ FIXED: Changed to /api/admin/dashboard
+      const response = await adminApi.get(`/api/admin/dashboard?period=${period}`);
       console.log('📊 Dashboard data:', response.data);
       return { success: true, data: response.data.data };
     } catch (error) {
@@ -67,7 +67,7 @@ export const AdminDashboardAPI = {
   getAllUsers: async (filters = {}) => {
     try {
       const params = new URLSearchParams(filters).toString();
-      const response = await adminApi.get(`/api/v1/admin/users?${params}`);
+      const response = await adminApi.get(`/api/admin/users?${params}`);
       return { success: true, data: response.data.data };
     } catch (error) {
       return { 
@@ -79,7 +79,7 @@ export const AdminDashboardAPI = {
 
   getUserDetails: async (userId) => {
     try {
-      const response = await adminApi.get(`/api/v1/admin/users/${userId}`);
+      const response = await adminApi.get(`/api/admin/users/${userId}`);
       return { success: true, data: response.data.data };
     } catch (error) {
       return { 
@@ -91,7 +91,7 @@ export const AdminDashboardAPI = {
 
   updateUserStatus: async (userId, statusData) => {
     try {
-      const response = await adminApi.put(`/api/v1/admin/users/${userId}/status`, statusData);
+      const response = await adminApi.put(`/api/admin/users/${userId}/status`, statusData);
       return { success: true, data: response.data.data };
     } catch (error) {
       return { 
@@ -101,11 +101,25 @@ export const AdminDashboardAPI = {
     }
   },
 
+  deleteUser: async (userId, reason) => {
+    try {
+      const response = await adminApi.delete(`/api/admin/users/${userId}`, {
+        data: { reason }
+      });
+      return { success: true, data: response.data.data };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.response?.data?.message || 'Failed to delete user' 
+      };
+    }
+  },
+
   // ========== BOOKING MANAGEMENT ==========
   getAllBookings: async (filters = {}) => {
     try {
       const params = new URLSearchParams(filters).toString();
-      const response = await adminApi.get(`/api/v1/admin/bookings?${params}`);
+      const response = await adminApi.get(`/api/admin/bookings?${params}`);
       return { success: true, data: response.data.data };
     } catch (error) {
       return { 
@@ -117,7 +131,7 @@ export const AdminDashboardAPI = {
 
   getBookingDetails: async (bookingId) => {
     try {
-      const response = await adminApi.get(`/api/v1/admin/bookings/${bookingId}`);
+      const response = await adminApi.get(`/api/admin/bookings/${bookingId}`);
       return { success: true, data: response.data.data };
     } catch (error) {
       return { 
@@ -129,7 +143,7 @@ export const AdminDashboardAPI = {
 
   updateBookingStatus: async (bookingId, statusData) => {
     try {
-      const response = await adminApi.put(`/api/v1/admin/bookings/${bookingId}/status`, statusData);
+      const response = await adminApi.put(`/api/admin/bookings/${bookingId}/status`, statusData);
       return { success: true, data: response.data.data };
     } catch (error) {
       return { 
@@ -143,7 +157,7 @@ export const AdminDashboardAPI = {
   getAllHotels: async (filters = {}) => {
     try {
       const params = new URLSearchParams(filters).toString();
-      const response = await adminApi.get(`/api/v1/admin/hotels?${params}`);
+      const response = await adminApi.get(`/api/admin/hotels?${params}`);
       return { success: true, data: response.data.data };
     } catch (error) {
       return { 
@@ -153,11 +167,59 @@ export const AdminDashboardAPI = {
     }
   },
 
+  getHotelDetails: async (hotelId) => {
+    try {
+      const response = await adminApi.get(`/api/admin/hotels/${hotelId}`);
+      return { success: true, data: response.data.data };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.response?.data?.message || 'Failed to load hotel details' 
+      };
+    }
+  },
+
+  createHotel: async (hotelData) => {
+    try {
+      const response = await adminApi.post(`/api/admin/hotels`, hotelData);
+      return { success: true, data: response.data.data };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.response?.data?.message || 'Failed to create hotel' 
+      };
+    }
+  },
+
+  updateHotel: async (hotelId, hotelData) => {
+    try {
+      const response = await adminApi.put(`/api/admin/hotels/${hotelId}`, hotelData);
+      return { success: true, data: response.data.data };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.response?.data?.message || 'Failed to update hotel' 
+      };
+    }
+  },
+
+  updateHotelStatus: async (hotelId, statusData) => {
+    try {
+      const response = await adminApi.put(`/api/admin/hotels/${hotelId}/status`, statusData);
+      return { success: true, data: response.data.data };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.response?.data?.message || 'Failed to update hotel status' 
+      };
+    }
+  },
+
   // ========== PAYMENT MANAGEMENT ==========
   getAllPayments: async (filters = {}) => {
     try {
       const params = new URLSearchParams(filters).toString();
-      const response = await adminApi.get(`/api/v1/admin/payments?${params}`);
+      const response = await adminApi.get(`/api/admin/payments?${params}`);
       return { success: true, data: response.data.data };
     } catch (error) {
       return { 
@@ -167,9 +229,21 @@ export const AdminDashboardAPI = {
     }
   },
 
+  getPaymentDetails: async (paymentId) => {
+    try {
+      const response = await adminApi.get(`/api/admin/payments/${paymentId}`);
+      return { success: true, data: response.data.data };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.response?.data?.message || 'Failed to load payment details' 
+      };
+    }
+  },
+
   processRefund: async (paymentId, refundData) => {
     try {
-      const response = await adminApi.post(`/api/v1/admin/payments/${paymentId}/refund`, refundData);
+      const response = await adminApi.post(`/api/admin/payments/${paymentId}/refund`, refundData);
       return { success: true, data: response.data.data };
     } catch (error) {
       return { 
@@ -183,7 +257,7 @@ export const AdminDashboardAPI = {
   getAllSupportTickets: async (filters = {}) => {
     try {
       const params = new URLSearchParams(filters).toString();
-      const response = await adminApi.get(`/api/v1/admin/support/tickets?${params}`);
+      const response = await adminApi.get(`/api/admin/support/tickets?${params}`);
       return { success: true, data: response.data.data };
     } catch (error) {
       return { 
@@ -195,7 +269,7 @@ export const AdminDashboardAPI = {
 
   getSupportTicketDetails: async (ticketId) => {
     try {
-      const response = await adminApi.get(`/api/v1/admin/support/tickets/${ticketId}`);
+      const response = await adminApi.get(`/api/admin/support/tickets/${ticketId}`);
       return { success: true, data: response.data.data };
     } catch (error) {
       return { 
@@ -207,7 +281,7 @@ export const AdminDashboardAPI = {
 
   updateSupportTicket: async (ticketId, updateData) => {
     try {
-      const response = await adminApi.put(`/api/v1/admin/support/tickets/${ticketId}`, updateData);
+      const response = await adminApi.put(`/api/admin/support/tickets/${ticketId}`, updateData);
       return { success: true, data: response.data.data };
     } catch (error) {
       return { 
@@ -219,7 +293,7 @@ export const AdminDashboardAPI = {
 
   addTicketResponse: async (ticketId, responseData) => {
     try {
-      const response = await adminApi.post(`/api/v1/admin/support/tickets/${ticketId}/responses`, responseData);
+      const response = await adminApi.post(`/api/admin/support/tickets/${ticketId}/responses`, responseData);
       return { success: true, data: response.data.data };
     } catch (error) {
       return { 
@@ -233,7 +307,7 @@ export const AdminDashboardAPI = {
   getAnalytics: async (filters = {}) => {
     try {
       const params = new URLSearchParams(filters).toString();
-      const response = await adminApi.get(`/api/v1/admin/analytics?${params}`);
+      const response = await adminApi.get(`/api/admin/analytics?${params}`);
       return { success: true, data: response.data.data };
     } catch (error) {
       return { 
@@ -245,7 +319,7 @@ export const AdminDashboardAPI = {
 
   exportData: async (type, format = 'excel') => {
     try {
-      const response = await adminApi.get(`/api/v1/admin/reports/export?type=${type}&format=${format}`, {
+      const response = await adminApi.get(`/api/admin/reports/export?type=${type}&format=${format}`, {
         responseType: 'blob'
       });
       return { success: true, data: response.data };
@@ -253,6 +327,45 @@ export const AdminDashboardAPI = {
       return { 
         success: false, 
         error: error.response?.data?.message || 'Failed to export data' 
+      };
+    }
+  },
+
+  // ========== SETTINGS ==========
+  getSettings: async () => {
+    try {
+      const response = await adminApi.get(`/api/admin/settings`);
+      return { success: true, data: response.data.data };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.response?.data?.message || 'Failed to load settings' 
+      };
+    }
+  },
+
+  updateSettings: async (settingsData) => {
+    try {
+      const response = await adminApi.put(`/api/admin/settings`, settingsData);
+      return { success: true, data: response.data.data };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.response?.data?.message || 'Failed to update settings' 
+      };
+    }
+  },
+
+  // ========== ACTIVITY LOGS ==========
+  getActivityLogs: async (filters = {}) => {
+    try {
+      const params = new URLSearchParams(filters).toString();
+      const response = await adminApi.get(`/api/admin/logs/activity?${params}`);
+      return { success: true, data: response.data.data };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.response?.data?.message || 'Failed to load activity logs' 
       };
     }
   },

@@ -42,7 +42,7 @@ const bookingSchema = new mongoose.Schema({
   
   user: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'user',
     required: true,
     index: true // Index for user-based queries
   },
@@ -278,7 +278,7 @@ const bookingSchema = new mongoose.Schema({
     cancelledAt: Date,
     cancelledBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User'
+      ref: 'user'
     },
     cancellationReason: String,
     refundAmount: Number,
@@ -293,7 +293,7 @@ const bookingSchema = new mongoose.Schema({
       modifiedAt: { type: Date, default: Date.now },
       modifiedBy: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
+        ref: 'user'
       },
       changes: mongoose.Schema.Types.Mixed,
       additionalFee: Number
@@ -350,7 +350,7 @@ const bookingSchema = new mongoose.Schema({
   internal: {
     salesAgent: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User'
+      ref: 'user'
     },
     commission: Number,
     costPrice: Number,
