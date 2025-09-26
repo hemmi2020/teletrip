@@ -278,7 +278,7 @@ const bookingSchema = new mongoose.Schema({
     cancelledAt: Date,
     cancelledBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'user'
+      ref: 'User'
     },
     cancellationReason: String,
     refundAmount: Number,
@@ -293,7 +293,7 @@ const bookingSchema = new mongoose.Schema({
       modifiedAt: { type: Date, default: Date.now },
       modifiedBy: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'user'
+        ref: 'User'
       },
       changes: mongoose.Schema.Types.Mixed,
       additionalFee: Number
@@ -350,7 +350,7 @@ const bookingSchema = new mongoose.Schema({
   internal: {
     salesAgent: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'user'
+      ref: 'User'
     },
     commission: Number,
     costPrice: Number,
