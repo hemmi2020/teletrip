@@ -10,7 +10,7 @@ const { asyncErrorHandler } = require('../middlewares/errorHandler.middleware');
 const notificationService = require('../services/notification.service');
 const moment = require('moment');
 
-const User = userModel; 
+const user = userModel; 
 const Booking = bookingModel;
 
 // ========== ADMIN DASHBOARD OVERVIEW ==========
@@ -66,8 +66,8 @@ const getDashboardOverview = asyncErrorHandler(async (req, res) => {
     paymentMethods
   ] = await Promise.all([
     // ✅ FIXED: Count all users (no isActive field exists)
-    User.countDocuments(),
-    User.countDocuments({ 
+    user.countDocuments(),
+    user.countDocuments({ 
       createdAt: { 
         $exists: true,
         $gte: startDate 
@@ -137,7 +137,7 @@ const getDashboardOverview = asyncErrorHandler(async (req, res) => {
     ]),
     
     // User Registrations - Handle missing createdAt
-    User.aggregate([
+    user.aggregate([
       {
         $match: {
           createdAt: { 
@@ -288,7 +288,7 @@ const getUserDetails = asyncErrorHandler(async (req, res) => {
   const { userId } = req.params;
   
   const [user, userStats] = await Promise.all([
-    User.findById(userId)
+    user.findById(userId)
       .select('-password -refreshTokens')
       .populate('preferences.favoriteHotels', 'name location images'),
     
@@ -374,7 +374,7 @@ const deleteUser = asyncErrorHandler(async (req, res) => {
   }
 
   // Soft delete - mark as deleted instead of removing
-  await User.findByIdAndUpdate(userId, {
+  await user.findByIdAndUpdate(userId, {
     isDeleted: true,
     deletedAt: new Date(),
     deletedBy: req.user.id,
@@ -699,7 +699,7 @@ const getAllPayments = asyncErrorHandler(async (req, res) => {
   const sort = { [sortBy]: sortOrder === 'desc' ? -1 : 1 };
 
   const [payments, totalPayments] = await Promise.all([
-    paymentModel
+    Payment
       .find(query)
       .populate('userId', 'fullname email')
       .populate('bookingId', 'bookingId hotelName')
@@ -707,7 +707,7 @@ const getAllPayments = asyncErrorHandler(async (req, res) => {
       .skip(skip)
       .limit(limitNum)
       .lean(),
-    paymentModel.countDocuments(query)
+    Payment.countDocuments(query)
   ]);
 
   const totalPages = Math.ceil(totalPayments / limitNum);

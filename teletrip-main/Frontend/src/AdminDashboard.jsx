@@ -493,77 +493,120 @@ const AdminDashboard = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {data.docs && data.docs.length > 0 ? (
-                data.docs.map((item, index) => (
-                  <tr key={item._id || index} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 text-sm text-gray-900">{item._id?.slice(-6) || 'N/A'}</td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm font-medium text-gray-900">
-                        {item.fullname?.firstname || item.name || item.title || 'N/A'}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        {item.email || item.location?.city || item.subject || 'N/A'}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`px-2 py-1 text-xs rounded-full ${
-                        item.status === 'active' || item.status === 'confirmed' || item.status === 'completed' || item.status === 'closed'
-                          ? 'bg-green-100 text-green-800'
-                          : item.status === 'pending' || item.status === 'open'
-                          ? 'bg-yellow-100 text-yellow-800'
-                          : 'bg-red-100 text-red-800'
-                      }`}>
-                        {item.status || item.isActive ? 'Active' : 'Inactive'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-500">
-                      {item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'N/A'}
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex justify-end gap-2">
-                        <button
-                          onClick={() => {
-                            if (activeTab === 'users') handleUserAction(item._id, 'view');
-                            else if (activeTab === 'bookings') handleBookingAction(item._id, 'view');
-                            else if (activeTab === 'hotels') handleHotelAction(item._id, 'view');
-                            else if (activeTab === 'payments') handlePaymentAction(item._id, 'view');
-                          }}
-                          className="p-2 text-blue-600 hover:bg-blue-50 rounded"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => {
-                            if (activeTab === 'users') handleUserAction(item._id, item.isActive ? 'deactivate' : 'activate');
-                            else if (activeTab === 'bookings') handleBookingAction(item._id, 'confirmed');
-                            else if (activeTab === 'hotels') handleHotelAction(item._id, 'approve');
-                            else if (activeTab === 'payments') handlePaymentAction(item._id, 'refund');
-                          }}
-                          className="p-2 text-green-600 hover:bg-green-50 rounded"
-                        >
-                          <Check className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => {
-                            if (activeTab === 'users') handleUserAction(item._id, 'delete');
-                            else if (activeTab === 'hotels') handleHotelAction(item._id, 'delete');
-                          }}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="5" className="px-6 py-12 text-center text-gray-500">
-                    No data available
-                  </td>
-                </tr>
+  {data.docs && data.docs.length > 0 ? (
+    data.docs.map((item, index) => {
+      // Different display logic based on activeTab
+      let displayId, displayDetails, displayStatus, displayDate;
+
+      if (activeTab === 'users') {
+        displayId = item._id?.slice(-6) || 'N/A';
+        displayDetails = (
+          <div>
+            <p className="font-medium">{item.fullname?.firstname} {item.fullname?.lastname}</p>
+            <p className="text-sm text-gray-500">{item.email}</p>
+          </div>
+        );
+        displayStatus = item.status || item.isActive ? 'Active' : 'Inactive';
+        displayDate = item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'N/A';
+      } 
+      else if (activeTab === 'bookings') {
+        displayId = item.bookingReference || item._id?.slice(-6) || 'N/A';
+        displayDetails = (
+          <div>
+            <p className="font-medium">
+              {item.hotelBooking?.hotelName || item.user?.fullname?.firstname || 'Booking'}
+            </p>
+            <p className="text-sm text-gray-500">
+              {item.user?.email || `${item.hotelBooking?.nights || 0} nights`}
+            </p>
+          </div>
+        );
+        displayStatus = item.status || 'pending';
+        displayDate = item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'N/A';
+      } 
+      else if (activeTab === 'hotels') {
+        displayId = item._id?.slice(-6) || 'N/A';
+        displayDetails = (
+          <div>
+            <p className="font-medium">{item.name || 'Hotel'}</p>
+            <p className="text-sm text-gray-500">{item.location?.city || ''}</p>
+          </div>
+        );
+        displayStatus = item.status || item.isActive ? 'Active' : 'Inactive';
+        displayDate = item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'N/A';
+      } 
+      else if (activeTab === 'payments') {
+        displayId = item._id?.slice(-6) || 'N/A';
+        displayDetails = (
+          <div>
+            <p className="font-medium">{item.user?.email || 'Payment'}</p>
+            <p className="text-sm text-gray-500">PKR {item.amount?.toFixed(2) || 0}</p>
+          </div>
+        );
+        displayStatus = item.status || 'pending';
+        displayDate = item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'N/A';
+      } 
+      else if (activeTab === 'support') {
+        displayId = item._id?.slice(-6) || 'N/A';
+        displayDetails = (
+          <div>
+            <p className="font-medium">{item.subject || 'Ticket'}</p>
+            <p className="text-sm text-gray-500">{item.user?.email || 'N/A'}</p>
+          </div>
+        );
+        displayStatus = item.status || 'open';
+        displayDate = item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'N/A';
+      }
+      else {
+        // Default fallback
+        displayId = item._id?.slice(-6) || 'N/A';
+        displayDetails = <p>N/A</p>;
+        displayStatus = 'N/A';
+        displayDate = 'N/A';
+      }
+
+      return (
+        <tr key={item._id || index} className="hover:bg-gray-50">
+          <td className="px-6 py-4 text-sm text-gray-900">{displayId}</td>
+          <td className="px-6 py-4 text-sm text-gray-900">{displayDetails}</td>
+          <td className="px-6 py-4">
+            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+              displayStatus === 'Active' || displayStatus === 'active' || displayStatus === 'confirmed' || displayStatus === 'completed' ? 
+                'bg-green-100 text-green-800' : 
+              displayStatus === 'pending' ? 
+                'bg-yellow-100 text-yellow-800' : 
+                'bg-red-100 text-red-800'
+            }`}>
+              {displayStatus}
+            </span>
+          </td>
+          <td className="px-6 py-4 text-sm text-gray-500">{displayDate}</td>
+          <td className="px-6 py-4 text-right">
+            <div className="flex items-center justify-end gap-2">
+              <button className="text-blue-600 hover:text-blue-800">
+                <Eye className="w-4 h-4" />
+              </button>
+              {activeTab !== 'support' && (
+                <button className="text-green-600 hover:text-green-800">
+                  <Check className="w-4 h-4" />
+                </button>
               )}
-            </tbody>
+              <button className="text-red-600 hover:text-red-800">
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
+          </td>
+        </tr>
+      );
+    })
+  ) : (
+    <tr>
+      <td colSpan="5" className="px-6 py-12 text-center text-gray-500">
+        No data available
+      </td>
+    </tr>
+  )}
+</tbody>
           </table>
         </div>
 

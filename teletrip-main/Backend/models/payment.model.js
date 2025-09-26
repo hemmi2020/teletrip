@@ -20,14 +20,14 @@ const paymentSchema = new mongoose.Schema({
   
   userId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'user',
     required: true,
     index: true
   },
   
   bookingId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Booking',
+    ref: 'booking',
     required: true,
     index: true
   },
