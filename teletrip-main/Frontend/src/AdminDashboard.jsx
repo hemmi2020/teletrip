@@ -482,133 +482,157 @@ const AdminDashboard = () => {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Details</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-  {data.docs && data.docs.length > 0 ? (
-    data.docs.map((item, index) => {
-      // Different display logic based on activeTab
-      let displayId, displayDetails, displayStatus, displayDate;
+  <table className="min-w-full divide-y divide-gray-200">
+    <thead className="bg-gray-50">
+      <tr>
+        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">ID</th>
+        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Details</th>
+        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Status</th>
+        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-40">Date</th>
+        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Actions</th>
+      </tr>
+    </thead>
+    <tbody className="bg-white divide-y divide-gray-200">
+      {data.docs && data.docs.length > 0 ? (
+        data.docs.map((item, index) => {
+          // Different display logic based on activeTab
+          let displayId, displayDetails, displayStatus, displayDate;
 
-      if (activeTab === 'users') {
-        displayId = item._id?.slice(-6) || 'N/A';
-        displayDetails = (
-          <div>
-            <p className="font-medium">{item.fullname?.firstname} {item.fullname?.lastname}</p>
-            <p className="text-sm text-gray-500">{item.email}</p>
-          </div>
-        );
-        displayStatus = item.status || item.isActive ? 'Active' : 'Inactive';
-        displayDate = item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'N/A';
-      } 
-      else if (activeTab === 'bookings') {
-        displayId = item.bookingReference || item._id?.slice(-6) || 'N/A';
-        displayDetails = (
-          <div>
-            <p className="font-medium">
-              {item.hotelBooking?.hotelName || item.user?.fullname?.firstname || 'Booking'}
-            </p>
-            <p className="text-sm text-gray-500">
-              {item.user?.email || `${item.hotelBooking?.nights || 0} nights`}
-            </p>
-          </div>
-        );
-        displayStatus = item.status || 'pending';
-        displayDate = item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'N/A';
-      } 
-      else if (activeTab === 'hotels') {
-        displayId = item._id?.slice(-6) || 'N/A';
-        displayDetails = (
-          <div>
-            <p className="font-medium">{item.name || 'Hotel'}</p>
-            <p className="text-sm text-gray-500">{item.location?.city || ''}</p>
-          </div>
-        );
-        displayStatus = item.status || item.isActive ? 'Active' : 'Inactive';
-        displayDate = item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'N/A';
-      } 
-      else if (activeTab === 'payments') {
-        displayId = item._id?.slice(-6) || 'N/A';
-        displayDetails = (
-          <div>
-            <p className="font-medium">{item.user?.email || 'Payment'}</p>
-            <p className="text-sm text-gray-500">PKR {item.amount?.toFixed(2) || 0}</p>
-          </div>
-        );
-        displayStatus = item.status || 'pending';
-        displayDate = item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'N/A';
-      } 
-      else if (activeTab === 'support') {
-        displayId = item._id?.slice(-6) || 'N/A';
-        displayDetails = (
-          <div>
-            <p className="font-medium">{item.subject || 'Ticket'}</p>
-            <p className="text-sm text-gray-500">{item.user?.email || 'N/A'}</p>
-          </div>
-        );
-        displayStatus = item.status || 'open';
-        displayDate = item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'N/A';
-      }
-      else {
-        // Default fallback
-        displayId = item._id?.slice(-6) || 'N/A';
-        displayDetails = <p>N/A</p>;
-        displayStatus = 'N/A';
-        displayDate = 'N/A';
-      }
+          if (activeTab === 'users') {
+            displayId = item._id?.slice(-6) || 'N/A';
+            displayDetails = (
+              <div>
+                <p className="font-medium truncate">{item.fullname?.firstname} {item.fullname?.lastname}</p>
+                <p className="text-sm text-gray-500 truncate">{item.email}</p>
+              </div>
+            );
+            displayStatus = item.status || item.isActive ? 'Active' : 'Inactive';
+            displayDate = item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'N/A';
+          } 
+          else if (activeTab === 'bookings') {
+            displayId = item.bookingReference || item._id?.slice(-6) || 'N/A';
+            displayDetails = (
+              <div>
+                <p className="font-medium truncate">
+                  {item.hotelBooking?.hotelName || item.user?.fullname?.firstname || 'Booking'}
+                </p>
+                <p className="text-sm text-gray-500 truncate">
+                  {item.user?.email || `${item.hotelBooking?.nights || 0} nights`}
+                </p>
+              </div>
+            );
+            displayStatus = item.status || 'pending';
+            displayDate = item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'N/A';
+          } 
+          else if (activeTab === 'hotels') {
+            displayId = item._id?.slice(-6) || 'N/A';
+            displayDetails = (
+              <div>
+                <p className="font-medium truncate">{item.name || 'Hotel'}</p>
+                <p className="text-sm text-gray-500 truncate">{item.location?.city || ''}</p>
+              </div>
+            );
+            displayStatus = item.status || item.isActive ? 'Active' : 'Inactive';
+            displayDate = item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'N/A';
+          } 
+          else if (activeTab === 'payments') {
+            displayId = item.transactionId?.slice(-8) || item._id?.slice(-8) || 'N/A';
+            
+            const paymentMethod = item.paymentMethod || 'Credit Card';
+            const bookingRef = item.bookingId?.bookingReference || item.bookingReference;
+            const userEmail = item.userId?.email || item.user?.email;
+            
+            displayDetails = (
+              <div>
+                <p className="font-medium truncate">
+                  {userEmail || 'Guest Payment'}
+                </p>
+                <p className="text-sm text-gray-500 truncate">
+                  {bookingRef ? `Booking: ${bookingRef}` : paymentMethod} • PKR {item.amount?.toFixed(2) || 0}
+                </p>
+              </div>
+            );
+            
+            displayStatus = item.status || 'pending';
+            displayDate = item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'N/A';
+          } 
+          else if (activeTab === 'support') {
+            displayId = item._id?.slice(-6) || 'N/A';
+            displayDetails = (
+              <div>
+                <p className="font-medium truncate">{item.subject || 'Ticket'}</p>
+                <p className="text-sm text-gray-500 truncate">{item.user?.email || 'N/A'}</p>
+              </div>
+            );
+            displayStatus = item.status || 'open';
+            displayDate = item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'N/A';
+          }
+          else {
+            displayId = item._id?.slice(-6) || 'N/A';
+            displayDetails = <p>N/A</p>;
+            displayStatus = 'N/A';
+            displayDate = 'N/A';
+          }
 
-      return (
-        <tr key={item._id || index} className="hover:bg-gray-50">
-          <td className="px-6 py-4 text-sm text-gray-900">{displayId}</td>
-          <td className="px-6 py-4 text-sm text-gray-900">{displayDetails}</td>
-          <td className="px-6 py-4">
-            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-              displayStatus === 'Active' || displayStatus === 'active' || displayStatus === 'confirmed' || displayStatus === 'completed' ? 
-                'bg-green-100 text-green-800' : 
-              displayStatus === 'pending' ? 
-                'bg-yellow-100 text-yellow-800' : 
-                'bg-red-100 text-red-800'
-            }`}>
-              {displayStatus}
-            </span>
-          </td>
-          <td className="px-6 py-4 text-sm text-gray-500">{displayDate}</td>
-          <td className="px-6 py-4 text-right">
-            <div className="flex items-center justify-end gap-2">
-              <button className="text-blue-600 hover:text-blue-800">
-                <Eye className="w-4 h-4" />
-              </button>
-              {activeTab !== 'support' && (
-                <button className="text-green-600 hover:text-green-800">
-                  <Check className="w-4 h-4" />
-                </button>
-              )}
-              <button className="text-red-600 hover:text-red-800">
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </div>
+          return (
+            <tr key={item._id || index} className="hover:bg-gray-50">
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-mono">
+                {displayId}
+              </td>
+              <td className="px-6 py-4 text-sm text-gray-900 max-w-xs">
+                {displayDetails}
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap">
+                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                  displayStatus === 'Active' || displayStatus === 'active' || displayStatus === 'confirmed' || displayStatus === 'completed' ? 
+                    'bg-green-100 text-green-800' : 
+                  displayStatus === 'pending' ? 
+                    'bg-yellow-100 text-yellow-800' : 
+                    'bg-red-100 text-red-800'
+                }`}>
+                  {displayStatus}
+                </span>
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                {displayDate}
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <div className="flex items-center justify-end gap-2">
+                  <button 
+                    className="text-blue-600 hover:text-blue-800"
+                    title="View"
+                  >
+                    <Eye className="w-4 h-4" />
+                  </button>
+                  {activeTab !== 'support' && (
+                    <button 
+                      className="text-green-600 hover:text-green-800"
+                      title="Approve"
+                    >
+                      <Check className="w-4 h-4" />
+                    </button>
+                  )}
+                  <button 
+                    className="text-red-600 hover:text-red-800"
+                    title="Delete"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </td>
+            </tr>
+          );
+        })
+      ) : (
+        <tr>
+          <td colSpan="5" className="px-6 py-12 text-center text-gray-500">
+            No data available
           </td>
         </tr>
-      );
-    })
-  ) : (
-    <tr>
-      <td colSpan="5" className="px-6 py-12 text-center text-gray-500">
-        No data available
-      </td>
-    </tr>
-  )}
-</tbody>
-          </table>
-        </div>
+      )}
+    </tbody>
+  </table>
+</div>
 
         {/* Pagination */}
         {data.totalPages > 1 && (
