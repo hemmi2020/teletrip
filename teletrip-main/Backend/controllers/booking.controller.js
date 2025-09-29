@@ -33,10 +33,11 @@ module.exports.createBooking = asyncErrorHandler(async (req, res) => {
     // Required fields
     user: userId,                    // ✅ Correct field name
     bookingType: 'hotel',           // ✅ Required field
-    bookingId: generateBookingReference('hotel'),
+    bookingReference: generateBookingReference('hotel'),
+    bookingId: undefined,            // ✅ Will be auto-generated if not provided
      // ✅ Will be auto-generated if not provided
     
-    // Status
+    // Status 
     status: 'pending',
     
     // Pricing structure (required)
