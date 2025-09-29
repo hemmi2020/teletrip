@@ -33,6 +33,7 @@ module.exports.createBooking = asyncErrorHandler(async (req, res) => {
     // Required fields
     user: userId,                    // ✅ Correct field name
     bookingType: 'hotel',           // ✅ Required field
+    bookingId: `BK${Date.now()}${Math.random().toString(36).substr(2, 9).toUpperCase()}`, // Generate unique ID
     bookingReference: generateBookingReference('hotel'), // ✅ Will be auto-generated if not provided
     
     // Status
