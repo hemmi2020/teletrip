@@ -53,6 +53,11 @@ const bookingSchema = new mongoose.Schema({
     required: true,
     index: true // Index for type-based queries
   },
+  bookingId: {
+    type: String,
+    unique: true,
+    default: () => `BK${Date.now()}${Math.random().toString(36).substr(2, 9).toUpperCase()}`
+  },
   
   status: {
     type: String,
