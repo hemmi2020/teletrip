@@ -1,0 +1,221 @@
+/* Custom styles for react-date-range to match Bedsonline */
+
+/* Calendar container */
+.rdrCalendarWrapper {
+  font-family: inherit;
+  font-size: 14px;
+}
+
+/* Month navigation */
+.rdrMonthAndYearWrapper {
+  padding: 10px;
+  background-color: #f8f9fa;
+}
+
+.rdrMonthAndYearPickers select {
+  padding: 5px 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-weight: 500;
+  color: #374151;
+}
+
+/* Navigation arrows */
+.rdrNextPrevButton {
+  background-color: transparent;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  width: 32px;
+  height: 32px;
+  transition: all 0.2s;
+}
+
+.rdrNextPrevButton:hover {
+  background-color: #f3f4f6;
+  border-color: #2563eb;
+}
+
+.rdrNextPrevButton i {
+  border-color: #6b7280;
+}
+
+/* Weekday labels */
+.rdrWeekDays {
+  padding: 0 10px;
+}
+
+.rdrWeekDay {
+  color: #6b7280;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+/* Day cells */
+.rdrDays {
+  padding: 0 10px 10px;
+}
+
+.rdrDay {
+  height: 40px;
+}
+
+.rdrDayNumber {
+  font-weight: 500;
+  color: #1f2937;
+}
+
+/* Day states */
+.rdrDayToday .rdrDayNumber span:after {
+  background-color: #2563eb;
+  bottom: 4px;
+  height: 2px;
+}
+
+.rdrDayPassive .rdrDayNumber span {
+  color: #d1d5db;
+}
+
+.rdrDayDisabled {
+  background-color: transparent;
+}
+
+.rdrDayDisabled .rdrDayNumber span {
+  color: #e5e7eb;
+}
+
+/* Selected range */
+.rdrDayStartOfMonth .rdrInRange,
+.rdrDayEndOfMonth .rdrInRange,
+.rdrDayStartOfWeek .rdrInRange,
+.rdrDayEndOfWeek .rdrInRange {
+  border-radius: 0;
+}
+
+.rdrDayInRange {
+  color: #1f2937 !important;
+}
+
+.rdrInRange {
+  background-color: #dbeafe !important;
+}
+
+.rdrStartEdge,
+.rdrEndEdge {
+  background-color: #2563eb !important;
+  color: white !important;
+}
+
+.rdrStartEdge {
+  border-top-left-radius: 8px !important;
+  border-bottom-left-radius: 8px !important;
+}
+
+.rdrEndEdge {
+  border-top-right-radius: 8px !important;
+  border-bottom-right-radius: 8px !important;
+}
+
+.rdrDayStartEdge .rdrDayNumber span,
+.rdrDayEndEdge .rdrDayNumber span {
+  color: white !important;
+}
+
+/* Hover effect */
+.rdrDay:not(.rdrDayPassive):not(.rdrDayDisabled) .rdrInRange ~ .rdrDayNumber span,
+.rdrDay:not(.rdrDayPassive):not(.rdrDayDisabled) .rdrStartEdge ~ .rdrDayNumber span,
+.rdrDay:not(.rdrDayPassive):not(.rdrDayDisabled) .rdrEndEdge ~ .rdrDayNumber span {
+  color: inherit;
+}
+
+.rdrDay:not(.rdrDayPassive) .rdrStartEdge ~ .rdrDayNumber span,
+.rdrDay:not(.rdrDayPassive) .rdrEndEdge ~ .rdrDayNumber span {
+  color: white !important;
+}
+
+.rdrDayHovered {
+  border-radius: 8px;
+}
+
+.rdrDayHovered .rdrDayNumber:after {
+  border-color: #93c5fd;
+  background-color: #eff6ff;
+}
+
+/* Date input fields */
+.rdrDateInput {
+  height: 40px;
+}
+
+.rdrDateInput input {
+  height: 38px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 0 12px;
+  font-size: 14px;
+  color: #374151;
+}
+
+.rdrDateInput input:focus {
+  border-color: #2563eb;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* Mobile responsiveness */
+@media (max-width: 640px) {
+  .rdrCalendarWrapper {
+    font-size: 12px;
+  }
+  
+  .rdrDay {
+    height: 36px;
+  }
+  
+  .rdrMonthAndYearPickers select {
+    padding: 4px 8px;
+    font-size: 12px;
+  }
+  
+  .rdrNextPrevButton {
+    width: 28px;
+    height: 28px;
+  }
+}
+
+/* Remove default borders */
+.rdrDefinedRangesWrapper,
+.rdrDateDisplayWrapper {
+  display: none;
+}
+
+.rdrMonth {
+  padding: 0;
+}
+
+/* Custom scrollbar for month dropdown */
+.rdrMonthPicker select,
+.rdrYearPicker select {
+  cursor: pointer;
+}
+
+.rdrMonthPicker select::-webkit-scrollbar,
+.rdrYearPicker select::-webkit-scrollbar {
+  width: 6px;
+}
+
+.rdrMonthPicker select::-webkit-scrollbar-track,
+.rdrYearPicker select::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.rdrMonthPicker select::-webkit-scrollbar-thumb,
+.rdrYearPicker select::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 10px;
+}
+
+.rdrMonthPicker select::-webkit-scrollbar-thumb:hover,
+.rdrYearPicker select::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
