@@ -1,1 +1,119 @@
 @import "tailwindcss";
+
+
+
+
+
+
+
+/* 
+ * Z-Index Layering System Fix
+ * Add this to your main CSS file or index.css
+ * This ensures proper stacking order throughout the application
+ */
+
+/* Base z-index hierarchy for the application */
+
+/* Layer 1: Background elements (0-9) */
+.slider-background,
+.page-background {
+  z-index: 1;
+}
+
+/* Layer 2: Content elements (10-39) */
+.slider-content,
+.page-content {
+  z-index: 10;
+}
+
+.slider-indicators,
+.navigation-arrows {
+  z-index: 20;
+}
+
+/* Layer 3: Form elements (40-49) */
+.hotel-search-form,
+.search-form-container {
+  z-index: 40 !important;
+}
+
+/* Layer 4: Dropdowns and tooltips (50-79) */
+.dropdown-menu,
+.calendar-dropdown,
+.autocomplete-dropdown {
+  z-index: 50 !important;
+}
+
+.tooltip {
+  z-index: 60;
+}
+
+/* Layer 5: Modals and overlays (80-99) */
+.modal-overlay {
+  z-index: 80;
+}
+
+.modal-content {
+  z-index: 85;
+}
+
+/* Layer 6: Header/Navigation (100-109) */
+header,
+.site-header,
+.main-navigation {
+  z-index: 100 !important;
+}
+
+/* Layer 7: Notifications and alerts (110-119) */
+.notification,
+.alert,
+.toast {
+  z-index: 110;
+}
+
+/* Layer 8: Cart and side panels (120-129) */
+.cart-sidebar,
+.slide-out-cart {
+  z-index: 120 !important;
+}
+
+/* Layer 9: Top-level modals (130-149) */
+.auth-modal,
+.confirmation-modal {
+  z-index: 130;
+}
+
+/* Layer 10: Critical UI (150+) */
+.loading-overlay {
+  z-index: 150;
+}
+
+.critical-notification {
+  z-index: 200;
+}
+
+/* 
+ * Important: Prevent z-index conflicts in calendar components
+ */
+.react-date-range-picker,
+.rdrCalendarWrapper {
+  z-index: 50 !important;
+}
+
+.rdrDateRangePickerWrapper {
+  z-index: 50 !important;
+}
+
+/* 
+ * Fix for form elements that should appear above slider but below header
+ */
+.form-overlay {
+  position: relative;
+  z-index: 40;
+}
+
+/* Ensure dropdown panels in forms are visible */
+.form-overlay .dropdown-panel,
+.form-overlay .calendar-panel {
+  z-index: 55 !important;
+}

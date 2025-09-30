@@ -1,4 +1,4 @@
-// Slider.js
+// Slider.js - FIXED VERSION
 import React, { useEffect, useState, useRef } from "react";
 import image1 from "../images/1.jpg";
 import image2 from "../images/2.jpg";
@@ -46,7 +46,7 @@ const Slider = () => {
     }, 5000);
 
     return () => resetTimeout();
-  }, [active]);
+  }, [active, items.length]);
 
   return (
     <main className="mt-16 w-full mb-0">
@@ -98,15 +98,15 @@ const Slider = () => {
             </div>
           ))}
 
-          {/* Hotel Search Form - Responsive positioning */}
-          <div className=" absolute bottom-4 sm:bottom-6 md:bottom-8 lg:bottom-12 xl:bottom-16 left-1/2 transform -translate-x-1/2 w-full max-w-7xl px-2 sm:px-4 lg:px-8 z-30">
+          {/* Hotel Search Form - FIXED: Changed z-index from z-30 to z-40 */}
+          <div className="absolute bottom-4 sm:bottom-6 md:bottom-8 lg:bottom-12 xl:bottom-16 left-1/2 transform -translate-x-1/2 w-full max-w-7xl px-2 sm:px-4 lg:px-8 z-40">
             <div className="bg-transparent rounded-2xl">
               <HotelSearchForm />
             </div>
           </div>
 
-          {/* Slide Indicators */}
-          <div className="absolute bottom-20 sm:bottom-24 md:bottom-28 lg:bottom-32 xl:bottom-40 left-1/2 transform -translate-x-1/2 flex space-x-2 z-20">
+          {/* Slide Indicators - FIXED: Adjusted position to not overlap with form */}
+          <div className="absolute bottom-2 sm:bottom-3 left-1/2 transform -translate-x-1/2 flex space-x-2 z-20">
             {items.map((_, index) => (
               <button
                 key={index}
@@ -116,6 +116,7 @@ const Slider = () => {
                     ? 'bg-white shadow-lg' 
                     : 'bg-white/50 hover:bg-white/70'
                 }`}
+                aria-label={`Go to slide ${index + 1}`}
               />
             ))}
           </div>
@@ -125,6 +126,7 @@ const Slider = () => {
             <button
               onClick={() => setActive(active === 0 ? items.length - 1 : active - 1)}
               className="absolute left-4 lg:left-8 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white p-2 lg:p-3 rounded-full transition-all duration-300 z-20 group"
+              aria-label="Previous slide"
             >
               <svg className="w-4 h-4 lg:w-6 lg:h-6 transform group-hover:scale-110 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -134,20 +136,21 @@ const Slider = () => {
             <button
               onClick={() => setActive(active === items.length - 1 ? 0 : active + 1)}
               className="absolute right-4 lg:right-8 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white p-2 lg:p-3 rounded-full transition-all duration-300 z-20 group"
+              aria-label="Next slide"
             >
               <svg className="w-4 h-4 lg:w-6 lg:h-6 transform group-hover:scale-110 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
             </button>
           </div>
-        </div>
 
-        {/* Mobile-only swipe hints */}
-        <div className="md:hidden absolute bottom-4 left-1/2 transform -translate-x-1/2 text-white/70 text-xs text-center z-20">
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-0.5 bg-white/50 rounded"></div>
-            <span>Swipe or tap dots to navigate</span>
-            <div className="w-8 h-0.5 bg-white/50 rounded"></div>
+          {/* Mobile-only swipe hints */}
+          <div className="md:hidden absolute bottom-1 left-1/2 transform -translate-x-1/2 text-white/70 text-xs text-center z-20">
+            <div className="flex items-center space-x-2">
+              <div className="w-8 h-0.5 bg-white/50 rounded"></div>
+              <span>Swipe or tap dots to navigate</span>
+              <div className="w-8 h-0.5 bg-white/50 rounded"></div>
+            </div>
           </div>
         </div>
       </section>

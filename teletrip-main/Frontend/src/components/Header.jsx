@@ -1,4 +1,4 @@
-// Updated Header.jsx with enhanced authentication check for checkout
+// Fixed Header.jsx - Complete working version with proper z-index
 import React, { useState, useContext } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import logo from "../images/Telitrip-Logo-1.png";
@@ -11,6 +11,7 @@ const Header = () => {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const { user, setUser } = useContext(UserDataContext);
   
+  // Call useCart at the component level
   const { getTotalItems, items: cartItems, getTotalPrice } = useCart();
   
   const handleAccountClick = () => {
@@ -34,38 +35,31 @@ const Header = () => {
     navigate('/home');
   };
 
-  // Enhanced checkout handler with better authentication flow
   const handleProceedToCheckout = () => {
     console.log('🛒 Proceeding to checkout from header...');
-    console.log('👤 User status:', user ? 'Logged in' : 'Not logged in');
     console.log('📦 Cart items:', cartItems);
     console.log('💰 Total price:', getTotalPrice());
     
     setIsCartOpen(false);
     
-    // Check if cart has items
     if (!cartItems || cartItems.length === 0) {
       console.warn('⚠️ Cart is empty, cannot proceed to checkout');
       return;
     }
     
-    // If user is not authenticated, the SlideOutCart component will handle auth
-    // This function will only be called if user is authenticated or after successful auth
-    
-    // Navigate to checkout page with cart data
     navigate('/checkout', {
       state: {
         cartItems: cartItems,
         totalAmount: getTotalPrice(),
-        fromCart: true,
-        user: user // Pass user data to checkout
+        fromCart: true
       }
     });
   };
 
   return (
     <>
-      <header className="bg-white fixed top-0 left-0 right-0 !z-50 shadow-md">
+      {/* FIXED: Changed from !z-50 to z-[100] for proper layering */}
+      <header className="bg-white fixed top-0 left-0 right-0 z-[100] shadow-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo on the left */}
@@ -129,7 +123,7 @@ const Header = () => {
                   </button>
                 )}
 
-                {/* Cart Icon with proper item count and authentication status */}
+                {/* Cart Icon with proper item count */}
                 <button
                   onClick={() => setIsCartOpen(true)}
                   className="relative p-2 text-gray-700 hover:text-blue-600 transition-colors flex items-center space-x-2"
@@ -155,13 +149,6 @@ const Header = () => {
                       {getTotalItems()}
                     </span>
                   )}
-                  
-                  {/* Authentication status indicator for cart */}
-                  {getTotalItems() > 0 && (!user || !user.email) && (
-                    <span className="absolute -bottom-1 -right-1 bg-yellow-500 text-white text-xs rounded-full w-3 h-3 flex items-center justify-center">
-                      !
-                    </span>
-                  )}
                 </button>
               </div>
             </div>
@@ -169,7 +156,7 @@ const Header = () => {
         </div>
       </header>
 
-      {/* Enhanced Cart Slide-out with authentication check */}
+      {/* Cart Slide-out with checkout integration */}
       <SlideOutCart
         isOpen={isCartOpen}
         onClose={() => setIsCartOpen(false)}
