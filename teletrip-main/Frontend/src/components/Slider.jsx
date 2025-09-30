@@ -49,7 +49,7 @@ const Slider = () => {
   }, [active, items.length]);
 
   return (
-    <main className="w-full mb-0">
+    <main className="pt-16 w-full mb-0">
       <section className="relative w-full h-screen bg-black">
         <div className="relative w-full h-full">
           {items.map((item, index) => (

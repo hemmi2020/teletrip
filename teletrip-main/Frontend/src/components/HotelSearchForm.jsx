@@ -109,7 +109,7 @@ const HotelSearchForm = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-transparent from-blue-50 to-orange-50 p-4">
+    <div className="min-h-screen pt-22 bg-transparent from-blue-50 to-orange-50 p-4">
       <div className="max-w-7xl mx-auto">
         {/* Main Content */}
         <div className="bg-white rounded-2xl shadow-2xl p-4 sm:p-6 lg:p-8 backdrop-blur-sm bg-opacity-95">
