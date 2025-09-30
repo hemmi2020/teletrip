@@ -1,4 +1,4 @@
-// Slider.js - FIXED VERSION
+// Slider.js - FINAL CORRECT VERSION
 import React, { useEffect, useState, useRef } from "react";
 import image1 from "../images/1.jpg";
 import image2 from "../images/2.jpg";
@@ -49,7 +49,7 @@ const Slider = () => {
   }, [active, items.length]);
 
   return (
-    <main className="mt-16 w-full mb-0">
+    <main className="w-full mb-0">
       <section className="relative w-full h-screen bg-black">
         <div className="relative w-full h-full">
           {items.map((item, index) => (
@@ -70,43 +70,39 @@ const Slider = () => {
                 <div className="absolute inset-0 bg-black/40"></div>
               </div>
               
-              {/* Text Content - Responsive positioning */}
-              <div className="absolute inset-0 flex flex-col justify-center lg:justify-start lg:pt-32 xl:pt-40 px-4 sm:px-6 lg:px-8 z-10">
-                <div className="max-w-7xl mx-auto w-full">
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 text-white text-center lg:text-left">
-                    {/* Title */}
-                    <div className="lg:col-span-2 xl:col-span-1">
-                      <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-oswald uppercase leading-tight lg:leading-none transition-transform duration-1000 font-bold">
-                        {item.title}
-                      </h2>
-                    </div>
-                    
-                    {/* Description */}
-                    <div className="space-y-3 sm:space-y-4 lg:col-span-2 xl:col-span-1">
+              {/* Text Content - Positioned ABOVE the form */}
+              <div className="absolute top-24 sm:top-28 md:top-32 left-1/2 transform -translate-x-1/2 w-full max-w-6xl px-4 sm:px-6 lg:px-8 z-10">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 text-white text-center lg:text-left">
+                  {/* Title */}
+                  <div>
+                    <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-oswald uppercase leading-tight lg:leading-none font-bold">
+                      {item.title}
+                    </h2>
+                  </div>
+                  
+                  {/* Description */}
+                  <div className="space-y-3 sm:space-y-4">
+                    <p className="text-sm sm:text-base md:text-lg lg:text-xl leading-relaxed">
+                      {item.description.split(". ")[0]}.
+                    </p>
+                    {item.description.split(". ")[1] && (
                       <p className="text-sm sm:text-base md:text-lg lg:text-xl leading-relaxed">
-                        {item.description.split(". ")[0]}.
+                        {item.description.split(". ")[1]}.
                       </p>
-                      {item.description.split(". ")[1] && (
-                        <p className="text-sm sm:text-base md:text-lg lg:text-xl leading-relaxed">
-                          {item.description.split(". ")[1]}.
-                        </p>
-                      )}
-                    </div>
+                    )}
                   </div>
                 </div>
               </div>
             </div>
           ))}
 
-          {/* Hotel Search Form - FIXED: Changed z-index from z-30 to z-40 */}
-          <div className="absolute bottom-4 sm:bottom-6 md:bottom-8 lg:bottom-12 xl:bottom-16 left-1/2 transform -translate-x-1/2 w-full max-w-7xl px-2 sm:px-4 lg:px-8 z-40">
-            <div className="bg-transparent rounded-2xl">
-              <HotelSearchForm />
-            </div>
+          {/* Hotel Search Form - CRITICAL FIX: Position at bottom, NOT overlapping header */}
+          <div className="absolute bottom-8 sm:bottom-12 md:bottom-16 lg:bottom-20 left-1/2 transform -translate-x-1/2 w-full max-w-7xl px-4 sm:px-6 lg:px-8 z-40">
+            <HotelSearchForm />
           </div>
 
-          {/* Slide Indicators - FIXED: Adjusted position to not overlap with form */}
-          <div className="absolute bottom-2 sm:bottom-3 left-1/2 transform -translate-x-1/2 flex space-x-2 z-20">
+          {/* Slide Indicators */}
+          <div className="absolute bottom-2 sm:bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2 z-20">
             {items.map((_, index) => (
               <button
                 key={index}
@@ -142,15 +138,6 @@ const Slider = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
             </button>
-          </div>
-
-          {/* Mobile-only swipe hints */}
-          <div className="md:hidden absolute bottom-1 left-1/2 transform -translate-x-1/2 text-white/70 text-xs text-center z-20">
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-0.5 bg-white/50 rounded"></div>
-              <span>Swipe or tap dots to navigate</span>
-              <div className="w-8 h-0.5 bg-white/50 rounded"></div>
-            </div>
           </div>
         </div>
       </section>
