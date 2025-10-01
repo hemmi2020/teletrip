@@ -287,11 +287,7 @@ if (children > 0 && childAges.length > 0) {
         const requestBody = {
           stay: { checkIn, checkOut },
           occupancies: [
-            {
-              rooms: rooms,
-              adults: adults,
-              children: children > 0 ? children : 0,
-            },
+            occupancy
           ],
           geolocation: {
             latitude: parseFloat(lat),

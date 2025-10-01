@@ -466,6 +466,8 @@ const HotelSearchResults = () => {
         const rooms = parseInt(searchParams.get("rooms") || "1");
         const adults = parseInt(searchParams.get("adults") || "2");
         const children = parseInt(searchParams.get("children") || "0");
+        const childAgesParam = searchParams.get("childAges");
+        const childAges = childAgesParam ? childAgesParam.split(',').map(age => parseInt(age)) : [];
         const country = searchParams.get("country");
         const city = searchParams.get("city");
 
@@ -485,10 +487,21 @@ const HotelSearchResults = () => {
         const { lat, lon } = geoResult?.data?.[0] || {};
         if (!lat || !lon) throw new Error("Invalid coordinates");
 
+
+        const occupancy = { 
+  rooms, 
+  adults, 
+  children: children > 0 ? children : 0
+};
+
+if (children > 0 && childAges.length > 0) {
+  occupancy.paxes = childAges.map(age => ({ type: 'CH', age }));
+}
+
         const requestBody = {
           stay: { checkIn, checkOut },
           occupancies: [
-            { rooms, adults, children: children > 0 ? children : 0 },
+            occupancy,
           ],
           geolocation: {
             latitude: parseFloat(lat),
