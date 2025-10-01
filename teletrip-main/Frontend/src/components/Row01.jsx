@@ -6,7 +6,7 @@ const Row01 = () => {
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 items-center gap-12">
         {/* Left Text */}
         <div>
-          <h2 className="text-3xl md:text-4xl font-semibold mb-6 text-gray-800">Why Choose Us?</h2>
+          <h2 className="text-3xl md:text-4xl font-semibold mb-6 text-gray-800 underline">Why Choose Us?</h2>
           <p className="text-gray-700 leading-relaxed text-base md:text-lg space-y-4">
             <span className="block mb-4">
               <strong>Personalized Itineraries:</strong> We understand that every traveler is unique. Our experienced team works closely with you to craft a personalized itinerary that suits your interests, preferences, and budget.

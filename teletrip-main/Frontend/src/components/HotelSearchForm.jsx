@@ -179,11 +179,11 @@ const HotelSearchForm = () => {
   };
 
   const tabs = [
-    { id: 'stays', label: 'Stays', icon: '🏨' },
-    { id: 'transfers', label: 'Transfers', icon: '🚐' },
-    { id: 'experiences', label: 'Experiences', icon: '🎭' },
-    { id: 'car-rental', label: 'Car Rental', icon: '🚗' },
-    { id: 'theme-parks', label: 'Theme parks', icon: '🎢' }
+    { id: 'stays', label: 'Stays', icon: '🏨 ' },
+    { id: 'transfers', label: 'Transfers', icon: '🚐 ' },
+    { id: 'experiences', label: 'Experiences', icon: '🎭 ' },
+    { id: 'car-rental', label: 'Car Rental', icon: '🚗 ' },
+    { id: 'theme-parks', label: 'Theme parks', icon: '🎢 ' }
   ];
 
   return (
@@ -207,7 +207,7 @@ const HotelSearchForm = () => {
                 }`}
               >
                 <span className="text-base sm:text-lg">{tab.icon}</span>
-                <span className="hidden xs:inline">{tab.label}</span>
+                <span className=" hidden sm:inline">{tab.label}</span>
               </button>
             ))}
           </div>
