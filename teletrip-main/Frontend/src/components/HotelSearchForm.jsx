@@ -245,7 +245,7 @@ const HotelSearchForm = () => {
                     value={searchQuery}
                     onChange={handleSearchInputChange}
                     onFocus={() => setShowLocationDropdown(true)}
-                    placeholder="Where are you going?"
+                    placeholder="e.g: karachi, pakistan"
                     className="w-full pl-9 sm:pl-10 pr-10 py-2.5 sm:py-3 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-700 text-sm sm:text-base"
                     required
                   />
