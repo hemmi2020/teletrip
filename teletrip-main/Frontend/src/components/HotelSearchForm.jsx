@@ -131,7 +131,7 @@ const HotelSearchForm = () => {
   return (
     <div className="w-full pt-22">
       <div className="max-w-7xl mx-auto">
-        <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-4 sm:p-6 lg:p-8">
+        <div className="bg-white/40 backdrop-blur-sm rounded-2xl shadow-2xl p-4 sm:p-6 lg:p-8">
           <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800 mb-4 sm:mb-6">
             Search for hotels, transfers, experiences and more
           </h1>
