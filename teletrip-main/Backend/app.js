@@ -19,45 +19,17 @@ require('./models/blacklistToken.model');
 require('./models/notification.model');
 require('./models/review.model');
 
-// Import middlewares
-
-
-  
-
 dotenv.config();   
 connectToDb();
 const app = express();
 
-// Security middleware
-app.use(helmet());
-// Data sanitization
-app.use(mongoSanitize());
-app.use(xss());
-
-// Compression
-app.use(compression());
-
-// Body parsing middleware
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-
-// Cookie parser (if you use cookies)
-
-app.use(cookieParser());
-
-
+// Trust proxy - IMPORTANT for rate limiting on Render
 app.set('trust proxy', 1);
 
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP, please try again later.'
-});
-app.use(limiter);
+// Security middleware
+app.use(helmet());
 
-
-app.use(cookieParser());
+// CORS - Must be early in middleware chain
 app.use(cors({
     origin: [
         process.env.FRONTEND_URL,
@@ -70,14 +42,48 @@ app.use(cors({
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Cookie']
 }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true })); 
 
+// Body parsing middleware
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+// Cookie parser
+app.use(cookieParser());
 
+// Data sanitization
+app.use(mongoSanitize());
+app.use(xss());
+
+// Compression
+app.use(compression());
+
+// General API rate limiting (more lenient)
+const generalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 500, // Increased from 100
+  message: 'Too many requests from this IP, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Strict rate limiting for geocoding API (the problematic endpoint)
+const geocodeLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 10, // 10 requests per minute
+  message: 'Too many geocoding requests, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+  // Skip rate limiting for health checks
+  skip: (req) => req.path === '/health' || req.path === '/'
+});
+
+// Apply general rate limiter to all API routes
+app.use('/api', generalLimiter);
+
+// Static files
 app.use('/uploads', express.static('./uploads'));
 
-// Root route
+// Root route (no rate limit)
 app.get('/', (req, res) => {
     res.json({ 
         message: 'TeleTrip Backend API is running!',
@@ -85,7 +91,8 @@ app.get('/', (req, res) => {
         timestamp: new Date().toISOString() 
     });
 });
-// Fixed Health check route
+
+// Health check route (no rate limit)
 app.get('/health', (req, res) => {
     res.status(200).json({ 
         status: 'OK', 
@@ -96,21 +103,20 @@ app.get('/health', (req, res) => {
     });
 });
 
-
+// Routes
 app.use('/users', userRoutes); 
-app.use('/api', hotelRoutes); // Add this line
+app.use('/api', hotelRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/bookings', bookingRoutes);
+app.use('/api/user', userDashboardRoutes);
+app.use('/api/admin', adminDashboardRoutes);
+
 console.log('userRoutes:', typeof userRoutes);
 console.log('hotelRoutes:', typeof hotelRoutes);
 console.log('paymentRoutes:', typeof paymentRoutes);
 console.log('bookingRoutes:', typeof bookingRoutes);
-// New dashboard routes
-app.use('/api/user', userDashboardRoutes);
-app.use('/api/admin', adminDashboardRoutes);
 
 // Error handling middleware (MUST be last)
-// Handle 404s
-app.use(globalErrorHandler); // Handle all errors
-module.exports = app;
+app.use(globalErrorHandler);
 
+module.exports = app;
