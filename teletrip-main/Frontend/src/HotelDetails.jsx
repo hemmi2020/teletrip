@@ -246,6 +246,8 @@ const HotelDetails = () => {
         const rooms = parseInt(searchParams.get("rooms") || "1");
         const adults = parseInt(searchParams.get("adults") || "2");
         const children = parseInt(searchParams.get("children") || "0");
+        const childAgesParam = searchParams.get("childAges"); // NEW
+        const childAges = childAgesParam ? childAgesParam.split(',').map(age => parseInt(age)) : []; // NEW
         const country = searchParams.get("country");
         const city = searchParams.get("city");
 
@@ -268,6 +270,18 @@ const HotelDetails = () => {
         }
 
         const { lat, lon } = geoResult.data[0];
+
+        // FIXED: Build occupancy with paxes
+const occupancy = {
+  rooms: rooms,
+  adults: adults,
+  children: children > 0 ? children : 0,
+};
+
+// Add paxes array only if there are children
+if (children > 0 && childAges.length > 0) {
+  occupancy.paxes = childAges.map(age => ({ type: 'CH', age }));
+}
 
         // Search hotels
         const requestBody = {
@@ -368,7 +382,7 @@ const HotelDetails = () => {
     };
 
     fetchHotelDetails();
-  }, [hotelCode, searchParams, API_BASE_URL]);
+  }, [hotelCode, searchParams, API_BASE_URL, makeAuthenticatedRequest]);
 
   const handleBackToResults = () => {
     try {
