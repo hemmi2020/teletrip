@@ -442,6 +442,7 @@ const HotelSearchForm = () => {
               {/* Search Button */}
               <button
                 type="submit"
+                style={{ cursor: 'pointer' }}
                 className="w-full md:w-auto px-6 sm:px-8 py-2.5 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center justify-center space-x-2 cursor-pointer text-sm sm:text-base"
               >
                 <Search size={18} />
