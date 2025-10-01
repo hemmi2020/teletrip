@@ -1076,7 +1076,7 @@ const exportData = asyncErrorHandler(async (req, res) => {
     res.setHeader('Content-Disposition', `attachment; filename="${exportResult.filename}"`);
     
     return res.send(exportResult.data);
-  } catch (error) {
+  } catch (error) { 
     return ApiResponse.error(res, 'Export failed', 500);
   }
 });

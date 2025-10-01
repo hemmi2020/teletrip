@@ -378,7 +378,7 @@ if (children > 0 && childAges.length > 0) {
     };
 
     fetchHotelDetails();
-  }, [hotelCode, searchParams, API_BASE_URL, makeAuthenticatedRequest]);
+  }, [hotelCode, searchParams, API_BASE_URL]);
 
   const handleBackToResults = () => {
     try {

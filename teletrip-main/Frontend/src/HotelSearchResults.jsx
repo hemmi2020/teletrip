@@ -74,7 +74,7 @@ const HotelSearchResults = () => {
     ABW: "Aruba",
     AUS: "Australia",
     AUT: "Austria",
-    AZE: "Azerbaijan",
+    AZE: "Azerbaijan", 
 
     // B‑codes
     BHS: "Bahamas",
