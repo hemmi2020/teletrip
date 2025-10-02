@@ -202,7 +202,7 @@ const Header = () => {
 
                 {/* Cart Icon */}
                 <button
-                  onClick={() => setIsCartOpen(true)}
+                  onClick={() => setIsCartOpen(!isCartOpen)}
                   className="relative p-2 text-gray-700 hover:text-blue-600 transition-colors flex items-center space-x-2"
                 >
                   <svg 
