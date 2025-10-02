@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
+import ReviewsModal from "./components/ReviewModal";
 
 const HotelSearchResults = () => {
   const [searchParams] = useSearchParams();
@@ -42,6 +43,11 @@ const HotelSearchResults = () => {
   const [hotelReviews, setHotelReviews] = useState({});
 const [expandedReviews, setExpandedReviews] = useState({});
 const [loadingReviews, setLoadingReviews] = useState({});
+const [reviewsModal, setReviewsModal] = useState({
+  isOpen: false,
+  hotelId: null,
+  hotelName: null
+});
   const navigate = useNavigate();
 
   // Available amenities and accommodation types
@@ -463,28 +469,61 @@ const [loadingReviews, setLoadingReviews] = useState({});
 
   // ADD THIS FUNCTION
   const fetchTripAdvisorReviews = async (hotel) => {
-    if (hotelReviews[hotel.id]) return; // Already fetched
+  // Check if already fetched or currently loading
+  if (hotelReviews[hotel.id] || loadingReviews[hotel.id]) return;
+  
+  setLoadingReviews(prev => ({ ...prev, [hotel.id]: true }));
+  
+  try {
+    // Use hotel code (not id) and send proper hotel data
+    const hotelCode = hotel.code || hotel.id;
+    const cityName = hotel.city || hotel.address?.split(',')[0] || 'Baku';
     
-    setLoadingReviews(prev => ({ ...prev, [hotel.id]: true }));
+    console.log(`Fetching reviews for: ${hotel.name} in ${cityName}`);
     
-    try {
-      const response = await fetch(
-        `${API_BASE_URL}/api/hotels/${hotel.id}/reviews?name=${encodeURIComponent(hotel.name)}&city=${encodeURIComponent(hotel.address)}`
-      );
-      const data = await response.json();
-      
-      if (data.success && data.data) {
-        setHotelReviews(prev => ({
-          ...prev,
-          [hotel.id]: data.data
-        }));
-      }
-    } catch (error) {
-      console.error('Error fetching reviews:', error);
-    } finally {
-      setLoadingReviews(prev => ({ ...prev, [hotel.id]: false }));
+    const response = await fetch(
+      `${API_BASE_URL}/hotels/${encodeURIComponent(hotelCode)}/reviews?name=${encodeURIComponent(hotel.name)}&city=${encodeURIComponent(cityName)}`
+    );
+    
+    const data = await response.json();
+    
+    console.log('Reviews response:', data);
+    
+    if (data.success && data.data) {
+      setHotelReviews(prev => ({
+        ...prev,
+        [hotel.id]: data.data
+      }));
+    } else {
+      console.log('No reviews found or API returned error:', data.message);
     }
-  };
+  } catch (error) {
+    console.error('Error fetching reviews:', error);
+  } finally {
+    setLoadingReviews(prev => ({ ...prev, [hotel.id]: false }));
+  }
+};
+const openReviewsModal = (hotel) => {
+  setReviewsModal({
+    isOpen: true,
+    hotelId: hotel.id,
+    hotelName: hotel.name
+  });
+  
+  // Fetch reviews if not already fetched
+  if (!hotelReviews[hotel.id]) {
+    fetchTripAdvisorReviews(hotel);
+  }
+};
+
+// 5. Add function to close modal
+const closeReviewsModal = () => {
+  setReviewsModal({
+    isOpen: false,
+    hotelId: null,
+    hotelName: null
+  });
+};
 
   // ADD THIS useEffect AFTER your existing hotel fetching useEffect
   useEffect(() => {
@@ -992,132 +1031,57 @@ if (children > 0 && childAges.length > 0) {
                         )}
                       </div>
                       {/* Reviews Section - Add right after amenities */}
-{/* ✅ ADD THIS TRIPADVISOR REVIEWS SECTION HERE */}
-              {loadingReviews[hotel.id] ? (
-                <div className="flex items-center gap-2 text-sm text-gray-600 mt-4 pt-4 border-t">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Loading reviews...</span>
-                </div>
-              ) : hotelReviews[hotel.id] && hotelReviews[hotel.id].numReviews > 0 ? (
-                <div className="mt-4 pt-4 border-t border-gray-200">
-                  {/* Reviews Header */}
-                  <div className="flex items-center justify-between flex-wrap gap-2">
-                    <div className="flex items-center gap-3">
-                      {/* TripAdvisor Logo */}
-                      <img 
-                        src="https://static.tacdn.com/img2/brand_refresh/Tripadvisor_lockup_horizontal_secondary_registered.svg"
-                        alt="TripAdvisor"
-                        className="h-5"
-                      />
-                      
-                      {/* Rating Circles */}
-                      <div className="flex gap-0.5">
-                        {[...Array(5)].map((_, i) => (
-                          <div
-                            key={i}
-                            className={`w-5 h-5 rounded-full ${
-                              i < Math.floor(hotelReviews[hotel.id].rating)
-                                ? 'bg-green-600'
-                                : 'bg-gray-300'
-                            }`}
-                          />
-                        ))}
-                      </div>
-                      
-                      {/* Review Count Button */}
-                      <button
-                        onClick={() => {
-                          setExpandedReviews(prev => ({
-                            ...prev,
-                            [hotel.id]: !prev[hotel.id]
-                          }));
-                          if (!expandedReviews[hotel.id]) {
-                            fetchTripAdvisorReviews(hotel);
-                          }
-                        }}
-                        className="text-blue-600 hover:underline text-sm font-medium flex items-center gap-1"
-                      >
-                        <MessageSquare className="w-4 h-4" />
-                        {hotelReviews[hotel.id].numReviews.toLocaleString()} Reviews
-                        {expandedReviews[hotel.id] ? (
-                          <ChevronUp className="w-4 h-4" />
-                        ) : (
-                          <ChevronDown className="w-4 h-4" />
-                        )}
-                      </button>
-                    </div>
-                    
-                    {/* Ranking */}
-                    {hotelReviews[hotel.id].rankingData && (
-                      <span className="text-xs text-gray-600">
-                        #{hotelReviews[hotel.id].rankingData.ranking_string}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Expanded Reviews */}
-                  {expandedReviews[hotel.id] && hotelReviews[hotel.id].reviews && (
-                    <div className="mt-4 space-y-3">
-                      {hotelReviews[hotel.id].reviews.slice(0, 3).map((review, idx) => (
-                        <div key={idx} className="bg-gray-50 rounded-lg p-4">
-                          <div className="flex items-start justify-between mb-2">
-                            <div className="flex items-center gap-2">
-                              <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                                {review.user?.username?.charAt(0).toUpperCase() || 'U'}
-                              </div>
-                              <div>
-                                <div className="font-semibold text-sm">
-                                  {review.user?.username || 'Anonymous'}
-                                </div>
-                                <div className="text-xs text-gray-500">
-                                  {new Date(review.published_date).toLocaleDateString('en-US', {
-                                    month: 'short',
-                                    year: 'numeric'
-                                  })}
-                                </div>
-                              </div>
-                            </div>
-                            <div className="flex gap-0.5">
-                              {[...Array(5)].map((_, i) => (
-                                <div
-                                  key={i}
-                                  className={`w-4 h-4 rounded-full ${
-                                    i < review.rating ? 'bg-green-600' : 'bg-gray-300'
-                                  }`}
-                                />
-                              ))}
-                            </div>
-                          </div>
-                          
-                          {review.title && (
-                            <h4 className="font-semibold text-sm mb-1">{review.title}</h4>
-                          )}
-                          
-                          <p className="text-sm text-gray-700 leading-relaxed line-clamp-3">
-                            {review.text}
-                          </p>
-                          
-                          {review.trip_type && (
-                            <span className="inline-block mt-2 text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
-                              {review.trip_type}
-                            </span>
-                          )}
-                        </div>
-                      ))}
-                      
-                      {hotelReviews[hotel.id].reviews.length > 3 && (
-                        <button 
-                          onClick={() => window.open(`https://www.tripadvisor.com`, '_blank')}
-                          className="text-blue-600 hover:underline text-sm font-medium"
-                        >
-                          View all {hotelReviews[hotel.id].numReviews} reviews on TripAdvisor →
-                        </button>
-                      )}
-                    </div>
-                  )}
-                </div>
-              ) : null}
-              {/* END REVIEWS SECTION */}
+{/* Reviews Section - Simplified with Modal */}
+{loadingReviews[hotel.id] ? (
+  <div className="flex items-center gap-2 text-sm text-gray-600 mt-4 pt-4 border-t">
+    <Loader2 className="w-4 h-4 animate-spin" />
+    <span>Loading reviews...</span>
+  </div>
+) : hotelReviews[hotel.id] && hotelReviews[hotel.id].numReviews > 0 ? (
+  <div className="mt-4 pt-4 border-t border-gray-200">
+    <div className="flex items-center justify-between flex-wrap gap-2">
+      <div className="flex items-center gap-3">
+        {/* TripAdvisor Logo */}
+        <img 
+          src="https://static.tacdn.com/img2/brand_refresh/Tripadvisor_lockup_horizontal_secondary_registered.svg"
+          alt="TripAdvisor"
+          className="h-5"
+        />
+        
+        {/* Rating Circles */}
+        <div className="flex gap-0.5">
+          {[...Array(5)].map((_, i) => (
+            <div
+              key={i}
+              className={`w-5 h-5 rounded-full ${
+                i < Math.floor(hotelReviews[hotel.id].rating)
+                  ? 'bg-green-600'
+                  : 'bg-gray-300'
+              }`}
+            />
+          ))}
+        </div>
+        
+        {/* Review Count Button - Opens Modal */}
+        <button
+          onClick={() => openReviewsModal(hotel)}
+          className="text-blue-600 hover:underline text-sm font-medium flex items-center gap-1"
+        >
+          <MessageSquare className="w-4 h-4" />
+          {hotelReviews[hotel.id].numReviews.toLocaleString()} Reviews
+        </button>
+      </div>
+      
+      {/* Ranking */}
+      {hotelReviews[hotel.id].rankingData && (
+        <span className="text-xs text-gray-600">
+          #{hotelReviews[hotel.id].rankingData.ranking_string}
+        </span>
+      )}
+    </div>
+  </div>
+) : null}
+{/* END REVIEWS SECTION */}
                     </div>
 
                     <div className="flex justify-between items-center">
@@ -1165,6 +1129,13 @@ if (children > 0 && childAges.length > 0) {
             )}
           </div>
         </div>
+        {/* Reviews Modal */}
+<ReviewsModal
+  isOpen={reviewsModal.isOpen}
+  onClose={closeReviewsModal}
+  hotelName={reviewsModal.hotelName}
+  reviewData={reviewsModal.hotelId ? hotelReviews[reviewsModal.hotelId] : null}
+/>
       </div>
       
       {/* Overlay for mobile */}
