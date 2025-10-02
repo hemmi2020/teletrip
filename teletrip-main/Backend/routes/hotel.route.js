@@ -342,6 +342,28 @@ router.get('/hotels/details/:hotelCode', async (req, res) => {
     }
 });
 
+router.get('/hotels/:hotelCode/reviews', async (req, res) => {
+  try {
+    const { hotelCode } = req.params;
+    
+    const reviews = await Review.find({ hotelId: hotelCode })
+      .populate('userId', 'name')
+      .sort({ createdAt: -1 })
+      .limit(20);
+    
+    res.json({
+      success: true,
+      reviews: reviews
+    });
+  } catch (error) {
+    console.error('Error fetching reviews:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch reviews'
+    });
+  }
+});
+
 // Geocoding route (existing)
 router.get('/geocode', async (req, res) => {  
     try {
