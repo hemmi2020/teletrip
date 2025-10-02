@@ -9,6 +9,7 @@ const HOTELBEDS_API_KEY = process.env.HOTELBEDS_API_KEY || '106700a0f2f1e2aa1d4c
 const HOTELBEDS_SECRET = process.env.HOTELBEDS_SECRET || '018e478aa6'; 
 const HOTELBEDS_BASE_URL = 'https://api.test.hotelbeds.com';
 const HOTELBEDS_CONTENT_URL = 'https://api.test.hotelbeds.com/hotel-content-api/1.0';   
+const TRIPADVISOR_API_KEY = process.env.TRIPADVISOR_API_KEY ;
 
 // Generate signature for Hotelbeds API 
 function generateHotelbedsSignature(apiKey, secret, timestamp) { 
@@ -342,27 +343,131 @@ router.get('/hotels/details/:hotelCode', async (req, res) => {
     }
 });
 
+// Search TripAdvisor for hotel location ID
+async function searchTripAdvisorLocation(hotelName, city) {
+  try {
+    const searchQuery = `${hotelName} ${city}`;
+    const url = `https://api.content.tripadvisor.com/api/v1/location/search?searchQuery=${encodeURIComponent(searchQuery)}&category=hotels&language=en&key=${TRIPADVISOR_API_KEY}`;
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'accept': 'application/json'
+      }
+    });
+    
+    const data = await response.json();
+    
+    if (data.data && data.data.length > 0) {
+      return data.data[0].location_id;
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('TripAdvisor search error:', error);
+    return null;
+  }
+}
+
+// Get TripAdvisor location details (rating info)
+async function getTripAdvisorDetails(locationId) {
+  try {
+    const url = `https://api.content.tripadvisor.com/api/v1/location/${locationId}/details?language=en&key=${TRIPADVISOR_API_KEY}`;
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'accept': 'application/json'
+      }
+    });
+    
+    return await response.json();
+  } catch (error) {
+    console.error('TripAdvisor details error:', error);
+    return null;
+  }
+}
+
+// Get TripAdvisor reviews
+async function getTripAdvisorReviews(locationId) {
+  try {
+    const url = `https://api.content.tripadvisor.com/api/v1/location/${locationId}/reviews?language=en&key=${TRIPADVISOR_API_KEY}`;
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'accept': 'application/json'
+      }
+    });
+    
+    return await response.json();
+  } catch (error) {
+    console.error('TripAdvisor reviews error:', error);
+    return null;
+  }
+}
+
+// ROUTE: Get hotel reviews from TripAdvisor
 router.get('/hotels/:hotelCode/reviews', async (req, res) => {
   try {
     const { hotelCode } = req.params;
     
-    const reviews = await Review.find({ hotelId: hotelCode })
-      .populate('userId', 'name')
-      .sort({ createdAt: -1 })
-      .limit(20);
+    // Get hotel info from your database or Hotelbeds
+    // For now, we'll need the hotel name and city from the search results
+    // You should store this info when hotels are searched
     
+    // This is a placeholder - you'll need to get actual hotel data
+    const hotelName = req.query.name || '';
+    const city = req.query.city || '';
+    
+    if (!hotelName || !city) {
+      return res.json({
+        success: false,
+        message: 'Hotel name and city required',
+        data: null
+      });
+    }
+    
+    // Step 1: Search for hotel on TripAdvisor
+    const locationId = await searchTripAdvisorLocation(hotelName, city);
+    
+    if (!locationId) {
+      return res.json({
+        success: false,
+        message: 'Hotel not found on TripAdvisor',
+        data: null
+      });
+    }
+    
+    // Step 2: Get hotel details
+    const details = await getTripAdvisorDetails(locationId);
+    
+    // Step 3: Get reviews
+    const reviewsData = await getTripAdvisorReviews(locationId);
+    
+    // Format response
     res.json({
       success: true,
-      reviews: reviews
+      data: {
+        locationId: locationId,
+        rating: details?.rating || 0,
+        numReviews: details?.num_reviews || 0,
+        rankingData: details?.ranking_data || null,
+        ratingImageUrl: details?.rating_image_url || null,
+        reviews: reviewsData?.data || []
+      }
     });
+    
   } catch (error) {
-    console.error('Error fetching reviews:', error);
+    console.error('Error fetching TripAdvisor data:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to fetch reviews'
+      message: error.message,
+      data: null
     });
   }
 });
+
 
 // Geocoding route (existing)
 router.get('/geocode', async (req, res) => {  

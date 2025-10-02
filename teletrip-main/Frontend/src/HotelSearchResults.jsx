@@ -41,6 +41,7 @@ const HotelSearchResults = () => {
   });
   const [hotelReviews, setHotelReviews] = useState({});
 const [expandedReviews, setExpandedReviews] = useState({});
+const [loadingReviews, setLoadingReviews] = useState({});
   const navigate = useNavigate();
 
   // Available amenities and accommodation types
@@ -460,40 +461,51 @@ const [expandedReviews, setExpandedReviews] = useState({});
   };
 
 
-  const fetchHotelReviews = async (hotelCode) => {
+  // ADD THIS FUNCTION
+  const fetchTripAdvisorReviews = async (hotel) => {
+    if (hotelReviews[hotel.id]) return; // Already fetched
+    
+    setLoadingReviews(prev => ({ ...prev, [hotel.id]: true }));
+    
     try {
-      const response = await fetch(`${API_BASE_URL}/api/v1/hotels/${hotelCode}/reviews`);
+      const response = await fetch(
+        `${API_BASE_URL}/api/hotels/${hotel.id}/reviews?name=${encodeURIComponent(hotel.name)}&city=${encodeURIComponent(hotel.address)}`
+      );
       const data = await response.json();
       
-      if (data.success) {
+      if (data.success && data.data) {
         setHotelReviews(prev => ({
           ...prev,
-          [hotelCode]: data.reviews || []
+          [hotel.id]: data.data
         }));
       }
     } catch (error) {
       console.error('Error fetching reviews:', error);
-      // Set empty array on error
-      setHotelReviews(prev => ({
-        ...prev,
-        [hotelCode]: []
-      }));
+    } finally {
+      setLoadingReviews(prev => ({ ...prev, [hotel.id]: false }));
     }
   };
 
-  // 4. ADD HELPER FUNCTIONS
-  const calculateAverageRating = (reviews) => {
-    if (!reviews || reviews.length === 0) return 0;
-    const sum = reviews.reduce((acc, review) => acc + review.rating, 0);
-    return (sum / reviews.length).toFixed(1);
+  // ADD THIS useEffect AFTER your existing hotel fetching useEffect
+  useEffect(() => {
+    if (hotels.length > 0) {
+      // Fetch reviews for first 5 hotels initially
+      hotels.slice(0, 5).forEach(hotel => {
+        fetchTripAdvisorReviews(hotel);
+      });
+    }
+  }, [hotels]);
+
+  // HELPER FUNCTION
+  const getRatingColor = (rating) => {
+    if (rating >= 4.5) return "bg-green-600";
+    if (rating >= 3.5) return "bg-green-500";
+    if (rating >= 2.5) return "bg-yellow-500";
+    if (rating >= 1.5) return "bg-orange-500";
+    return "bg-red-600";
   };
 
-  const getReviewScoreColor = (score) => {
-    if (score >= 4.0) return "bg-green-600";
-    if (score >= 3.0) return "bg-yellow-500";
-    return "bg-orange-500";
-  };
-
+ 
   useEffect(() => {
     const fetchHotels = async () => {
       try {
@@ -631,16 +643,7 @@ if (children > 0 && childAges.length > 0) {
     fetchHotels();
   }, [searchParams]);
 
-  useEffect(() => {
-    // Only fetch reviews after hotels are loaded
-    if (hotels.length > 0) {
-      hotels.forEach(hotel => {
-        if (hotel.id && !hotelReviews[hotel.id]) {
-          fetchHotelReviews(hotel.id);
-        }
-      });
-    }
-  }, [hotels]);
+ 
 
   // Filter hotels based on selected filters
   const filteredHotels = hotels.filter(hotel => {
@@ -989,114 +992,132 @@ if (children > 0 && childAges.length > 0) {
                         )}
                       </div>
                       {/* Reviews Section - Add right after amenities */}
-{hotelReviews[hotel.id] && hotelReviews[hotel.id].length > 0 && (
-  <div className="mt-4 pt-4 border-t border-gray-200">
-    <div className="flex items-center justify-between">
-      <div className="flex items-center gap-3">
-        {/* Review Score */}
-        <div className={`${getReviewScoreColor(calculateAverageRating(hotelReviews[hotel.id]))} text-white px-3 py-1 rounded-lg font-bold text-lg`}>
-          {calculateAverageRating(hotelReviews[hotel.id])}
-        </div>
-        
-        {/* Review Bars */}
-        <div className="flex gap-1">
-          {[...Array(5)].map((_, i) => (
-            <div
-              key={i}
-              className={`w-8 h-2 rounded-full ${
-                i < Math.floor(calculateAverageRating(hotelReviews[hotel.id])) 
-                  ? 'bg-green-600' 
-                  : 'bg-gray-300'
-              }`}
-            />
-          ))}
-        </div>
-        
-        {/* Review Count Button */}
-        <button
-          onClick={() => setExpandedReviews(prev => ({
-            ...prev,
-            [hotel.id]: !prev[hotel.id]
-          }))}
-          className="text-blue-600 hover:underline text-sm font-medium flex items-center gap-1"
-        >
-          <MessageSquare className="w-4 h-4" />
-          {hotelReviews[hotel.id].length} Review{hotelReviews[hotel.id].length !== 1 ? 's' : ''}
-          {expandedReviews[hotel.id] ? (
-            <ChevronUp className="w-4 h-4" />
-          ) : (
-            <ChevronDown className="w-4 h-4" />
-          )}
-        </button>
-      </div>
-    </div>
-    
-    {/* Expanded Reviews */}
-    {expandedReviews[hotel.id] && (
-      <div className="mt-4 space-y-3">
-        {hotelReviews[hotel.id].slice(0, 3).map((review) => (
-          <div key={review._id} className="bg-gray-50 rounded-lg p-4">
-            <div className="flex items-start justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                  {review.userId?.name?.charAt(0).toUpperCase() || 'U'}
+{/* ✅ ADD THIS TRIPADVISOR REVIEWS SECTION HERE */}
+              {loadingReviews[hotel.id] ? (
+                <div className="flex items-center gap-2 text-sm text-gray-600 mt-4 pt-4 border-t">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Loading reviews...</span>
                 </div>
-                <div>
-                  <div className="font-semibold text-sm text-gray-900">
-                    {review.userId?.name || 'Anonymous'}
+              ) : hotelReviews[hotel.id] && hotelReviews[hotel.id].numReviews > 0 ? (
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  {/* Reviews Header */}
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <div className="flex items-center gap-3">
+                      {/* TripAdvisor Logo */}
+                      <img 
+                        src="https://static.tacdn.com/img2/brand_refresh/Tripadvisor_lockup_horizontal_secondary_registered.svg"
+                        alt="TripAdvisor"
+                        className="h-5"
+                      />
+                      
+                      {/* Rating Circles */}
+                      <div className="flex gap-0.5">
+                        {[...Array(5)].map((_, i) => (
+                          <div
+                            key={i}
+                            className={`w-5 h-5 rounded-full ${
+                              i < Math.floor(hotelReviews[hotel.id].rating)
+                                ? 'bg-green-600'
+                                : 'bg-gray-300'
+                            }`}
+                          />
+                        ))}
+                      </div>
+                      
+                      {/* Review Count Button */}
+                      <button
+                        onClick={() => {
+                          setExpandedReviews(prev => ({
+                            ...prev,
+                            [hotel.id]: !prev[hotel.id]
+                          }));
+                          if (!expandedReviews[hotel.id]) {
+                            fetchTripAdvisorReviews(hotel);
+                          }
+                        }}
+                        className="text-blue-600 hover:underline text-sm font-medium flex items-center gap-1"
+                      >
+                        <MessageSquare className="w-4 h-4" />
+                        {hotelReviews[hotel.id].numReviews.toLocaleString()} Reviews
+                        {expandedReviews[hotel.id] ? (
+                          <ChevronUp className="w-4 h-4" />
+                        ) : (
+                          <ChevronDown className="w-4 h-4" />
+                        )}
+                      </button>
+                    </div>
+                    
+                    {/* Ranking */}
+                    {hotelReviews[hotel.id].rankingData && (
+                      <span className="text-xs text-gray-600">
+                        #{hotelReviews[hotel.id].rankingData.ranking_string}
+                      </span>
+                    )}
                   </div>
-                  <div className="text-xs text-gray-500">
-                    {new Date(review.createdAt).toLocaleDateString('en-US', {
-                      month: 'short',
-                      year: 'numeric'
-                    })}
-                  </div>
+
+                  {/* Expanded Reviews */}
+                  {expandedReviews[hotel.id] && hotelReviews[hotel.id].reviews && (
+                    <div className="mt-4 space-y-3">
+                      {hotelReviews[hotel.id].reviews.slice(0, 3).map((review, idx) => (
+                        <div key={idx} className="bg-gray-50 rounded-lg p-4">
+                          <div className="flex items-start justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                                {review.user?.username?.charAt(0).toUpperCase() || 'U'}
+                              </div>
+                              <div>
+                                <div className="font-semibold text-sm">
+                                  {review.user?.username || 'Anonymous'}
+                                </div>
+                                <div className="text-xs text-gray-500">
+                                  {new Date(review.published_date).toLocaleDateString('en-US', {
+                                    month: 'short',
+                                    year: 'numeric'
+                                  })}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex gap-0.5">
+                              {[...Array(5)].map((_, i) => (
+                                <div
+                                  key={i}
+                                  className={`w-4 h-4 rounded-full ${
+                                    i < review.rating ? 'bg-green-600' : 'bg-gray-300'
+                                  }`}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                          
+                          {review.title && (
+                            <h4 className="font-semibold text-sm mb-1">{review.title}</h4>
+                          )}
+                          
+                          <p className="text-sm text-gray-700 leading-relaxed line-clamp-3">
+                            {review.text}
+                          </p>
+                          
+                          {review.trip_type && (
+                            <span className="inline-block mt-2 text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
+                              {review.trip_type}
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                      
+                      {hotelReviews[hotel.id].reviews.length > 3 && (
+                        <button 
+                          onClick={() => window.open(`https://www.tripadvisor.com`, '_blank')}
+                          className="text-blue-600 hover:underline text-sm font-medium"
+                        >
+                          View all {hotelReviews[hotel.id].numReviews} reviews on TripAdvisor →
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
-              </div>
-              <div className="flex items-center gap-1">
-                <div className="bg-green-600 text-white px-2 py-0.5 rounded text-xs font-bold">
-                  {review.rating.toFixed(1)}
-                </div>
-                <div className="flex">
-                  {[...Array(5)].map((_, i) => (
-                    <Star
-                      key={i}
-                      className={`w-3 h-3 ${
-                        i < review.rating
-                          ? 'fill-yellow-400 text-yellow-400'
-                          : 'text-gray-300'
-                      }`}
-                    />
-                  ))}
-                </div>
-              </div>
-            </div>
-            
-            <p className="text-gray-700 text-sm leading-relaxed">
-              {review.comment}
-            </p>
-            
-            {review.categories && (
-              <div className="flex flex-wrap gap-2 mt-2">
-                {Object.entries(review.categories).map(([category, rating]) => (
-                  <span key={category} className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
-                    {category}: {rating}/5
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
-        ))}
-        
-        {hotelReviews[hotel.id].length > 3 && (
-          <button className="text-blue-600 hover:underline text-sm font-medium">
-            View all {hotelReviews[hotel.id].length} reviews
-          </button>
-        )}
-      </div>
-    )}
-  </div>
-)}
+              ) : null}
+              {/* END REVIEWS SECTION */}
                     </div>
 
                     <div className="flex justify-between items-center">
