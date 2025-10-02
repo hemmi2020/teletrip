@@ -23,7 +23,26 @@ import {
 } from "lucide-react";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
-import ReviewsModal from "./components/ReviewModal";
+import ReviewsModal from "./components/ReviewsModal";
+
+
+const RatingCircles = ({ rating, size = 'w-5 h-5' }) => {
+  const numRating = Number(rating) || 0;
+  const filledCircles = Math.round(numRating);
+  
+  return (
+    <div className="flex gap-0.5">
+      {[...Array(5)].map((_, i) => (
+        <div
+          key={i}
+          className={`${size} rounded-full ${
+            i < filledCircles ? 'bg-green-600' : 'bg-gray-300'
+          }`}
+        />
+      ))}
+    </div>
+  );
+};
 
 const HotelSearchResults = () => {
   const [searchParams] = useSearchParams();
@@ -527,13 +546,13 @@ const closeReviewsModal = () => {
 
   // ADD THIS useEffect AFTER your existing hotel fetching useEffect
   useEffect(() => {
-    if (hotels.length > 0) {
-      // Fetch reviews for first 5 hotels initially
-      hotels.slice(0, 5).forEach(hotel => {
-        fetchTripAdvisorReviews(hotel);
-      });
-    }
-  }, [hotels]);
+  if (hotels.length > 0) {
+    // Fetch reviews for ALL hotels
+    hotels.forEach(hotel => {
+      fetchTripAdvisorReviews(hotel);
+    });
+  }
+}, [hotels]);
 
   // HELPER FUNCTION
   const getRatingColor = (rating) => {
@@ -1005,7 +1024,7 @@ if (children > 0 && childAges.length > 0) {
                             {hotel.price !== "N/A" ? `€${hotel.price}` : "Price on request"}
                           </div>
                           {hotel.price !== "N/A" && (
-                            <div className="text-sm text-gray-600">/night</div>
+                            <div className="text-sm text-gray-600">Total</div>
                           )}
                         </div>
                       </div>
@@ -1049,18 +1068,7 @@ if (children > 0 && childAges.length > 0) {
         />
         
         {/* Rating Circles */}
-        <div className="flex gap-0.5">
-          {[...Array(5)].map((_, i) => (
-            <div
-              key={i}
-              className={`w-5 h-5 rounded-full ${
-                i < Math.floor(hotelReviews[hotel.id].rating)
-                  ? 'bg-green-600'
-                  : 'bg-gray-300'
-              }`}
-            />
-          ))}
-        </div>
+        <RatingCircles rating={hotelReviews[hotel.id].rating} />
         
         {/* Review Count Button - Opens Modal */}
         <button
@@ -1072,12 +1080,12 @@ if (children > 0 && childAges.length > 0) {
         </button>
       </div>
       
-      {/* Ranking */}
+      {/* Ranking
       {hotelReviews[hotel.id].rankingData && (
         <span className="text-xs text-gray-600">
           #{hotelReviews[hotel.id].rankingData.ranking_string}
         </span>
-      )}
+      )} */}
     </div>
   </div>
 ) : null}
