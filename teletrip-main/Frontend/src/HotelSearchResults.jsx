@@ -459,6 +459,41 @@ const [expandedReviews, setExpandedReviews] = useState({});
     setSortOption("default");
   };
 
+
+  const fetchHotelReviews = async (hotelCode) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/v1/hotels/${hotelCode}/reviews`);
+      const data = await response.json();
+      
+      if (data.success) {
+        setHotelReviews(prev => ({
+          ...prev,
+          [hotelCode]: data.reviews || []
+        }));
+      }
+    } catch (error) {
+      console.error('Error fetching reviews:', error);
+      // Set empty array on error
+      setHotelReviews(prev => ({
+        ...prev,
+        [hotelCode]: []
+      }));
+    }
+  };
+
+  // 4. ADD HELPER FUNCTIONS
+  const calculateAverageRating = (reviews) => {
+    if (!reviews || reviews.length === 0) return 0;
+    const sum = reviews.reduce((acc, review) => acc + review.rating, 0);
+    return (sum / reviews.length).toFixed(1);
+  };
+
+  const getReviewScoreColor = (score) => {
+    if (score >= 4.0) return "bg-green-600";
+    if (score >= 3.0) return "bg-yellow-500";
+    return "bg-orange-500";
+  };
+
   useEffect(() => {
     const fetchHotels = async () => {
       try {
@@ -596,6 +631,17 @@ if (children > 0 && childAges.length > 0) {
     fetchHotels();
   }, [searchParams]);
 
+  useEffect(() => {
+    // Only fetch reviews after hotels are loaded
+    if (hotels.length > 0) {
+      hotels.forEach(hotel => {
+        if (hotel.id && !hotelReviews[hotel.id]) {
+          fetchHotelReviews(hotel.id);
+        }
+      });
+    }
+  }, [hotels]);
+
   // Filter hotels based on selected filters
   const filteredHotels = hotels.filter(hotel => {
     // Amenities filter
@@ -656,42 +702,10 @@ if (children > 0 && childAges.length > 0) {
     );
   }
 
-  const fetchHotelReviews = async (hotelCode) => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/api/hotels/${hotelCode}/reviews`);
-    const data = await response.json();
-    
-    if (data.success) {
-      setHotelReviews(prev => ({
-        ...prev,
-        [hotelCode]: data.reviews
-      }));
-    }
-  } catch (error) {
-    console.error('Error fetching reviews:', error);
-  }
-};
+  
 
-useEffect(() => {
-  if (hotels.length > 0) {
-    hotels.forEach(hotel => {
-      fetchHotelReviews(hotel.id);
-    });
-  }
-}, [hotels]);
 
-const calculateAverageRating = (reviews) => {
-  if (!reviews || reviews.length === 0) return 0;
-  const sum = reviews.reduce((acc, review) => acc + review.rating, 0);
-  return (sum / reviews.length).toFixed(1);
-};
 
-// 6. ADD THIS HELPER FUNCTION to get review score color
-const getReviewScoreColor = (score) => {
-  if (score >= 4.0) return "bg-green-600";
-  if (score >= 3.0) return "bg-yellow-500";
-  return "bg-orange-500";
-};
 
 
   return (
