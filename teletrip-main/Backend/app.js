@@ -103,7 +103,7 @@ app.get('/health', (req, res) => {
     });
 });
 
-// Routes
+// Routes 
 app.use('/users', userRoutes); 
 app.use('/api', hotelRoutes);
 app.use('/api/payments', paymentRoutes);

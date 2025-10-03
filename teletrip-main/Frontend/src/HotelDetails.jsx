@@ -471,7 +471,49 @@ if (children > 0 && childAges.length > 0) {
         )}
 
         {/* Hotel Header */}
-        <HotelImageGallery images={hotel.images} hotelName={hotel.name} />
+        {/* Image Gallery */}
+  <HotelImageGallery hotel={hotel} />
+
+  {/* Hotel Info Card */}
+  <div className="bg-white rounded-lg shadow-lg overflow-hidden mb-8">
+    <div className="p-6">
+      <div className="flex justify-between items-start mb-4">
+        <div>
+          <h1 className="text-3xl font-bold mb-2">{hotel.name}</h1>
+          <div className="flex items-center mb-2">
+            <Star className="w-5 h-5 text-yellow-400 fill-current mr-1" />
+            <span className="text-lg font-medium">{hotel.category}</span>
+          </div>
+          <div className="flex items-center text-gray-600">
+            <MapPin className="w-4 h-4 mr-1" />
+            <span>{hotel.address}</span>
+          </div>
+        </div>
+        <div className="text-right">
+          <div className="text-sm text-gray-600">From</div>
+          <div className="text-3xl font-bold text-blue-600">
+            €{hotel.minRate}
+          </div>
+          <div className="text-sm text-gray-600">/night</div>
+        </div>
+      </div>
+      {/* Amenities */}
+      {hotel.amenities && hotel.amenities.length > 0 && (
+        <div className="flex gap-3 flex-wrap">
+          {hotel.amenities.map((amenity, index) => (
+            <div
+              key={index}
+              className="flex items-center bg-gray-100 px-3 py-1 rounded-full"
+            >
+              {getAmenityIcon(amenity)}
+              <span className="ml-2 text-sm">{amenity}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  </div>
+
 
         {/* Search Summary */}
         <div className="bg-gray-50 rounded-lg p-4 mb-8">
