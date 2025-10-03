@@ -4,6 +4,7 @@ import { ImageIcon, X } from 'lucide-react';
 // Add this component to your HotelDetails.jsx file
 const HotelImageGallery = ({ hotel }) => {
   const [showAllPhotos, setShowAllPhotos] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   // Extract and format images from hotel data
   const getFormattedImages = () => {
@@ -37,37 +38,119 @@ const HotelImageGallery = ({ hotel }) => {
     );
   }
 
-  // Full screen gallery modal
+  // Full screen gallery modal - Bedsonline style with proper overlay
   if (showAllPhotos) {
+
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-95 z-50 overflow-y-auto">
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex justify-between items-center mb-6 sticky top-0 bg-black bg-opacity-90 py-4">
-            <h2 className="text-white text-2xl font-semibold">
-              All Photos ({images.length})
-            </h2>
-            <button
-              onClick={() => setShowAllPhotos(false)}
-              className="text-white hover:text-gray-300 text-3xl font-light w-10 h-10 flex items-center justify-center"
-            >
-              <X className="w-8 h-8" />
-            </button>
+      <>
+        {/* Backdrop Overlay */}
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-50 transition-opacity"
+          onClick={() => setShowAllPhotos(false)}
+        />
+
+        {/* Modal Container */}
+        <div className="fixed pt-25 inset-0 z-50 flex items-center justify-center p-4 ">
+          <div 
+            className="bg-white w-[80%] rounded-lg shadow-2xl  max-w-6xl max-h-[90vh] overflow-hidden flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+        {/* Header */}
+        <div className="bg-white border-b border-gray-200 px-6 py-4  flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-gray-100 rounded flex items-center justify-center">
+              <ImageIcon className="w-5 h-5 text-gray-600" />
+            </div>
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900">{hotel.name}</h2>
+              <p className="text-sm text-gray-500">Photo gallery</p>
+            </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {images.map((img, index) => (
-              <img
-                key={index}
-                src={img}
-                alt={`${hotel.name} - Photo ${index + 1}`}
-                className="w-full h-64 object-cover rounded-lg"
-                onError={(e) => {
-                  e.target.src = "https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg";
-                }}
-              />
-            ))}
+          <button
+            onClick={() => setShowAllPhotos(false)}
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+          >
+            <X className="w-6 h-6 text-gray-600" />
+          </button>
+        </div>
+
+        {/* Main Content */}
+        <div className="flex-1 overflow-y-auto bg-gray-50">
+          <div className="max-w-7xl mx-auto px-4 py-6">
+            {/* Large Preview Image */}
+            <div className="bg-white rounded-lg shadow-sm mb-6 overflow-hidden">
+              <div className="relative h-[500px] bg-gray-100">
+                <img
+                  src={images[currentImageIndex]}
+                  alt={`${hotel.name} - Photo ${currentImageIndex + 1}`}
+                  className="w-full h-full object-contain"
+                  onError={(e) => {
+                    e.target.src = "https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg";
+                  }}
+                />
+                
+                {/* Navigation Arrows */}
+                {images.length > 1 && (
+                  <>
+                    <button
+                      onClick={() => setCurrentImageIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1))}
+                      className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-gray-800 bg-opacity-70 hover:bg-opacity-90 text-white rounded-full flex items-center justify-center transition-all"
+                    >
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={() => setCurrentImageIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1))}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-gray-800 bg-opacity-70 hover:bg-opacity-90 text-white rounded-full flex items-center justify-center transition-all"
+                    >
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                  </>
+                )}
+
+                {/* Image Counter */}
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-gray-800 bg-opacity-70 text-white px-4 py-2 rounded-full text-sm">
+                  {currentImageIndex + 1} / {images.length}
+                </div>
+              </div>
+            </div>
+
+            {/* Thumbnail Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+              {images.map((img, index) => (
+                <div
+                  key={index}
+                  onClick={() => setCurrentImageIndex(index)}
+                  className={`relative cursor-pointer rounded-lg overflow-hidden transition-all ${
+                    currentImageIndex === index
+                      ? 'ring-4 ring-blue-500 shadow-lg'
+                      : 'hover:ring-2 hover:ring-gray-300'
+                  }`}
+                >
+                  <div className="aspect-video bg-gray-100">
+                    <img
+                      src={img}
+                      alt={`${hotel.name} - Thumbnail ${index + 1}`}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.target.src = "https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg";
+                      }}
+                    />
+                  </div>
+                  {currentImageIndex === index && (
+                    <div className="absolute inset-0 bg-blue-500 bg-opacity-20" />
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
+      </div>
+      </>
     );
   }
 
@@ -154,5 +237,6 @@ const HotelImageGallery = ({ hotel }) => {
     </div>
   );
 };
+
 
 export default HotelImageGallery;
