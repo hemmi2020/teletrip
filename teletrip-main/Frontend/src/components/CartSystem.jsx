@@ -450,7 +450,7 @@ export const AuthModal = ({ isOpen, onClose, defaultTab = 'login' }) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg w-full max-w-md relative">
+      <div className="bg-white rounded-lg w-full max-w-md relative pt-15">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b">
           <h2 className="text-xl font-semibold">
