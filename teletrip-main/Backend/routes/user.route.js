@@ -4,6 +4,7 @@ const {body} = require('express-validator');
 const userController = require('../controllers/user.controller'); 
 const authMiddleware = require('../middlewares/auth.middleware');   
 const { validateRequest } = require('../middlewares/validation.middleware');
+const userModel = require('../models/user.model');
  
  
 router.post('/register',[ 
@@ -18,6 +19,66 @@ router.post('/login',[
 ],validateRequest, userController.loginUser);
 console.log('authUser:', typeof authMiddleware.authUser);
 console.log('getUserProfile:', typeof userController.getUserProfile);   
+
+// Google OAuth Login/Signup Route
+router.post('/google-auth', async (req, res) => {
+  try {
+    const { email, name, googleId, picture } = req.body;
+
+    if (!email || !googleId) {
+      return res.status(400).json({ 
+        message: 'Email and Google ID are required' 
+      });
+    }
+
+    // Check if user exists
+    let user = await userModel.findOne({ email });
+
+    if (user) {
+      // User exists - update googleId if not set
+      if (!user.googleId) {
+        user.googleId = googleId;
+        user.profilePicture = picture;
+        await user.save();
+      }
+    } else {
+      // Create new user
+      const nameParts = name ? name.split(' ') : ['User', ''];
+      user = await userModel.create({
+        googleId,
+        email,
+        fullname: {
+          firstname: nameParts[0] || 'User',
+          lastname: nameParts.slice(1).join(' ') || '',
+        },
+        profilePicture: picture,
+        isVerified: true, // Google accounts are pre-verified
+      });
+    }
+
+    // Generate JWT token (using your existing token generation)
+    const token = user.generateAuthToken();
+
+    // Return user data and token
+    res.status(200).json({
+      success: true,
+      token,
+      user: {
+        _id: user._id,
+        email: user.email,
+        fullname: user.fullname,
+        profilePicture: user.profilePicture
+      }
+    });
+
+  } catch (error) {
+    console.error('Google auth error:', error);
+    res.status(500).json({ 
+      message: 'Failed to authenticate with Google',
+      error: error.message 
+    });
+  }
+});
 
 
 router.get('/profile', authMiddleware.authUser, userController.getUserProfile); 

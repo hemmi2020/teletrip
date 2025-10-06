@@ -65,11 +65,11 @@ const userSchema = new mongoose.Schema({
   },
   
   password: {
-    type: String,
-    required: [true, 'Password is required'],
-    minlength: [8, 'Password must be at least 8 characters'],
-    select: false // Don't include in queries by default
+  type: String,
+  required: function() {
+    return !this.googleId; // Only required if not using Google OAuth
   },
+},
   
   fullname: {
     firstname: {
@@ -93,7 +93,7 @@ const userSchema = new mongoose.Schema({
     match: [/^\+?[\d\s-()]+$/, 'Please enter a valid phone number']
   },
   
-  dateOfBirth: {
+  dateOfBirth: { 
     type: Date,
     validate: {
       validator: function(v) {
@@ -102,6 +102,15 @@ const userSchema = new mongoose.Schema({
       message: 'Date of birth must be in the past'
     }
   },
+  googleId: {
+  type: String,
+  unique: true,
+  sparse: true, // Allows null but enforces uniqueness
+},
+profilePicture: {
+  type: String,
+  default: null,
+},
   
   gender: {
     type: String,

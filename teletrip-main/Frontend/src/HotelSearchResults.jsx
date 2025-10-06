@@ -1059,13 +1059,13 @@ if (children > 0 && childAges.length > 0) {
 ) : hotelReviews[hotel.id] && hotelReviews[hotel.id].numReviews > 0 ? (
   <div className="mt-4 pt-4 border-t border-gray-200">
     <div className="flex items-center justify-between flex-wrap gap-2">
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 tet-xs">
         {/* TripAdvisor Logo */}
-        <img 
+        {/* <img 
           src="https://static.tacdn.com/img2/brand_refresh/Tripadvisor_lockup_horizontal_secondary_registered.svg"
           alt="TripAdvisor"
           className="h-5"
-        />
+        /> */}
         
         {/* Rating Circles */}
         <RatingCircles rating={hotelReviews[hotel.id].rating} />
