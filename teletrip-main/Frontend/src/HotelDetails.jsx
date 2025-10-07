@@ -93,10 +93,12 @@ const useHotelCartIntegration = () => {
       id: `${hotel.id}-${room.code}-${rate.rateKey || rate.net}`,
       hotelId: hotel.id,
       hotelName: hotel.name,
+      hotelCode: hotel.code,
       roomCode: room.code,
       roomName: room.name,
       rateKey: rate.rateKey,
       price: pricePerNight,
+      pricePerNight: pricePerNight,
       currency: hotel.currency || 'EUR',
       checkIn: checkIn,
       checkOut: checkOut,
@@ -105,28 +107,37 @@ const useHotelCartIntegration = () => {
       adults: adults,
       children: children,
       rooms: rooms,
-      location: hotel.address,
+      location: `${hotel.zoneName}, ${hotel.destinationName}`,
       boardName: rate.boardName,
       rateClass: rate.rateClass,
       paymentType: rate.paymentType,
+      cancellationPolicies: rate.cancellationPolicies || [],
       cancellationPolicy: rate.cancellationPolicies
         ? formatCancellationPolicy(rate.cancellationPolicies)
         : "No cancellation policy",
+        promotions: rate.promotions || [],
       offers: rate.offers || [],
       thumbnail: hotel.thumbnail,
       allotment: rate.allotment,
+      rateCommentsId: rate.rateCommentsId,
       packaging: rate.packaging,
       taxes: rate.taxes,
       // Location
       city: hotel.destinationName,
       zone: hotel.zoneName,
+      zoneCode: hotel.zoneCode,
+      latitude: hotel.latitude,
+      longitude: hotel.longitude,
       destinationCode: hotel.destinationCode,
       category: hotel.categoryName,
       categoryCode: hotel.categoryCode,
+      categoryName: hotel.categoryName,
       rateType: rate.rateType,
       boardCode: rate.boardCode,
       totalPrice: totalPrice,
       net: net,
+
+      addedAt: new Date().toISOString()
       // Remove originalPrice and discountPercent if not defined elsewhere
     };
 
