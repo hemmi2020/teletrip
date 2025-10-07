@@ -212,7 +212,7 @@ router.get('/bookings',
       .isIn(['asc', 'desc'])
   ],
   validateRequest,
-  adminDashboardController.getAllBookings
+  adminDashboardController.getAllBookings   
 );
 
 /**

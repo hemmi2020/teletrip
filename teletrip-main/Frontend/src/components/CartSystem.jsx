@@ -723,22 +723,52 @@ export const AuthModal = ({ isOpen, onClose, defaultTab = 'login' }) => {
 };
 
 // Updated SlideOut Cart Component with Authentication Check
+const CartAuthModal = ({ isOpen, onClose, onAuthSuccess, defaultTab }) => {
+  if (!isOpen) return null;
+  
+  return (
+    <div className="fixed inset-0 z-[140]">
+      <AuthModal
+        isOpen={isOpen}
+        onClose={onClose}
+        onAuthSuccess={onAuthSuccess}
+        defaultTab={defaultTab}
+      />
+    </div>
+  );
+};
+
 export const SlideOutCart = ({ isOpen, onClose, onProceedToCheckout }) => {
   const { items, removeFromCart, getTotalPrice } = useCart();
   const { user } = useContext(UserDataContext);
   const [showAuthModal, setShowAuthModal] = useState(false);
 
   const handleCheckoutClick = () => {
+    console.log('🛒 Checkout button clicked');
+    console.log('👤 User:', user);
     if (!user || !user.email) {
+      console.log('🔒 User not logged in, showing auth modal');
       setShowAuthModal(true);
     } else {
+      console.log('✅ User logged in, proceeding to checkout');
       onProceedToCheckout();
     }
   };
 
   const handleAuthSuccess = (userData) => {
+    console.log('✅ Auth successful:', userData);
     setShowAuthModal(false);
     onProceedToCheckout();
+  };
+
+  const handleRemoveItem = (item) => {
+    console.log('🗑️ Removing item from cart:', item);
+    removeFromCart(item);
+  };
+
+  const handleCloseCart = () => {
+    console.log('❌ Closing cart');
+    onClose();
   };
 
   // Calculate nights between dates
@@ -761,66 +791,79 @@ export const SlideOutCart = ({ isOpen, onClose, onProceedToCheckout }) => {
     });
   };
 
+  // Format short date for mobile
+  const formatShortDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      day: '2-digit', 
+      month: 'short'
+    });
+  };
+
   return (
     <>
       {/* Backdrop */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40"
+          className="fixed inset-0 bg-black bg-opacity-50 z-[120] transition-opacity duration-300"
           onClick={onClose}
+          style={{ pointerEvents: 'auto' }}
         />
       )}
 
-      {/* Slide-out panel */}
+      {/* Slide-out panel - Responsive width */}
       <div
-        className={`fixed right-0 top-0 h-full w-[450px] bg-white shadow-2xl z-50 transform transition-transform duration-300 ${
+        className={`fixed right-0 top-0 h-full w-full sm:w-[480px] md:w-[500px] bg-white shadow-2xl z-[121] transform transition-transform duration-300 ease-in-out ${
           isOpen ? "translate-x-0" : "translate-x-full"
         }`}
+        style={{ pointerEvents: 'auto' }}
+        onClick={(e) => e.stopPropagation()}
       >
         <div className="flex flex-col h-full">
-          {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b bg-gray-50">
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900">Your Cart</h2>
-              <p className="text-sm text-gray-500 mt-1">
-                Expires in 24:00
+          {/* Header - Compact */}
+          <div className="flex items-center justify-between p-4 sm:p-5 border-b bg-gradient-to-r from-blue-50 to-white">
+            <div className="flex-1">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Your Cart</h2>
+              <p className="text-xs sm:text-sm text-gray-500 mt-0.5">
+                {items.length} {items.length === 1 ? 'item' : 'items'} • Expires in 24:00
               </p>
             </div>
             <button
-              onClick={onClose}
-              className="p-2 hover:bg-gray-200 rounded-full transition-colors"
+              onClick={handleCloseCart}
+              className="p-2 hover:bg-gray-200 rounded-full transition-colors flex-shrink-0 ml-2"
+              aria-label="Close cart"
             >
-              <X className="w-6 h-6 text-gray-600" />
+              <X className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600" />
             </button>
           </div>
 
-          {/* Cart Items */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-4">
+          {/* Cart Items - Scrollable */}
+          <div className="flex-1 overflow-y-auto">
             {items.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full text-center py-12">
-                <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                  <ShoppingCart className="w-12 h-12 text-gray-400" />
+              <div className="flex flex-col items-center justify-center h-full text-center px-4 py-12">
+                <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                  <ShoppingCart className="w-10 h-10 sm:w-12 sm:h-12 text-gray-400" />
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">
                   Your cart is empty
                 </h3>
-                <p className="text-gray-500 mb-6">
+                <p className="text-sm sm:text-base text-gray-500 mb-6">
                   Add some hotels to get started!
                 </p>
                 <button
                   onClick={onClose}
-                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm sm:text-base"
                 >
                   Continue Shopping
                 </button>
               </div>
             ) : (
-              <>
+              <div className="p-4 sm:p-5 space-y-4">
                 {/* Date Header */}
                 {items.length > 0 && (
-                  <div className="flex items-center gap-2 text-gray-700 mb-4">
-                    <Calendar className="w-5 h-5" />
-                    <span className="font-medium">
+                  <div className="flex items-center gap-2 text-gray-700 bg-blue-50 px-3 py-2 rounded-lg">
+                    <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
+                    <span className="font-medium text-sm sm:text-base">
                       {formatDate(items[0].checkIn)}
                     </span>
                   </div>
@@ -837,204 +880,150 @@ export const SlideOutCart = ({ isOpen, onClose, onProceedToCheckout }) => {
                   return (
                     <div
                       key={index}
-                      className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+                      className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow"
                     >
                       {/* Hotel Header */}
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex items-start gap-3 flex-1">
-                          <div className="w-12 h-12 bg-gray-100 rounded flex items-center justify-center flex-shrink-0">
-                            <Bed className="w-6 h-6 text-gray-400" />
+                      <div className="bg-gray-50 px-3 py-2 flex items-center justify-between border-b">
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                          <div className="w-8 h-8 bg-blue-100 rounded flex items-center justify-center flex-shrink-0">
+                            <span className="text-lg">🏨</span>
                           </div>
-                          <div className="flex-1">
-                            <h3 className="font-bold text-gray-900 text-lg mb-1">
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-bold text-sm sm:text-base text-gray-900 truncate">
                               {item.hotelName}
                             </h3>
-                            <p className="text-sm text-gray-600 flex items-center gap-1">
-                              <MapPin className="w-3 h-3" />
-                              {item.city || 'Location'}
-                            </p>
+                            {item.location && (
+                              <div className="flex items-center gap-1 text-xs text-gray-500">
+                                <MapPin className="w-3 h-3" />
+                                <span className="truncate">{item.location}</span>
+                              </div>
+                            )}
                           </div>
                         </div>
                         <button
-                          onClick={() => removeFromCart(item)}
-                          className="p-1.5 hover:bg-red-50 rounded-full transition-colors group"
-                          title="Remove item"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleRemoveItem(item);
+                          }}
+                          className="p-1.5 hover:bg-red-100 rounded-full transition-colors flex-shrink-0 ml-2"
+                          aria-label="Remove item"
                         >
-                          <X className="w-5 h-5 text-gray-400 group-hover:text-red-600" />
+                          <Trash2 className="w-4 h-4 text-red-600" />
                         </button>
                       </div>
 
                       {/* Room Details */}
-                      <div className="space-y-2 mb-3">
-                        <p className="text-sm font-medium text-gray-700">
-                          {item.roomType || '1 x luxury city view room'}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          Room only (RO) - {nights} Night{nights > 1 ? 's' : ''}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {item.guests || 2} adult{item.guests > 1 ? 's' : ''}
-                        </p>
-                      </div>
-
-                      {/* Product Features */}
-                      {item.isPackage && (
-                        <div className="flex items-center gap-1 mb-3">
-                          <Tag className="w-3 h-3 text-gray-500" />
-                          <span className="text-xs text-gray-600">Product for packaging</span>
+                      <div className="p-3 space-y-2">
+                        {/* Room Type */}
+                        <div className="text-sm">
+                          <span className="font-medium text-gray-900">{item.roomType || '1 x Room'}</span>
                         </div>
-                      )}
 
-                      {/* Pricing */}
-                      <div className="border-t pt-3 mt-3">
-                        <div className="flex items-center justify-between">
+                        {/* Stay Details */}
+                        <div className="flex flex-wrap items-center gap-2 text-xs text-gray-600">
+                          <span className="bg-gray-100 px-2 py-1 rounded">
+                            {item.mealPlan || 'Room only (RO)'}
+                          </span>
+                          <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded font-medium">
+                            {nights} {nights === 1 ? 'Night' : 'Nights'}
+                          </span>
+                          <span className="bg-gray-100 px-2 py-1 rounded">
+                            {item.adults || 2} {item.adults === 1 ? 'Adult' : 'Adults'}
+                          </span>
+                        </div>
+
+                        {/* Rate Class Badge */}
+                        {item.rateClass && (
                           <div className="flex items-center gap-2">
-                            {discountPercent > 0 && (
-                              <span className="inline-block px-2 py-1 bg-green-100 text-green-700 text-xs font-bold rounded">
-                                -{discountPercent}%
+                            {item.rateClass.toLowerCase() === 'non-refundable' ? (
+                              <span className="inline-flex items-center px-2 py-1 bg-red-100 text-red-700 rounded text-xs font-medium">
+                                Non-Refundable
                               </span>
-                            )}
-                            {item.originalPrice && (
-                              <span className="text-sm text-red-500 line-through">
-                                AED {item.originalPrice.toFixed(2)}
+                            ) : (
+                              <span className="inline-flex items-center px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-medium">
+                                ✓ Free Cancellation
                               </span>
                             )}
                           </div>
-                        </div>
-                        <div className="flex items-baseline justify-between mt-2">
-                          <div className="flex items-baseline gap-2">
-                            <span className="text-2xl font-bold text-gray-900">
-                              AED {totalPrice.toFixed(2)}
-                            </span>
-                            <button className="p-1 hover:bg-gray-100 rounded-full">
-                              <Info className="w-4 h-4 text-blue-600" />
-                            </button>
-                          </div>
-                          {item.freeCancellation && (
-                            <div className="flex items-center gap-1 text-green-600">
-                              <CheckCircle className="w-4 h-4" />
-                              <span className="text-xs font-medium">Free cancellation</span>
+                        )}
+
+                        {/* Pricing */}
+                        <div className="pt-2 border-t">
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                              {discountPercent > 0 && (
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className="bg-green-600 text-white text-xs font-bold px-2 py-0.5 rounded">
+                                    -{discountPercent}%
+                                  </span>
+                                  <span className="text-xs text-gray-500 line-through">
+                                    AED {item.originalPrice?.toFixed(2)}
+                                  </span>
+                                </div>
+                              )}
+                              <div className="flex items-baseline gap-1">
+                                <span className="text-lg sm:text-xl font-bold text-gray-900">
+                                  AED {totalPrice.toFixed(2)}
+                                </span>
+                                <span className="text-xs text-gray-500">total</span>
+                              </div>
+                              <p className="text-xs text-gray-500 mt-0.5">
+                                AED {item.price.toFixed(2)} per night
+                              </p>
                             </div>
-                          )}
+                          </div>
                         </div>
                       </div>
-
-                      {/* Cancellation Policy */}
-                      {!item.refundable && (
-                        <div className="mt-3 flex items-center gap-2 text-xs text-gray-600">
-                          <XCircle className="w-4 h-4" />
-                          <span>Non refundable</span>
-                        </div>
-                      )}
                     </div>
                   );
                 })}
-
-                {/* Additional Services Section */}
-                <div className="space-y-3 mt-6">
-                  <h3 className="font-semibold text-gray-900">Add to your booking</h3>
-                  
-                  {[
-                    { icon: '🚗', name: 'Transfers', color: 'blue' },
-                    { icon: '🚙', name: 'Car Rental', color: 'purple' },
-                    { icon: '🎭', name: 'Experiences', color: 'pink' },
-                    { icon: '🏨', name: 'Stays', color: 'orange' }
-                  ].map((service, idx) => (
-                    <button
-                      key={idx}
-                      className="w-full flex items-center justify-between p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-all group"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
-                          {service.icon}
-                        </div>
-                        <span className="font-medium text-gray-700 group-hover:text-blue-600">
-                          {service.name}
-                        </span>
-                      </div>
-                      <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center group-hover:bg-blue-600">
-                        <span className="text-blue-600 group-hover:text-white text-xl">+</span>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </>
+              </div>
             )}
           </div>
 
-          {/* Footer with Total and Checkout */}
+          {/* Footer with Total and Checkout - Fixed at bottom */}
           {items.length > 0 && (
-            <div className="border-t bg-gray-50 p-6 space-y-4">
-              {/* Total Price */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-base">
+            <div className="border-t bg-white shadow-lg">
+              <div className="p-4 sm:p-5 space-y-3">
+                {/* Subtotal */}
+                <div className="flex items-center justify-between text-sm">
                   <span className="text-gray-600">Subtotal</span>
                   <span className="font-semibold text-gray-900">
                     AED {getTotalPrice().toFixed(2)}
                   </span>
                 </div>
-                <div className="flex items-center justify-between text-xl font-bold">
-                  <span className="text-gray-900">Total:</span>
-                  <span className="text-gray-900">
+
+                {/* Total */}
+                <div className="flex items-center justify-between pt-3 border-t">
+                  <span className="text-base sm:text-lg font-bold text-gray-900">Total</span>
+                  <span className="text-xl sm:text-2xl font-bold text-blue-600">
                     AED {getTotalPrice().toFixed(2)}
                   </span>
                 </div>
-              </div>
 
-              {/* Action Buttons */}
-              <div className="space-y-3">
                 {/* Checkout Button */}
                 <button
                   onClick={handleCheckoutClick}
-                  className="w-full bg-orange-500 text-white py-4 px-6 rounded-lg hover:bg-orange-600 font-bold text-lg transition-colors flex items-center justify-center gap-2 shadow-lg"
+                  className="w-full bg-blue-600 text-white py-3 sm:py-3.5 rounded-lg font-semibold hover:bg-blue-700 transition-colors shadow-md hover:shadow-lg text-sm sm:text-base"
                 >
-                  <CreditCard className="w-5 h-5" />
-                  <span>Checkout</span>
+                  Proceed to Checkout
                 </button>
 
-                {/* Additional Actions */}
-                <div className="flex gap-3">
-                  <button className="flex-1 py-3 px-4 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 font-medium transition-colors flex items-center justify-center gap-2">
-                    <Calendar className="w-4 h-4" />
-                    <span>Open</span>
-                  </button>
-                  <button className="flex-1 py-3 px-4 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 font-medium transition-colors flex items-center justify-center gap-2">
-                    <Save className="w-4 h-4" />
-                    <span>Save</span>
-                  </button>
-                  <button 
-                    onClick={() => {
-                      if (window.confirm('Are you sure you want to empty your cart?')) {
-                        items.forEach(item => removeFromCart(item));
-                      }
-                    }}
-                    className="flex-1 py-3 px-4 border-2 border-red-300 text-red-600 rounded-lg hover:bg-red-50 font-medium transition-colors flex items-center justify-center gap-2"
-                  >
-                    <X className="w-4 h-4" />
-                    <span>Empty</span>
-                  </button>
-                </div>
+                {/* Sign in message */}
+                {!user?.email && (
+                  <p className="text-xs text-center text-gray-500">
+                    🔒 Sign in required to proceed
+                  </p>
+                )}
               </div>
-
-              {/* Auth Status */}
-              {!user || !user.email ? (
-                <div className="text-center text-sm text-gray-600">
-                  <Lock className="w-4 h-4 inline mr-1" />
-                  Sign in required to proceed
-                </div>
-              ) : (
-                <div className="text-center text-sm text-green-600 flex items-center justify-center gap-2">
-                  <CheckCircle className="w-4 h-4" />
-                  <span>Ready to checkout as {user.fullname?.firstname}</span>
-                </div>
-              )}
             </div>
           )}
         </div>
       </div>
 
-      {/* Authentication Modal */}
-      <AuthModal
+      {/* Authentication Modal - Higher z-index than cart */}
+      <CartAuthModal
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}
         onAuthSuccess={handleAuthSuccess}
