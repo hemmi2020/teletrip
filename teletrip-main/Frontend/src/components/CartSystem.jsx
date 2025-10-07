@@ -1,6 +1,6 @@
 // Fixed CartSystem.jsx - Complete working version
 import React, { createContext, useContext, useReducer, useEffect, useState } from "react";
-import { X, ShoppingCart, MapPin, Calendar, Trash2, User, Eye, EyeOff, Lock, Mail } from "lucide-react";
+import { X, ShoppingCart, MapPin, Calendar, Trash2, User, Eye, EyeOff, Lock, Mail, Save, Bed, Info, XCircle, CreditCard  } from "lucide-react";
 import { LoginSocialGoogle } from 'reactjs-social-login';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
@@ -79,23 +79,24 @@ export const CartContext = createContext();
 const cartReducer = (state, action) => {
   switch (action.type) {
     case "ADD_ITEM": {
+      // Check if exact same item already exists (same hotel, dates, room)
       const existingItem = state.items.find(
         (item) =>
           item.id === action.payload.id &&
           item.checkIn === action.payload.checkIn &&
-          item.checkOut === action.payload.checkOut
+          item.checkOut === action.payload.checkOut &&
+          item.roomType === action.payload.roomType
       );
+
+      if (existingItem) {
+        // Item already in cart - don't add duplicate, just show notification
+        return state;
+      }
+
+      // Add new item without quantity field
       return {
         ...state,
-        items: existingItem
-          ? state.items.map((item) =>
-              item.id === action.payload.id &&
-              item.checkIn === action.payload.checkIn &&
-              item.checkOut === action.payload.checkOut
-                ? { ...item, quantity: item.quantity + 1 }
-                : item
-            )
-          : [...state.items, { ...action.payload, quantity: 1 }],
+        items: [...state.items, action.payload],
       };
     }
 
@@ -109,18 +110,6 @@ const cartReducer = (state, action) => {
               item.checkIn === action.payload.checkIn &&
               item.checkOut === action.payload.checkOut
             )
-        ),
-      };
-
-    case "UPDATE_QUANTITY":
-      return {
-        ...state,
-        items: state.items.map((item) =>
-          item.id === action.payload.id &&
-          item.checkIn === action.payload.checkIn &&
-          item.checkOut === action.payload.checkOut
-            ? { ...item, quantity: action.payload.quantity }
-            : item
         ),
       };
 
@@ -169,27 +158,24 @@ export const CartProvider = ({ children }) => {
     dispatch({ type: "REMOVE_ITEM", payload: item });
   };
 
-  const updateQuantity = (item, quantity) => {
-    if (quantity <= 0) {
-      removeFromCart(item);
-    } else {
-      dispatch({ type: "UPDATE_QUANTITY", payload: { ...item, quantity } });
-    }
-  };
-
   const clearCart = () => {
     dispatch({ type: "CLEAR_CART" });
   };
 
   const getTotalPrice = () => {
-    return state.items.reduce(
-      (total, item) => total + item.price * item.quantity,
-      0
-    );
+    return state.items.reduce((total, item) => {
+      // Calculate nights
+      const checkIn = new Date(item.checkIn);
+      const checkOut = new Date(item.checkOut);
+      const nights = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24));
+      
+      // Total price = price per night * number of nights
+      return total + (item.price * nights);
+    }, 0);
   };
 
   const getTotalItems = () => {
-    return state.items.reduce((total, item) => total + item.quantity, 0);
+    return state.items.length; // Just count items, no quantities
   };
 
   return (
@@ -198,7 +184,6 @@ export const CartProvider = ({ children }) => {
         items: state.items,
         addToCart,
         removeFromCart,
-        updateQuantity,
         clearCart,
         getTotalPrice,
         getTotalItems,
@@ -739,26 +724,41 @@ export const AuthModal = ({ isOpen, onClose, defaultTab = 'login' }) => {
 
 // Updated SlideOut Cart Component with Authentication Check
 export const SlideOutCart = ({ isOpen, onClose, onProceedToCheckout }) => {
-  const { items, removeFromCart, updateQuantity, getTotalPrice } = useCart();
+  const { items, removeFromCart, getTotalPrice } = useCart();
   const { user } = useContext(UserDataContext);
   const [showAuthModal, setShowAuthModal] = useState(false);
 
-  // Handle checkout button click with authentication check
   const handleCheckoutClick = () => {
     if (!user || !user.email) {
-      // User is not logged in - show auth modal
       setShowAuthModal(true);
     } else {
-      // User is logged in - proceed to checkout
       onProceedToCheckout();
     }
   };
 
-  // Handle successful authentication
   const handleAuthSuccess = (userData) => {
     setShowAuthModal(false);
-    // Now proceed to checkout after authentication
     onProceedToCheckout();
+  };
+
+  // Calculate nights between dates
+  const calculateNights = (checkIn, checkOut) => {
+    const start = new Date(checkIn);
+    const end = new Date(checkOut);
+    const diffTime = Math.abs(end - start);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  };
+
+  // Format date
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      weekday: 'short', 
+      day: '2-digit', 
+      month: 'short', 
+      year: 'numeric' 
+    });
   };
 
   return (
@@ -773,164 +773,267 @@ export const SlideOutCart = ({ isOpen, onClose, onProceedToCheckout }) => {
 
       {/* Slide-out panel */}
       <div
-        className={`fixed right-0 top-0 h-full w-96 bg-white shadow-xl z-50 transform transition-transform duration-300 ${
+        className={`fixed right-0 top-0 h-full w-[450px] bg-white shadow-2xl z-50 transform transition-transform duration-300 ${
           isOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b">
-            <h2 className="text-xl font-semibold">Your Cart</h2>
+          <div className="flex items-center justify-between p-6 border-b bg-gray-50">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">Your Cart</h2>
+              <p className="text-sm text-gray-500 mt-1">
+                Expires in 24:00
+              </p>
+            </div>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-gray-100 rounded-full"
+              className="p-2 hover:bg-gray-200 rounded-full transition-colors"
             >
-              <X className="w-5 h-5" />
+              <X className="w-6 h-6 text-gray-600" />
             </button>
           </div>
 
           {/* Cart Items */}
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto p-6 space-y-4">
             {items.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full text-gray-500">
-                <ShoppingCart className="w-16 h-16 mb-4" />
-                <p className="text-lg font-medium">Your cart is empty</p>
-                <p className="text-sm">Add some rooms to get started!</p>
+              <div className="flex flex-col items-center justify-center h-full text-center py-12">
+                <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                  <ShoppingCart className="w-12 h-12 text-gray-400" />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                  Your cart is empty
+                </h3>
+                <p className="text-gray-500 mb-6">
+                  Add some hotels to get started!
+                </p>
+                <button
+                  onClick={onClose}
+                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Continue Shopping
+                </button>
               </div>
             ) : (
-              <div className="p-4 space-y-4">
-                {items.map((item) => (
-                  <div
-                    key={`${item.id}-${item.checkIn}-${item.checkOut}`}
-                    className="border rounded-lg p-3"
-                  >
-                    <div className="flex justify-between items-start mb-2">
-                      <div className="flex-1">
-                        <h3 className="font-medium text-sm">{item.roomName}</h3>
-                        <p className="text-xs text-gray-600">
-                          {item.hotelName}
+              <>
+                {/* Date Header */}
+                {items.length > 0 && (
+                  <div className="flex items-center gap-2 text-gray-700 mb-4">
+                    <Calendar className="w-5 h-5" />
+                    <span className="font-medium">
+                      {formatDate(items[0].checkIn)}
+                    </span>
+                  </div>
+                )}
+
+                {/* Cart Items */}
+                {items.map((item, index) => {
+                  const nights = calculateNights(item.checkIn, item.checkOut);
+                  const totalPrice = item.price * nights;
+                  const discountPercent = item.originalPrice 
+                    ? Math.round(((item.originalPrice - item.price) / item.originalPrice) * 100)
+                    : 0;
+
+                  return (
+                    <div
+                      key={index}
+                      className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+                    >
+                      {/* Hotel Header */}
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-start gap-3 flex-1">
+                          <div className="w-12 h-12 bg-gray-100 rounded flex items-center justify-center flex-shrink-0">
+                            <Bed className="w-6 h-6 text-gray-400" />
+                          </div>
+                          <div className="flex-1">
+                            <h3 className="font-bold text-gray-900 text-lg mb-1">
+                              {item.hotelName}
+                            </h3>
+                            <p className="text-sm text-gray-600 flex items-center gap-1">
+                              <MapPin className="w-3 h-3" />
+                              {item.city || 'Location'}
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => removeFromCart(item)}
+                          className="p-1.5 hover:bg-red-50 rounded-full transition-colors group"
+                          title="Remove item"
+                        >
+                          <X className="w-5 h-5 text-gray-400 group-hover:text-red-600" />
+                        </button>
+                      </div>
+
+                      {/* Room Details */}
+                      <div className="space-y-2 mb-3">
+                        <p className="text-sm font-medium text-gray-700">
+                          {item.roomType || '1 x luxury city view room'}
                         </p>
-                        <div className="flex items-center text-xs text-gray-500 mt-1">
-                          <MapPin className="w-3 h-3 mr-1" />
-                          {item.location}
+                        <p className="text-xs text-gray-500">
+                          Room only (RO) - {nights} Night{nights > 1 ? 's' : ''}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {item.guests || 2} adult{item.guests > 1 ? 's' : ''}
+                        </p>
+                      </div>
+
+                      {/* Product Features */}
+                      {item.isPackage && (
+                        <div className="flex items-center gap-1 mb-3">
+                          <Tag className="w-3 h-3 text-gray-500" />
+                          <span className="text-xs text-gray-600">Product for packaging</span>
+                        </div>
+                      )}
+
+                      {/* Pricing */}
+                      <div className="border-t pt-3 mt-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            {discountPercent > 0 && (
+                              <span className="inline-block px-2 py-1 bg-green-100 text-green-700 text-xs font-bold rounded">
+                                -{discountPercent}%
+                              </span>
+                            )}
+                            {item.originalPrice && (
+                              <span className="text-sm text-red-500 line-through">
+                                AED {item.originalPrice.toFixed(2)}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-baseline justify-between mt-2">
+                          <div className="flex items-baseline gap-2">
+                            <span className="text-2xl font-bold text-gray-900">
+                              AED {totalPrice.toFixed(2)}
+                            </span>
+                            <button className="p-1 hover:bg-gray-100 rounded-full">
+                              <Info className="w-4 h-4 text-blue-600" />
+                            </button>
+                          </div>
+                          {item.freeCancellation && (
+                            <div className="flex items-center gap-1 text-green-600">
+                              <CheckCircle className="w-4 h-4" />
+                              <span className="text-xs font-medium">Free cancellation</span>
+                            </div>
+                          )}
                         </div>
                       </div>
-                      <button
-                        onClick={() => removeFromCart(item)}
-                        className="text-red-500 hover:text-red-700 p-1"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
 
-                    <div className="flex items-center justify-between text-xs text-gray-600 mb-2">
-                      <div className="flex items-center">
-                        <Calendar className="w-3 h-3 mr-1" />
-                        {new Date(item.checkIn).toLocaleDateString()} -{" "}
-                        {new Date(item.checkOut).toLocaleDateString()}
-                      </div>
+                      {/* Cancellation Policy */}
+                      {!item.refundable && (
+                        <div className="mt-3 flex items-center gap-2 text-xs text-gray-600">
+                          <XCircle className="w-4 h-4" />
+                          <span>Non refundable</span>
+                        </div>
+                      )}
                     </div>
+                  );
+                })}
 
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <button
-                          onClick={() => updateQuantity(item, item.quantity - 1)}
-                          className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-xs hover:bg-gray-300"
-                        >
-                          -
-                        </button>
-                        <span className="text-sm font-medium">
-                          {item.quantity}
+                {/* Additional Services Section */}
+                <div className="space-y-3 mt-6">
+                  <h3 className="font-semibold text-gray-900">Add to your booking</h3>
+                  
+                  {[
+                    { icon: '🚗', name: 'Transfers', color: 'blue' },
+                    { icon: '🚙', name: 'Car Rental', color: 'purple' },
+                    { icon: '🎭', name: 'Experiences', color: 'pink' },
+                    { icon: '🏨', name: 'Stays', color: 'orange' }
+                  ].map((service, idx) => (
+                    <button
+                      key={idx}
+                      className="w-full flex items-center justify-between p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-all group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
+                          {service.icon}
+                        </div>
+                        <span className="font-medium text-gray-700 group-hover:text-blue-600">
+                          {service.name}
                         </span>
-                        <button
-                          onClick={() => updateQuantity(item, item.quantity + 1)}
-                          className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-xs hover:bg-gray-300"
-                        >
-                          +
-                        </button>
                       </div>
-                      <div className="text-right">
-                        <p className="text-sm font-semibold">
-                          PKR {(item.price * item.quantity).toLocaleString()}
-                        </p>
-                        {getRateClassBadge(item.rateClass)}
+                      <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center group-hover:bg-blue-600">
+                        <span className="text-blue-600 group-hover:text-white text-xl">+</span>
                       </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                    </button>
+                  ))}
+                </div>
+              </>
             )}
           </div>
 
-          {/* Footer with Authentication Check */}
+          {/* Footer with Total and Checkout */}
           {items.length > 0 && (
-            <div className="border-t p-4 space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="text-lg font-semibold">Total:</span>
-                <span className="text-lg font-bold text-blue-600">
-                  PKR {getTotalPrice().toLocaleString()}
-                </span>
+            <div className="border-t bg-gray-50 p-6 space-y-4">
+              {/* Total Price */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-base">
+                  <span className="text-gray-600">Subtotal</span>
+                  <span className="font-semibold text-gray-900">
+                    AED {getTotalPrice().toFixed(2)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-xl font-bold">
+                  <span className="text-gray-900">Total:</span>
+                  <span className="text-gray-900">
+                    AED {getTotalPrice().toFixed(2)}
+                  </span>
+                </div>
               </div>
-              
-              {/* Authentication Status Indicator */}
+
+              {/* Action Buttons */}
+              <div className="space-y-3">
+                {/* Checkout Button */}
+                <button
+                  onClick={handleCheckoutClick}
+                  className="w-full bg-orange-500 text-white py-4 px-6 rounded-lg hover:bg-orange-600 font-bold text-lg transition-colors flex items-center justify-center gap-2 shadow-lg"
+                >
+                  <CreditCard className="w-5 h-5" />
+                  <span>Checkout</span>
+                </button>
+
+                {/* Additional Actions */}
+                <div className="flex gap-3">
+                  <button className="flex-1 py-3 px-4 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 font-medium transition-colors flex items-center justify-center gap-2">
+                    <Calendar className="w-4 h-4" />
+                    <span>Open</span>
+                  </button>
+                  <button className="flex-1 py-3 px-4 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 font-medium transition-colors flex items-center justify-center gap-2">
+                    <Save className="w-4 h-4" />
+                    <span>Save</span>
+                  </button>
+                  <button 
+                    onClick={() => {
+                      if (window.confirm('Are you sure you want to empty your cart?')) {
+                        items.forEach(item => removeFromCart(item));
+                      }
+                    }}
+                    className="flex-1 py-3 px-4 border-2 border-red-300 text-red-600 rounded-lg hover:bg-red-50 font-medium transition-colors flex items-center justify-center gap-2"
+                  >
+                    <X className="w-4 h-4" />
+                    <span>Empty</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Auth Status */}
               {!user || !user.email ? (
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-3">
-                  <div className="flex items-center text-yellow-800 text-sm">
-                    <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                    </svg>
-                    Sign in required for checkout
-                  </div>
+                <div className="text-center text-sm text-gray-600">
+                  <Lock className="w-4 h-4 inline mr-1" />
+                  Sign in required to proceed
                 </div>
               ) : (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-3">
-                  <div className="flex items-center text-green-800 text-sm">
-                    <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
-                    Ready to checkout as {user.fullname?.firstname || user.email}
-                  </div>
+                <div className="text-center text-sm text-green-600 flex items-center justify-center gap-2">
+                  <CheckCircle className="w-4 h-4" />
+                  <span>Ready to checkout as {user.fullname?.firstname}</span>
                 </div>
               )}
-
-              {/* Checkout Button */}
-              <button
-                onClick={handleCheckoutClick}
-                className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 font-medium transition-colors flex items-center justify-center space-x-2"
-              >
-                {!user || !user.email ? (
-                  <>
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                    <span>Sign In to Checkout</span>
-                  </>
-                ) : (
-                  <>
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <span>Proceed to Checkout</span>
-                  </>
-                )}
-              </button>
-
-              {/* Continue Shopping Button */}
-              <button
-                onClick={onClose}
-                className="w-full bg-gray-100 text-gray-700 py-3 px-4 rounded-lg hover:bg-gray-200 font-medium transition-colors flex items-center justify-center space-x-2"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                </svg>
-                <span>Continue Shopping</span>
-              </button>
             </div>
           )}
         </div>
       </div>
 
-      {/* Authentication Modal for Cart */}
+      {/* Authentication Modal */}
       <AuthModal
         isOpen={showAuthModal}
         onClose={() => setShowAuthModal(false)}

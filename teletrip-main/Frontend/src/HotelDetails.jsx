@@ -84,6 +84,11 @@ const useHotelCartIntegration = () => {
     const checkOutDate = new Date(checkOut);
     const nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
 
+    // Calculate price per night and total price
+    const net = parseFloat(rate.net);
+    const pricePerNight = nights > 0 ? (net / nights) : net;
+    const totalPrice = net;
+
     const cartItem = {
       id: `${hotel.id}-${room.code}-${rate.rateKey || rate.net}`,
       hotelId: hotel.id,
@@ -91,7 +96,7 @@ const useHotelCartIntegration = () => {
       roomCode: room.code,
       roomName: room.name,
       rateKey: rate.rateKey,
-      price: parseFloat(rate.net),
+      price: pricePerNight,
       currency: hotel.currency || 'EUR',
       checkIn: checkIn,
       checkOut: checkOut,
@@ -112,6 +117,17 @@ const useHotelCartIntegration = () => {
       allotment: rate.allotment,
       packaging: rate.packaging,
       taxes: rate.taxes,
+      // Location
+      city: hotel.destinationName,
+      zone: hotel.zoneName,
+      destinationCode: hotel.destinationCode,
+      category: hotel.categoryName,
+      categoryCode: hotel.categoryCode,
+      rateType: rate.rateType,
+      boardCode: rate.boardCode,
+      totalPrice: totalPrice,
+      net: net,
+      // Remove originalPrice and discountPercent if not defined elsewhere
     };
 
     addToCart(cartItem);
