@@ -149,7 +149,7 @@ const useHotelCartIntegration = () => {
   return { handleAddToCart };
 };
 
-const HotelDetails = (rate) => {
+const HotelDetails = () => {
   const { hotelCode } = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -162,16 +162,7 @@ const HotelDetails = (rate) => {
   const [notification, setNotification] = useState({ show: false, message: '', type: 'success' });
   const ROOMS_PER_PAGE = 3;
   const { handleAddToCart } = useHotelCartIntegration();
-  const checkIn = searchParams.get("checkIn");
-    const checkOut = searchParams.get("checkOut");
-    
-    // Calculate nights
-    const checkInDate = new Date(checkIn);
-    const checkOutDate = new Date(checkOut);
-    const nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
-    const totalPrice = parseFloat(rate.net);
-    const pricePerNight = nights > 0 ? (totalPrice / nights) : totalPrice;
-
+  
   const showNotification = (message, type = 'success') => {
     setNotification({ show: true, message, type });
   };
@@ -653,30 +644,64 @@ if (children > 0 && childAges.length > 0) {
                           )}
                         </div>
                         <div className="text-right ml-4">
-                          <div className="text-sm text-gray-600 mb-1">
-          {hotel.currency || '€'}{pricePerNight.toFixed(2)} per night
-        </div>
-        
-        {/* Total price - LARGE and prominent */}
-        <div className="text-2xl font-bold text-blue-600">
-          {hotel.currency || '€'}{totalPrice.toFixed(2)}
-        </div>
-        
-        {/* Clear total label */}
-        <div className="text-sm font-semibold text-gray-700">
-          Total for {nights} {nights === 1 ? 'night' : 'nights'}
-        </div>
-                          <div className="text-xs text-gray-500 mb-3">
-                            {rate.allotment} room(s) left
-                          </div>
-                          <button
-                            onClick={() => handleBookRoom(room, rate)}
-                            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-300 flex items-center"
-                          >
-                            <ShoppingCart className="w-4 h-4 mr-2" />
-                            Add to Cart
-                          </button>
-                        </div>
+    {(() => {
+      // ✅ Calculate nights and prices HERE, inside the rate map
+      const checkIn = searchParams.get("checkIn");
+      const checkOut = searchParams.get("checkOut");
+      const checkInDate = new Date(checkIn);
+      const checkOutDate = new Date(checkOut);
+      const nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
+      
+      // ✅ rate.net is available here because we're inside the rate.map loop
+      const totalPrice = parseFloat(rate.net);
+      const pricePerNight = nights > 0 ? (totalPrice / nights) : totalPrice;
+      
+      // ✅ Validation check
+      if (isNaN(totalPrice) || isNaN(pricePerNight)) {
+        console.error('Price calculation error:', { 
+          rateNet: rate.net, 
+          totalPrice, 
+          pricePerNight, 
+          nights 
+        });
+        return (
+          <div className="text-sm text-red-600">
+            Price unavailable
+          </div>
+        );
+      }
+      
+      return (
+        <>
+          {/* Per night price */}
+          <div className="text-sm text-gray-600 mb-1">
+            {hotel.currency || '€'}{pricePerNight.toFixed(2)} per night
+          </div>
+          
+          {/* Total price - LARGE */}
+          <div className="text-2xl font-bold text-blue-600">
+            {hotel.currency || '€'}{totalPrice.toFixed(2)}
+          </div>
+          
+          {/* Clear label */}
+          <div className="text-sm font-semibold text-gray-700">
+            Total for {nights} {nights === 1 ? 'night' : 'nights'}
+          </div>
+        </>
+      );
+    })()}
+    
+    <div className="text-xs text-gray-500 mt-2 mb-3">
+      {rate.allotment} room(s) left
+    </div>
+    
+    <button
+      onClick={() => handleBookRoom(room, rate)}
+      className="px-6 py-2 flex bg-blue-600 text-white rounded-lg hover:bg-orange-600 transition-colors font-semibold"
+    ><ShoppingCart className="w-4 h-4 mr-2" />  
+      Add to Cart
+    </button>
+  </div>
                       </div>
                     </div>
                   ))}
