@@ -825,7 +825,7 @@ export const SlideOutCart = ({ isOpen, onClose, onProceedToCheckout }) => {
             <div className="flex-1">
               <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Your Cart</h2>
               <p className="text-xs sm:text-sm text-gray-500 mt-0.5">
-                {items.length} {items.length === 1 ? 'item' : 'items'} • Expires in 24:00
+                {items.length} {items.length === 1 ? 'item' : 'items'} 
               </p>
             </div>
             <button

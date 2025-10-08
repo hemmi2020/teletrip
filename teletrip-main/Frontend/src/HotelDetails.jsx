@@ -697,7 +697,7 @@ if (children > 0 && childAges.length > 0) {
     
     <button
       onClick={() => handleBookRoom(room, rate)}
-      className="px-6 py-2 flex bg-blue-600 text-white rounded-lg hover:bg-orange-600 transition-colors font-semibold"
+      className="px-6 py-2 flex bg-blue-600 text-white rounded-lg hover:bg-blue-900 transition-colors font-semibold"
     ><ShoppingCart className="w-4 h-4 mr-2" />  
       Add to Cart
     </button>
