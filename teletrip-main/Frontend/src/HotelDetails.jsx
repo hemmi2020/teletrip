@@ -85,9 +85,9 @@ const useHotelCartIntegration = () => {
     const nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
 
     // Calculate price per night and total price
-    const net = parseFloat(rate.net);
-    const pricePerNight = nights > 0 ? (net / nights) : net;
-    const totalPrice = net;
+    const totalFromAPI  = parseFloat(rate.net);
+    const pricePerNight = nights > 0 ? (totalFromAPI  / nights) : totalFromAPI ;
+    const totalPrice = totalFromAPI ;
 
     const cartItem = {
       id: `${hotel.id}-${room.code}-${rate.rateKey || rate.net}`,
@@ -134,10 +134,12 @@ const useHotelCartIntegration = () => {
       categoryName: hotel.categoryName,
       rateType: rate.rateType,
       boardCode: rate.boardCode,
-      totalPrice: totalPrice,
-      net: net,
+      totalPrice: totalFromAPI,
+      net: totalFromAPI ,
 
-      addedAt: new Date().toISOString()
+      addedAt: new Date().toISOString(),
+      // ✅ Add original price if there was a discount
+      originalPrice: rate.originalPrice || null
       // Remove originalPrice and discountPercent if not defined elsewhere
     };
 
@@ -147,7 +149,7 @@ const useHotelCartIntegration = () => {
   return { handleAddToCart };
 };
 
-const HotelDetails = () => {
+const HotelDetails = (rate) => {
   const { hotelCode } = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -160,6 +162,15 @@ const HotelDetails = () => {
   const [notification, setNotification] = useState({ show: false, message: '', type: 'success' });
   const ROOMS_PER_PAGE = 3;
   const { handleAddToCart } = useHotelCartIntegration();
+  const checkIn = searchParams.get("checkIn");
+    const checkOut = searchParams.get("checkOut");
+    
+    // Calculate nights
+    const checkInDate = new Date(checkIn);
+    const checkOutDate = new Date(checkOut);
+    const nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
+    const totalPrice = parseFloat(rate.net);
+    const pricePerNight = nights > 0 ? (totalPrice / nights) : totalPrice;
 
   const showNotification = (message, type = 'success') => {
     setNotification({ show: true, message, type });
@@ -642,10 +653,19 @@ if (children > 0 && childAges.length > 0) {
                           )}
                         </div>
                         <div className="text-right ml-4">
-                          <div className="text-2xl font-bold text-blue-600">
-                            €{rate.net}
-                          </div>
-                          <div className="text-sm text-gray-600">/night</div>
+                          <div className="text-sm text-gray-600 mb-1">
+          {hotel.currency || '€'}{pricePerNight.toFixed(2)} per night
+        </div>
+        
+        {/* Total price - LARGE and prominent */}
+        <div className="text-2xl font-bold text-blue-600">
+          {hotel.currency || '€'}{totalPrice.toFixed(2)}
+        </div>
+        
+        {/* Clear total label */}
+        <div className="text-sm font-semibold text-gray-700">
+          Total for {nights} {nights === 1 ? 'night' : 'nights'}
+        </div>
                           <div className="text-xs text-gray-500 mb-3">
                             {rate.allotment} room(s) left
                           </div>

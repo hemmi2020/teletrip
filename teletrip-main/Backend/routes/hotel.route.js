@@ -369,7 +369,7 @@ async function searchTripAdvisorLocation(hotelName, city) {
   }
 }
 
-// Get TripAdvisor location details (rating info)
+// Get TripAdvisor location details (rating info) 
 async function getTripAdvisorDetails(locationId) {
   try {
     const url = `https://api.content.tripadvisor.com/api/v1/location/${locationId}/details?language=en&key=${TRIPADVISOR_API_KEY}`;

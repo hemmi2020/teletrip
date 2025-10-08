@@ -1020,13 +1020,52 @@ if (children > 0 && childAges.length > 0) {
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="text-2xl font-bold text-blue-600">
-                            {hotel.price !== "N/A" ? `€${hotel.price}` : "Price on request"}
-                          </div>
-                          {hotel.price !== "N/A" && (
-                            <div className="text-sm text-gray-600">Total</div>
-                          )}
-                        </div>
+  {(() => {
+    // Get search parameters
+    const checkIn = searchParams.get("checkIn");
+    const checkOut = searchParams.get("checkOut");
+    
+    if (checkIn && checkOut) {
+      // Calculate nights
+      const checkInDate = new Date(checkIn);
+      const checkOutDate = new Date(checkOut);
+      const nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
+      
+      // hotel.price is the total price from API
+      const totalPrice = parseFloat(hotel.price);
+      const pricePerNight = nights > 0 ? (totalPrice / nights) : totalPrice;
+      
+      return (
+        <>
+          {/* Small per night price */}
+          <div className="text-xs text-gray-500">
+            {hotel.currency} {pricePerNight.toFixed(2)}/night
+          </div>
+          
+          {/* Large total price */}
+          <div className="text-2xl font-bold text-blue-600">
+            {hotel.currency} {totalPrice.toFixed(2)}
+          </div>
+          
+          {/* Total label */}
+          <div className="text-sm font-medium text-gray-700">
+            Total ({nights} {nights === 1 ? 'night' : 'nights'})
+          </div>
+        </>
+      );
+    } else {
+      // Fallback if no dates
+      return (
+        <>
+          <div className="text-2xl font-bold text-blue-600">
+            {hotel.currency} {parseFloat(hotel.price).toFixed(2)}
+          </div>
+          <div className="text-sm text-gray-600">Total</div>
+        </>
+      );
+    }
+  })()}
+</div>
                       </div>
 
                       <div className="flex items-center text-gray-600 mb-4">
