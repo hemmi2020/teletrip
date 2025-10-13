@@ -26,69 +26,62 @@ router.post('/search-suggestions', async (req, res) => {
         return res.json({ hotels: [], destinations: [] });
     }
 
-    // This is the correct Hotelbeds endpoint for autocomplete
-    const searchUrl = `${HOTELBEDS_BASE_URL}/hotel-api/1.0/locations/destinations?language=ENG&query=${encodeURIComponent(query)}`;
-    
-    const timestamp = Math.floor(Date.now() / 1000);
-const signature = generateHotelbedsSignature(HOTELBEDS_API_KEY, HOTELBEDS_SECRET, timestamp);
+    console.log('🔍 Searching for:', query);
 
     try {
-        const response = await fetch(searchUrl, {
-            method: 'GET',
-            headers: { 
-                'Accept': 'application/json',
-                'Api-key': HOTELBEDS_API_KEY,
-                'X-Signature': signature,
-                'X-Timestamp': timestamp.toString()
-            }
-        });
-
+        // Use CountriesNow API as fallback (free, no auth required)
+        const response = await fetch('https://countriesnow.space/api/v0.1/countries');
+        
         if (!response.ok) {
-            const errorData = await response.json();
-            console.error('Hotelbeds API Error:', errorData);
-            // Throw an error to be caught by the catch block
-            throw new Error('Failed to fetch suggestions from Hotelbeds');
+            throw new Error('Failed to fetch countries data');
         }
 
         const data = await response.json();
-        const locations = data.locations || [];
+        const queryLower = query.toLowerCase();
+        const results = [];
 
-        // Separate the results into hotels and destinations
-        const hotels = [];
-        const destinations = [];
+        // Search through all countries and cities
+        if (data.data) {
+            data.data.forEach(country => {
+                if (country.cities && Array.isArray(country.cities)) {
+                    country.cities.forEach(city => {
+                        const cityLower = city.toLowerCase();
+                        const countryLower = country.country.toLowerCase();
+                        
+                        // Match if query is in city name or country name
+                        if (cityLower.includes(queryLower) || countryLower.includes(queryLower)) {
+                            results.push({
+                                id: `${country.iso3}-${city.replace(/\s+/g, '-')}`,
+                                name: city,
+                                type: 'city',
+                                country: country.country,
+                        countryCode: country.iso3,
+                                location: `${city}, ${country.country}`
+                            });
+                        }
+                    });
+                }
+            });
+        }
 
-        locations.forEach(location => {
-            if (location.type === "HOTEL") {
-                hotels.push({
-                    id: location.code,
-                    name: location.name.content,
-                    type: 'hotel',
-                    location: `${location.parentName.content}, ${location.countryName.content}`
-                });
-            } else { // Treats types like "DESTINATION", "ZONE", etc., as destinations
-                destinations.push({
-                    id: location.code,
-                    name: location.name.content,
-                    type: 'destination',
-                    location: location.countryName.content,
-                    // The API provides the hotel count directly!
-                    hotelCount: location.hotels || (Math.floor(Math.random() * 200) + 10) // Fallback for items without a count
-                });
-            }
-        });
-        
+        // Limit to 50 results
+        const limitedResults = results.slice(0, 50);
+
+        console.log('✅ Found', limitedResults.length, 'cities');
+
         res.json({
             success: true,
-            hotels,
-            destinations
+            hotels: [],
+            destinations: limitedResults
         });
 
     } catch (error) {
-        console.error('Unified search error:', error);
+        console.error('💥 Search error:', error.message);
         res.json({
             success: false,
             hotels: [],
-            destinations: []
+            destinations: [],
+            error: error.message
         });
     }
 });

@@ -49,20 +49,42 @@ const Header = () => {
     navigate('/home');
   };
 
-  const handleProceedToCheckout = () => {
-    setIsCartOpen(false);
-    if (!cartItems || cartItems.length === 0) {
-      console.warn('⚠️ Cart is empty, cannot proceed to checkout');
-      return;
+ const handleProceedToCheckout = () => {
+  console.log('🛒 Proceeding to checkout from header...');
+  console.log('👤 Current user from context:', user);
+  
+  // ✅ CHECK: Use context user first, then localStorage
+  const token = localStorage.getItem('token');
+  const userData = localStorage.getItem('userData');
+  
+  if (!user && (!token || !userData)) {
+    console.log('❌ User not logged in, showing auth modal');
+    setShowAuthModal(true);
+    return;
+  }
+  
+  // ✅ If user exists in context but not in localStorage, save it
+  if (user && !token) {
+    console.log('⚠️ User in context but no token in localStorage - this might cause issues');
+    console.log('Authentication error. Please try logging in again.');
+    setShowAuthModal(true);
+    return;
+  }
+  setIsCartOpen(false);
+  
+  if (!cartItems || cartItems.length === 0) {
+    console.warn('⚠️ Cart is empty');
+    return;
+  }
+  
+  navigate('/checkout', {
+    state: {
+      cartItems: cartItems,
+      totalAmount: getTotalPrice(),
+      fromCart: true
     }
-    navigate('/checkout', {
-      state: {
-        cartItems: cartItems,
-        totalAmount: getTotalPrice(),
-        fromCart: true
-      }
-    });
-  };
+  });
+};
 
   const handleFormMenuClick = (formType) => {
     setIsFormMenuOpen(false);

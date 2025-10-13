@@ -18,7 +18,7 @@ const HBLPAY_USER_ID = process.env.HBLPAY_USER_ID || 'teliadmin';
 const HBLPAY_PASSWORD = process.env.HBLPAY_PASSWORD || 'd6n26Yd4m!';
 const HBL_PUBLIC_KEY = process.env.HBL_PUBLIC_KEY_PEM;
 const HBL_SANDBOX_URL = process.env.HBL_SANDBOX_API_URL || 'https://testpaymentapi.hbl.com/hblpay/api/checkout';
-const HBL_PRODUCTION_URL = process.env.HBL_PRODUCTION_API_URL;
+// const HBL_PRODUCTION_URL = process.env.HBL_PRODUCTION_API_URL;
 const HBL_SANDBOX_REDIRECT = process.env.HBL_SANDBOX_REDIRECT_URL || 'https://testpaymentapi.hbl.com/hblpay/site/index.html#/checkout?data=';
 const HBL_PRODUCTION_REDIRECT = process.env.HBL_PRODUCTION_REDIRECT_URL;
 const HBL_CHANNEL = 'HBLPay_Teli_Website';
@@ -28,6 +28,8 @@ const HBL_RETRY_ATTEMPTS = parseInt(process.env.HBL_RETRY_ATTEMPTS) || 3;
 const privateKeyPem = process.env.MERCHANT_PRIVATE_KEY_PEM;
 
 const isProduction = process.env.NODE_ENV === 'production';
+ 
+
 
 const https = require('https');
 
@@ -325,23 +327,35 @@ module.exports.handlePaymentSuccess = asyncErrorHandler(async (req, res) => {
     console.log('📋 [SUCCESS-NATIVE] Decrypted parameters:', JSON.stringify(decryptedResponse, null, 2));
     
     const responseCode = decryptedResponse.RESPONSE_CODE;
-    const orderRefNumber = decryptedResponse.ORDER_REF_NUMBER || decryptedResponse.REFERENCE_NUMBER;
     
     console.log('🔍 [SUCCESS-NATIVE] Response code:', responseCode);
+    // Update payment record if found
+    const orderRefNumber = decryptedResponse.ORDER_REF_NUMBER || decryptedResponse.REFERENCE_NUMBER;
     console.log('🔍 [SUCCESS-NATIVE] Order ref:', orderRefNumber);
     
-    // Update database if we have order reference (same as your version)
+    // Fetch actual payment amount from database
+    let actualAmount = '0';
+    let actualCurrency = 'PKR';
+    
     if (orderRefNumber) {
       try {
-        const payment = await paymentModel.findOne({ orderRefNumber });
+        // ✅ CORRECT: Use gateway.orderRefNumber nested field
+        const payment = await paymentModel.findOne({ 'gateway.orderRefNumber': orderRefNumber });
+        
         if (payment) {
-          const isActualSuccess = responseCode === '0' || responseCode === '100' || responseCode === 0 || responseCode === 100;
+          // Store amount values BEFORE updating
+          actualAmount = payment.amount.toString();
+          actualCurrency = payment.currency || 'PKR';
+          
+          const isActualSuccess = responseCode === '0' || responseCode === '100';
           
           await payment.updateOne({
             status: isActualSuccess ? 'completed' : 'failed',
             completedAt: isActualSuccess ? new Date() : null,
             gatewayResponse: decryptedResponse,
             transactionId: decryptedResponse.TRANSACTION_ID || decryptedResponse.TXN_ID || decryptedResponse.GUID,
+            'gateway.responseCode': decryptedResponse.RESPONSE_CODE,
+            'gateway.responseMessage': decryptedResponse.RESPONSE_MESSAGE,
             updatedAt: new Date()
           });
           
@@ -355,13 +369,16 @@ module.exports.handlePaymentSuccess = asyncErrorHandler(async (req, res) => {
           }
           
           console.log('✅ [SUCCESS-NATIVE] Database records updated');
+          console.log('✅ [SUCCESS-NATIVE] Amount retrieved:', actualAmount, actualCurrency);
+        } else {
+          console.error('⚠️ [SUCCESS-NATIVE] Payment record not found for orderRef:', orderRefNumber);
         }
       } catch (dbError) {
         console.error('❌ [SUCCESS-NATIVE] Database update failed:', dbError.message);
       }
     }
     
-    // BUILD SUCCESS PAGE URL WITH ALL HBL DATA (exact same as your version)
+    // BUILD SUCCESS PAGE URL WITH ALL HBL DATA
     const successParams = new URLSearchParams({
       RESPONSE_CODE: decryptedResponse.RESPONSE_CODE || '',
       RESPONSE_MESSAGE: encodeURIComponent(decryptedResponse.RESPONSE_MESSAGE || ''),
@@ -371,8 +388,8 @@ module.exports.handlePaymentSuccess = asyncErrorHandler(async (req, res) => {
       DISCOUNTED_AMOUNT: decryptedResponse.DISCOUNTED_AMOUNT || '0',
       DISCOUNT_CAMPAIGN_ID: decryptedResponse.DISCOUNT_CAMPAIGN_ID || '0',
       GUID: decryptedResponse.GUID || '',
-      amount: '66.53', // You can get this from payment record
-      currency: 'PKR',
+      amount: actualAmount, // ✅ USE ACTUAL AMOUNT FROM DATABASE
+      currency: actualCurrency, // ✅ USE ACTUAL CURRENCY
       transactionId: decryptedResponse.TRANSACTION_ID || decryptedResponse.TXN_ID || decryptedResponse.GUID || ''
     });
     
@@ -458,22 +475,53 @@ module.exports.handlePaymentCancel = asyncErrorHandler(async (req, res) => {
       }
     }
     
-    // BUILD CANCEL PAGE URL WITH ALL HBL DATA (same as success page approach)
-    const cancelParams = new URLSearchParams({
-      RESPONSE_CODE: decryptedResponse.RESPONSE_CODE || '',
-      RESPONSE_MESSAGE: encodeURIComponent(decryptedResponse.RESPONSE_MESSAGE || 'Payment was cancelled'),
-      ORDER_REF_NUMBER: decryptedResponse.ORDER_REF_NUMBER || '',
-      PAYMENT_TYPE: decryptedResponse.PAYMENT_TYPE || '',
-      CARD_NUM_MASKED: decryptedResponse.CARD_NUM_MASKED || '',
-      DISCOUNTED_AMOUNT: decryptedResponse.DISCOUNTED_AMOUNT || '0',
-      DISCOUNT_CAMPAIGN_ID: decryptedResponse.DISCOUNT_CAMPAIGN_ID || '0',
-      GUID: decryptedResponse.GUID || '',
-      amount: '66.53', // You can get this from payment record if available
-      currency: 'PKR',
-      transactionId: decryptedResponse.TRANSACTION_ID || decryptedResponse.TXN_ID || decryptedResponse.GUID || '',
-      status: 'cancelled',
-      timestamp: Date.now()
-    });
+    // Fetch actual payment amount from database
+// Fetch actual payment amount from database
+let actualAmount = '0';
+let actualCurrency = 'PKR';
+
+if (orderRefNumber) {
+  try {
+    // ✅ CORRECT: Use gateway.orderRefNumber nested field
+    const payment = await paymentModel.findOne({ 'gateway.orderRefNumber': orderRefNumber });
+    
+    if (payment) {
+      // Store amount values BEFORE updating
+      actualAmount = payment.amount.toString();
+      actualCurrency = payment.currency || 'PKR';
+      
+      await payment.updateOne({
+        status: 'cancelled',
+        cancelledAt: new Date(),
+        gatewayResponse: decryptedResponse,
+        responseCode: decryptedResponse.RESPONSE_CODE,
+        responseMessage: decryptedResponse.RESPONSE_MESSAGE,
+        updatedAt: new Date()
+      });
+      
+      console.log('✅ [CANCEL] Payment record updated to cancelled');
+    }
+  } catch (dbError) {
+    console.error('❌ [CANCEL] Database update failed:', dbError.message);
+  }
+}
+
+// BUILD CANCEL PAGE URL WITH ALL HBL DATA
+const cancelParams = new URLSearchParams({
+  RESPONSE_CODE: decryptedResponse.RESPONSE_CODE || '',
+  RESPONSE_MESSAGE: encodeURIComponent(decryptedResponse.RESPONSE_MESSAGE || 'Payment was cancelled'),
+  ORDER_REF_NUMBER: decryptedResponse.ORDER_REF_NUMBER || '',
+  PAYMENT_TYPE: decryptedResponse.PAYMENT_TYPE || '',
+  CARD_NUM_MASKED: decryptedResponse.CARD_NUM_MASKED || '',
+  DISCOUNTED_AMOUNT: decryptedResponse.DISCOUNTED_AMOUNT || '0',
+  DISCOUNT_CAMPAIGN_ID: decryptedResponse.DISCOUNT_CAMPAIGN_ID || '0',
+  GUID: decryptedResponse.GUID || '',
+  amount: actualAmount, // ✅ USE ACTUAL AMOUNT
+  currency: actualCurrency, // ✅ USE ACTUAL CURRENCY
+  transactionId: decryptedResponse.TRANSACTION_ID || decryptedResponse.TXN_ID || decryptedResponse.GUID || '',
+  status: 'cancelled',
+  timestamp: Date.now()
+});
     
     const cancelUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/payment/cancel?${cancelParams.toString()}`;
     

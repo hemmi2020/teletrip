@@ -339,8 +339,12 @@ export const AuthModal = ({ isOpen, onClose, defaultTab = 'login' }) => {
 
     if (result.data.success) {
       localStorage.setItem('token', result.data.token);
+      localStorage.setItem('userData', JSON.stringify(result.data.user)); // ✅ ADD THIS LINE
       setUser(result.data.user);
-      console.log('✅ Login successful! Navigating to home...');
+      console.log('✅ Saved to localStorage:', {
+    token: !!result.data.token,
+    userData: !!result.data.user
+  });
       onClose();
       Navigate('/home');
     }
@@ -378,6 +382,7 @@ export const AuthModal = ({ isOpen, onClose, defaultTab = 'login' }) => {
         const data = response.data;
         setUser(data.user);
         localStorage.setItem('token', data.token);
+        localStorage.setItem('userData', JSON.stringify(data.user)); // ✅ ADD THIS LINE
         onClose();
         Navigate('/home');
       }
@@ -399,7 +404,7 @@ export const AuthModal = ({ isOpen, onClose, defaultTab = 'login' }) => {
       password: signupData.password,
       fullname: {
         firstname: signupData.firstName,
-        lastname: signupData.lastName
+        lastname: signupData.lastName 
       },
     };
 
@@ -413,6 +418,7 @@ export const AuthModal = ({ isOpen, onClose, defaultTab = 'login' }) => {
         const data = response.data;
         setUser(data.user);
         localStorage.setItem('token', data.token);
+        localStorage.setItem('userData', JSON.stringify(data.user)); // ✅ ADD THIS LINE
         onClose();
         Navigate('/home');
       }
@@ -744,16 +750,25 @@ export const SlideOutCart = ({ isOpen, onClose, onProceedToCheckout }) => {
   const [showAuthModal, setShowAuthModal] = useState(false);
 
   const handleCheckoutClick = () => {
-    console.log('🛒 Checkout button clicked');
-    console.log('👤 User:', user);
-    if (!user || !user.email) {
-      console.log('🔒 User not logged in, showing auth modal');
-      setShowAuthModal(true);
-    } else {
-      console.log('✅ User logged in, proceeding to checkout');
-      onProceedToCheckout();
-    }
-  };
+  console.log('🛒 Checkout button clicked');
+  
+  // ✅ Check BOTH context and localStorage
+  const token = localStorage.getItem('token');
+  const userData = localStorage.getItem('userData');
+  
+  console.log('👤 User from context:', user);
+  console.log('🔑 Token:', !!token);
+  console.log('📝 UserData:', !!userData);
+  
+  // If user exists in EITHER context OR localStorage, allow checkout
+  if ((!user || !user.email) && (!token || !userData)) {
+    console.log('🔒 User not logged in, showing auth modal');
+    setShowAuthModal(true);
+  } else {
+    console.log('✅ User logged in, proceeding to checkout');
+    onProceedToCheckout();
+  }
+};
 
   const handleAuthSuccess = (userData) => {
     console.log('✅ Auth successful:', userData);
