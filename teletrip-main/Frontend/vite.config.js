@@ -16,8 +16,8 @@ export default defineConfig({
     host: true,
     allowedHosts: [
       'telitrip.onrender.com',
-      'www.telitrip.com',
-      'telitrip.com',
+      'https://www.telitrip.com',
+        'https://telitrip.com',
       'localhost',
       '127.0.0.1'
     ]
