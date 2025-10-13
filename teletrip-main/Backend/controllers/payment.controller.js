@@ -15,10 +15,10 @@ const querystring = require('querystring');
 
 // HBLPay Configuration
 const HBLPAY_USER_ID = process.env.HBLPAY_USER_ID || 'teliadmin';
-const HBLPAY_PASSWORD = process.env.HBLPAY_PASSWORD || 'd6n26Yd4m!';
+const HBLPAY_PASSWORD = process.env.HBLPAY_PASSWORD || '9S2n37TVT!';
 const HBL_PUBLIC_KEY = process.env.HBL_PUBLIC_KEY_PEM;
 const HBL_SANDBOX_URL = process.env.HBL_SANDBOX_API_URL || 'https://testpaymentapi.hbl.com/hblpay/api/checkout';
-// const HBL_PRODUCTION_URL = process.env.HBL_PRODUCTION_API_URL;
+const HBL_PRODUCTION_URL = process.env.HBL_PRODUCTION_API_URL;
 const HBL_SANDBOX_REDIRECT = process.env.HBL_SANDBOX_REDIRECT_URL || 'https://testpaymentapi.hbl.com/hblpay/site/index.html#/checkout?data=';
 const HBL_PRODUCTION_REDIRECT = process.env.HBL_PRODUCTION_REDIRECT_URL;
 const HBL_CHANNEL = 'HBLPay_Teli_Website';
