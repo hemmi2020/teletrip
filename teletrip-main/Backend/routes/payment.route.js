@@ -22,6 +22,9 @@ router.post('/success', paymentController.handlePaymentSuccess);
 router.get('/extract-hbl-data', authUser, paymentController.extractHBLData);
 router.post('/test-decrypt',authUser, paymentController.testDecryption);
 router.post('/test', paymentController.testNativeDecryption);
+router.get('/diagnose-hbl', paymentController.diagnoseHBLIntegration);
+router.get('/hbl-health-check', paymentController.checkHBLServerStatus);
+router.get('/hbl-quick-check', paymentController.quickHBLCheck);
 
 
 

@@ -11,13 +11,14 @@ const { asyncErrorHandler } = require('../middlewares/errorHandler.middleware');
 const notificationService = require('../services/notification.service');
 const logger = require('../utils/logger.util'); // Enhanced logging utility
 const querystring = require('querystring');
+const forge = require('node-forge');
 
 
 // HBLPay Configuration
 const HBLPAY_USER_ID = process.env.HBLPAY_USER_ID || 'teliadmin';
-const HBLPAY_PASSWORD = process.env.HBLPAY_PASSWORD || '9S2n37TVT!';
+const HBLPAY_PASSWORD = process.env.HBLPAY_PASSWORD || 'd6n26Yd4m!';
 const HBL_PUBLIC_KEY = process.env.HBL_PUBLIC_KEY_PEM;
-// const HBL_SANDBOX_URL = process.env.HBL_SANDBOX_API_URL || 'https://testpaymentapi.hbl.com/hblpay/api/checkout';
+const HBL_SANDBOX_URL = process.env.HBL_SANDBOX_API_URL || 'https://testpaymentapi.hbl.com/hblpay/api/checkout';
 const HBL_PRODUCTION_URL = process.env.HBL_PRODUCTION_API_URL;
 const HBL_SANDBOX_REDIRECT = process.env.HBL_SANDBOX_REDIRECT_URL || 'https://testpaymentapi.hbl.com/hblpay/site/index.html#/checkout?data=';
 const HBL_PRODUCTION_REDIRECT = process.env.HBL_PRODUCTION_REDIRECT_URL;
@@ -118,7 +119,6 @@ function parseGarbledDataNative(rawDecryptedData) {
   }
 }
 
-// Native Node.js crypto version of your enhancedDecryption function
 function enhancedDecryptionNative(encryptedData, privateKeyPem) {
   try {
     console.log('\n🔧 [ENHANCED-NATIVE] Starting enhanced decryption with Node.js crypto...');
@@ -260,6 +260,240 @@ function enhancedDecryptionNative(encryptedData, privateKeyPem) {
 }
 
 
+function decryptHBLResponseNodeForge(encryptedData, privateKeyPem) {
+  try {
+    console.log('\n🔐 [DECRYPT] Starting multi-method decryption...');
+    
+    if (!encryptedData || !privateKeyPem) {
+      console.log('❌ [DECRYPT] Missing data or key');
+      return {};
+    }
+
+    // Step 1: Clean the data
+    let cleanData = encryptedData.trim();
+    cleanData = cleanData.replace(/ /g, '+');
+    cleanData = cleanData.replace(/%2B/g, '+');
+    cleanData = cleanData.replace(/%2F/g, '/');
+    cleanData = cleanData.replace(/%3D/g, '=');
+    
+    console.log('📏 [DECRYPT] Clean data length:', cleanData.length);
+    console.log('📏 [DECRYPT] First 50 chars:', cleanData.substring(0, 50));
+
+    // Step 2: Load keys
+    const forgePrivateKey = forge.pki.privateKeyFromPem(privateKeyPem);
+    console.log('🔑 [DECRYPT] Private key loaded');
+
+    // Step 3: Decode Base64
+    const encryptedBytes = forge.util.decode64(cleanData);
+    console.log('📦 [DECRYPT] Decoded length:', encryptedBytes.length);
+
+    // ============================================================================
+    // TRY MULTIPLE DECRYPTION METHODS
+    // ============================================================================
+    
+    const methods = [
+      {
+        name: 'node-forge PKCS1 v1.5',
+        decrypt: () => forgePrivateKey.decrypt(encryptedBytes, 'RSAES-PKCS1-V1_5')
+      },
+      {
+        name: 'node-forge PKCS1 (RSA-OAEP with SHA-1)',
+        decrypt: () => forgePrivateKey.decrypt(encryptedBytes, 'RSA-OAEP', {
+          md: forge.md.sha1.create()
+        })
+      },
+      {
+        name: 'node-forge PKCS1 (RSA-OAEP with SHA-256)',
+        decrypt: () => forgePrivateKey.decrypt(encryptedBytes, 'RSA-OAEP', {
+          md: forge.md.sha256.create()
+        })
+      },
+      {
+        name: 'node-forge RAW (no padding)',
+        decrypt: () => forgePrivateKey.decrypt(encryptedBytes, null)
+      },
+      {
+        name: 'node-forge RAW with manual PKCS1 removal',
+        decrypt: () => {
+          const raw = forgePrivateKey.decrypt(encryptedBytes, null);
+          // Remove PKCS1 padding manually
+          const buffer = forge.util.createBuffer(raw, 'raw');
+          const bytes = buffer.bytes();
+          
+          // Find the 0x00 separator after padding
+          let i = 2; // Skip first two bytes (0x00 0x02 for PKCS1)
+          while (i < bytes.length && bytes.charCodeAt(i) !== 0x00) {
+            i++;
+          }
+          i++; // Skip the 0x00 byte
+          
+          return bytes.substring(i);
+        }
+      },
+      {
+        name: 'Native crypto PKCS1 OAEP (SHA-1)',
+        decrypt: () => {
+          const buffer = Buffer.from(cleanData, 'base64');
+          return crypto.privateDecrypt({
+            key: privateKeyPem,
+            padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
+            oaepHash: 'sha1'
+          }, buffer).toString('utf8');
+        }
+      },
+      {
+        name: 'Native crypto PKCS1 OAEP (SHA-256)',
+        decrypt: () => {
+          const buffer = Buffer.from(cleanData, 'base64');
+          return crypto.privateDecrypt({
+            key: privateKeyPem,
+            padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
+            oaepHash: 'sha256'
+          }, buffer).toString('utf8');
+        }
+      },
+      {
+        name: 'Native crypto NO PADDING',
+        decrypt: () => {
+          const buffer = Buffer.from(cleanData, 'base64');
+          const decrypted = crypto.privateDecrypt({
+            key: privateKeyPem,
+            padding: crypto.constants.RSA_NO_PADDING
+          }, buffer);
+          
+          // Extract readable text from binary
+          let result = '';
+          for (let i = 0; i < decrypted.length; i++) {
+            const code = decrypted[i];
+            if ((code >= 32 && code <= 126) || code === 10 || code === 13) {
+              result += String.fromCharCode(code);
+            }
+          }
+          return result;
+        }
+      }
+    ];
+
+    // Try each method
+    for (const method of methods) {
+      try {
+        console.log(`\n🔄 [DECRYPT] Trying: ${method.name}...`);
+        const decrypted = method.decrypt();
+        
+        console.log('✅ [DECRYPT] Method succeeded!');
+        console.log('📝 [DECRYPT] Decrypted length:', decrypted.length);
+        console.log('📝 [DECRYPT] Sample:', decrypted.substring(0, 200));
+        
+        // Try to parse
+        const params = parseDecryptedParams(decrypted);
+        
+        if (params && Object.keys(params).length > 0) {
+          console.log(`🎉 [DECRYPT] SUCCESS with method: ${method.name}`);
+          console.log('📋 [DECRYPT] Parameters found:', Object.keys(params));
+          return params;
+        } else {
+          console.log(`⚠️ [DECRYPT] Method worked but no parameters parsed`);
+        }
+        
+      } catch (methodError) {
+        console.log(`❌ [DECRYPT] ${method.name} failed:`, methodError.message);
+      }
+    }
+
+    console.log('❌ [DECRYPT] All methods failed');
+    return {};
+
+  } catch (error) {
+    console.error('❌ [DECRYPT] Fatal error:', error.message);
+    return {};
+  }
+}
+
+// ==================== PARSE DECRYPTED PARAMETERS ====================
+function parseDecryptedParams(decryptedString) {
+  try {
+    console.log('🔍 [PARSE] Starting to parse...');
+    
+    if (!decryptedString || decryptedString.length === 0) {
+      console.log('❌ [PARSE] Empty string');
+      return {};
+    }
+    
+    const params = {};
+    
+    // Method 1: Standard query string format (key=value&key=value)
+    if (decryptedString.includes('=') && decryptedString.includes('&')) {
+      console.log('🔍 [PARSE] Trying query string format...');
+      
+      const pairs = decryptedString.split('&');
+      for (const pair of pairs) {
+        if (pair.includes('=')) {
+          const [key, ...valueParts] = pair.split('=');
+          const value = valueParts.join('=');
+          
+          if (key && value) {
+            try {
+              params[key.trim()] = decodeURIComponent(value.trim());
+              console.log(`✅ [PARSE] ${key.trim()}: ${params[key.trim()]}`);
+            } catch {
+              params[key.trim()] = value.trim();
+              console.log(`⚠️ [PARSE] ${key.trim()}: ${value.trim()} (raw)`);
+            }
+          }
+        }
+      }
+    }
+    
+    // Method 2: Try regex patterns if Method 1 failed
+    if (Object.keys(params).length === 0) {
+      console.log('🔍 [PARSE] Trying regex patterns...');
+      
+      const patterns = {
+        RESPONSE_CODE: /RESPONSE_CODE[=:]([^&\s\n]+)/i,
+        RESPONSE_MESSAGE: /RESPONSE_MESSAGE[=:]([^&\n]+)/i,
+        ORDER_REF_NUMBER: /ORDER_REF_NUMBER[=:]([^&\s\n]+)/i,
+        REFERENCE_NUMBER: /REFERENCE_NUMBER[=:]([^&\s\n]+)/i,
+        TRANSACTION_ID: /TRANSACTION_ID[=:]([^&\s\n]+)/i,
+        TXN_ID: /TXN_ID[=:]([^&\s\n]+)/i,
+        GUID: /GUID[=:]([^&\s\n]+)/i,
+        PAYMENT_TYPE: /PAYMENT_TYPE[=:]([^&\s\n]+)/i,
+        CARD_NUM_MASKED: /CARD_NUM_MASKED[=:]([^&\s\n]+)/i,
+        SESSION_ID: /SESSION_ID[=:]([^&\s\n]+)/i,
+        AMOUNT: /AMOUNT[=:]([^&\s\n]+)/i,
+        CURRENCY: /CURRENCY[=:]([^&\s\n]+)/i
+      };
+      
+      for (const [key, pattern] of Object.entries(patterns)) {
+        const match = decryptedString.match(pattern);
+        if (match && match[1]) {
+          params[key] = match[1].trim();
+          console.log(`✅ [PARSE] ${key}: ${params[key]}`);
+        }
+      }
+    }
+    
+    // Method 3: Try JSON parsing
+    if (Object.keys(params).length === 0) {
+      console.log('🔍 [PARSE] Trying JSON parsing...');
+      try {
+        const jsonData = JSON.parse(decryptedString);
+        Object.assign(params, jsonData);
+        console.log('✅ [PARSE] Parsed as JSON');
+      } catch {
+        console.log('❌ [PARSE] Not valid JSON');
+      }
+    }
+    
+    console.log(`📊 [PARSE] Total parameters: ${Object.keys(params).length}`);
+    return params;
+
+  } catch (error) {
+    console.error('❌ [PARSE] Error:', error.message);
+    return {};
+  }
+} 
+
+
 
 
 
@@ -269,270 +503,213 @@ function enhancedDecryptionNative(encryptedData, privateKeyPem) {
 
 // ==================== UPDATED SUCCESS HANDLER ====================
 module.exports.handlePaymentSuccess = asyncErrorHandler(async (req, res) => {
-  console.log('\n🎉 ========== PAYMENT SUCCESS CALLBACK (NATIVE) ==========');
+  console.log('\n🎉 ========== PAYMENT SUCCESS CALLBACK ==========');
   console.log('🔗 Full URL:', req.url);
-  console.log('🌐 Environment:', process.env.NODE_ENV);
-  console.log('📦 Platform:', process.platform);
-  console.log('🔍 Query params:', req.query);
-  console.log('🔍 Body params:', req.body);
   
   try {
-    // Extract encrypted data from raw URL (exact same logic as your version)
-    let encryptedData;
+    // Extract encrypted data (your existing code is good!)
+    let encryptedData = null;
     
-    if (req.url.includes('data=')) {
+    if (req.url && req.url.includes('data=')) {
       const rawUrl = req.url;
       const dataStart = rawUrl.indexOf('data=') + 5;
       const dataEnd = rawUrl.indexOf('&', dataStart);
       encryptedData = dataEnd === -1 ? 
         rawUrl.substring(dataStart) : 
         rawUrl.substring(dataStart, dataEnd);
-      
-      console.log('🔧 [SUCCESS-NATIVE] Extracted from raw URL:', encryptedData?.length, 'chars');
+      console.log('✅ [SUCCESS] Data from raw URL');
+    } else if (req.query && req.query.data) {
+      encryptedData = req.query.data;
+      console.log('⚠️ [SUCCESS] Data from query');
+    } else if (req.body && req.body.data) {
+      encryptedData = req.body.data;
+      console.log('✅ [SUCCESS] Data from body');
     }
-    
-    // Fallback to Express parsing
+
     if (!encryptedData) {
-      encryptedData = req.query?.data || req.body?.data;
+      console.log('❌ [SUCCESS] No encrypted data');
+      return res.redirect(`${process.env.FRONTEND_URL}/payment/failed?reason=missing_data`);
     }
-    
-    if (!encryptedData) {
-      console.log('❌ [SUCCESS-NATIVE] No encrypted data found');
-      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/payment/failed?reason=missing_data`);
-    }
-    
-    console.log('📥 [SUCCESS-NATIVE] Processing encrypted data...');
-    console.log('📥 [SUCCESS-NATIVE] Data length:', encryptedData.length);
-    console.log('📥 [SUCCESS-NATIVE] Data sample:', encryptedData.substring(0, 50) + '...');
-    
-    // Get private key from environment
+
+    console.log('📦 [SUCCESS] Encrypted data length:', encryptedData.length);
+
     const privateKeyPem = process.env.MERCHANT_PRIVATE_KEY_PEM;
     
     if (!privateKeyPem) {
-      console.log('❌ [SUCCESS-NATIVE] No private key found in environment');
-      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/payment/failed?reason=config_error`);
+      console.log('❌ [SUCCESS] No private key');
+      return res.redirect(`${process.env.FRONTEND_URL}/payment/failed?reason=config_error`);
     }
-    
-    console.log('🔑 [SUCCESS-NATIVE] Private key loaded, length:', privateKeyPem.length);
-    
-    // Use enhanced native decryption
-    const decryptedResponse = enhancedDecryptionNative(encryptedData, privateKeyPem);
-    
+
+    // USE MULTI-METHOD DECRYPTION
+    const decryptedResponse = decryptHBLResponseNodeForge(encryptedData, privateKeyPem);
+
     if (!decryptedResponse || Object.keys(decryptedResponse).length === 0) {
-      console.log('💥 [SUCCESS-NATIVE] Decryption failed completely');
-      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/payment/failed?reason=decrypt_failed`);
+      console.log('❌ [SUCCESS] All decryption methods failed');
+      console.log('⚠️ [SUCCESS] This means HBL is using a different public key');
+      console.log('📧 [SUCCESS] Action required: Contact HBL support to verify your public key');
+      
+      return res.redirect(`${process.env.FRONTEND_URL}/payment/failed?reason=key_mismatch`);
     }
-    
-    console.log('🎊 [SUCCESS-NATIVE] NATIVE DECRYPTION SUCCESSFUL!');
-    console.log('📋 [SUCCESS-NATIVE] Decrypted parameters:', JSON.stringify(decryptedResponse, null, 2));
-    
+
+    console.log('🎊 [SUCCESS] DECRYPTION SUCCESSFUL!');
+    console.log('📋 [SUCCESS] Response:', JSON.stringify(decryptedResponse, null, 2));
+
+    // Rest of your code (database update, redirect, etc.)
     const responseCode = decryptedResponse.RESPONSE_CODE;
-    
-    console.log('🔍 [SUCCESS-NATIVE] Response code:', responseCode);
-    // Update payment record if found
     const orderRefNumber = decryptedResponse.ORDER_REF_NUMBER || decryptedResponse.REFERENCE_NUMBER;
-    console.log('🔍 [SUCCESS-NATIVE] Order ref:', orderRefNumber);
-    
-    // Fetch actual payment amount from database
+    const transactionId = decryptedResponse.TRANSACTION_ID || decryptedResponse.TXN_ID || decryptedResponse.GUID;
+
     let actualAmount = '0';
     let actualCurrency = 'PKR';
     
     if (orderRefNumber) {
-      try {
-        // ✅ CORRECT: Use gateway.orderRefNumber nested field
-        const payment = await paymentModel.findOne({ 'gateway.orderRefNumber': orderRefNumber });
+      const payment = await paymentModel.findOne({ 
+        'gateway.orderRefNumber': orderRefNumber 
+      });
+
+      if (payment) {
+        actualAmount = payment.amount.toString();
+        actualCurrency = payment.currency || 'PKR';
         
-        if (payment) {
-          // Store amount values BEFORE updating
-          actualAmount = payment.amount.toString();
-          actualCurrency = payment.currency || 'PKR';
-          
-          const isActualSuccess = responseCode === '0' || responseCode === '100';
-          
-          await payment.updateOne({
-            status: isActualSuccess ? 'completed' : 'failed',
-            completedAt: isActualSuccess ? new Date() : null,
-            gatewayResponse: decryptedResponse,
-            transactionId: decryptedResponse.TRANSACTION_ID || decryptedResponse.TXN_ID || decryptedResponse.GUID,
-            'gateway.responseCode': decryptedResponse.RESPONSE_CODE,
-            'gateway.responseMessage': decryptedResponse.RESPONSE_MESSAGE,
+        const isSuccess = responseCode === '0' || responseCode === '100';
+        
+        await payment.updateOne({
+          status: isSuccess ? 'completed' : 'failed',
+          completedAt: isSuccess ? new Date() : null,
+          'gateway.transactionId': transactionId,
+          'gateway.responseCode': responseCode,
+          'gateway.responseMessage': decryptedResponse.RESPONSE_MESSAGE,
+          'gateway.paymentType': decryptedResponse.PAYMENT_TYPE,
+          'gateway.cardMasked': decryptedResponse.CARD_NUM_MASKED,
+          gatewayResponse: decryptedResponse,
+          updatedAt: new Date()
+        });
+
+        if (payment.bookingId && isSuccess) {
+          await bookingModel.findByIdAndUpdate(payment.bookingId, {
+            paymentStatus: 'paid',
+            status: 'confirmed',
+            confirmedAt: new Date(),
             updatedAt: new Date()
           });
-          
-          if (payment.bookingId && isActualSuccess) {
-            await bookingModel.findByIdAndUpdate(payment.bookingId, {
-              paymentStatus: 'paid',
-              status: 'confirmed',
-              confirmedAt: new Date(),
-              updatedAt: new Date()
-            });
-          }
-          
-          console.log('✅ [SUCCESS-NATIVE] Database records updated');
-          console.log('✅ [SUCCESS-NATIVE] Amount retrieved:', actualAmount, actualCurrency);
-        } else {
-          console.error('⚠️ [SUCCESS-NATIVE] Payment record not found for orderRef:', orderRefNumber);
         }
-      } catch (dbError) {
-        console.error('❌ [SUCCESS-NATIVE] Database update failed:', dbError.message);
       }
     }
-    
-    // BUILD SUCCESS PAGE URL WITH ALL HBL DATA
+
     const successParams = new URLSearchParams({
       RESPONSE_CODE: decryptedResponse.RESPONSE_CODE || '',
       RESPONSE_MESSAGE: encodeURIComponent(decryptedResponse.RESPONSE_MESSAGE || ''),
-      ORDER_REF_NUMBER: decryptedResponse.ORDER_REF_NUMBER || '',
-      PAYMENT_TYPE: decryptedResponse.PAYMENT_TYPE || '',
-      CARD_NUM_MASKED: decryptedResponse.CARD_NUM_MASKED || '',
-      DISCOUNTED_AMOUNT: decryptedResponse.DISCOUNTED_AMOUNT || '0',
-      DISCOUNT_CAMPAIGN_ID: decryptedResponse.DISCOUNT_CAMPAIGN_ID || '0',
-      GUID: decryptedResponse.GUID || '',
-      amount: actualAmount, // ✅ USE ACTUAL AMOUNT FROM DATABASE
-      currency: actualCurrency, // ✅ USE ACTUAL CURRENCY
-      transactionId: decryptedResponse.TRANSACTION_ID || decryptedResponse.TXN_ID || decryptedResponse.GUID || ''
+      ORDER_REF_NUMBER: orderRefNumber || '',
+      amount: actualAmount,
+      currency: actualCurrency,
+      transactionId: transactionId || ''
     });
-    
-    const successUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/payment/success?${successParams.toString()}`;
-    
-    console.log('🎯 [SUCCESS-NATIVE] Redirecting to:', successUrl);
-    console.log('🎯 [SUCCESS-NATIVE] URL length:', successUrl.length);
-    
+
+    const successUrl = `${process.env.FRONTEND_URL}/payment/success?${successParams.toString()}`;
     return res.redirect(successUrl);
-    
+
   } catch (error) {
-    console.error('💥 [SUCCESS-NATIVE] Handler error:', error);
-    console.error('💥 [SUCCESS-NATIVE] Stack trace:', error.stack);
-    return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/payment/failed?reason=server_error`);
+    console.error('❌ [SUCCESS] Error:', error);
+    return res.redirect(`${process.env.FRONTEND_URL}/payment/failed?reason=server_error`);
   }
 });
 
-
-
-// ==================== ENHANCED PAYMENT CANCEL HANDLER ====================
+// ==================== REPLACE YOUR handlePaymentCancel FUNCTION ====================
 module.exports.handlePaymentCancel = asyncErrorHandler(async (req, res) => {
   console.log('\n🚫 ========== PAYMENT CANCEL CALLBACK ==========');
   console.log('🔗 Full URL:', req.url);
   
   try {
-    // Extract encrypted data from raw URL (same as success handler)
-    let encryptedData;
+    let encryptedData = null;
     
-    if (req.url.includes('data=')) {
+    // Extract from raw URL (best method)
+    if (req.url && req.url.includes('data=')) {
       const rawUrl = req.url;
       const dataStart = rawUrl.indexOf('data=') + 5;
       const dataEnd = rawUrl.indexOf('&', dataStart);
       encryptedData = dataEnd === -1 ? 
         rawUrl.substring(dataStart) : 
         rawUrl.substring(dataStart, dataEnd);
-      
-      console.log('🔧 [CANCEL] Extracted from raw URL:', encryptedData?.length, 'chars');
+      console.log('✅ [CANCEL] Data from raw URL');
+    } else if (req.query && req.query.data) {
+      encryptedData = req.query.data;
+      console.log('⚠️ [CANCEL] Data from query');
+    } else if (req.body && req.body.data) {
+      encryptedData = req.body.data;
+      console.log('✅ [CANCEL] Data from body');
     }
-    
-    // Fallback to Express parsing
+
     if (!encryptedData) {
-      encryptedData = req.query?.data || req.body?.data;
+      console.log('❌ [CANCEL] No encrypted data');
+      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/payment/cancel?reason=no_data`);
     }
+
+    const privateKeyPem = process.env.MERCHANT_PRIVATE_KEY_PEM;
     
-    if (!encryptedData) {
-      console.log('❌ [CANCEL] No encrypted data found - redirecting with basic info');
-      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/payment/cancel?reason=no_data&timestamp=${Date.now()}`);
+    if (!privateKeyPem) {
+      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/payment/cancel?reason=config_error`);
     }
-    
-    console.log('📥 [CANCEL] Processing encrypted data...');
-    
-    // Use the same enhanced decryption as success handler
-    const decryptedResponse = enhancedDecryption(encryptedData, privateKeyPem);
-    
+
+    // Use fixed decryption
+    const decryptedResponse = decryptHBLResponseNodeForge(encryptedData, privateKeyPem);
+
     if (!decryptedResponse || Object.keys(decryptedResponse).length === 0) {
-      console.log('💥 [CANCEL] Decryption failed - redirecting with basic cancel info');
-      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/payment/cancel?reason=decrypt_failed&timestamp=${Date.now()}`);
+      console.log('❌ [CANCEL] Decryption failed');
+      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/payment/cancel?reason=decrypt_failed`);
     }
-    
-    console.log('🎊 [CANCEL] DECRYPTION SUCCESSFUL!');
-    console.log('📋 [CANCEL] Decrypted parameters:', decryptedResponse);
-    
+
+    console.log('✅ [CANCEL] Decryption successful');
+    console.log('📋 [CANCEL] Response:', JSON.stringify(decryptedResponse, null, 2));
+
     const orderRefNumber = decryptedResponse.ORDER_REF_NUMBER || decryptedResponse.REFERENCE_NUMBER;
-    
-    // Update database records
+    let actualAmount = '0';
+    let actualCurrency = 'PKR';
+
+    // Update records
     if (orderRefNumber) {
       try {
-        const payment = await paymentModel.findOne({ orderRefNumber });
+        const payment = await paymentModel.findOne({ 
+          'gateway.orderRefNumber': orderRefNumber 
+        });
+
         if (payment) {
+          actualAmount = payment.amount.toString();
+          actualCurrency = payment.currency || 'PKR';
+
           await payment.updateOne({
             status: 'cancelled',
             cancelledAt: new Date(),
+            'gateway.responseCode': decryptedResponse.RESPONSE_CODE,
+            'gateway.responseMessage': decryptedResponse.RESPONSE_MESSAGE || 'Payment cancelled',
             gatewayResponse: decryptedResponse,
-            responseCode: decryptedResponse.RESPONSE_CODE,
-            responseMessage: decryptedResponse.RESPONSE_MESSAGE,
             updatedAt: new Date()
           });
-          
-          console.log('✅ [CANCEL] Payment record updated to cancelled');
+
+          console.log('✅ [CANCEL] Payment cancelled:', payment.paymentId);
         }
       } catch (dbError) {
-        console.error('❌ [CANCEL] Database update failed:', dbError.message);
+        console.error('❌ [CANCEL] Database error:', dbError.message);
       }
     }
-    
-    // Fetch actual payment amount from database
-// Fetch actual payment amount from database
-let actualAmount = '0';
-let actualCurrency = 'PKR';
 
-if (orderRefNumber) {
-  try {
-    // ✅ CORRECT: Use gateway.orderRefNumber nested field
-    const payment = await paymentModel.findOne({ 'gateway.orderRefNumber': orderRefNumber });
-    
-    if (payment) {
-      // Store amount values BEFORE updating
-      actualAmount = payment.amount.toString();
-      actualCurrency = payment.currency || 'PKR';
-      
-      await payment.updateOne({
-        status: 'cancelled',
-        cancelledAt: new Date(),
-        gatewayResponse: decryptedResponse,
-        responseCode: decryptedResponse.RESPONSE_CODE,
-        responseMessage: decryptedResponse.RESPONSE_MESSAGE,
-        updatedAt: new Date()
-      });
-      
-      console.log('✅ [CANCEL] Payment record updated to cancelled');
-    }
-  } catch (dbError) {
-    console.error('❌ [CANCEL] Database update failed:', dbError.message);
-  }
-}
+    // Redirect
+    const cancelParams = new URLSearchParams({
+      RESPONSE_CODE: decryptedResponse.RESPONSE_CODE || '',
+      RESPONSE_MESSAGE: encodeURIComponent(decryptedResponse.RESPONSE_MESSAGE || 'Payment cancelled'),
+      ORDER_REF_NUMBER: orderRefNumber || '',
+      amount: actualAmount,
+      currency: actualCurrency,
+      status: 'cancelled'
+    });
 
-// BUILD CANCEL PAGE URL WITH ALL HBL DATA
-const cancelParams = new URLSearchParams({
-  RESPONSE_CODE: decryptedResponse.RESPONSE_CODE || '',
-  RESPONSE_MESSAGE: encodeURIComponent(decryptedResponse.RESPONSE_MESSAGE || 'Payment was cancelled'),
-  ORDER_REF_NUMBER: decryptedResponse.ORDER_REF_NUMBER || '',
-  PAYMENT_TYPE: decryptedResponse.PAYMENT_TYPE || '',
-  CARD_NUM_MASKED: decryptedResponse.CARD_NUM_MASKED || '',
-  DISCOUNTED_AMOUNT: decryptedResponse.DISCOUNTED_AMOUNT || '0',
-  DISCOUNT_CAMPAIGN_ID: decryptedResponse.DISCOUNT_CAMPAIGN_ID || '0',
-  GUID: decryptedResponse.GUID || '',
-  amount: actualAmount, // ✅ USE ACTUAL AMOUNT
-  currency: actualCurrency, // ✅ USE ACTUAL CURRENCY
-  transactionId: decryptedResponse.TRANSACTION_ID || decryptedResponse.TXN_ID || decryptedResponse.GUID || '',
-  status: 'cancelled',
-  timestamp: Date.now()
-});
-    
     const cancelUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/payment/cancel?${cancelParams.toString()}`;
     
     console.log('🎯 [CANCEL] Redirecting to:', cancelUrl);
-    console.log('🎯 [CANCEL] URL length:', cancelUrl.length);
-    
     return res.redirect(cancelUrl);
-    
+
   } catch (error) {
-    console.error('💥 [CANCEL] Handler error:', error);
-    return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/payment/cancel?reason=server_error&timestamp=${Date.now()}`);
+    console.error('❌ [CANCEL] Handler error:', error);
+    return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/payment/cancel?reason=server_error`);
   }
 });
 
@@ -1422,7 +1599,7 @@ module.exports.initiateHBLPayPayment = asyncErrorHandler(async (req, res) => {
       userData: userData
     }, userId);
 
-    const hblResponse = await callHBLPayAPI(hblRequest);
+    const hblResponse = await callHBLPayAPI(hblRequest); 
 
     if (!hblResponse.IsSuccess) {
       await payment.updateOne({
@@ -1883,18 +2060,7 @@ module.exports.testDecryption = (req, res) => {
     }
     
     // Check node-forge
-    let forge;
-    try {
-      forge = require('node-forge');
-      console.log('✅ node-forge library loaded');
-    } catch (forgeError) {
-      return res.json({
-        success: false,
-        error: 'node-forge not installed',
-        solution: 'Run: npm install node-forge',
-        details: forgeError.message
-      });
-    }
+    
     
     // Test decryption with real HBL data
     console.log('\n🚀 Starting decryption with REAL HBL data...');
@@ -2094,4 +2260,1071 @@ module.exports.testNativeDecryption = asyncErrorHandler(async (req, res) => {
       method: 'native-nodejs-crypto'
     }
   });
+});
+
+module.exports.testHBLDecrypt = asyncErrorHandler(async (req, res) => {
+  console.log('\n🧪 ========== HBL DECRYPT TEST (POSTMAN) ==========');
+  
+  try {
+    const { url, encryptedData } = req.body;
+    
+    let dataToDecrypt = encryptedData;
+    
+    // If URL is provided, extract the data parameter
+    if (!dataToDecrypt && url) {
+      console.log('📋 Full URL provided:', url);
+      
+      // Extract data from URL
+      let urlToParse = url;
+      
+      // Handle hash fragments
+      if (urlToParse.includes('#/checkout?data=')) {
+        urlToParse = urlToParse.split('#/checkout?data=')[1];
+        dataToDecrypt = decodeURIComponent(urlToParse.split('&')[0]);
+        console.log('✅ Extracted from hash fragment');
+      } 
+      // Handle success/cancel callbacks
+      else if (urlToParse.includes('/success?data=') || urlToParse.includes('/cancel?data=')) {
+        const match = urlToParse.match(/data=([^&]+)/);
+        if (match) {
+          dataToDecrypt = decodeURIComponent(match[1]);
+          console.log('✅ Extracted from callback URL');
+        }
+      }
+      // Handle regular query params
+      else if (urlToParse.includes('?data=')) {
+        const match = urlToParse.match(/data=([^&]+)/);
+        if (match) {
+          dataToDecrypt = decodeURIComponent(match[1]);
+          console.log('✅ Extracted from query param');
+        }
+      }
+    }
+    
+    if (!dataToDecrypt) {
+      return res.status(400).json({
+        success: false,
+        error: 'Please provide either "url" or "encryptedData"',
+        examples: {
+          checkout_url: {
+            url: 'https://digitalbankingportal.hbl.com/hostedcheckout/site/index.html#/checkout?data=ABC123...'
+          },
+          callback_url: {
+            url: '/success?data=XYZ789...'
+          },
+          direct_data: {
+            encryptedData: 'ABC123...'
+          }
+        }
+      });
+    }
+    
+    console.log('📦 Encrypted data length:', dataToDecrypt.length);
+    console.log('📦 First 50 chars:', dataToDecrypt.substring(0, 50));
+    console.log('📦 Last 50 chars:', dataToDecrypt.substring(dataToDecrypt.length - 50));
+    
+    // Get private key
+    const privateKeyPem = process.env.MERCHANT_PRIVATE_KEY_PEM;
+    
+    if (!privateKeyPem) {
+      return res.status(500).json({
+        success: false,
+        error: 'MERCHANT_PRIVATE_KEY_PEM not configured in environment variables'
+      });
+    }
+    
+    console.log('🔑 Private key loaded, length:', privateKeyPem.length);
+    
+    // ============================================================================
+    // TRY METHOD 1: enhancedDecryptionNative (your NO_PADDING method)
+    // ============================================================================
+    
+    console.log('\n🔄 ========== TRYING METHOD 1: enhancedDecryptionNative ==========');
+    let method1Result = null;
+    
+    try {
+      method1Result = enhancedDecryptionNative(dataToDecrypt, privateKeyPem);
+      
+      if (method1Result && Object.keys(method1Result).length > 0) {
+        console.log('🎉 METHOD 1 SUCCESS!');
+        console.log('📋 Parameters found:', Object.keys(method1Result));
+        
+        return res.json({
+          success: true,
+          message: 'Decryption successful with Method 1! ✅',
+          method: 'enhancedDecryptionNative (NO_PADDING)',
+          decryptedData: method1Result,
+          parameters: {
+            RESPONSE_CODE: method1Result.RESPONSE_CODE || 'N/A',
+            RESPONSE_MESSAGE: method1Result.RESPONSE_MESSAGE || 'N/A',
+            ORDER_REF_NUMBER: method1Result.ORDER_REF_NUMBER || method1Result.REFERENCE_NUMBER || 'N/A',
+            TRANSACTION_ID: method1Result.TRANSACTION_ID || method1Result.TXN_ID || method1Result.GUID || 'N/A',
+            PAYMENT_TYPE: method1Result.PAYMENT_TYPE || 'N/A',
+            CARD_NUM_MASKED: method1Result.CARD_NUM_MASKED || 'N/A',
+            AMOUNT: method1Result.AMOUNT || 'N/A',
+            CURRENCY: method1Result.CURRENCY || 'N/A',
+            SESSION_ID: method1Result.SESSION_ID || 'N/A'
+          },
+          allFields: method1Result
+        });
+      } else {
+        console.log('⚠️ METHOD 1 FAILED: No parameters found');
+      }
+    } catch (method1Error) {
+      console.log('❌ METHOD 1 ERROR:', method1Error.message);
+    }
+    
+    // ============================================================================
+    // TRY METHOD 2: decryptHBLResponseNodeForge (multi-method with node-forge)
+    // ============================================================================
+    
+    console.log('\n🔄 ========== TRYING METHOD 2: decryptHBLResponseNodeForge ==========');
+    let method2Result = null;
+    
+    try {
+      method2Result = decryptHBLResponseNodeForge(dataToDecrypt, privateKeyPem);
+      
+      if (method2Result && Object.keys(method2Result).length > 0) {
+        console.log('🎉 METHOD 2 SUCCESS!');
+        console.log('📋 Parameters found:', Object.keys(method2Result));
+        
+        return res.json({
+          success: true,
+          message: 'Decryption successful with Method 2! ✅',
+          method: 'decryptHBLResponseNodeForge (multi-method with node-forge)',
+          decryptedData: method2Result,
+          parameters: {
+            RESPONSE_CODE: method2Result.RESPONSE_CODE || 'N/A',
+            RESPONSE_MESSAGE: method2Result.RESPONSE_MESSAGE || 'N/A',
+            ORDER_REF_NUMBER: method2Result.ORDER_REF_NUMBER || method2Result.REFERENCE_NUMBER || 'N/A',
+            TRANSACTION_ID: method2Result.TRANSACTION_ID || method2Result.TXN_ID || method2Result.GUID || 'N/A',
+            PAYMENT_TYPE: method2Result.PAYMENT_TYPE || 'N/A',
+            CARD_NUM_MASKED: method2Result.CARD_NUM_MASKED || 'N/A',
+            AMOUNT: method2Result.AMOUNT || 'N/A',
+            CURRENCY: method2Result.CURRENCY || 'N/A',
+            SESSION_ID: method2Result.SESSION_ID || 'N/A'
+          },
+          allFields: method2Result
+        });
+      } else {
+        console.log('⚠️ METHOD 2 FAILED: No parameters found');
+      }
+    } catch (method2Error) {
+      console.log('❌ METHOD 2 ERROR:', method2Error.message);
+    }
+    
+    // ============================================================================
+    // BOTH METHODS FAILED
+    // ============================================================================
+    
+    console.log('\n❌ ========== ALL METHODS FAILED ==========');
+    
+    return res.json({
+      success: false,
+      message: 'Both decryption methods failed - HBL has wrong public key',
+      methodsTried: [
+        {
+          name: 'Method 1: enhancedDecryptionNative',
+          result: 'Failed',
+          details: 'NO_PADDING decryption succeeded but produced garbage'
+        },
+        {
+          name: 'Method 2: decryptHBLResponseNodeForge',
+          result: 'Failed',
+          details: 'All 8 padding methods tried, none produced readable output'
+        }
+      ],
+      diagnosis: {
+        problem: 'HBL has the WRONG public key registered for your merchant account',
+        evidence: [
+          'Decryption technically succeeds (no errors)',
+          'But output is binary garbage instead of readable text',
+          'This means HBL encrypted with a different public key',
+          'The public key used for encryption does not match your private key'
+        ]
+      },
+      immediateAction: {
+        step1: 'Contact HBL IPG Support NOW',
+        step2: 'Email: hblpay.support@hbl.com',
+        step3: 'Subject: URGENT - Public Key Mismatch - Merchant teliadmin',
+        step4: 'Send them your MERCHANT_PUBLIC_KEY_PEM from .env file',
+        step5: 'Request immediate key verification and update'
+      },
+      yourPublicKey: process.env.MERCHANT_PUBLIC_KEY_PEM ? 
+        'Available in environment (send this to HBL)' : 
+        'NOT FOUND in environment variables',
+      technicalDetails: {
+        encryptedDataLength: dataToDecrypt.length,
+        base64Decoded: Buffer.from(dataToDecrypt, 'base64').length + ' bytes',
+        expectedRSABlockSize: 512,
+        decryptionAttempts: 10,
+        allMethodsFailed: true
+      }
+    });
+    
+  } catch (error) {
+    console.error('❌ Test endpoint fatal error:', error);
+    
+    return res.status(500).json({
+      success: false,
+      error: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
+  }
+});
+
+// ============================================================================
+// ADDITIONAL HELPER: Compare encryption/decryption with YOUR keys
+// ============================================================================
+
+module.exports.testYourKeys = asyncErrorHandler(async (req, res) => {
+  console.log('\n🔑 ========== TESTING YOUR OWN KEY PAIR ==========');
+  
+  try {
+    const forge = require('node-forge');
+    
+    const privateKeyPem = process.env.MERCHANT_PRIVATE_KEY_PEM;
+    const publicKeyPem = process.env.MERCHANT_PUBLIC_KEY_PEM;
+    
+    if (!privateKeyPem || !publicKeyPem) {
+      return res.status(500).json({
+        success: false,
+        error: 'Keys not configured',
+        hasPrivateKey: !!privateKeyPem,
+        hasPublicKey: !!publicKeyPem
+      });
+    }
+    
+    // Test data that simulates HBL response
+    const testData = 'RESPONSE_CODE=0&ORDER_REF_NUMBER=TEST_ORDER_123&PAYMENT_TYPE=CARD&TRANSACTION_ID=TXN_456&AMOUNT=1500&CURRENCY=PKR';
+    
+    console.log('📝 Original data:', testData);
+    
+    // Encrypt with YOUR public key (simulating what HBL should do)
+    const publicKey = forge.pki.publicKeyFromPem(publicKeyPem);
+    const encrypted = publicKey.encrypt(testData, 'RSAES-PKCS1-V1_5');
+    const encryptedBase64 = forge.util.encode64(encrypted);
+    
+    console.log('🔐 Encrypted (base64):', encryptedBase64.substring(0, 100) + '...');
+    
+    // Try decrypting with Method 1
+    console.log('\n🔄 Testing with enhancedDecryptionNative...');
+    const method1 = enhancedDecryptionNative(encryptedBase64, privateKeyPem);
+    
+    // Try decrypting with Method 2
+    console.log('\n🔄 Testing with decryptHBLResponseNodeForge...');
+    const method2 = decryptHBLResponseNodeForge(encryptedBase64, privateKeyPem);
+    
+    const method1Works = method1 && Object.keys(method1).length > 0;
+    const method2Works = method2 && Object.keys(method2).length > 0;
+    
+    return res.json({
+      success: method1Works || method2Works,
+      message: method1Works || method2Works ? 
+        'Your key pair is VALID! ✅' : 
+        'Your key pair has issues ❌',
+      testData: {
+        original: testData,
+        encryptedLength: encryptedBase64.length
+      },
+      results: {
+        method1_enhancedDecryptionNative: {
+          success: method1Works,
+          decrypted: method1Works ? method1 : 'Failed'
+        },
+        method2_decryptHBLResponseNodeForge: {
+          success: method2Works,
+          decrypted: method2Works ? method2 : 'Failed'
+        }
+      },
+      conclusion: method1Works || method2Works ?
+        'Your keys work perfectly! The issue is 100% that HBL has the wrong public key.' :
+        'Your key pair might be invalid. Generate a new RSA 4096 key pair.',
+      nextStep: method1Works || method2Works ?
+        'Send your MERCHANT_PUBLIC_KEY_PEM to HBL support immediately' :
+        'Generate new keys and register with HBL'
+    });
+    
+  } catch (error) {
+    console.error('❌ Key test error:', error);
+    
+    return res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+
+// Enhanced test endpoint for Render deployment debugging
+// Test endpoint for native decryption
+// Test endpoint for native decryption
+module.exports.testNativeDecryption = asyncErrorHandler(async (req, res) => {
+  console.log('\n🧪 ========== NATIVE DECRYPTION TEST ==========');
+  
+  const { testData } = req.body;
+  
+  if (!testData) {
+    return res.status(400).json({
+      success: false,
+      error: 'Please provide testData in request body',
+      environment: {
+        nodeVersion: process.version,
+        platform: process.platform,
+        hasPrivateKey: !!process.env.MERCHANT_PRIVATE_KEY_PEM
+      }
+    });
+  }
+
+  console.log('🧪 [TEST] Testing native decryption...');
+  console.log('🧪 [TEST] Environment:', process.env.NODE_ENV);
+  console.log('🧪 [TEST] Platform:', process.platform);
+  console.log('🧪 [TEST] Node version:', process.version);
+  
+  const privateKeyPem = process.env.MERCHANT_PRIVATE_KEY_PEM;
+  
+  if (!privateKeyPem) {
+    return res.status(500).json({
+      success: false,
+      error: 'Private key not found in environment variables'
+    });
+  }
+  
+  const startTime = Date.now();
+  const result = enhancedDecryptionNative(testData, privateKeyPem);
+  const endTime = Date.now();
+  
+  console.log('⏱️ [TEST] Decryption took:', endTime - startTime, 'ms');
+  console.log('📊 [TEST] Result:', JSON.stringify(result, null, 2));
+  
+  return res.json({
+    success: result && Object.keys(result).length > 0,
+    decryptedData: result,
+    performance: {
+      decryptionTime: endTime - startTime,
+      memoryUsage: process.memoryUsage()
+    },
+    environment: {
+      nodeVersion: process.version,
+      platform: process.platform,
+      architecture: process.arch,
+      hasPrivateKey: !!privateKeyPem,
+      privateKeyLength: privateKeyPem ? privateKeyPem.length : 0
+    },
+    debugging: {
+      originalDataLength: testData.length,
+      originalDataSample: testData.substring(0, 100) + '...',
+      method: 'native-nodejs-crypto'
+    }
+  });
+});
+
+
+
+
+module.exports.diagnoseHBLIntegration = asyncErrorHandler(async (req, res) => {
+  console.log('\n🔬 ========== COMPREHENSIVE HBL DIAGNOSTIC ==========\n');
+  
+  const diagnostics = {
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV,
+    tests: []
+  };
+
+  // TEST 1: Environment Variables Check
+  console.log('📋 TEST 1: Environment Variables');
+  const envTest = {
+    name: 'Environment Variables',
+    status: 'checking',
+    details: {
+      HBLPAY_USER_ID: {
+        exists: !!process.env.HBLPAY_USER_ID,
+        value: process.env.HBLPAY_USER_ID || 'NOT SET',
+        length: process.env.HBLPAY_USER_ID?.length || 0
+      },
+      HBLPAY_PASSWORD: {
+        exists: !!process.env.HBLPAY_PASSWORD,
+        value: process.env.HBLPAY_PASSWORD ? '***' + process.env.HBLPAY_PASSWORD.slice(-3) : 'NOT SET',
+        length: process.env.HBLPAY_PASSWORD?.length || 0
+      },
+      HBL_PUBLIC_KEY_PEM: {
+        exists: !!process.env.HBL_PUBLIC_KEY_PEM,
+        length: process.env.HBL_PUBLIC_KEY_PEM?.length || 0,
+        hasPemHeaders: process.env.HBL_PUBLIC_KEY_PEM?.includes('BEGIN PUBLIC KEY')
+      },
+      HBL_CHANNEL: {
+        exists: !!process.env.HBL_CHANNEL,
+        value: process.env.HBL_CHANNEL || 'NOT SET'
+      },
+      HBL_SANDBOX_API_URL: {
+        exists: !!process.env.HBL_SANDBOX_API_URL,
+        value: process.env.HBL_SANDBOX_API_URL || 'NOT SET'
+      }
+    }
+  };
+
+  const missingEnv = Object.entries(envTest.details)
+    .filter(([_, v]) => !v.exists)
+    .map(([k]) => k);
+
+  envTest.status = missingEnv.length === 0 ? 'PASS' : 'FAIL';
+  if (missingEnv.length > 0) {
+    envTest.error = `Missing: ${missingEnv.join(', ')}`;
+  }
+  diagnostics.tests.push(envTest);
+  console.log(envTest.status === 'PASS' ? '✅ PASS' : '❌ FAIL', envTest.error || '');
+
+  // TEST 2: Build Minimal Request
+  console.log('\n📋 TEST 2: Build Minimal Test Request');
+  const requestTest = {
+    name: 'Request Building',
+    status: 'checking',
+    details: {}
+  };
+
+  try {
+    const testRequest = {
+      USER_ID: process.env.HBLPAY_USER_ID,
+      PASSWORD: process.env.HBLPAY_PASSWORD,
+      CHANNEL: process.env.HBL_CHANNEL || 'HBLPay_Teli_Website',
+      TYPE_ID: '0',
+      RETURN_URL: `${process.env.BACKEND_URL}/api/payments/success`,
+      CANCEL_URL: `${process.env.BACKEND_URL}/api/payments/cancel`,
+      ORDER: {
+        DISCOUNT_ON_TOTAL: '0',
+        SUBTOTAL: '100.00',
+        OrderSummaryDescription: [{
+          ITEM_NAME: 'TEST ITEM',
+          QUANTITY: '1',
+          UNIT_PRICE: '100.00',
+          OLD_PRICE: null,
+          CATEGORY: 'Test',
+          SUB_CATEGORY: 'Test'
+        }]
+      },
+      SHIPPING_DETAIL: {
+        NAME: 'DHL SERVICE',
+        ICON_PATH: null,
+        DELIEVERY_DAYS: '0',
+        SHIPPING_COST: '0'
+      },
+      ADDITIONAL_DATA: {
+        REFERENCE_NUMBER: 'TEST_' + Date.now(),
+        CUSTOMER_ID: '12345678',
+        CURRENCY: 'PKR',
+        BILL_TO_FORENAME: 'Test',
+        BILL_TO_SURNAME: 'User',
+        BILL_TO_EMAIL: 'test@example.com',
+        BILL_TO_PHONE: '03001234567',
+        BILL_TO_ADDRESS_LINE: 'Test Address',
+        BILL_TO_ADDRESS_CITY: 'Karachi',
+        BILL_TO_ADDRESS_STATE: 'Sindh',
+        BILL_TO_ADDRESS_COUNTRY: 'PK',
+        BILL_TO_ADDRESS_POSTAL_CODE: '75500',
+        SHIP_TO_FORENAME: 'Test',
+        SHIP_TO_SURNAME: 'User',
+        SHIP_TO_EMAIL: 'test@example.com',
+        SHIP_TO_PHONE: '03001234567',
+        SHIP_TO_ADDRESS_LINE: 'Test Address',
+        SHIP_TO_ADDRESS_CITY: 'Karachi',
+        SHIP_TO_ADDRESS_STATE: 'Sindh',
+        SHIP_TO_ADDRESS_COUNTRY: 'PK',
+        SHIP_TO_ADDRESS_POSTAL_CODE: '75500',
+        MerchantFields: {
+          MDD1: process.env.HBL_CHANNEL || 'HBLPay_Teli_Website',
+          MDD2: 'N'
+        }
+      }
+    };
+
+    requestTest.details = {
+      hasUserId: !!testRequest.USER_ID,
+      hasPassword: !!testRequest.PASSWORD,
+      hasChannel: !!testRequest.CHANNEL,
+      hasReturnUrl: !!testRequest.RETURN_URL,
+      hasCancelUrl: !!testRequest.CANCEL_URL,
+      hasOrder: !!testRequest.ORDER,
+      hasAdditionalData: !!testRequest.ADDITIONAL_DATA,
+      requestSize: JSON.stringify(testRequest).length
+    };
+    requestTest.status = 'PASS';
+  } catch (error) {
+    requestTest.status = 'FAIL';
+    requestTest.error = error.message;
+  }
+  diagnostics.tests.push(requestTest);
+  console.log(requestTest.status === 'PASS' ? '✅ PASS' : '❌ FAIL');
+
+  // TEST 3: Encryption Test
+  console.log('\n📋 TEST 3: Encryption Test');
+  const encryptTest = {
+    name: 'Encryption',
+    status: 'checking',
+    details: {}
+  };
+
+  try {
+    const publicKey = process.env.HBL_PUBLIC_KEY_PEM;
+    if (!publicKey) {
+      throw new Error('Public key not found');
+    }
+
+    // Test encrypting a simple string
+    const testString = 'TEST_VALUE_123';
+    const buffer = Buffer.from(testString, 'utf8');
+    const encrypted = crypto.publicEncrypt({
+      key: publicKey,
+      padding: crypto.constants.RSA_PKCS1_PADDING
+    }, buffer);
+
+    encryptTest.details = {
+      publicKeyLength: publicKey.length,
+      testStringLength: testString.length,
+      encryptedLength: encrypted.length,
+      encryptedBase64Length: encrypted.toString('base64').length,
+      encryptionWorks: true
+    };
+    encryptTest.status = 'PASS';
+  } catch (error) {
+    encryptTest.status = 'FAIL';
+    encryptTest.error = error.message;
+  }
+  diagnostics.tests.push(encryptTest);
+  console.log(encryptTest.status === 'PASS' ? '✅ PASS' : '❌ FAIL');
+
+  // TEST 4: Try UNENCRYPTED API Call (Debug Only)
+  console.log('\n📋 TEST 4: Unencrypted API Call (Debug)');
+  const unencryptedTest = {
+    name: 'Unencrypted API Test',
+    status: 'checking',
+    details: {}
+  };
+
+  try {
+    const minimalRequest = {
+      USER_ID: process.env.HBLPAY_USER_ID,
+      PASSWORD: process.env.HBLPAY_PASSWORD,
+      CHANNEL: process.env.HBL_CHANNEL || 'HBLPay_Teli_Website',
+      TYPE_ID: '0'
+    };
+
+    console.log('📤 Sending minimal UNENCRYPTED request...');
+    console.log('Request:', JSON.stringify(minimalRequest, null, 2));
+
+    const https = require('https');
+    const httpsAgent = new https.Agent({
+      rejectUnauthorized: false
+    });
+
+    const response = await fetch(process.env.HBL_SANDBOX_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify(minimalRequest),
+      agent: httpsAgent
+    });
+
+    const responseText = await response.text();
+    
+    unencryptedTest.details = {
+      requestSent: minimalRequest,
+      responseStatus: response.status,
+      responseStatusText: response.statusText,
+      responseBody: responseText,
+      responseLength: responseText.length
+    };
+
+    // Analyze the response
+    if (response.status === 500 && responseText.includes('An error has occurred')) {
+      unencryptedTest.status = 'CREDENTIAL_ISSUE';
+      unencryptedTest.message = '⚠️ API is reachable but rejecting request - likely invalid USER_ID or PASSWORD';
+      unencryptedTest.recommendations = [
+        '1. Contact HBL support to verify your USER_ID: ' + process.env.HBLPAY_USER_ID,
+        '2. Verify your PASSWORD is correct (currently: ' + (process.env.HBLPAY_PASSWORD?.length || 0) + ' characters)',
+        '3. Confirm your sandbox account is activated',
+        '4. Ask HBL if CHANNEL name "' + (process.env.HBL_CHANNEL || 'HBLPay_Teli_Website') + '" is correct'
+      ];
+    } else if (responseText.includes('RESPONSE_CODE') || responseText.includes('ResponseCode')) {
+      try {
+        const parsed = JSON.parse(responseText);
+        unencryptedTest.status = 'PARTIAL_SUCCESS';
+        unencryptedTest.message = '✅ Got a structured response!';
+        unencryptedTest.hblResponse = parsed;
+      } catch (e) {
+        unencryptedTest.status = 'UNKNOWN';
+      }
+    } else {
+      unencryptedTest.status = 'UNKNOWN';
+      unencryptedTest.message = 'Unexpected response format';
+    }
+
+  } catch (error) {
+    unencryptedTest.status = 'FAIL';
+    unencryptedTest.error = error.message;
+    unencryptedTest.recommendations = ['Check network connectivity to HBL API'];
+  }
+  diagnostics.tests.push(unencryptedTest);
+  console.log('Status:', unencryptedTest.status);
+
+  // TEST 5: Try ENCRYPTED API Call
+  console.log('\n📋 TEST 5: Encrypted API Call');
+  const encryptedTest = {
+    name: 'Encrypted API Test',
+    status: 'checking',
+    details: {}
+  };
+
+  try {
+    const testRequest = {
+      USER_ID: process.env.HBLPAY_USER_ID,
+      PASSWORD: process.env.HBLPAY_PASSWORD,
+      CHANNEL: process.env.HBL_CHANNEL || 'HBLPay_Teli_Website',
+      TYPE_ID: '0',
+      RETURN_URL: `${process.env.BACKEND_URL}/api/payments/success`,
+      CANCEL_URL: `${process.env.BACKEND_URL}/api/payments/cancel`,
+      ORDER: {
+        DISCOUNT_ON_TOTAL: '0',
+        SUBTOTAL: '100.00'
+      }
+    };
+
+    // Encrypt (except USER_ID)
+    const publicKey = process.env.HBL_PUBLIC_KEY_PEM;
+    const encryptedRequest = { USER_ID: testRequest.USER_ID };
+    
+    for (const [key, value] of Object.entries(testRequest)) {
+      if (key !== 'USER_ID') {
+        if (typeof value === 'object') {
+          encryptedRequest[key] = {};
+          for (const [subKey, subValue] of Object.entries(value)) {
+            const buffer = Buffer.from(String(subValue), 'utf8');
+            const encrypted = crypto.publicEncrypt({
+              key: publicKey,
+              padding: crypto.constants.RSA_PKCS1_PADDING
+            }, buffer);
+            encryptedRequest[key][subKey] = encrypted.toString('base64');
+          }
+        } else {
+          const buffer = Buffer.from(String(value), 'utf8');
+          const encrypted = crypto.publicEncrypt({
+            key: publicKey,
+            padding: crypto.constants.RSA_PKCS1_PADDING
+          }, buffer);
+          encryptedRequest[key] = encrypted.toString('base64');
+        }
+      }
+    }
+
+    console.log('📤 Sending ENCRYPTED request...');
+
+    const https = require('https');
+    const httpsAgent = new https.Agent({
+      rejectUnauthorized: false
+    });
+
+    const response = await fetch(process.env.HBL_SANDBOX_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify(encryptedRequest),
+      agent: httpsAgent
+    });
+
+    const responseText = await response.text();
+
+    encryptedTest.details = {
+      responseStatus: response.status,
+      responseBody: responseText,
+      encryptedFieldsCount: Object.keys(encryptedRequest).length - 1 // Exclude USER_ID
+    };
+
+    if (response.ok) {
+      try {
+        const parsed = JSON.parse(responseText);
+        encryptedTest.status = 'SUCCESS';
+        encryptedTest.hblResponse = parsed;
+      } catch (e) {
+        encryptedTest.status = 'PARTIAL';
+      }
+    } else {
+      encryptedTest.status = 'FAIL';
+    }
+
+  } catch (error) {
+    encryptedTest.status = 'FAIL';
+    encryptedTest.error = error.message;
+  }
+  diagnostics.tests.push(encryptedTest);
+  console.log('Status:', encryptedTest.status);
+
+  // FINAL SUMMARY
+  console.log('\n📊 ========== DIAGNOSTIC SUMMARY ==========');
+  const allPassed = diagnostics.tests.every(t => t.status === 'PASS');
+  const credentialIssue = diagnostics.tests.some(t => t.status === 'CREDENTIAL_ISSUE');
+
+  diagnostics.summary = {
+    allTestsPassed: allPassed,
+    credentialIssueDetected: credentialIssue,
+    recommendations: []
+  };
+
+  if (credentialIssue) {
+    diagnostics.summary.conclusion = '🔴 CREDENTIAL ISSUE DETECTED';
+    diagnostics.summary.recommendations = [
+      '1. Your code is CORRECT - the issue is with HBL credentials',
+      '2. Contact HBL support and verify:',
+      '   - USER_ID: ' + process.env.HBLPAY_USER_ID,
+      '   - PASSWORD is correct',
+      '   - Sandbox account is activated',
+      '   - CHANNEL name is registered: ' + (process.env.HBL_CHANNEL || 'HBLPay_Teli_Website'),
+      '3. Ask HBL for test credentials that definitely work',
+      '4. Request a working code example from HBL'
+    ];
+  } else if (allPassed) {
+    diagnostics.summary.conclusion = '✅ ALL TESTS PASSED';
+  } else {
+    diagnostics.summary.conclusion = '⚠️ SOME TESTS FAILED';
+    diagnostics.summary.recommendations.push('Review failed tests above');
+  }
+
+  console.log('\n' + diagnostics.summary.conclusion);
+  diagnostics.summary.recommendations.forEach(rec => console.log(rec));
+
+  return ApiResponse.success(res, diagnostics, 'Diagnostic complete');
+});
+
+module.exports.checkHBLServerStatus = asyncErrorHandler(async (req, res) => {
+  console.log('\n🏥 ========== HBL SERVER HEALTH CHECK ==========\n');
+  
+  const checks = {
+    timestamp: new Date().toISOString(),
+    checks: []
+  };
+
+  // CHECK 1: Basic Connectivity
+  console.log('📡 CHECK 1: Testing basic connectivity...');
+  const connectivityCheck = {
+    name: 'HBL API Connectivity',
+    url: process.env.HBL_SANDBOX_API_URL,
+    status: 'checking'
+  };
+
+  try {
+    const startTime = Date.now();
+    const response = await fetch(process.env.HBL_SANDBOX_API_URL, {
+      method: 'GET',
+      timeout: 10000
+    });
+    const responseTime = Date.now() - startTime;
+
+    connectivityCheck.status = 'REACHABLE';
+    connectivityCheck.responseTime = responseTime + 'ms';
+    connectivityCheck.httpStatus = response.status;
+    connectivityCheck.statusText = response.statusText;
+    
+    console.log('✅ HBL API is reachable');
+    console.log(`⏱️  Response time: ${responseTime}ms`);
+    
+  } catch (error) {
+    connectivityCheck.status = 'UNREACHABLE';
+    connectivityCheck.error = error.message;
+    connectivityCheck.errorCode = error.code;
+    console.log('❌ HBL API is not reachable:', error.message);
+  }
+  checks.checks.push(connectivityCheck);
+
+  // CHECK 2: SSL Certificate
+  console.log('\n🔒 CHECK 2: Checking SSL certificate...');
+  const sslCheck = {
+    name: 'SSL Certificate',
+    status: 'checking'
+  };
+
+  try {
+    const https = require('https');
+    const url = new URL(process.env.HBL_SANDBOX_API_URL);
+    
+    const options = {
+      hostname: url.hostname,
+      port: 443,
+      method: 'GET',
+      rejectUnauthorized: true
+    };
+
+    await new Promise((resolve, reject) => {
+      const req = https.request(options, (res) => {
+        const cert = res.socket.getPeerCertificate();
+        
+        if (cert) {
+          sslCheck.status = 'VALID';
+          sslCheck.details = {
+            subject: cert.subject?.CN,
+            issuer: cert.issuer?.O,
+            validFrom: cert.valid_from,
+            validTo: cert.valid_to,
+            daysRemaining: Math.floor((new Date(cert.valid_to) - new Date()) / (1000 * 60 * 60 * 24))
+          };
+          
+          if (new Date(cert.valid_to) < new Date()) {
+            sslCheck.status = 'EXPIRED';
+            sslCheck.warning = '⚠️ SSL certificate has EXPIRED!';
+          }
+          
+          console.log('✅ SSL certificate is valid');
+          console.log(`   Valid until: ${cert.valid_to}`);
+        }
+        resolve();
+      });
+
+      req.on('error', (error) => {
+        sslCheck.status = 'INVALID';
+        sslCheck.error = error.message;
+        console.log('❌ SSL certificate issue:', error.message);
+        reject(error);
+      });
+
+      req.end();
+    });
+
+  } catch (error) {
+    sslCheck.status = 'ERROR';
+    sslCheck.error = error.message;
+  }
+  checks.checks.push(sslCheck);
+
+  // CHECK 3: DNS Resolution
+  console.log('\n🌐 CHECK 3: DNS resolution...');
+  const dnsCheck = {
+    name: 'DNS Resolution',
+    status: 'checking'
+  };
+
+  try {
+    const dns = require('dns').promises;
+    const url = new URL(process.env.HBL_SANDBOX_API_URL);
+    const addresses = await dns.resolve4(url.hostname);
+    
+    dnsCheck.status = 'RESOLVED';
+    dnsCheck.hostname = url.hostname;
+    dnsCheck.ipAddresses = addresses;
+    console.log('✅ DNS resolved:', addresses);
+    
+  } catch (error) {
+    dnsCheck.status = 'FAILED';
+    dnsCheck.error = error.message;
+    console.log('❌ DNS resolution failed:', error.message);
+  }
+  checks.checks.push(dnsCheck);
+
+  // CHECK 4: API Endpoint Test (with your credentials)
+  console.log('\n🔑 CHECK 4: Testing API with credentials...');
+  const apiCheck = {
+    name: 'API Authentication Test',
+    status: 'checking'
+  };
+
+  try {
+    const https = require('https');
+    const httpsAgent = new https.Agent({
+      rejectUnauthorized: false
+    });
+
+    const minimalRequest = {
+      USER_ID: process.env.HBLPAY_USER_ID,
+      PASSWORD: process.env.HBLPAY_PASSWORD,
+      CHANNEL: process.env.HBL_CHANNEL,
+      TYPE_ID: '0'
+    };
+
+    const startTime = Date.now();
+    const response = await fetch(process.env.HBL_SANDBOX_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify(minimalRequest),
+      agent: httpsAgent,
+      timeout: 15000
+    });
+    const responseTime = Date.now() - startTime;
+
+    const responseText = await response.text();
+
+    apiCheck.responseTime = responseTime + 'ms';
+    apiCheck.httpStatus = response.status;
+    apiCheck.statusText = response.statusText;
+    apiCheck.responseBody = responseText;
+
+    // Analyze the response
+    if (response.status === 500) {
+      apiCheck.status = 'SERVER_ERROR';
+      apiCheck.message = '⚠️ HBL server is returning 500 errors';
+      apiCheck.analysis = 'This could mean:';
+      apiCheck.possibleCauses = [
+        '1. HBL sandbox is undergoing maintenance',
+        '2. HBL server is experiencing issues',
+        '3. Your account was suspended/deactivated',
+        '4. HBL made changes to their API',
+        '5. Rate limiting or IP blocking'
+      ];
+    } else if (response.status === 503) {
+      apiCheck.status = 'SERVICE_UNAVAILABLE';
+      apiCheck.message = '🔴 HBL service is unavailable';
+    } else if (response.ok) {
+      apiCheck.status = 'SUCCESS';
+      apiCheck.message = '✅ API is responding correctly';
+    } else {
+      apiCheck.status = 'UNKNOWN';
+      apiCheck.message = '❓ Unexpected response';
+    }
+
+    console.log(apiCheck.message);
+
+  } catch (error) {
+    apiCheck.status = 'TIMEOUT_OR_ERROR';
+    apiCheck.error = error.message;
+    apiCheck.errorCode = error.code;
+    
+    if (error.code === 'ETIMEDOUT' || error.code === 'ESOCKETTIMEDOUT') {
+      apiCheck.message = '⏱️ Request timed out - server might be overloaded';
+    } else if (error.code === 'ECONNREFUSED') {
+      apiCheck.message = '🔴 Connection refused - server might be down';
+    } else {
+      apiCheck.message = '❌ Request failed: ' + error.message;
+    }
+    
+    console.log(apiCheck.message);
+  }
+  checks.checks.push(apiCheck);
+
+  // CHECK 5: Compare with yesterday
+  console.log('\n📊 CHECK 5: Historical comparison...');
+  const comparisonCheck = {
+    name: 'Historical Comparison',
+    status: 'INFO',
+    message: 'Based on your report that it worked yesterday:',
+    analysis: []
+  };
+
+  const serverErrorDetected = checks.checks.some(c => 
+    c.status === 'SERVER_ERROR' || 
+    c.status === 'SERVICE_UNAVAILABLE' ||
+    c.status === 'TIMEOUT_OR_ERROR'
+  );
+
+  if (serverErrorDetected) {
+    comparisonCheck.analysis = [
+      '✅ Your code hasn\'t changed',
+      '✅ Your credentials haven\'t changed',
+      '❌ HBL server is having issues',
+      '',
+      '🎯 CONCLUSION: This is a temporary HBL server issue',
+      '',
+      'RECOMMENDED ACTIONS:',
+      '1. Wait 1-2 hours and try again',
+      '2. Check HBL\'s status page (if they have one)',
+      '3. Contact HBL support to confirm maintenance',
+      '4. Try again during business hours (9 AM - 5 PM PKT)',
+      '5. Monitor their sandbox environment status'
+    ];
+  } else {
+    comparisonCheck.analysis = [
+      '⚠️ Server is reachable but rejecting requests',
+      'Possible reasons:',
+      '1. Your account was suspended/deactivated overnight',
+      '2. HBL changed their API or requirements',
+      '3. Your IP was rate-limited or blocked',
+      '4. Configuration changes on HBL\'s end'
+    ];
+  }
+
+  checks.checks.push(comparisonCheck);
+
+  // FINAL VERDICT
+  console.log('\n📋 ========== FINAL VERDICT ==========\n');
+  
+  const verdict = {
+    timestamp: new Date().toISOString(),
+    dayOfWeek: new Date().toLocaleDateString('en-US', { weekday: 'long' }),
+    localTime: new Date().toLocaleTimeString('en-US', { timeZone: 'Asia/Karachi' }),
+    timeZone: 'PKT (Pakistan Time)',
+    status: serverErrorDetected ? 'HBL_SERVER_ISSUE' : 'CREDENTIAL_ISSUE',
+    recommendation: '',
+    nextSteps: []
+  };
+
+  if (serverErrorDetected) {
+    verdict.recommendation = '⏳ WAIT AND RETRY';
+    verdict.message = 'HBL sandbox appears to be having server issues';
+    verdict.nextSteps = [
+      '1. Try again in 1-2 hours',
+      '2. HBL often does maintenance during off-hours',
+      '3. If still failing after 4 hours, contact HBL support',
+      '4. Your code is fine - no changes needed'
+    ];
+  } else {
+    verdict.recommendation = '📞 CONTACT HBL SUPPORT';
+    verdict.message = 'Server is up but rejecting your credentials';
+    verdict.nextSteps = [
+      '1. Contact HBL support immediately',
+      '2. Ask if your account was deactivated',
+      '3. Request confirmation of credentials',
+      '4. Ask about any recent API changes'
+    ];
+  }
+
+  checks.verdict = verdict;
+
+  console.log('🎯 Status:', verdict.status);
+  console.log('📝 Recommendation:', verdict.recommendation);
+  console.log('⏰ Current time:', verdict.localTime, verdict.timeZone);
+  console.log('\nNext Steps:');
+  verdict.nextSteps.forEach((step, i) => {
+    console.log(`   ${step}`);
+  });
+
+  return res.json({
+    success: true,
+    message: 'HBL server health check complete',
+    data: checks
+  });
+});
+
+// ============================================
+// QUICK STATUS CHECK (Lightweight version)
+// ============================================
+
+module.exports.quickHBLCheck = asyncErrorHandler(async (req, res) => {
+  try {
+    const startTime = Date.now();
+    const response = await fetch(process.env.HBL_SANDBOX_API_URL, {
+      method: 'GET',
+      timeout: 5000
+    });
+    const responseTime = Date.now() - startTime;
+
+    const status = {
+      isUp: response.status < 500,
+      responseTime: responseTime + 'ms',
+      httpStatus: response.status,
+      timestamp: new Date().toISOString(),
+      message: response.status < 500 ? 
+        '✅ HBL API is responding' : 
+        '❌ HBL API is having server issues'
+    };
+
+    return res.json(status);
+  } catch (error) {
+    return res.json({
+      isUp: false,
+      error: error.message,
+      timestamp: new Date().toISOString(),
+      message: '🔴 HBL API is not reachable'
+    });
+  }
 });

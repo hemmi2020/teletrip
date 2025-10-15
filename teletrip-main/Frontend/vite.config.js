@@ -21,7 +21,8 @@ export default defineConfig({
       'localhost',
       'www.telitrip.com',
       'telitrip.com',
-      '127.0.0.1'
+      '127.0.0.1',
+      'http://localhost:5173'
     ]
   },
   build: {

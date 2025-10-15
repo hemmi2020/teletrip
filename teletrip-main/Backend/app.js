@@ -38,7 +38,9 @@ app.use(cors({
         'https://telitrip.onrender.com',
         'https://www.telitrip.com',
         'https://telitrip.com',
-        'https://telitrip-frontend.onrender.com'
+        'https://telitrip-frontend.onrender.com',
+        'www.telitrip.com',
+      'telitrip.com'
     ],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
