@@ -2197,6 +2197,193 @@ module.exports.extractHBLData = (req, res) => {
   }
 };
 
+module.exports.createPayOnSiteBooking = asyncErrorHandler(async (req, res) => {
+  const { bookingData, userData, amount, currency = 'PKR', bookingId } = req.body;
+  const userId = req.user._id;
+
+  console.log('🏨 Creating Pay on Site booking:', {
+    userId: userId.toString(),
+    amount,
+    currency,
+    bookingId,
+    userEmail: userData?.email
+  });
+
+  // ✅ VALIDATION
+  if (!amount || typeof amount !== 'number' || amount <= 0) {
+    console.error('❌ Invalid amount:', { amount, type: typeof amount });
+    return ApiResponse.error(res, `Invalid payment amount: ${amount}`, 400);
+  }
+
+  if (!userData || !userData.email || !userData.firstName) {
+    return ApiResponse.error(res, 'Invalid user data - email and name required', 400);
+  }
+
+  if (!bookingData || !bookingData.items || bookingData.items.length === 0) {
+    return ApiResponse.error(res, 'Invalid booking data - items required', 400);
+  }
+
+  if (!bookingId) {
+    return ApiResponse.error(res, 'Booking ID is required', 400);
+  }
+
+  // ✅ VERIFY BOOKING EXISTS
+  let bookingRecord = null;
+  try {
+    console.log('🔍 Looking for booking:', {
+      bookingId,
+      userId: userId.toString()
+    });
+
+    bookingRecord = await bookingModel.findOne({
+      _id: bookingId,
+      $or: [
+        { userId: userId },
+        { user: userId }
+      ]
+    });
+
+    if (!bookingRecord) {
+      console.error('❌ Booking not found:', { bookingId, userId: userId.toString() });
+      return ApiResponse.error(res, 'Booking not found', 404);
+    }
+
+    console.log('✅ Booking found:', {
+      bookingId: bookingRecord._id.toString(),
+      status: bookingRecord.status,
+      paymentStatus: bookingRecord.payment?.status || bookingRecord.paymentStatus
+    });
+
+    // Check if booking is already paid
+    if (bookingRecord.payment?.status === 'paid' || bookingRecord.paymentStatus === 'paid') {
+      return ApiResponse.error(res, 'This booking is already paid', 400);
+    }
+
+  } catch (error) {
+    console.error('❌ Error finding booking:', error);
+    return ApiResponse.error(res, 'Database error while finding booking: ' + error.message, 500);
+  }
+
+  // ✅ CREATE PAYMENT RECORD
+  try {
+    const paymentId = generatePaymentId();
+    const orderId = generateOrderId();
+    const paymentAmount = parseFloat(amount);
+
+    if (isNaN(paymentAmount) || paymentAmount <= 0) {
+      return ApiResponse.error(res, `Invalid payment amount: ${paymentAmount}`, 400);
+    }
+
+    // Create payment record with PENDING status
+    const payment = new paymentModel({
+      paymentId,
+      userId,
+      bookingId: bookingRecord._id,
+      amount: paymentAmount,
+      currency,
+      status: 'pending', // ✅ KEY: Payment status is PENDING
+      paymentMethod: 'pay_on_site', // ✅ NEW payment method
+      orderId: orderId,
+      billing: {
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        email: userData.email,
+        phone: userData.phone,
+        address: {
+          street: userData.address,
+          city: userData.city,
+          state: userData.state,
+          country: userData.country || 'PK',
+          postalCode: userData.postalCode
+        }
+      },
+      userDetails: userData,
+      bookingDetails: bookingData,
+      createdAt: new Date(),
+      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // Expires in 24 hours
+      gateway: {
+        provider: 'Pay on Site',
+        orderRefNumber: orderId,
+        responseMessage: 'Payment will be collected on site'
+      },
+      metadata: {
+        source: 'web',
+        ipAddress: req.ip,
+        userAgent: req.get('User-Agent'),
+        paymentType: 'pay_on_site'
+      },
+      initiatedAt: new Date()
+    });
+
+    await payment.save();
+    console.log('💾 Pay on Site payment record created:', paymentId);
+
+    // ✅ UPDATE BOOKING STATUS
+    await bookingRecord.updateOne({
+      status: 'pending', // ✅ Booking is pending until paid
+      paymentStatus: 'pending',
+      'payment.method': 'pay_on_site',
+      'payment.status': 'pending',
+      'payment.orderId': orderId,
+      updatedAt: new Date()
+    });
+
+    console.log('✅ Booking updated with pending payment status');
+
+    // ✅ SEND CONFIRMATION EMAIL
+    try {
+      await notificationService.sendPayOnSiteConfirmation({
+        user: {
+          email: userData.email,
+          fullname: `${userData.firstName} ${userData.lastName}`
+        },
+        booking: bookingRecord,
+        payment: {
+          paymentId,
+          orderId,
+          amount: paymentAmount,
+          currency
+        }
+      });
+      console.log('📧 Pay on Site confirmation email sent');
+    } catch (emailError) {
+      console.warn('⚠️ Failed to send confirmation email:', emailError.message);
+      // Don't fail the request if email fails
+    }
+
+    // ✅ RETURN SUCCESS RESPONSE
+    return ApiResponse.success(res, {
+      success: true,
+      bookingId: bookingRecord._id,
+      bookingReference: bookingRecord.bookingReference,
+      paymentId,
+      orderId,
+      amount: paymentAmount,
+      currency,
+      paymentMethod: 'pay_on_site',
+      status: 'pending',
+      message: 'Booking confirmed! Payment will be collected on site.',
+      instructions: [
+        'Your booking is confirmed',
+        'Payment will be collected when you arrive',
+        'Please bring a valid ID and payment method',
+        'You can view this booking in your dashboard'
+      ],
+      expiresAt: payment.expiresAt,
+      bookingDetails: {
+        hotelName: bookingData.hotelName,
+        checkIn: bookingData.checkIn,
+        checkOut: bookingData.checkOut,
+        guests: bookingData.guests
+      }
+    }, 'Pay on Site booking created successfully', 201);
+
+  } catch (error) {
+    console.error('❌ Pay on Site booking creation error:', error);
+    return ApiResponse.error(res, error.message || 'Failed to create booking', 500);
+  }
+});
+
 
 
 // Enhanced test endpoint for Render deployment debugging

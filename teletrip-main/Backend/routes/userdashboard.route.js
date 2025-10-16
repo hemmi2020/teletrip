@@ -429,5 +429,9 @@ router.get('/insights/travel',
 
 
 router.get('/test-queries', authUser, userDashboardController.testQueries); 
+router.get('/payments/pending', 
+  authUser, 
+  userDashboardController.getPendingPayments
+);
 
 module.exports = router;

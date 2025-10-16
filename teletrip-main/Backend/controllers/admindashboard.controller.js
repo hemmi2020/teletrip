@@ -89,6 +89,21 @@ const getDashboardOverview = asyncErrorHandler(async (req, res) => {
       { $match: { createdAt: { $gte: startDate } } },
       { $group: { _id: null, total: { $sum: '$amount' } } }
     ]),
+    Payment.aggregate([
+    {
+      $match: {
+        paymentMethod: 'pay_on_site',
+        isDeleted: false
+      }
+    },
+    {
+      $group: {
+        _id: '$status',
+        count: { $sum: 1 },
+        totalAmount: { $sum: '$amount' }
+      }
+    }
+  ]),
     
     // Hotel Statistics
     Hotel.countDocuments(),
@@ -164,6 +179,14 @@ const getDashboardOverview = asyncErrorHandler(async (req, res) => {
     ])
   ]);
 
+  const payOnSiteStats = payOnSiteStatsRaw.reduce((acc, stat) => {
+  acc[stat._id] = {
+    count: stat.count,
+    totalAmount: stat.totalAmount
+  };
+  return acc;
+}, {});
+
   const overview = {
     period,
     stats: {
@@ -194,7 +217,14 @@ const getDashboardOverview = asyncErrorHandler(async (req, res) => {
       support: {
         openTickets,
         avgRating: averageRating[0]?.avgRating || 0
-      }
+      },
+      payOnSite: {
+      pending: payOnSiteStats.pending || { count: 0, totalAmount: 0 },
+      completed: payOnSiteStats.completed || { count: 0, totalAmount: 0 },
+      total: Object.values(payOnSiteStats).reduce((sum, s) => sum + s.count, 0),
+      totalAmount: Object.values(payOnSiteStats).reduce((sum, s) => sum + s.totalAmount, 0)
+    }
+  
     },
     charts: {
       revenueByMonth,
@@ -1081,6 +1111,184 @@ const exportData = asyncErrorHandler(async (req, res) => {
   }
 });
 
+const getPayOnSiteBookings = asyncErrorHandler(async (req, res) => {
+  const { 
+    page = 1, 
+    limit = 20, 
+    status,
+    search,
+    dateFrom, 
+    dateTo,
+    sortBy = 'createdAt', 
+    sortOrder = 'desc'
+  } = req.query;
+
+  console.log('📊 Admin fetching Pay on Site bookings');
+
+  try {
+    const query = {
+      paymentMethod: 'pay_on_site',
+      isDeleted: false
+    };
+    
+    if (status) query.status = status;
+
+    if (search && search.trim()) {
+      query.$or = [
+        { paymentId: { $regex: search, $options: 'i' } },
+        { orderId: { $regex: search, $options: 'i' } }
+      ];
+    }
+    
+    if (dateFrom || dateTo) {
+      query.createdAt = {};
+      if (dateFrom) query.createdAt.$gte = new Date(dateFrom);
+      if (dateTo) query.createdAt.$lte = new Date(dateTo);
+    }
+
+    const pageNum = parseInt(page);
+    const limitNum = parseInt(limit);
+    const skip = (pageNum - 1) * limitNum;
+    const sort = { [sortBy]: sortOrder === 'desc' ? -1 : 1 };
+
+    const [payments, total, stats] = await Promise.all([
+      Payment.find(query)
+        .populate({
+          path: 'userId',
+          select: 'fullname email phone'
+        })
+        .populate({
+          path: 'bookingId',
+          select: 'bookingReference hotelName checkInDate checkOutDate status hotelBooking'
+        })
+        .sort(sort)
+        .skip(skip)
+        .limit(limitNum)
+        .lean(),
+      
+      Payment.countDocuments(query),
+      
+      Payment.aggregate([
+        { $match: { paymentMethod: 'pay_on_site', isDeleted: false } },
+        {
+          $group: {
+            _id: '$status',
+            count: { $sum: 1 },
+            totalAmount: { $sum: '$amount' }
+          }
+        }
+      ])
+    ]);
+
+    console.log(`✅ Found ${payments.length} Pay on Site bookings`);
+
+    return ApiResponse.success(res, {
+      payments,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total,
+        pages: Math.ceil(total / limitNum),
+        hasNext: pageNum < Math.ceil(total / limitNum),
+        hasPrev: pageNum > 1
+      },
+      statistics: {
+        byStatus: stats.reduce((acc, stat) => {
+          acc[stat._id] = {
+            count: stat.count,
+            totalAmount: stat.totalAmount
+          };
+          return acc;
+        }, {}),
+        totalPayments: total
+      }
+    }, 'Pay on Site bookings retrieved successfully');
+
+  } catch (error) {
+    console.error('❌ Error fetching Pay on Site bookings:', error);
+    return ApiResponse.error(res, 'Failed to fetch bookings', 500);
+  }
+});
+const markPayOnSiteAsPaid = asyncErrorHandler(async (req, res) => {
+  const { paymentId } = req.params;
+  const { transactionId, paymentMethod, notes } = req.body;
+  const adminId = req.user._id || req.user.id;
+
+  console.log('💰 Admin marking payment as paid:', {
+    paymentId,
+    adminId: adminId.toString(),
+    transactionId
+  });
+
+  try {
+    const payment = await Payment.findOne({
+      paymentId,
+      paymentMethod: 'pay_on_site',
+      isDeleted: false
+    });
+
+    if (!payment) {
+      return ApiResponse.error(res, 'Payment not found', 404);
+    }
+
+    if (payment.status === 'completed') {
+      return ApiResponse.error(res, 'Payment is already marked as paid', 400);
+    }
+
+    // Update payment
+    await payment.updateOne({
+      status: 'completed',
+      completedAt: new Date(),
+      transactionId: transactionId || `ONSITE_${Date.now()}`,
+      'gateway.responseMessage': notes || 'Payment collected on site',
+      'gateway.paymentMethod': paymentMethod || 'cash',
+      updatedBy: adminId,
+      updatedAt: new Date()
+    });
+
+    // Update booking
+    if (payment.bookingId) {
+      await Booking.findByIdAndUpdate(payment.bookingId, {
+        status: 'confirmed',
+        paymentStatus: 'paid',
+        'payment.status': 'paid',
+        'payment.paidAt': new Date(),
+        updatedAt: new Date()
+      });
+    }
+
+    console.log('✅ Payment marked as paid successfully');
+
+    // Send confirmation email
+    try {
+      const booking = await Booking.findById(payment.bookingId).populate('user');
+      if (booking && booking.user) {
+        await notificationService.sendPaymentConfirmation({
+          user: booking.user,
+          booking,
+          payment: {
+            ...payment.toObject(),
+            status: 'completed'
+          }
+        });
+      }
+    } catch (emailError) {
+      console.warn('⚠️ Failed to send confirmation email:', emailError.message);
+    }
+
+    return ApiResponse.success(res, {
+      paymentId,
+      status: 'completed',
+      message: 'Payment marked as paid successfully'
+    }, 'Payment updated successfully');
+
+  } catch (error) {
+    console.error('❌ Error marking payment as paid:', error);
+    return ApiResponse.error(res, 'Failed to update payment', 500);
+  }
+});
+
+
 module.exports = {
   getDashboardOverview,
   getAllUsers,
@@ -1103,5 +1311,7 @@ module.exports = {
   updateSupportTicket,
   addTicketResponse,
   getAnalytics,
-  exportData
+  exportData,
+  getPayOnSiteBookings,
+  markPayOnSiteAsPaid
 };

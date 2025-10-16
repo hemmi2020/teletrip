@@ -49,8 +49,15 @@ const getDashboardOverview = asyncErrorHandler(async (req, res) => {
       Booking.aggregate([
         { $match: { user: userId, status: { $ne: 'cancelled' } } },
         { $group: { _id: null, average: { $avg: '$pricing.totalAmount' } } }
-      ])
-    ]);
+      ]),
+      Payment.countDocuments({ 
+    userId: userId, 
+    status: 'pending', 
+    paymentMethod: 'pay_on_site',
+    isDeleted: false 
+  })
+]);
+    
 
     // Extract values safely
     const totalBookingsCount = totalBookings.status === 'fulfilled' ? totalBookings.value : 0;
@@ -60,6 +67,7 @@ const getDashboardOverview = asyncErrorHandler(async (req, res) => {
     const cancelledBookingsCount = cancelledBookings.status === 'fulfilled' ? cancelledBookings.value : 0;
     const failedPaymentsCount = failedPayments.status === 'fulfilled' ? failedPayments.value : 0;
     const successfulPaymentsCount = successfulPayments.status === 'fulfilled' ? successfulPayments.value : 0;
+    const pendingPayOnSiteCount = pendingPayOnSite.status === 'fulfilled' ? pendingPayOnSite.value : 0;
     
     const totalSpent = (totalSpentResult.status === 'fulfilled' && totalSpentResult.value[0]) ? 
       totalSpentResult.value[0].total : 0;
@@ -88,6 +96,10 @@ const getDashboardOverview = asyncErrorHandler(async (req, res) => {
         averageBookingValue: avgBookingValue || 0,
         currency: 'PKR'
       },
+      pendingPayOnSite: {
+    count: pendingPayOnSiteCount,
+    message: 'Bookings awaiting payment on arrival'
+  },
       payments: recentPayments, // Recent payments for the payments section
       upcoming: recentBookings,  // Upcoming/recent bookings
       recent: recentBookings,    // Same as upcoming but different key
@@ -884,9 +896,63 @@ const testQueries = asyncErrorHandler(async (req, res) => {
   }
 });
 
+const getPendingPayments = asyncErrorHandler(async (req, res) => {
+  const { page = 1, limit = 10 } = req.query;
+  const userId = req.user._id || req.user.id;
+
+  console.log('📋 Fetching pending payments for user:', userId);
+
+  try {
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    
+    const pendingPayments = await Payment.find({
+      userId,
+      status: 'pending',
+      paymentMethod: 'pay_on_site',
+      isDeleted: false
+    })
+    .populate({
+      path: 'bookingId',
+      select: 'bookingReference hotelName checkInDate checkOutDate status hotelBooking'
+    })
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(parseInt(limit))
+    .lean();
+
+    const total = await Payment.countDocuments({
+      userId,
+      status: 'pending',
+      paymentMethod: 'pay_on_site',
+      isDeleted: false
+    });
+
+    console.log(`✅ Found ${pendingPayments.length} pending payments`);
+
+    const result = {
+      payments: pendingPayments,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        pages: Math.ceil(total / parseInt(limit)),
+        hasNext: parseInt(page) < Math.ceil(total / parseInt(limit)),
+        hasPrev: parseInt(page) > 1
+      }
+    };
+
+    return ApiResponse.success(res, result, 'Pending payments retrieved successfully');
+
+  } catch (error) {
+    console.error('❌ Error fetching pending payments:', error);
+    return ApiResponse.error(res, 'Failed to fetch pending payments', 500);
+  }
+});
+
 module.exports = {
   getDashboardOverview,
   getProfile,
+  getPendingPayments,
   updateProfile,
   updatePassword,
   uploadProfilePicture,

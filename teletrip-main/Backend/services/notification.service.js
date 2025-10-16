@@ -608,3 +608,54 @@ class NotificationService {
 }
 
 module.exports = new NotificationService();
+
+exports.sendPayOnSiteConfirmation = async (data) => {
+  const { user, booking, payment } = data;
+  
+  try {
+    const emailData = {
+      to: user.email,
+      subject: 'Booking Confirmed - Payment on Site',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #4CAF50;">✅ Booking Confirmed!</h2>
+          
+          <p>Dear ${user.fullname || 'Customer'},</p>
+          
+          <p>Your booking has been confirmed successfully. Payment will be collected when you arrive at the hotel.</p>
+          
+          <div style="background: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <h3 style="margin-top: 0;">Booking Details:</h3>
+            <p><strong>Booking Reference:</strong> ${booking.bookingReference}</p>
+            <p><strong>Hotel:</strong> ${booking.hotelName || booking.hotelBooking?.hotelName}</p>
+            <p><strong>Check-in:</strong> ${new Date(booking.checkInDate || booking.hotelBooking?.checkIn).toLocaleDateString()}</p>
+            <p><strong>Check-out:</strong> ${new Date(booking.checkOutDate || booking.hotelBooking?.checkOut).toLocaleDateString()}</p>
+            <p><strong>Total Amount:</strong> ${payment.currency} ${payment.amount}</p>
+            <p><strong>Payment ID:</strong> ${payment.paymentId}</p>
+          </div>
+          
+          <div style="background: #fff3cd; padding: 15px; border-left: 4px solid #ffc107; margin: 20px 0;">
+            <h4 style="margin-top: 0;">Important Instructions:</h4>
+            <ul>
+              <li>Your booking is confirmed</li>
+              <li>Payment will be collected when you arrive at the hotel</li>
+              <li>Please bring a valid ID</li>
+              <li>You can pay by cash or card at the hotel reception</li>
+            </ul>
+          </div>
+          
+          <p>If you have any questions, please contact our support team.</p>
+          
+          <p>Best regards,<br>Telitrip Team</p>
+        </div>
+      `
+    };
+
+    await sendEmail(emailData);
+    console.log('✅ Pay on Site confirmation email sent to:', user.email);
+    
+  } catch (error) {
+    console.error('❌ Failed to send Pay on Site confirmation:', error);
+    throw error;
+  }
+};

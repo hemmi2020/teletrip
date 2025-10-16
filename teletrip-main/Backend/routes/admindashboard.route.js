@@ -472,4 +472,16 @@ router.get('/reports/export',
   adminDashboardController.exportData
 );
 
+router.get('/payments/pay-on-site',
+  authUser,
+  isAdmin,
+  adminDashboardController.getPayOnSiteBookings
+);
+
+router.put('/payments/:paymentId/mark-paid',
+  authUser,
+  isAdmin,
+  adminDashboardController.markPayOnSiteAsPaid
+);
+
 module.exports = router;

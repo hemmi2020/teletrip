@@ -215,6 +215,8 @@ router.get('/stats/:period',
   }
 );
 
+router.post('/pay-on-site', authUser, paymentController.createPayOnSiteBooking); 
+
 
 
 // ==================== ADMIN ROUTES ====================
