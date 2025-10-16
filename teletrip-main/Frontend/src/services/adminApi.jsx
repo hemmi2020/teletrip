@@ -253,6 +253,35 @@ export const AdminDashboardAPI = {
     }
   },
 
+  getPayOnSiteBookings: async (filters = {}) => {
+    try {
+      const { status, ...cleanFilters } = filters;
+      const filteredParams = Object.fromEntries(
+        Object.entries(cleanFilters).filter(([_, v]) => v !== '' && v != null)
+      );
+      const params = new URLSearchParams(filteredParams).toString();
+      const response = await adminApi.get(`/api/admin/payments/pay-on-site${params ? `?${params}` : ''}`);
+      return { success: true, data: response.data.data };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.response?.data?.message || 'Failed to load pay-on-site bookings' 
+      };
+    }
+  },
+
+  markPayOnSiteAsPaid: async (paymentId) => {
+    try {
+      const response = await adminApi.put(`/api/admin/payments/${paymentId}/mark-paid`);
+      return { success: true, data: response.data.data };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.response?.data?.message || 'Failed to mark payment as paid' 
+      };
+    }
+  },
+
   // ========== SUPPORT MANAGEMENT ==========
   getAllSupportTickets: async (filters = {}) => {
     try {
@@ -407,4 +436,4 @@ export const handleApiError = (error) => {
   }
 };
 
-export default AdminDashboardAPI;
+export default adminApi;

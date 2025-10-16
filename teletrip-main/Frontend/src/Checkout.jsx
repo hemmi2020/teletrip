@@ -14,6 +14,8 @@ import {
   CreditCard, 
   Lock,
   AlertCircle,
+  Building2,
+  Wallet,
   Loader2
 } from 'lucide-react';
 
@@ -32,6 +34,8 @@ const Checkout = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState('hblpay'); // 'hblpay' or 'pay_on_site'
+
 
   // Form data matching your backend validation
   const [billingInfo, setBillingInfo] = useState({
@@ -276,6 +280,161 @@ const Checkout = () => {
     }
   };
 
+  // 3. ADD THIS NEW FUNCTION (keep your existing handlePayment function)
+const handlePayOnSiteBooking = async () => {
+  setIsProcessing(true);
+  setError('');
+  setSuccess('');
+
+  try {
+    console.log('🏨 Creating Pay on Site booking...');
+
+    // Check authentication first
+    const authData = checkAuthentication();
+    if (!authData) {
+      setError('Please login to continue with your booking.');
+      setShowAuthModal(true);
+      setIsProcessing(false);
+      return;
+    }
+
+    if (!validateForm()) {
+      setIsProcessing(false);
+      return;
+    }
+
+    // Step 1: Create booking
+    const firstItem = checkoutItems[0];
+    const bookingPayload = {
+      hotelName: firstItem?.hotelName || 'Hotel Booking',
+      roomName: firstItem?.roomName || 'Standard Room',
+      location: firstItem?.location || 'Karachi, Pakistan',
+      checkIn: firstItem?.checkIn || new Date().toISOString(),
+      checkOut: firstItem?.checkOut || new Date(Date.now() + 86400000).toISOString(),
+      guests: firstItem?.guests || firstItem?.adults || 1,
+      totalAmount: parseFloat(totalAmount),
+      boardType: firstItem?.boardName || 'Room Only',
+      rateClass: firstItem?.rateClass || 'NOR'
+    };
+
+    console.log('📋 Creating booking with payload:', bookingPayload);
+
+    const bookingResponse = await axios.post(
+      `${import.meta.env.VITE_BASE_URL}/api/bookings/create`,
+      bookingPayload,
+      {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+
+    const bookingId = bookingResponse.data.data?._id;
+    if (!bookingId) {
+      throw new Error('No booking ID returned from booking creation');
+    }
+
+    console.log('✅ Booking created with ID:', bookingId);
+
+    // Step 2: Create Pay on Site payment record
+    const payOnSitePayload = {
+      userData: {
+        firstName: billingInfo.firstName.trim(),
+        lastName: billingInfo.lastName.trim(),
+        email: billingInfo.email.trim().toLowerCase(),
+        phone: billingInfo.phone.trim().replace(/\s+/g, ''),
+        address: billingInfo.address.trim(),
+        city: billingInfo.city.trim(),
+        state: billingInfo.state,
+        country: billingInfo.country,
+        postalCode: billingInfo.postalCode || ''
+      },
+      bookingData: {
+        hotelName: firstItem?.hotelName || 'Hotel Booking',
+        roomName: firstItem?.roomName || 'Standard Room',
+        checkIn: firstItem?.checkIn,
+        checkOut: firstItem?.checkOut,
+        guests: firstItem?.guests || 1,
+        items: checkoutItems.map(item => ({
+          name: item.hotelName || 'Hotel Booking',
+          quantity: 1,
+          price: parseFloat(item.price || item.totalPrice || 0)
+        }))
+      },
+      amount: parseFloat(totalAmount),
+      currency: 'PKR',
+      bookingId: bookingId
+    };
+
+    console.log('💳 Creating Pay on Site payment record...');
+
+    const paymentResponse = await axios.post(
+      `${import.meta.env.VITE_BASE_URL}/api/payments/pay-on-site`,
+      payOnSitePayload,
+      {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+
+    console.log('✅ Pay on Site payment created:', paymentResponse.data);
+
+    if (paymentResponse.data.success) {
+      setSuccess('Booking confirmed! Payment will be collected on site.');
+      clearCart();
+
+      // Navigate to success page after short delay
+      setTimeout(() => {
+        navigate('/payment-success-onsite', {
+          state: {
+            bookingId: paymentResponse.data.data.bookingId,
+            bookingReference: paymentResponse.data.data.bookingReference,
+            paymentId: paymentResponse.data.data.paymentId,
+            orderId: paymentResponse.data.data.orderId,
+            amount: paymentResponse.data.data.amount,
+            currency: paymentResponse.data.data.currency,
+            message: paymentResponse.data.data.message,
+            instructions: paymentResponse.data.data.instructions,
+            bookingDetails: paymentResponse.data.data.bookingDetails
+          }
+        });
+      }, 1500);
+    }
+
+  } catch (error) {
+    console.error('❌ Pay on Site booking error:', error);
+    console.error('❌ Error response:', error.response?.data);
+    
+    let errorMessage = 'Booking failed. Please try again.';
+    
+    if (error.response?.status === 401) {
+      errorMessage = 'Your session has expired. Please login again.';
+      localStorage.removeItem('token');
+      localStorage.removeItem('userData');
+      setShowAuthModal(true);
+    } else if (error.response?.data?.message) {
+      errorMessage = error.response.data.message;
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+    
+    setError(errorMessage);
+  } finally {
+    setIsProcessing(false);
+  }
+};
+
+const handlePaymentSubmit = () => {
+  if (paymentMethod === 'pay_on_site') {
+    handlePayOnSiteBooking();
+  } else {
+    handlePayment(); // Your existing HBL payment function
+  }
+};
+
   const handleAuthSuccess = (userData) => {
     setShowAuthModal(false);
     setBillingInfo(prev => ({
@@ -424,6 +583,94 @@ const Checkout = () => {
     </div>
   );
 
+  const renderPaymentMethodSelector = () => (
+    <div className="mb-6 space-y-3">
+      {/* HBLPay Option */}
+      <div
+        onClick={() => setPaymentMethod('hblpay')}
+        className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
+          paymentMethod === 'hblpay'
+            ? 'border-blue-600 bg-blue-50 shadow-md'
+            : 'border-gray-200 hover:border-blue-300'
+        }`}
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+              paymentMethod === 'hblpay' ? 'bg-blue-600' : 'bg-gray-200'
+            }`}>
+              <CreditCard className={`w-5 h-5 ${
+                paymentMethod === 'hblpay' ? 'text-white' : 'text-gray-500'
+              }`} />
+            </div>
+            <div>
+              <h3 className="font-semibold text-gray-900">Pay with HBLPay</h3>
+              <p className="text-xs text-gray-500">Secure online payment</p>
+            </div>
+          </div>
+          <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+            paymentMethod === 'hblpay' ? 'border-blue-600' : 'border-gray-300'
+          }`}>
+            {paymentMethod === 'hblpay' && (
+              <div className="w-3 h-3 rounded-full bg-blue-600"></div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Pay on Site Option */}
+      <div
+        onClick={() => setPaymentMethod('pay_on_site')}
+        className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
+          paymentMethod === 'pay_on_site'
+            ? 'border-green-600 bg-green-50 shadow-md'
+            : 'border-gray-200 hover:border-green-300'
+        }`}
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+              paymentMethod === 'pay_on_site' ? 'bg-green-600' : 'bg-gray-200'
+            }`}>
+              <Building2 className={`w-5 h-5 ${
+                paymentMethod === 'pay_on_site' ? 'text-white' : 'text-gray-500'
+              }`} />
+            </div>
+            <div>
+              <h3 className="font-semibold text-gray-900">Pay on Site</h3>
+              <p className="text-xs text-gray-500">Pay when you arrive</p>
+            </div>
+          </div>
+          <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+            paymentMethod === 'pay_on_site' ? 'border-green-600' : 'border-gray-300'
+          }`}>
+            {paymentMethod === 'pay_on_site' && (
+              <div className="w-3 h-3 rounded-full bg-green-600"></div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Pay on Site Instructions */}
+      {paymentMethod === 'pay_on_site' && (
+        <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+          <div className="flex items-start space-x-2">
+            <AlertCircle className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+            <div className="text-xs text-green-800">
+              <p className="font-semibold mb-1">✅ Pay on Site Benefits:</p>
+              <ul className="space-y-0.5 list-disc list-inside">
+                <li>Booking confirmed instantly</li>
+                <li>Pay when you arrive at hotel</li>
+                <li>Cash or card accepted</li>
+                <li>No online payment needed</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
   const renderOrderSummary = () => (
     <div className="bg-white rounded-lg shadow-sm p-6 sticky top-24">
       <h2 className="text-xl font-semibold text-gray-900 mb-4">Order Summary</h2>
@@ -470,11 +717,18 @@ const Checkout = () => {
         </div>
       )}
 
+      {/* Payment Method Selector */}
+      {renderPaymentMethodSelector()}
+
       {/* Payment Button */}
       <button
-        onClick={handlePayment}
+        onClick={handlePaymentSubmit}
         disabled={isProcessing || checkoutItems.length === 0}
-        className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 font-medium"
+        className={`w-full py-3 px-4 rounded-lg font-medium flex items-center justify-center space-x-2 transition-all ${
+          paymentMethod === 'hblpay'
+            ? 'bg-blue-600 hover:bg-blue-700 text-white'
+            : 'bg-green-600 hover:bg-green-700 text-white'
+        } disabled:opacity-50 disabled:cursor-not-allowed`}
       >
         {isProcessing ? (
           <>
@@ -483,8 +737,17 @@ const Checkout = () => {
           </>
         ) : (
           <>
-            <Lock className="w-4 h-4" />
-            <span>Pay with HBLPay - PKR {totalAmount.toLocaleString()}</span>
+            {paymentMethod === 'hblpay' ? (
+              <>
+                <Lock className="w-4 h-4" />
+                <span>Pay with HBLPay - PKR {totalAmount.toLocaleString()}</span>
+              </>
+            ) : (
+              <>
+                <Wallet className="w-4 h-4" />
+                <span>Confirm Booking - Pay on Site</span>
+              </>
+            )}
           </>
         )}
       </button>

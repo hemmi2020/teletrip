@@ -820,7 +820,7 @@ export const SlideOutCart = ({ isOpen, onClose, onProceedToCheckout }) => {
       {/* Backdrop */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-[120] transition-opacity duration-300"
+          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[120] transition-opacity duration-300"
           onClick={onClose}
           style={{ pointerEvents: 'auto' }}
         />

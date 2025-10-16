@@ -56,6 +56,9 @@ const getDashboardOverview = asyncErrorHandler(async (req, res) => {
     totalHotels,
     activeHotels,
     
+    // Pay on Site Statistics
+    payOnSiteStatsRaw,
+    
     // Support Statistics
     openTickets,
     averageRating,
@@ -89,25 +92,26 @@ const getDashboardOverview = asyncErrorHandler(async (req, res) => {
       { $match: { createdAt: { $gte: startDate } } },
       { $group: { _id: null, total: { $sum: '$amount' } } }
     ]),
-    Payment.aggregate([
-    {
-      $match: {
-        paymentMethod: 'pay_on_site',
-        isDeleted: false
-      }
-    },
-    {
-      $group: {
-        _id: '$status',
-        count: { $sum: 1 },
-        totalAmount: { $sum: '$amount' }
-      }
-    }
-  ]),
-    
     // Hotel Statistics
     Hotel.countDocuments(),
     Hotel.countDocuments({ status: 'active' }),
+    
+    // Pay on Site Statistics
+    Payment.aggregate([
+      {
+        $match: {
+          paymentMethod: 'pay_on_site',
+          isDeleted: false
+        }
+      },
+      {
+        $group: {
+          _id: '$status',
+          count: { $sum: 1 },
+          totalAmount: { $sum: '$amount' }
+        }
+      }
+    ]),
     
     // Support Statistics
     SupportTicket.countDocuments({ status: 'open' }),
@@ -1180,7 +1184,8 @@ const getPayOnSiteBookings = asyncErrorHandler(async (req, res) => {
       ])
     ]);
 
-    console.log(`✅ Found ${payments.length} Pay on Site bookings`);
+    console.log(`✅ Found ${payments.length} Pay on Site bookings out of ${total} total`);
+    console.log('Query used:', JSON.stringify(query));
 
     return ApiResponse.success(res, {
       payments,
@@ -1222,7 +1227,7 @@ const markPayOnSiteAsPaid = asyncErrorHandler(async (req, res) => {
 
   try {
     const payment = await Payment.findOne({
-      paymentId,
+      _id: paymentId,
       paymentMethod: 'pay_on_site',
       isDeleted: false
     });

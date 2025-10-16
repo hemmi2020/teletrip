@@ -28,6 +28,15 @@ const Header = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Listen for cart open events
+  useEffect(() => {
+    const handleOpenCart = () => {
+      setIsCartOpen(true);
+    };
+    window.addEventListener('openCart', handleOpenCart);
+    return () => window.removeEventListener('openCart', handleOpenCart);
+  }, []);
+
   const handleAccountClick = () => {
     if (user && user.email) {
       navigate("/account");

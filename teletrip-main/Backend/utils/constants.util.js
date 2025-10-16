@@ -20,6 +20,8 @@ const PAYMENT_METHODS = {
   DEBIT_CARD: 'Debit Card',
   PAYPAL: 'PayPal',
   BANK_TRANSFER: 'Bank Transfer',
+  HBLPAY: 'HBLPay',
+  PAY_ON_SITE: 'Pay on Site',
   REFUND: 'Refund'
 };
 

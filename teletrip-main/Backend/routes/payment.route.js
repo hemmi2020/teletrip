@@ -215,7 +215,43 @@ router.get('/stats/:period',
   }
 );
 
-router.post('/pay-on-site', authUser, paymentController.createPayOnSiteBooking); 
+// Pay on Site booking
+router.post('/pay-on-site', 
+  authUser,
+  [
+    body('amount')
+      .isFloat({ min: 0.01 })
+      .withMessage('Valid amount is required'),
+    body('currency')
+      .optional()
+      .isIn(['PKR', 'USD', 'EUR', 'GBP'])
+      .withMessage('Invalid currency'),
+    body('bookingId')
+      .isMongoId()
+      .withMessage('Valid booking ID required'),
+    body('userData.firstName')
+      .notEmpty()
+      .trim()
+      .withMessage('First name is required'),
+    body('userData.lastName')
+      .notEmpty()
+      .trim()
+      .withMessage('Last name is required'),
+    body('userData.email')
+      .isEmail()
+      .normalizeEmail()
+      .withMessage('Valid email is required'),
+    body('userData.phone')
+      .notEmpty()
+      .trim()
+      .withMessage('Phone number is required'),
+    body('bookingData.items')
+      .isArray({ min: 1 })
+      .withMessage('Booking items are required')
+  ],
+  validateRequest,
+  paymentController.createPayOnSiteBooking
+); 
 
 
 

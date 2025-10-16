@@ -175,6 +175,8 @@ const HotelDetails = () => {
     try {
       handleAddToCart(hotel, room, rate, searchParams);
       showNotification(`${room.name} added to cart!`, 'success');
+      // Dispatch custom event to open cart
+      window.dispatchEvent(new CustomEvent('openCart'));
     } catch (error) {
       console.error('Error adding to cart:', error);
       showNotification('Failed to add item to cart', 'error');

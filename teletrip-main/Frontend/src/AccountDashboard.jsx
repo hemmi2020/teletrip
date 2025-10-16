@@ -39,7 +39,8 @@ import {
   MessageSquare,
   FileText,
   Award,
-  Target
+  Target,
+  Building2
 } from "lucide-react";
 import { UserDataContext } from './components/CartSystem';
 import Header from './components/Header';
@@ -573,6 +574,7 @@ const AccountDashboard = () => {
   const [profile, setProfile] = useState({});
   const [bookings, setBookings] = useState({ docs: [], totalDocs: 0, totalPages: 1 });
   const [payments, setPayments] = useState({ docs: [], totalDocs: 0, totalPages: 1 });
+  const [pendingPayments, setPendingPayments] = useState([]);
   const [preferences, setPreferences] = useState({});
   const [notifications, setNotifications] = useState([]);
   const [favorites, setFavorites] = useState({ docs: [] });
@@ -611,7 +613,7 @@ const AccountDashboard = () => {
   }, [activeTab, user]);
 
   // Load tab-specific data
-  const loadTabData = async (tab) => {
+  const loadTabData = async (tab, filters = null) => {
     try {
       switch (tab) {
         case "overview": {
@@ -631,14 +633,20 @@ const AccountDashboard = () => {
         }
           
         case "bookings": {
-          const bookingsData = await makeApiCall(() => DashboardAPIService.getBookings(bookingFilters));
+          const currentFilters = filters || bookingFilters;
+          const bookingsData = await makeApiCall(() => DashboardAPIService.getBookings(currentFilters));
           setBookings(bookingsData || { docs: [], totalDocs: 0, totalPages: 1 });
           break;
         }
           
         case "payments": {
-          const paymentsData = await makeApiCall(() => DashboardAPIService.getPaymentHistory(paymentFilters));
+          const currentFilters = filters || paymentFilters;
+          const [paymentsData, pendingData] = await Promise.all([
+            makeApiCall(() => DashboardAPIService.getPaymentHistory(currentFilters)),
+            makeApiCall(() => DashboardAPIService.getPendingPayments()).catch(() => ({ docs: [] }))
+          ]);
           setPayments(paymentsData || { docs: [], totalDocs: 0, totalPages: 1 });
+          setPendingPayments(pendingData?.docs || pendingData?.payments || []);
           break;
         }
           
@@ -795,13 +803,15 @@ const AccountDashboard = () => {
 
   // Pagination handlers
   const handleBookingPageChange = (page) => {
-    setBookingFilters(prev => ({ ...prev, page }));
-    loadTabData("bookings");
+    const newFilters = { ...bookingFilters, page };
+    setBookingFilters(newFilters);
+    loadTabData("bookings", newFilters);
   };
 
   const handlePaymentPageChange = (page) => {
-    setPaymentFilters(prev => ({ ...prev, page }));
-    loadTabData("payments");
+    const newFilters = { ...paymentFilters, page };
+    setPaymentFilters(newFilters);
+    loadTabData("payments", newFilters);
   };
 
   // Authentication check
@@ -1100,8 +1110,9 @@ const AccountDashboard = () => {
                       <select
                         value={bookingFilters.status}
                         onChange={(e) => {
-                          setBookingFilters({...bookingFilters, status: e.target.value, page: 1});
-                          loadTabData("bookings");
+                          const newFilters = {...bookingFilters, status: e.target.value, page: 1};
+                          setBookingFilters(newFilters);
+                          loadTabData("bookings", newFilters);
                         }}
                         className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                       >
@@ -1112,7 +1123,7 @@ const AccountDashboard = () => {
                         <option value="cancelled">Cancelled</option>
                       </select>
                       <button
-                        onClick={() => loadTabData("bookings")}
+                        onClick={() => loadTabData("bookings", bookingFilters)}
                         disabled={loading}
                         className="flex items-center space-x-2 px-4 py-2 text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50 disabled:opacity-50"
                       >
@@ -1198,14 +1209,88 @@ const AccountDashboard = () => {
               {/* Payments Tab */}
               {activeTab === "payments" && (
                 <div>
+                  {/* Pending Payments (Pay on Site) */}
+                  {pendingPayments.length > 0 && (
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mb-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center space-x-2">
+                          <Clock className="w-5 h-5 text-yellow-600" />
+                          <h3 className="text-lg font-semibold text-yellow-900">Pending Payments (Pay on Site)</h3>
+                        </div>
+                        <span className="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded">
+                          {pendingPayments.length} pending
+                        </span>
+                      </div>
+                      <div className="space-y-3">
+                        {pendingPayments.map((payment) => (
+                          <div key={payment._id} className="bg-white rounded-lg p-4 border border-yellow-200">
+                            <div className="flex items-center justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center space-x-2 mb-2">
+                                  <Building2 className="w-4 h-4 text-gray-500" />
+                                  <span className="font-medium text-gray-900">
+                                    {payment.bookingId?.hotelBooking?.hotelName || 'Hotel Booking'}
+                                  </span>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4 text-sm">
+                                  <div>
+                                    <span className="text-gray-500">Booking Ref:</span>
+                                    <span className="ml-2 font-mono text-gray-900">
+                                      {payment.bookingId?.bookingReference || 'N/A'}
+                                    </span>
+                                  </div>
+                                  <div>
+                                    <span className="text-gray-500">Payment ID:</span>
+                                    <span className="ml-2 font-mono text-gray-900">
+                                      {payment.paymentId}
+                                    </span>
+                                  </div>
+                                  <div>
+                                    <span className="text-gray-500">Check-in:</span>
+                                    <span className="ml-2 text-gray-900">
+                                      {payment.bookingId?.hotelBooking?.checkIn ? 
+                                        formatDate(payment.bookingId.hotelBooking.checkIn) : 'N/A'}
+                                    </span>
+                                  </div>
+                                  <div>
+                                    <span className="text-gray-500">Amount:</span>
+                                    <span className="ml-2 font-semibold text-yellow-700">
+                                      {formatCurrency(payment.amount)}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="ml-4 text-right">
+                                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                  <Clock className="w-3 h-3 mr-1" />
+                                  Pay on Arrival
+                                </span>
+                                <p className="text-xs text-gray-500 mt-2">
+                                  Created {formatDate(payment.createdAt)}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="mt-3 pt-3 border-t border-yellow-100">
+                              <p className="text-xs text-yellow-800 flex items-center">
+                                <AlertCircle className="w-3 h-3 mr-1" />
+                                Payment will be collected when you arrive at the hotel
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   <div className="flex justify-between items-center mb-6">
                     <h2 className="text-xl font-semibold text-gray-900">Payment History</h2>
                     <div className="flex space-x-4">
                       <select
                         value={paymentFilters.status}
                         onChange={(e) => {
-                          setPaymentFilters({...paymentFilters, status: e.target.value, page: 1});
-                          loadTabData("payments");
+                          const newFilters = {...paymentFilters, status: e.target.value, page: 1};
+                          setPaymentFilters(newFilters);
+                          loadTabData("payments", newFilters);
                         }}
                         className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                       >
@@ -1216,7 +1301,7 @@ const AccountDashboard = () => {
                         <option value="refunded">Refunded</option>
                       </select>
                       <button
-                        onClick={() => loadTabData("payments")}
+                        onClick={() => loadTabData("payments", paymentFilters)}
                         disabled={loading}
                         className="flex items-center space-x-2 px-4 py-2 text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50 disabled:opacity-50"
                       >

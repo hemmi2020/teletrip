@@ -11,7 +11,7 @@ import {
   Clock, CheckCircle, XCircle, Loader2, ArrowUpRight, ArrowDownRight,
   Menu, XCircle as CloseIcon, Save, Camera, User, Globe, Zap
 } from 'lucide-react';
-import adminApi, { AdminDashboardAPI } from './services/adminApi';
+import { AdminDashboardAPI } from './services/adminApi';
 
 // Toast Component
 const Toast = ({ message, type, onClose }) => {
@@ -103,7 +103,7 @@ const AdminDashboard = () => {
   // Load data based on active tab
   useEffect(() => {
     loadData();
-  }, [activeTab, filters]);
+  }, [activeTab, filters.page, filters.limit, filters.search, filters.status, filters.sortBy, filters.sortOrder]);
 
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
@@ -171,9 +171,11 @@ const AdminDashboard = () => {
         showToast(result.error, 'error');
       }
     } else if (activeTab === 'payments') {
-      const result = await AdminDashboardAPI.getAllPayments(filters);
+      const result = filters.status === 'pay-on-site'
+        ? await AdminDashboardAPI.getPayOnSiteBookings(filters)
+        : await AdminDashboardAPI.getAllPayments(filters);
+      
       if (result.success) {
-        // ✅ FIXED: Map the payments array to docs format
         setData({
           docs: result.data.payments || [],
           totalDocs: result.data.pagination?.total || 0,
@@ -209,6 +211,7 @@ const AdminDashboard = () => {
 
   const handleFilterChange = (key, value) => {
     setFilters(prev => ({ ...prev, [key]: value, page: 1 }));
+    setData({ docs: [], totalDocs: 0, totalPages: 1, page: 1 });
   };
 
   const handlePageChange = (page) => {
@@ -350,6 +353,17 @@ const AdminDashboard = () => {
             showToast(result.error, 'error');
           }
         }
+      } else if (action === 'markPaid') {
+        if (window.confirm('Mark this pay-on-site payment as paid?')) {
+          const result = await AdminDashboardAPI.markPayOnSiteAsPaid(paymentId);
+          if (result.success) {
+            showToast('Payment marked as paid', 'success');
+            setFilters(prev => ({ ...prev, status: '' }));
+            await loadData();
+          } else {
+            showToast(result.error, 'error');
+          }
+        }
       } else if (action === 'view') {
         console.log('View payment:', paymentId);
       }
@@ -450,8 +464,8 @@ const AdminDashboard = () => {
       <div className="bg-white rounded-lg shadow-sm">
         <div className="p-6 border-b border-gray-200">
           <div className="flex flex-col sm:flex-row gap-4 justify-between">
-            <div className="flex-1">
-              <div className="relative">
+            <div className="flex-1 flex gap-2">
+              <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
                   type="text"
@@ -461,6 +475,19 @@ const AdminDashboard = () => {
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
+              {activeTab === 'payments' && (
+                <select
+                  value={filters.status}
+                  onChange={(e) => handleFilterChange('status', e.target.value)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">All Payments</option>
+                  <option value="pay-on-site">Pay on Site</option>
+                  <option value="pending">Pending</option>
+                  <option value="completed">Completed</option>
+                  <option value="failed">Failed</option>
+                </select>
+              )}
             </div>
             <div className="flex gap-2">
               <button
@@ -542,6 +569,8 @@ const AdminDashboard = () => {
             const bookingRef = item.bookingId?.bookingReference || item.bookingReference;
             const userEmail = item.userId?.email || item.user?.email;
             
+            console.log('Payment item:', { paymentMethod: item.paymentMethod, status: item.status, id: item._id });
+            
             displayDetails = (
               <div>
                 <p className="font-medium truncate">
@@ -604,7 +633,16 @@ const AdminDashboard = () => {
                   >
                     <Eye className="w-4 h-4" />
                   </button>
-                  {activeTab !== 'support' && (
+                  {activeTab === 'payments' && (item.paymentMethod === 'pay-on-site' || item.paymentMethod === 'pay_on_site') && item.status === 'pending' && (
+                    <button 
+                      onClick={() => handlePaymentAction(item._id, 'markPaid')}
+                      className="text-green-600 hover:text-green-800"
+                      title="Mark as Paid"
+                    >
+                      <Check className="w-4 h-4" />
+                    </button>
+                  )}
+                  {activeTab !== 'support' && activeTab !== 'payments' && (
                     <button 
                       className="text-green-600 hover:text-green-800"
                       title="Approve"

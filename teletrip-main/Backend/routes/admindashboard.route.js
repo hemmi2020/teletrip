@@ -327,6 +327,36 @@ router.put('/hotels/:hotelId/status',
 
 // ========== PAYMENT MANAGEMENT ==========
 /**
+ * @route   GET /api/admin/payments/pay-on-site
+ * @desc    Get all pay-on-site bookings
+ * @access  Private (Admin only)
+ */
+router.get('/payments/pay-on-site',
+  ...requireAdmin,
+  [
+    ...paginationValidation,
+    ...dateRangeValidation,
+    query('search').optional({ checkFalsy: true }).trim(),
+    query('sortBy').optional({ checkFalsy: true }).isString(),
+    query('sortOrder').optional({ checkFalsy: true }).isIn(['asc', 'desc'])
+  ],
+  validateRequest,
+  adminDashboardController.getPayOnSiteBookings
+);
+
+/**
+ * @route   PUT /api/admin/payments/:paymentId/mark-paid
+ * @desc    Mark pay-on-site payment as paid
+ * @access  Private (Admin only)
+ */
+router.put('/payments/:paymentId/mark-paid',
+  ...requireAdmin,
+  [param('paymentId').isMongoId().withMessage('Valid payment ID is required')],
+  validateRequest,
+  adminDashboardController.markPayOnSiteAsPaid
+);
+
+/**
  * @route   GET /api/v1/admin/payments
  * @desc    Get all payments with filters
  * @access  Private (Admin only)
@@ -470,18 +500,6 @@ router.get('/reports/export',
   ],
   validateRequest,
   adminDashboardController.exportData
-);
-
-router.get('/payments/pay-on-site',
-  authUser,
-  isAdmin,
-  adminDashboardController.getPayOnSiteBookings
-);
-
-router.put('/payments/:paymentId/mark-paid',
-  authUser,
-  isAdmin,
-  adminDashboardController.markPayOnSiteAsPaid
 );
 
 module.exports = router;

@@ -13,6 +13,7 @@ import Checkout from './Checkout';
 import AccountDashboard from './AccountDashboard';
 import PaymentSuccess from './components/PaymentSuccess';
 import PaymentCancel from './components/PaymentCancel';
+import PaymentSuccessOnSite from './PaymentSuccessOnSite';
 
 // Import Admin Components
 import AdminLogin from './components/AdminLogin';
@@ -82,6 +83,7 @@ const App = () => {
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/payment/success" element={<PaymentSuccess />} />
               <Route path="/payment/cancel" element={<PaymentCancel />} />
+              <Route path="/payment-success-onsite" element={<PaymentSuccessOnSite />} />
               
               {/* ===== ADMIN ROUTES ===== */}
               {/* Admin Login - Public route */}

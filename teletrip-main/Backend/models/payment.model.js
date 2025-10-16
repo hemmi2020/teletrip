@@ -57,7 +57,7 @@ const paymentSchema = new mongoose.Schema({
   paymentMethod: {
     type: String,
     required: true,
-    enum: ['credit_card', 'debit_card', 'hbl_account', 'HBLPay', 'union_pay', 'bank_transfer'],
+    enum: ['credit_card', 'debit_card', 'hbl_account', 'HBLPay', 'union_pay', 'bank_transfer', 'pay_on_site'],
     default: 'credit_card'
   },
   
