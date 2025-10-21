@@ -26,6 +26,12 @@ router.get('/diagnose-hbl', paymentController.diagnoseHBLIntegration);
 router.get('/hbl-health-check', paymentController.checkHBLServerStatus);
 router.get('/hbl-quick-check', paymentController.quickHBLCheck);
 
+router.post('/test-unencrypted', paymentController.testUnencryptedHBL);
+router.post('/test-pdf-sample', paymentController.testHBLPDFSample);
+router.post('/test-your-credentials', paymentController.testYourCredentials);
+router.post('/test-exact-pdf', paymentController.testExactPDFFormat);
+router.post('/test-minimal', paymentController.testMinimalFields);
+
 
 
 

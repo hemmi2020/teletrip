@@ -30,6 +30,10 @@ const privateKeyPem = process.env.MERCHANT_PRIVATE_KEY_PEM;
 
 const isProduction = process.env.NODE_ENV === 'production';
  
+// CRITICAL: Production credentials need PRODUCTION public key from HBL
+// Your current HBL_PUBLIC_KEY_PEM is for SANDBOX only
+// Contact HBL to get the PRODUCTION public key
+ 
 
 
 const https = require('https');
@@ -1211,21 +1215,50 @@ function encryptRequestParameters(data, publicKey) {
   const result = {};
   
   for (const [key, value] of Object.entries(data)) {
+    // NEVER encrypt USER_ID (per HBL requirements)
     if (key === 'USER_ID') {
-      // Never encrypt USER_ID (per HBL requirements)
       result[key] = value;
-    } else if (value === null || value === undefined) {
+      continue;
+    }
+
+    // Handle null/undefined
+    if (value === null || value === undefined) {
       result[key] = value;
-    } else if (typeof value === 'object') {
-      // Recursively encrypt objects and arrays
-      result[key] = encryptRequestParameters(value, publicKey);
-    } else {
-      // Encrypt primitive values (strings, numbers, booleans)
+      continue;
+    }
+
+    // ✅ FIX 4: For nested objects (ORDER, SHIPPING_DETAIL, ADDITIONAL_DATA)
+    // encrypt each value individually, not the whole object
+    if (typeof value === 'object' && !Array.isArray(value)) {
+      result[key] = {};
+      for (const [subKey, subValue] of Object.entries(value)) {
+        if (subValue === null || subValue === undefined) {
+          result[key][subKey] = subValue;
+        } else if (typeof subValue === 'object') {
+          // Handle nested arrays (like OrderSummaryDescription or MerchantFields)
+          result[key][subKey] = encryptRequestParameters(subValue, publicKey);
+        } else {
+          // Encrypt the primitive value
+          try {
+            result[key][subKey] = encryptHBLData(String(subValue), publicKey);
+          } catch (error) {
+            console.warn(`⚠️ Failed to encrypt ${key}.${subKey}:`, error.message);
+            // Keep original value if encryption fails (for debugging)
+            result[key][subKey] = subValue;
+          }
+        }
+      }
+    }
+    // Handle arrays (like OrderSummaryDescription)
+    else if (Array.isArray(value)) {
+      result[key] = value.map(item => encryptRequestParameters(item, publicKey));
+    }
+    // Handle primitive values (strings, numbers, booleans)
+    else {
       try {
         result[key] = encryptHBLData(String(value), publicKey);
       } catch (error) {
-        console.warn(`Failed to encrypt field ${key}:`, error.message);
-        // If encryption fails, keep original value (HBL sandbox might accept it)
+        console.warn(`⚠️ Failed to encrypt field ${key}:`, error.message);
         result[key] = value;
       }
     }
@@ -1240,7 +1273,7 @@ function encryptRequestParameters(data, publicKey) {
 const buildHBLPayRequest = (paymentData, userId) => {
   const { amount, currency, orderId, bookingData, userData } = paymentData;
 
-  console.log('🔍 buildHBLPayRequest received parameters:', {
+  console.log('🔍 buildHBLPayRequest received parameters:', { 
     amount: typeof amount,
     amountValue: amount,
     currency,
@@ -1254,6 +1287,11 @@ const buildHBLPayRequest = (paymentData, userId) => {
   if (!amount || typeof amount !== 'number' || amount <= 0) {
     throw new Error(`Invalid amount parameter: ${amount} (type: ${typeof amount})`);
   }
+
+  // ✅ FIX 1: Ensure RETURN_URL and CANCEL_URL are properly formatted
+  const backendUrl = process.env.BACKEND_URL || 'https://telitrip.onrender.com';
+  const returnUrl = `${backendUrl}/api/payments/success`;
+  const cancelUrl = `${backendUrl}/api/payments/cancel`;
 
   const hashUserId = (userId) => {
   if (!userId) return Date.now().toString();
@@ -1292,7 +1330,7 @@ const buildHBLPayRequest = (paymentData, userId) => {
       ]
     },
     "SHIPPING_DETAIL": {
-      "NAME": "DHL SERVICE",
+      "NAME": "Digital Delivery",
       "ICON_PATH": null,
       "DELIEVERY_DAYS": "0",
       "SHIPPING_COST": "0"
@@ -1356,6 +1394,30 @@ const buildHBLPayRequest = (paymentData, userId) => {
     CUSTOMER_ID: request.ADDITIONAL_DATA.CUSTOMER_ID
   });
 
+  // ✅ FIX 3: Validate critical fields before returning
+  const criticalFields = {
+    USER_ID: request.USER_ID,
+    PASSWORD: request.PASSWORD,
+    RETURN_URL: request.RETURN_URL,
+    CANCEL_URL: request.CANCEL_URL,
+    CHANNEL: request.CHANNEL,
+    TYPE_ID: request.TYPE_ID,
+    SUBTOTAL: request.ORDER.SUBTOTAL,
+    CURRENCY: request.ADDITIONAL_DATA.CURRENCY,
+    REFERENCE_NUMBER: request.ADDITIONAL_DATA.REFERENCE_NUMBER
+  };
+
+  console.log('📤 HBLPay Request (Critical fields validated):', criticalFields);
+
+  // Check for missing critical fields
+  const missingFields = Object.entries(criticalFields)
+    .filter(([_, value]) => !value || value === '')
+    .map(([key, _]) => key);
+
+  if (missingFields.length > 0) {
+    throw new Error(`Missing critical HBL fields: ${missingFields.join(', ')}`);
+  }
+
   return request;
 };
 
@@ -1375,6 +1437,11 @@ const callHBLPayAPI = async (requestData) => {
   });
 
   try {
+
+    // ✅ FIX 5: Validate URLs before encrypting
+    if (!requestData.RETURN_URL || !requestData.CANCEL_URL) {
+      throw new Error('RETURN_URL and CANCEL_URL are required but missing');
+    }
     // ✅ ENCRYPT THE REQUEST DATA (except USER_ID)
     let finalRequestData = requestData;
 
@@ -1382,6 +1449,16 @@ const callHBLPayAPI = async (requestData) => {
       console.log('🔐 Encrypting request parameters...');
       finalRequestData = encryptRequestParameters(requestData, HBL_PUBLIC_KEY);
       console.log('✅ Request parameters encrypted successfully');
+
+      // Log structure (not values) for debugging
+      console.log('📦 Encrypted request structure:', {
+        hasUserId: !!finalRequestData.USER_ID,
+        hasPassword: !!finalRequestData.PASSWORD,
+        hasReturnUrl: !!finalRequestData.RETURN_URL,
+        hasCancelUrl: !!finalRequestData.CANCEL_URL,
+        hasOrder: !!finalRequestData.ORDER,
+        hasAdditionalData: !!finalRequestData.ADDITIONAL_DATA
+      });
     } else {
       console.warn('⚠️ No HBL public key found - sending unencrypted data (this might fail)');
     }
@@ -1433,6 +1510,12 @@ const callHBLPayAPI = async (requestData) => {
     return hblResponse;
   } catch (error) {
     console.error('❌ HBLPay API Error:', error);
+    
+    // ✅ FIX 6: Better error messages
+    if (error.message.includes('RETURN_URL')) {
+      throw new Error('Payment gateway configuration error: Return URL missing');
+    }
+    
     throw new Error(`HBLPay API call failed: ${error.message}`);
   }
 };
@@ -1447,22 +1530,37 @@ const buildRedirectUrl = (sessionId) => {
 
 // Create HBLPay payment session
 module.exports.initiateHBLPayPayment = asyncErrorHandler(async (req, res) => {
+  console.log('📥 RAW REQUEST BODY:', JSON.stringify(req.body, null, 2));
+  
   const { bookingData, userData, amount, currency = 'PKR', orderId, bookingId } = req.body;
   const userId = req.user._id;
 
   console.log('🚀 Initiating HBLPay payment:', {
     userId: userId.toString(),
     amount: amount,
+    amountType: typeof amount,
     currency,
     orderId: orderId || 'auto-generated',
     bookingId,
-    userEmail: userData?.email
+    userEmail: userData?.email,
+    hasBookingData: !!bookingData,
+    hasUserData: !!userData,
+    bookingDataKeys: bookingData ? Object.keys(bookingData) : [],
+    userDataKeys: userData ? Object.keys(userData) : []
   });
 
   // Enhanced validation
-  if (!amount || typeof amount !== 'number' || amount <= 0) {
-    console.error('❌ Invalid amount:', { amount, type: typeof amount });
-    return ApiResponse.error(res, `Invalid payment amount: ${amount}`, 400);
+  let validAmount = amount;
+  
+  // Convert string to number if needed
+  if (typeof amount === 'string') {
+    validAmount = parseFloat(amount);
+    console.log('⚠️ Amount was string, converted to number:', { original: amount, converted: validAmount });
+  }
+  
+  if (!validAmount || typeof validAmount !== 'number' || validAmount <= 0 || isNaN(validAmount)) {
+    console.error('❌ Invalid amount:', { amount, validAmount, type: typeof amount });
+    return ApiResponse.error(res, `Invalid payment amount: ${amount} (type: ${typeof amount})`, 400);
   }
 
   if (!userData || !userData.email || !userData.firstName) {
@@ -1537,11 +1635,9 @@ module.exports.initiateHBLPayPayment = asyncErrorHandler(async (req, res) => {
   try {
     const finalOrderId = orderId || generateOrderId();
     const paymentId = generatePaymentId();
-    const paymentAmount = parseFloat(amount);
+    const paymentAmount = validAmount; // Use the validated amount
 
-    if (isNaN(paymentAmount) || paymentAmount <= 0) {
-      return ApiResponse.error(res, `Invalid payment amount: ${paymentAmount}`, 400);
-    }
+    console.log('💰 Final payment amount:', { paymentAmount, type: typeof paymentAmount });
 
     // Create payment record
     const payment = new paymentModel({
@@ -1591,6 +1687,14 @@ module.exports.initiateHBLPayPayment = asyncErrorHandler(async (req, res) => {
     console.log('💾 Payment record created:', paymentId);
 
     // Build and call HBL API
+    console.log('🛠️ Building HBL request with:', {
+      amount: paymentAmount,
+      currency,
+      orderId: finalOrderId,
+      hasBookingData: !!bookingData,
+      hasUserData: !!userData
+    });
+    
     const hblRequest = buildHBLPayRequest({
       amount: paymentAmount,
       currency: currency,
@@ -1599,7 +1703,13 @@ module.exports.initiateHBLPayPayment = asyncErrorHandler(async (req, res) => {
       userData: userData
     }, userId);
 
-    const hblResponse = await callHBLPayAPI(hblRequest); 
+    console.log('📤 HBL Request built, calling API...');
+    const hblResponse = await callHBLPayAPI(hblRequest);
+    console.log('📥 HBL Response received:', { 
+      IsSuccess: hblResponse.IsSuccess, 
+      ResponseCode: hblResponse.ResponseCode,
+      ResponseMessage: hblResponse.ResponseMessage 
+    }); 
 
     if (!hblResponse.IsSuccess) {
       await payment.updateOne({
@@ -3512,6 +3622,623 @@ module.exports.quickHBLCheck = asyncErrorHandler(async (req, res) => {
       error: error.message,
       timestamp: new Date().toISOString(),
       message: '🔴 HBL API is not reachable'
+    });
+  }
+});
+
+
+
+module.exports.testUnencryptedHBL = asyncErrorHandler(async (req, res) => {
+  console.log('\n🧪 ========== TESTING UNENCRYPTED HBL REQUEST ==========\n');
+  
+  try {
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:3000';
+    
+    // Build the EXACT request from HBL PDF (page 8-9)
+    const unencryptedRequest = {
+      "USER_ID": process.env.HBLPAY_USER_ID || 'teliadmin',
+      "PASSWORD": process.env.HBLPAY_PASSWORD || '9S2n37TVT!',
+      "RETURN_URL": `${backendUrl}/api/payments/success`,
+      "CANCEL_URL": `${backendUrl}/api/payments/cancel`,
+      "CHANNEL": process.env.HBL_CHANNEL || 'HBLPay_Teli_Website',
+      "TYPE_ID": "0",
+      "ORDER": {
+        "DISCOUNT_ON_TOTAL": "0",
+        "SUBTOTAL": "100.00",
+        "OrderSummaryDescription": [
+          {
+            "ITEM_NAME": "TEST ITEM",
+            "QUANTITY": "1",
+            "UNIT_PRICE": "100.00",
+            "OLD_PRICE": null,
+            "CATEGORY": "Test",
+            "SUB_CATEGORY": "Test Sub"
+          }
+        ]
+      },
+      "SHIPPING_DETAIL": {
+        "NAME": "DHL SERVICE",
+        "ICON_PATH": null,
+        "DELIEVERY_DAYS": "7",
+        "SHIPPING_COST": "0"
+      },
+      "ADDITIONAL_DATA": {
+        "REFERENCE_NUMBER": "TEST_" + Date.now(),
+        "CUSTOMER_ID": null,
+        "CURRENCY": "PKR",
+        "BILL_TO_FORENAME": "Test",
+        "BILL_TO_SURNAME": "User",
+        "BILL_TO_EMAIL": "test@example.com",
+        "BILL_TO_PHONE": "03001234567",
+        "BILL_TO_ADDRESS_LINE": "Test Address",
+        "BILL_TO_ADDRESS_CITY": "Karachi",
+        "BILL_TO_ADDRESS_STATE": "SD",
+        "BILL_TO_ADDRESS_COUNTRY": "PK",
+        "BILL_TO_ADDRESS_POSTAL_CODE": "75500",
+        "SHIP_TO_FORENAME": "Test",
+        "SHIP_TO_SURNAME": "User",
+        "SHIP_TO_EMAIL": "test@example.com",
+        "SHIP_TO_PHONE": "03001234567",
+        "SHIP_TO_ADDRESS_LINE": "Test Address",
+        "SHIP_TO_ADDRESS_CITY": "Karachi",
+        "SHIP_TO_ADDRESS_STATE": "SD",
+        "SHIP_TO_ADDRESS_COUNTRY": "PK",
+        "SHIP_TO_ADDRESS_POSTAL_CODE": "75500",
+        "MerchantFields": {
+          "MDD1": process.env.HBL_CHANNEL || 'HBLPay_Teli_Website',
+          "MDD2": "N"
+        }
+      }
+    };
+
+    console.log('📋 Sending UNENCRYPTED request to HBL...');
+    console.log('🔗 URL:', process.env.HBL_SANDBOX_API_URL);
+    console.log('📦 Request:', JSON.stringify(unencryptedRequest, null, 2));
+
+    const https = require('https');
+    const httpsAgent = new https.Agent({
+      rejectUnauthorized: false
+    });
+
+    const response = await fetch(process.env.HBL_SANDBOX_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify(unencryptedRequest),
+      agent: httpsAgent
+    });
+
+    const responseText = await response.text();
+    console.log('📥 HBL Response:', responseText);
+
+    let parsedResponse;
+    try {
+      parsedResponse = JSON.parse(responseText);
+    } catch (e) {
+      parsedResponse = { raw: responseText };
+    }
+
+    return res.json({
+      success: true,
+      message: 'Unencrypted test complete',
+      request: unencryptedRequest,
+      response: parsedResponse,
+      responseStatus: response.status,
+      analysis: {
+        note: 'If this works, encryption is the issue. If this fails with same error, credentials are wrong.',
+        responseCode: parsedResponse.ResponseCode,
+        responseMessage: parsedResponse.ResponseMessage,
+        hasSessionId: !!parsedResponse.Data?.SESSION_ID
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Test failed:', error);
+    return res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+module.exports.testHBLPDFSample = asyncErrorHandler(async (req, res) => {
+  console.log('\n🧪 ========== TESTING WITH HBL PDF EXACT SAMPLE ==========\n');
+  
+  try {
+    // EXACT request from HBL PDF page 8-9
+    const pdfSampleRequest = {
+      "USER_ID": "testmerchant", // HBL's test merchant from PDF
+      "PASSWORD": "hbl@1234", // HBL's test password from PDF
+      "RETURN_URL": "http://localhost:64149/Home/ThankYouPage",
+      "CANCEL_URL": "http://localhost:64149/Home/FailedPurchase",
+      "CHANNEL": "BOOKME_WEB",
+      "TYPE_ID": "0",
+      "ORDER": {
+        "DISCOUNT_ON_TOTAL": "20",
+        "SUBTOTAL": "600",
+        "OrderSummaryDescription": [
+          {
+            "ITEM_NAME": "COMPUTER BOOK",
+            "QUANTITY": "1",
+            "UNIT_PRICE": "180",
+            "OLD_PRICE": "210",
+            "CATEGORY": "Test_Category",
+            "SUB_CATEGORY": "Test sUB Category 1"
+          },
+          {
+            "ITEM_NAME": "GUITAR",
+            "QUANTITY": "2",
+            "UNIT_PRICE": "200",
+            "OLD_PRICE": null,
+            "CATEGORY": "Test_Category2",
+            "SUB_CATEGORY": "Test sUB Category2"
+          }
+        ]
+      },
+      "SHIPPING_DETAIL": {
+        "NAME": "DHL SERVICE",
+        "ICON_PATH": null,
+        "DELIEVERY_DAYS": "7",
+        "SHIPPING_COST": "40"
+      },
+      "ADDITIONAL_DATA": {
+        "REFERENCE_NUMBER": "TEST123456789",
+        "CUSTOMER_ID": null,
+        "CURRENCY": "PKR",
+        "BILL_TO_FORENAME": "John",
+        "BILL_TO_SURNAME": "Doe",
+        "BILL_TO_EMAIL": "null@cybersource.com",
+        "BILL_TO_PHONE": "02890888888",
+        "BILL_TO_ADDRESS_LINE": "1 Card Lane",
+        "BILL_TO_ADDRESS_CITY": "My City",
+        "BILL_TO_ADDRESS_STATE": "CA",
+        "BILL_TO_ADDRESS_COUNTRY": "US",
+        "BILL_TO_ADDRESS_POSTAL_CODE": "94043",
+        "SHIP_TO_FORENAME": "John",
+        "SHIP_TO_SURNAME": "Doe",
+        "SHIP_TO_EMAIL": "null@cybersource.com",
+        "SHIP_TO_PHONE": "02890888888",
+        "SHIP_TO_ADDRESS_LINE": "1 Card Lane",
+        "SHIP_TO_ADDRESS_CITY": "My City",
+        "SHIP_TO_ADDRESS_STATE": "CA",
+        "SHIP_TO_ADDRESS_COUNTRY": "US",
+        "SHIP_TO_ADDRESS_POSTAL_CODE": "94043",
+        "MerchantFields": {
+          "MDD1": "mdd1",
+          "MDD2": "mdd2"
+        }
+      }
+    };
+
+    console.log('📋 Sending HBL PDF sample request...');
+
+    const https = require('https');
+    const httpsAgent = new https.Agent({
+      rejectUnauthorized: false
+    });
+
+    const response = await fetch(process.env.HBL_SANDBOX_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify(pdfSampleRequest),
+      agent: httpsAgent
+    });
+
+    const responseText = await response.text();
+    console.log('📥 HBL Response:', responseText);
+
+    let parsedResponse;
+    try {
+      parsedResponse = JSON.parse(responseText);
+    } catch (e) {
+      parsedResponse = { raw: responseText };
+    }
+
+    return res.json({
+      success: true,
+      message: 'PDF sample test complete',
+      usedCredentials: {
+        userId: 'testmerchant',
+        password: 'hbl@1234',
+        channel: 'BOOKME_WEB'
+      },
+      response: parsedResponse,
+      analysis: {
+        note: 'Testing with HBL\'s own credentials from PDF',
+        works: parsedResponse.IsSuccess === true || !!parsedResponse.Data?.SESSION_ID,
+        responseCode: parsedResponse.ResponseCode,
+        responseMessage: parsedResponse.ResponseMessage
+      },
+      conclusion: parsedResponse.IsSuccess 
+        ? '✅ HBL API works with their credentials - YOUR credentials are the problem'
+        : '❌ Even HBL\'s own credentials fail - API might be down or changed'
+    });
+
+  } catch (error) {
+    console.error('❌ Test failed:', error);
+    return res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+module.exports.testYourCredentials = asyncErrorHandler(async (req, res) => {
+  console.log('\n🧪 ========== TESTING YOUR CREDENTIALS (UNENCRYPTED) ==========\n');
+  
+  try {
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:3000';
+    
+    // Minimal request with YOUR credentials
+    const minimalRequest = {
+      "USER_ID": process.env.HBLPAY_USER_ID,
+      "PASSWORD": process.env.HBLPAY_PASSWORD,
+      "RETURN_URL": `${backendUrl}/api/payments/success`,
+      "CANCEL_URL": `${backendUrl}/api/payments/cancel`,
+      "CHANNEL": process.env.HBL_CHANNEL,
+      "TYPE_ID": "0",
+      "ORDER": {
+        "SUBTOTAL": "100.00",
+        "OrderSummaryDescription": [{
+          "ITEM_NAME": "TEST",
+          "QUANTITY": "1",
+          "UNIT_PRICE": "100.00"
+        }]
+      },
+      "ADDITIONAL_DATA": {
+        "REFERENCE_NUMBER": "TEST_" + Date.now(),
+        "CURRENCY": "PKR",
+        "BILL_TO_FORENAME": "Test",
+        "BILL_TO_SURNAME": "User",
+        "BILL_TO_EMAIL": "test@test.com",
+        "BILL_TO_PHONE": "1234567890",
+        "BILL_TO_ADDRESS_CITY": "City",
+        "BILL_TO_ADDRESS_COUNTRY": "PK"
+      }
+    };
+
+    console.log('📋 Testing YOUR credentials:', {
+      USER_ID: minimalRequest.USER_ID,
+      PASSWORD: minimalRequest.PASSWORD ? '***' + minimalRequest.PASSWORD.slice(-3) : 'MISSING',
+      CHANNEL: minimalRequest.CHANNEL,
+      RETURN_URL: minimalRequest.RETURN_URL
+    });
+
+    const https = require('https');
+    const httpsAgent = new https.Agent({
+      rejectUnauthorized: false
+    });
+
+    const response = await fetch(process.env.HBL_SANDBOX_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify(minimalRequest),
+      agent: httpsAgent
+    });
+
+    const responseText = await response.text();
+    console.log('📥 Response:', responseText);
+
+    let parsedResponse;
+    try {
+      parsedResponse = JSON.parse(responseText);
+    } catch (e) {
+      parsedResponse = { raw: responseText };
+    }
+
+    // Analyze the response
+    const diagnosis = {
+      responseCode: parsedResponse.ResponseCode,
+      responseMessage: parsedResponse.ResponseMessage,
+      hasSessionId: !!parsedResponse.Data?.SESSION_ID,
+      problem: null,
+      solution: null
+    };
+
+    if (parsedResponse.ResponseCode === '30') {
+      diagnosis.problem = 'INVALID_DATA - Request structure is wrong';
+      diagnosis.solution = 'Check required fields or contact HBL for correct format';
+    } else if (parsedResponse.ResponseCode === '188' || parsedResponse.ResponseCode === '02') {
+      diagnosis.problem = 'INVALID_USERNAME_OR_PASSWORD';
+      diagnosis.solution = 'Your USER_ID or PASSWORD is incorrect';
+    } else if (parsedResponse.IsSuccess) {
+      diagnosis.problem = null;
+      diagnosis.solution = '✅ SUCCESS! Your credentials work!';
+    }
+
+    return res.json({
+      success: true,
+      credentials: {
+        userId: minimalRequest.USER_ID,
+        hasPassword: !!minimalRequest.PASSWORD,
+        channel: minimalRequest.CHANNEL
+      },
+      response: parsedResponse,
+      diagnosis,
+      nextSteps: diagnosis.problem 
+        ? [
+            'Contact HBL support',
+            'Verify your credentials',
+            'Ask HBL for a working example with YOUR merchant ID'
+          ]
+        : [
+            'Credentials work!',
+            'The issue is with encryption',
+            'Try encrypting one field at a time'
+          ]
+    });
+
+  } catch (error) {
+    console.error('❌ Test failed:', error);
+    return res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+
+module.exports.testExactPDFFormat = asyncErrorHandler(async (req, res) => {
+  console.log('\n🧪 ========== TESTING EXACT HBL PDF FORMAT ==========\n');
+  
+  try {
+    // EXACT structure from HBL PDF page 8-9 with YOUR credentials
+    const exactRequest = {
+      "USER_ID": process.env.HBLPAY_USER_ID,
+      "PASSWORD": process.env.HBLPAY_PASSWORD,
+      "RETURN_URL": "http://localhost:3000/api/payments/success",
+      "CANCEL_URL": "http://localhost:3000/api/payments/cancel",
+      "CHANNEL": process.env.HBL_CHANNEL,
+      "TYPE_ID": "0",
+      "ORDER": {
+        "DISCOUNT_ON_TOTAL": "20",
+        "SUBTOTAL": "600",
+        "OrderSummaryDescription": [
+          {
+            "ITEM_NAME": "COMPUTER BOOK",
+            "QUANTITY": "1",
+            "UNIT_PRICE": "180",
+            "OLD_PRICE": "210",
+            "CATEGORY": "Test_Category",
+            "SUB_CATEGORY": "Test sUB Category 1"
+          },
+          {
+            "ITEM_NAME": "GUITAR",
+            "QUANTITY": "2",
+            "UNIT_PRICE": "200",
+            "OLD_PRICE": null,
+            "CATEGORY": "Test_Category2",
+            "SUB_CATEGORY": "Test sUB Category2"
+          }
+        ]
+      },
+      "SHIPPING_DETAIL": {
+        "NAME": "DHL SERVICE",
+        "ICON_PATH": null,
+        "DELIEVERY_DAYS": "7",
+        "SHIPPING_COST": "40"
+      },
+      "ADDITIONAL_DATA": {
+        "REFERENCE_NUMBER": "TEST123456789",
+        "CUSTOMER_ID": null,
+        "CURRENCY": "PKR",
+        "BILL_TO_FORENAME": "John",
+        "BILL_TO_SURNAME": "Doe",
+        "BILL_TO_EMAIL": "null@cybersource.com",
+        "BILL_TO_PHONE": "02890888888",
+        "BILL_TO_ADDRESS_LINE": "1 Card Lane",
+        "BILL_TO_ADDRESS_CITY": "My City",
+        "BILL_TO_ADDRESS_STATE": "CA",
+        "BILL_TO_ADDRESS_COUNTRY": "US",
+        "BILL_TO_ADDRESS_POSTAL_CODE": "94043",
+        "SHIP_TO_FORENAME": "John",
+        "SHIP_TO_SURNAME": "Doe",
+        "SHIP_TO_EMAIL": "null@cybersource.com",
+        "SHIP_TO_PHONE": "02890888888",
+        "SHIP_TO_ADDRESS_LINE": "1 Card Lane",
+        "SHIP_TO_ADDRESS_CITY": "My City",
+        "SHIP_TO_ADDRESS_STATE": "CA",
+        "SHIP_TO_ADDRESS_COUNTRY": "US",
+        "SHIP_TO_ADDRESS_POSTAL_CODE": "94043",
+        "MerchantFields": {
+          "MDD1": "mdd1",
+          "MDD2": "mdd2",
+          "MDD3": "mdd3",
+          "MDD4": "mdd4",
+          "MDD5": "mdd5",
+          "MDD6": "mdd6",
+          "MDD7": "mdd7",
+          "MDD8": "mdd8",
+          "MDD9": "mdd9",
+          "MDD10": "mdd10",
+          "MDD11": "mdd11",
+          "MDD12": "mdd12",
+          "MDD13": "mdd13",
+          "MDD14": "mdd14",
+          "MDD15": "mdd15",
+          "MDD16": "mdd16",
+          "MDD17": "mdd17",
+          "MDD18": "mdd18",
+          "MDD19": "mdd19",
+          "MDD20": "mdd20"
+        }
+      }
+    };
+
+    console.log('📤 Sending EXACT PDF format with YOUR credentials...');
+
+    const https = require('https');
+    const httpsAgent = new https.Agent({
+      rejectUnauthorized: false
+    });
+
+    const response = await fetch(process.env.HBL_SANDBOX_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify(exactRequest),
+      agent: httpsAgent
+    });
+
+    const responseText = await response.text();
+    console.log('📥 Response:', responseText);
+
+    let parsedResponse;
+    try {
+      parsedResponse = JSON.parse(responseText);
+    } catch (e) {
+      parsedResponse = { raw: responseText };
+    }
+
+    return res.json({
+      success: true,
+      message: 'Exact PDF format test with YOUR credentials',
+      credentials: {
+        userId: process.env.HBLPAY_USER_ID,
+        channel: process.env.HBL_CHANNEL
+      },
+      response: parsedResponse,
+      analysis: {
+        works: parsedResponse.IsSuccess === true,
+        hasSessionId: !!parsedResponse.Data?.SESSION_ID,
+        responseCode: parsedResponse.ResponseCode,
+        responseMessage: parsedResponse.ResponseMessage,
+        diagnosis: parsedResponse.ResponseCode === '30' 
+          ? '❌ INVALID_DATA - Either wrong credentials OR HBL changed their API format'
+          : parsedResponse.ResponseCode === '188'
+          ? '❌ INVALID_USERNAME_OR_PASSWORD - Credentials are wrong'
+          : parsedResponse.IsSuccess
+          ? '✅ SUCCESS - Credentials and format are correct!'
+          : '❓ Unknown error'
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Test failed:', error);
+    return res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// ============================================================================
+// MINIMAL REQUEST TEST - Remove one field at a time to find the culprit
+// ============================================================================
+
+module.exports.testMinimalFields = asyncErrorHandler(async (req, res) => {
+  console.log('\n🧪 ========== TESTING MINIMAL REQUIRED FIELDS ==========\n');
+  
+  try {
+    const tests = [];
+    
+    // Test 1: Absolute minimum
+    const test1 = {
+      "USER_ID": process.env.HBLPAY_USER_ID,
+      "PASSWORD": process.env.HBLPAY_PASSWORD,
+      "CHANNEL": process.env.HBL_CHANNEL,
+      "TYPE_ID": "0"
+    };
+    
+    // Test 2: Add URLs
+    const test2 = {
+      ...test1,
+      "RETURN_URL": "http://localhost:3000/api/payments/success",
+      "CANCEL_URL": "http://localhost:3000/api/payments/cancel"
+    };
+    
+    // Test 3: Add ORDER
+    const test3 = {
+      ...test2,
+      "ORDER": {
+        "SUBTOTAL": "100.00"
+      }
+    };
+    
+    // Test 4: Add ORDER with items
+    const test4 = {
+      ...test2,
+      "ORDER": {
+        "SUBTOTAL": "100.00",
+        "OrderSummaryDescription": [{
+          "ITEM_NAME": "TEST",
+          "QUANTITY": "1",
+          "UNIT_PRICE": "100.00"
+        }]
+      }
+    };
+    
+    const https = require('https');
+    const httpsAgent = new https.Agent({
+      rejectUnauthorized: false
+    });
+    
+    const testRequests = [
+      { name: 'Test 1: Bare minimum', data: test1 },
+      { name: 'Test 2: With URLs', data: test2 },
+      { name: 'Test 3: With ORDER (no items)', data: test3 },
+      { name: 'Test 4: With ORDER items', data: test4 }
+    ];
+    
+    for (const test of testRequests) {
+      console.log(`\n📋 ${test.name}...`);
+      
+      try {
+        const response = await fetch(process.env.HBL_SANDBOX_API_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify(test.data),
+          agent: httpsAgent
+        });
+        
+        const responseText = await response.text();
+        const parsedResponse = JSON.parse(responseText);
+        
+        tests.push({
+          test: test.name,
+          request: test.data,
+          response: parsedResponse,
+          works: parsedResponse.IsSuccess === true,
+          responseCode: parsedResponse.ResponseCode,
+          responseMessage: parsedResponse.ResponseMessage
+        });
+        
+        console.log(`   Response: ${parsedResponse.ResponseCode} - ${parsedResponse.ResponseMessage}`);
+        
+      } catch (error) {
+        tests.push({
+          test: test.name,
+          error: error.message
+        });
+      }
+    }
+    
+    return res.json({
+      success: true,
+      message: 'Minimal fields test complete',
+      tests,
+      conclusion: tests.find(t => t.works) 
+        ? `✅ Working format found: ${tests.find(t => t.works).test}`
+        : '❌ No working format found - contact HBL support'
+    });
+    
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      error: error.message
     });
   }
 });
