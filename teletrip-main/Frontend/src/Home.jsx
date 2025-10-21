@@ -1,5 +1,4 @@
-import React, { Suspense, lazy } from "react";
-import { useState } from "react";
+import React, { Suspense, lazy, useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import HotelSearchForm from "./components/HotelSearchForm";
 import DestinationCard from "./components/DestinationCard";
@@ -23,6 +22,15 @@ const fadeInUp = {
   }
 };
 
+const fadeInUpMobile = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { 
+    opacity: 1, 
+    y: 0,
+    transition: { duration: 0.4, ease: "easeOut" }
+  }
+};
+
 const staggerContainer = {
   hidden: { opacity: 0 },
   visible: {
@@ -30,6 +38,17 @@ const staggerContainer = {
     transition: {
       staggerChildren: 0.2,
       delayChildren: 0.1
+    }
+  }
+};
+
+const staggerContainerMobile = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0
     }
   }
 };
@@ -43,7 +62,24 @@ const scaleIn = {
   }
 };
 
+const scaleInMobile = {
+  hidden: { opacity: 0, scale: 0.95 },
+  visible: { 
+    opacity: 1, 
+    scale: 1,
+    transition: { duration: 0.3, ease: "easeOut" }
+  }
+};
+
 const Home = () => {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const featuredDestinations = [
     {
@@ -125,27 +161,26 @@ const Home = () => {
 
         {/* Featured Destinations */}
         <motion.section 
-          className="py-16 bg-gray-50"
+          className="py-12 md:py-16 bg-gray-50"
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, amount: 0.2 }}
         >
           <div className="container mx-auto px-4">
             <motion.h2 
-              className="text-3xl font-bold text-center mb-12 underline"
-              variants={fadeInUp}
+              className="text-2xl md:text-3xl font-bold text-center mb-8 md:mb-12 underline"
+              variants={isMobile ? fadeInUpMobile : fadeInUp}
             >
               Our Deals
             </motion.h2>
             <motion.div 
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
-              variants={staggerContainer}
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8"
+              variants={isMobile ? staggerContainerMobile : staggerContainer}
             >
               {featuredDestinations.map((destination, index) => (
                 <motion.div
                   key={destination.id}
-                  variants={scaleIn}
-                  whileHover={{ y: -10, transition: { duration: 0.3 } }}
+                  variants={isMobile ? scaleInMobile : scaleIn}
                 >
                   <DestinationCard
                     name={destination.name}
@@ -180,7 +215,7 @@ const Home = () => {
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, amount: 0.2 }}
-          variants={fadeInUp}
+          variants={isMobile ? fadeInUpMobile : fadeInUp}
         >
           <Accommodation />
         </motion.div>
@@ -188,27 +223,26 @@ const Home = () => {
 
         {/* Testimonials */}
         <motion.section 
-          className="py-16 bg-gray-50"
+          className="py-12 md:py-16 bg-gray-50"
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, amount: 0.2 }}
         >
           <div className="container mx-auto px-4">
             <motion.h2 
-              className="text-3xl font-bold text-center mb-12 underline"
-              variants={fadeInUp}
+              className="text-2xl md:text-3xl font-bold text-center mb-8 md:mb-12 underline"
+              variants={isMobile ? fadeInUpMobile : fadeInUp}
             >
               What Our Customers Say
             </motion.h2>
             <motion.div 
-              className="grid grid-cols-1 md:grid-cols-3 gap-8"
-              variants={staggerContainer}
+              className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8"
+              variants={isMobile ? staggerContainerMobile : staggerContainer}
             >
               {testimonials.map((testimonial) => (
                 <motion.div
                   key={testimonial.id}
-                  variants={scaleIn}
-                  whileHover={{ scale: 1.05, transition: { duration: 0.3 } }}
+                  variants={isMobile ? scaleInMobile : scaleIn}
                 >
                   <TestimonialCard
                     name={testimonial.name}
@@ -225,7 +259,7 @@ const Home = () => {
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, amount: 0.2 }}
-          variants={fadeInUp}
+          variants={isMobile ? fadeInUpMobile : fadeInUp}
         >
           <Services />
         </motion.div>
@@ -233,7 +267,7 @@ const Home = () => {
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, amount: 0.2 }}
-          variants={fadeInUp}
+          variants={isMobile ? fadeInUpMobile : fadeInUp}
         >
           <Row01 />
         </motion.div>

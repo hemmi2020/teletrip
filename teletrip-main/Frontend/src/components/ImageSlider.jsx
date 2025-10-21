@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const ImageSlider = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [itemsPerSlide, setItemsPerSlide] = useState(4);
 
   const images = [
     '/images/1.jpg',
@@ -16,7 +17,17 @@ const ImageSlider = () => {
     '/images/10.jpg',
   ];
 
-  const itemsPerSlide = 4;
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 640) setItemsPerSlide(1);
+      else if (window.innerWidth < 1024) setItemsPerSlide(2);
+      else setItemsPerSlide(4);
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const maxIndex = images.length - itemsPerSlide;
 
   const nextSlide = () => {
@@ -28,12 +39,16 @@ const ImageSlider = () => {
   };
 
   return (
-    <div className="relative w-full max-w-6xl mx-auto overflow-hidden py-6">
+    <div className="relative w-full max-w-6xl mx-auto overflow-hidden py-6 px-2">
       <div className="flex transition-transform duration-500 ease-in-out"
         style={{ transform: `translateX(-${(100 / itemsPerSlide) * currentIndex}%)` }}
       >
         {images.map((src, index) => (
-          <div key={index} className="w-1/4 p-2 flex-shrink-0">
+          <div 
+            key={index} 
+            className="p-2 flex-shrink-0"
+            style={{ width: `${100 / itemsPerSlide}%` }}
+          >
             <img
               src={src}
               alt={`Image ${index + 1}`}
