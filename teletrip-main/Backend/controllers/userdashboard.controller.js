@@ -31,7 +31,8 @@ const getDashboardOverview = asyncErrorHandler(async (req, res) => {
       recentBookingsRaw,
       recentPaymentsRaw,
       totalSpentResult,
-      avgBookingValueResult
+      avgBookingValueResult,
+      pendingPayOnSite
     ] = await Promise.allSettled([
       Booking.countDocuments({ user: userId }),
       Payment.countDocuments({ userId: userId }),
