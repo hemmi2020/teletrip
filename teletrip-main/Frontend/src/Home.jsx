@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Suspense, lazy } from "react";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import HotelSearchForm from "./components/HotelSearchForm";
@@ -49,21 +49,21 @@ const Home = () => {
     {
       id: 1,
       name: "Paris, France",
-      image: "https://placehold.co/600x400",
+      image: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=600&h=400&fit=crop",
       description:
         "Experience the city of love with its iconic landmarks and cuisine.",
     },
     {
       id: 2,
       name: "Bali, Indonesia",
-      image: "https://placehold.co/600x400",
+      image: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=600&h=400&fit=crop",
       description:
         "Relax on pristine beaches and explore lush tropical landscapes.",
     },
     {
       id: 3,
       name: "New York, USA",
-      image: "https://placehold.co/600x400",
+      image: "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=600&h=400&fit=crop",
       description:
         "Discover the city that never sleeps with its vibrant culture.",
     },
@@ -74,7 +74,7 @@ const Home = () => {
       id: 1,
       title: "Summer Getaway",
       discount: "25% OFF",
-      image: "https://placehold.co/800x400",
+      image: "https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=800&h=400&fit=crop",
       description:
         "Book your summer vacation now and get 25% off on selected hotels.",
     },
@@ -82,7 +82,7 @@ const Home = () => {
       id: 2,
       title: "Weekend Escape",
       discount: "Free Breakfast",
-      image: "https://placehold.co/800x400",
+      image: "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&h=400&fit=crop",
       description:
         "Enjoy complimentary breakfast when you book a weekend stay.",
     },
@@ -92,21 +92,21 @@ const Home = () => {
     {
       id: 1,
       name: "Sarah Johnson",
-      image: "https://placehold.co/100x100",
+      image: "https://ui-avatars.com/api/?name=Sarah+Johnson&size=100&background=3b82f6&color=fff",
       rating: 5,
       text: "The booking process was so easy and we found an amazing hotel at a great price!",
     },
     {
       id: 2,
       name: "Michael Brown",
-      image: "https://placehold.co/100x100",
+      image: "https://ui-avatars.com/api/?name=Michael+Brown&size=100&background=10b981&color=fff",
       rating: 4,
       text: "Great selection of hotels and the customer service was excellent.",
     },
     {
       id: 3,
       name: "Emily Davis",
-      image: "https://placehold.co/100x100",
+      image: "https://ui-avatars.com/api/?name=Emily+Davis&size=100&background=8b5cf6&color=fff",
       rating: 5,
       text: "We've used this service for all our trips and have never been disappointed.",
     },
@@ -128,7 +128,7 @@ const Home = () => {
           className="py-16 bg-gray-50"
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
+          viewport={{ once: true, amount: 0.2 }}
         >
           <div className="container mx-auto px-4">
             <motion.h2 
@@ -179,7 +179,7 @@ const Home = () => {
         <motion.div
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
+          viewport={{ once: true, amount: 0.2 }}
           variants={fadeInUp}
         >
           <Accommodation />
@@ -191,7 +191,7 @@ const Home = () => {
           className="py-16 bg-gray-50"
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
+          viewport={{ once: true, amount: 0.2 }}
         >
           <div className="container mx-auto px-4">
             <motion.h2 
@@ -224,7 +224,7 @@ const Home = () => {
         <motion.div
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
+          viewport={{ once: true, amount: 0.2 }}
           variants={fadeInUp}
         >
           <Services />
@@ -232,7 +232,7 @@ const Home = () => {
         <motion.div
           initial="hidden"
           whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
+          viewport={{ once: true, amount: 0.2 }}
           variants={fadeInUp}
         >
           <Row01 />
