@@ -40,7 +40,7 @@ app.use(cors({
         'https://telitrip.com',
         'https://telitrip-frontend.onrender.com',
         'www.telitrip.com',
-      'telitrip.com'
+        'telitrip.com'
     ],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],

@@ -1,5 +1,6 @@
 import React from "react";
 import { useState } from "react";
+import { motion } from "framer-motion";
 import HotelSearchForm from "./components/HotelSearchForm";
 import DestinationCard from "./components/DestinationCard";
 import OfferCard from "./components/OfferCard";
@@ -11,6 +12,36 @@ import Row01 from "./components/Row01";
 import Accommodation from "./components/Accomodation";
 import Services from "./components/Services";
 import Footer from "./components/Footer";
+
+// Animation variants
+const fadeInUp = {
+  hidden: { opacity: 0, y: 60 },
+  visible: { 
+    opacity: 1, 
+    y: 0,
+    transition: { duration: 0.6, ease: "easeOut" }
+  }
+};
+
+const staggerContainer = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.2,
+      delayChildren: 0.1
+    }
+  }
+};
+
+const scaleIn = {
+  hidden: { opacity: 0, scale: 0.8 },
+  visible: { 
+    opacity: 1, 
+    scale: 1,
+    transition: { duration: 0.5, ease: "easeOut" }
+  }
+};
 
 const Home = () => {
 
@@ -93,23 +124,39 @@ const Home = () => {
         {/* Hero Section */}
 
         {/* Featured Destinations */}
-        <section className="py-16 bg-gray-50">
+        <motion.section 
+          className="py-16 bg-gray-50"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-100px" }}
+        >
           <div className="container mx-auto px-4">
-            <h2 className="text-3xl font-bold text-center mb-12 underline">
+            <motion.h2 
+              className="text-3xl font-bold text-center mb-12 underline"
+              variants={fadeInUp}
+            >
               Our Deals
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {featuredDestinations.map((destination) => (
-                <DestinationCard
-                key={destination.id}
-                name={destination.name}
-                image={destination.image}
-                description={destination.description}
+            </motion.h2>
+            <motion.div 
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+              variants={staggerContainer}
+            >
+              {featuredDestinations.map((destination, index) => (
+                <motion.div
+                  key={destination.id}
+                  variants={scaleIn}
+                  whileHover={{ y: -10, transition: { duration: 0.3 } }}
+                >
+                  <DestinationCard
+                    name={destination.name}
+                    image={destination.image}
+                    description={destination.description}
                   />
+                </motion.div>
               ))}
-            </div>
+            </motion.div>
           </div>
-        </section>
+        </motion.section>
         
 
         {/* Special Offers */}
@@ -129,30 +176,67 @@ const Home = () => {
           </div>
         </div>
       </section> */}
-        <Accommodation />
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-100px" }}
+          variants={fadeInUp}
+        >
+          <Accommodation />
+        </motion.div>
         
 
         {/* Testimonials */}
-        <section className="py-16 bg-gray-50">
+        <motion.section 
+          className="py-16 bg-gray-50"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-100px" }}
+        >
           <div className="container mx-auto px-4">
-            <h2 className="text-3xl font-bold text-center mb-12 underline">
+            <motion.h2 
+              className="text-3xl font-bold text-center mb-12 underline"
+              variants={fadeInUp}
+            >
               What Our Customers Say
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            </motion.h2>
+            <motion.div 
+              className="grid grid-cols-1 md:grid-cols-3 gap-8"
+              variants={staggerContainer}
+            >
               {testimonials.map((testimonial) => (
-                <TestimonialCard
+                <motion.div
                   key={testimonial.id}
-                  name={testimonial.name}
-                  image={testimonial.image}
-                  rating={testimonial.rating}
-                  text={testimonial.text}
-                />
+                  variants={scaleIn}
+                  whileHover={{ scale: 1.05, transition: { duration: 0.3 } }}
+                >
+                  <TestimonialCard
+                    name={testimonial.name}
+                    image={testimonial.image}
+                    rating={testimonial.rating}
+                    text={testimonial.text}
+                  />
+                </motion.div>
               ))}
-            </div>
+            </motion.div>
           </div>
-        </section>
-        <Services />
-        <Row01 />
+        </motion.section>
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-100px" }}
+          variants={fadeInUp}
+        >
+          <Services />
+        </motion.div>
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-100px" }}
+          variants={fadeInUp}
+        >
+          <Row01 />
+        </motion.div>
 
         <Footer />
       </div>
