@@ -32,4 +32,20 @@ router.put('/:bookingId', [
 // Cancel booking
 router.put('/:bookingId/cancel', authUser, bookingController.cancelBooking);
 
+// Create activity booking
+router.post('/activity', [
+  body('holder.name').notEmpty().withMessage('Holder name is required'),
+  body('holder.email').isEmail().withMessage('Valid email is required'),
+  body('activities').isArray({ min: 1 }).withMessage('At least one activity is required'),
+], authUser, validateRequest, bookingController.createActivityBooking);
+
+// List bookings with filters
+router.get('/list', authUser, bookingController.listBookings);
+
+// Get booking by reference
+router.get('/reference/:bookingReference', authUser, bookingController.getBookingByReference);
+
+// Generate voucher
+router.get('/:bookingId/voucher', authUser, bookingController.generateVoucher);
+
 module.exports = router;

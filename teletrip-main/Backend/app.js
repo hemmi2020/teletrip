@@ -5,6 +5,8 @@ const connectToDb = require('./db/db');
 const cookieParser = require('cookie-parser');
 const userRoutes = require('./routes/user.route');
 const hotelRoutes = require('./routes/hotel.route.js');   
+const activityRoutes = require('./routes/activity.route');
+const activityContentRoutes = require('./routes/activityContent.route');
 const paymentRoutes = require('./routes/payment.route');
 const bookingRoutes = require('./routes/booking.route');
 const { globalErrorHandler } = require('./middlewares/errorHandler.middleware');
@@ -110,6 +112,8 @@ app.get('/health', (req, res) => {
 // Routes 
 app.use('/users', userRoutes); 
 app.use('/api', hotelRoutes);
+app.use('/api/activities', activityRoutes);
+app.use('/api/activity-content', activityContentRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/user', userDashboardRoutes);

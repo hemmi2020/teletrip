@@ -125,7 +125,6 @@ const Checkout = () => {
   };
 
   const handlePayment = async () => {
-    // Check authentication first
     const authData = checkAuthentication();
     if (!authData) {
       setError('Please login to continue with your booking.');
@@ -142,43 +141,87 @@ const Checkout = () => {
     setSuccess('');
 
     try {
-      console.log('🚀 Starting checkout process...');
+      console.log('🚀 Starting HBLPay checkout process...');
 
-      // Step 1: Create booking with exact structure your backend expects
       const firstItem = checkoutItems[0];
-      const bookingPayload = {
-        hotelName: firstItem?.hotelName || 'Hotel Booking',
-        roomName: firstItem?.roomName || 'Standard Room',
-        location: firstItem?.location || 'Karachi, Pakistan',
-        checkIn: firstItem?.checkIn || new Date().toISOString(),
-        checkOut: firstItem?.checkOut || new Date(Date.now() + 86400000).toISOString(),
-        guests: firstItem?.guests || firstItem?.adults || 1,
-        totalAmount: parseFloat(totalAmount),
-        boardType: firstItem?.boardName || 'Room Only',
-        rateClass: firstItem?.rateClass || 'NOR'
-      };
-
-      console.log('📋 Creating booking with payload:', bookingPayload);
-
-      const bookingResponse = await axios.post(
-        `${import.meta.env.VITE_BASE_URL}/api/bookings/create`,
-        bookingPayload,
-        {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-            'Content-Type': 'application/json'
+      const isActivity = firstItem?.type === 'activity';
+      
+      let bookingResponse;
+      
+      if (isActivity) {
+        const activityBookingPayload = {
+          holder: {
+            name: `${billingInfo.firstName} ${billingInfo.lastName}`,
+            email: billingInfo.email,
+            phone: billingInfo.phone
+          },
+          activities: checkoutItems.map(item => ({
+            code: item.activityCode,
+            modality: item.modalityCode,
+            name: item.name,
+            date: item.checkIn,
+            paxes: Array(item.adults || 1).fill({ age: 30 }),
+            price: item.price,
+            currency: item.currency
+          })),
+          clientReference: `CLIENT_${Date.now()}`
+        };
+        
+        console.log('📋 Creating activity booking:', activityBookingPayload);
+        
+        bookingResponse = await axios.post(
+          `${import.meta.env.VITE_BASE_URL}/api/bookings/activity`,
+          activityBookingPayload,
+          {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`,
+              'Content-Type': 'application/json'
+            }
           }
-        }
-      );
+        );
+      } else {
+        const hotelBookingPayload = {
+          hotelName: firstItem?.hotelName || 'Hotel Booking',
+          roomName: firstItem?.roomName || 'Standard Room',
+          location: firstItem?.location || 'Karachi, Pakistan',
+          checkIn: firstItem?.checkIn || new Date().toISOString(),
+          checkOut: firstItem?.checkOut || new Date(Date.now() + 86400000).toISOString(),
+          guests: firstItem?.guests || firstItem?.adults || 1,
+          totalAmount: parseFloat(totalAmount),
+          boardType: firstItem?.boardName || 'Room Only',
+          rateClass: firstItem?.rateClass || 'NOR'
+        };
+        
+        console.log('📋 Creating hotel booking:', hotelBookingPayload);
+        
+        bookingResponse = await axios.post(
+          `${import.meta.env.VITE_BASE_URL}/api/bookings/create`,
+          hotelBookingPayload,
+          {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+      }
 
-      const bookingId = bookingResponse.data.data?._id;
+      const bookingId = bookingResponse.data.data?.booking?._id || 
+                        bookingResponse.data.data?._id || 
+                        bookingResponse.data.data?.id || 
+                        bookingResponse.data.data?.bookingId ||
+                        bookingResponse.data._id || 
+                        bookingResponse.data.id ||
+                        bookingResponse.data.bookingId;
+      
       if (!bookingId) {
+        console.error('❌ No booking ID found:', bookingResponse.data);
         throw new Error('No booking ID returned from booking creation');
       }
 
       console.log('✅ Booking created with ID:', bookingId);
 
-      // Step 2: Initiate payment with exact structure your backend expects
+      // Step 2: Initiate HBLPay payment
       const paymentPayload = {
         userData: {
           firstName: billingInfo.firstName.trim(),
@@ -192,14 +235,16 @@ const Checkout = () => {
           postalCode: billingInfo.postalCode || ''
         },
         bookingData: {
-          hotelName: firstItem?.hotelName || 'Hotel Booking',
+          hotelName: isActivity ? firstItem.name : (firstItem?.hotelName || 'Hotel Booking'),
           items: checkoutItems.map(item => ({
-            name: item.hotelName || 'Hotel Booking',
+            name: item.type === 'activity' ? item.name : (item.hotelName || 'Hotel Booking'),
             quantity: 1,
             price: parseFloat(item.price || item.totalPrice || 0)
           })),
           itinerary: checkoutItems.map(item => 
-            `${item.hotelName} - ${item.checkIn} to ${item.checkOut}`
+            item.type === 'activity' 
+              ? `${item.name} - ${item.from} to ${item.to}`
+              : `${item.hotelName} - ${item.checkIn} to ${item.checkOut}`
           ).join('; ')
         },
         amount: parseFloat(totalAmount),
@@ -282,6 +327,17 @@ const Checkout = () => {
 
   // 3. ADD THIS NEW FUNCTION (keep your existing handlePayment function)
 const handlePayOnSiteBooking = async () => {
+  const authData = checkAuthentication();
+  if (!authData) {
+    setError('Please login to continue with your booking.');
+    setShowAuthModal(true);
+    return;
+  }
+
+  if (!validateForm()) {
+    return;
+  }
+
   setIsProcessing(true);
   setError('');
   setSuccess('');
@@ -289,55 +345,84 @@ const handlePayOnSiteBooking = async () => {
   try {
     console.log('🏨 Creating Pay on Site booking...');
 
-    // Check authentication first
-    const authData = checkAuthentication();
-    if (!authData) {
-      setError('Please login to continue with your booking.');
-      setShowAuthModal(true);
-      setIsProcessing(false);
-      return;
-    }
-
-    if (!validateForm()) {
-      setIsProcessing(false);
-      return;
-    }
-
-    // Step 1: Create booking
     const firstItem = checkoutItems[0];
-    const bookingPayload = {
-      hotelName: firstItem?.hotelName || 'Hotel Booking',
-      roomName: firstItem?.roomName || 'Standard Room',
-      location: firstItem?.location || 'Karachi, Pakistan',
-      checkIn: firstItem?.checkIn || new Date().toISOString(),
-      checkOut: firstItem?.checkOut || new Date(Date.now() + 86400000).toISOString(),
-      guests: firstItem?.guests || firstItem?.adults || 1,
-      totalAmount: parseFloat(totalAmount),
-      boardType: firstItem?.boardName || 'Room Only',
-      rateClass: firstItem?.rateClass || 'NOR'
-    };
-
-    console.log('📋 Creating booking with payload:', bookingPayload);
-
-    const bookingResponse = await axios.post(
-      `${import.meta.env.VITE_BASE_URL}/api/bookings/create`,
-      bookingPayload,
-      {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json'
+    const isActivity = firstItem?.type === 'activity';
+    
+    let bookingResponse;
+    
+    if (isActivity) {
+      const activityBookingPayload = {
+        holder: {
+          name: `${billingInfo.firstName} ${billingInfo.lastName}`,
+          email: billingInfo.email,
+          phone: billingInfo.phone
+        },
+        activities: checkoutItems.map(item => ({
+          code: item.activityCode,
+          modality: item.modalityCode,
+          name: item.name,
+          date: item.checkIn,
+          paxes: Array(item.adults || 1).fill({ age: 30 }),
+          price: item.price,
+          currency: item.currency
+        })),
+        clientReference: `CLIENT_${Date.now()}`
+      };
+      
+      console.log('📤 Sending activity booking:', activityBookingPayload);
+      
+      bookingResponse = await axios.post(
+        `${import.meta.env.VITE_BASE_URL}/api/bookings/activity`,
+        activityBookingPayload,
+        {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'application/json'
+          }
         }
-      }
-    );
-
-    const bookingId = bookingResponse.data.data?._id;
-    if (!bookingId) {
-      throw new Error('No booking ID returned from booking creation');
+      );
+      
+      console.log('📥 Activity booking response:', bookingResponse.data);
+    } else {
+      const hotelBookingPayload = {
+        hotelName: firstItem?.hotelName || 'Hotel Booking',
+        roomName: firstItem?.roomName || 'Standard Room',
+        location: firstItem?.location || 'Karachi, Pakistan',
+        checkIn: firstItem?.checkIn || new Date().toISOString(),
+        checkOut: firstItem?.checkOut || new Date(Date.now() + 86400000).toISOString(),
+        guests: firstItem?.guests || firstItem?.adults || 1,
+        totalAmount: parseFloat(totalAmount),
+        boardType: firstItem?.boardName || 'Room Only',
+        rateClass: firstItem?.rateClass || 'NOR'
+      };
+      
+      bookingResponse = await axios.post(
+        `${import.meta.env.VITE_BASE_URL}/api/bookings/create`,
+        hotelBookingPayload,
+        {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
     }
 
-    console.log('✅ Booking created with ID:', bookingId);
+    const bookingId = bookingResponse.data.data?.booking?._id || 
+                      bookingResponse.data.data?._id || 
+                      bookingResponse.data.data?.id || 
+                      bookingResponse.data.data?.bookingId ||
+                      bookingResponse.data._id || 
+                      bookingResponse.data.id ||
+                      bookingResponse.data.bookingId;
+    
+    if (!bookingId) {
+      console.error('❌ No booking ID found:', bookingResponse.data);
+      throw new Error('No booking ID returned from server');
+    }
 
-    // Step 2: Create Pay on Site payment record
+    console.log('✅ Booking created:', bookingId);
+
     const payOnSitePayload = {
       userData: {
         firstName: billingInfo.firstName.trim(),
@@ -351,23 +436,23 @@ const handlePayOnSiteBooking = async () => {
         postalCode: billingInfo.postalCode || ''
       },
       bookingData: {
-        hotelName: firstItem?.hotelName || 'Hotel Booking',
-        roomName: firstItem?.roomName || 'Standard Room',
-        checkIn: firstItem?.checkIn,
-        checkOut: firstItem?.checkOut,
-        guests: firstItem?.guests || 1,
+        hotelName: firstItem.type === 'activity' ? firstItem.name : (firstItem?.hotelName || 'Hotel Booking'),
+        roomName: firstItem.type === 'activity' ? firstItem.modalityName : (firstItem?.roomName || 'Standard Room'),
+        checkIn: firstItem.type === 'activity' ? firstItem.from : firstItem?.checkIn,
+        checkOut: firstItem.type === 'activity' ? firstItem.to : firstItem?.checkOut,
+        guests: firstItem?.guests || firstItem?.adults || 1,
         items: checkoutItems.map(item => ({
-          name: item.hotelName || 'Hotel Booking',
+          name: item.type === 'activity' ? item.name : (item.hotelName || 'Hotel Booking'),
           quantity: 1,
           price: parseFloat(item.price || item.totalPrice || 0)
         }))
       },
       amount: parseFloat(totalAmount),
-      currency: 'PKR',
+      currency: checkoutItems[0]?.currency || 'PKR',
       bookingId: bookingId
     };
 
-    console.log('💳 Creating Pay on Site payment record...');
+    console.log('💳 Creating Pay on Site payment...');
 
     const paymentResponse = await axios.post(
       `${import.meta.env.VITE_BASE_URL}/api/payments/pay-on-site`,
@@ -380,13 +465,12 @@ const handlePayOnSiteBooking = async () => {
       }
     );
 
-    console.log('✅ Pay on Site payment created:', paymentResponse.data);
+    console.log('✅ Pay on Site payment created');
 
     if (paymentResponse.data.success) {
       setSuccess('Booking confirmed! Payment will be collected on site.');
       clearCart();
 
-      // Navigate to success page after short delay
       setTimeout(() => {
         navigate('/payment-success-onsite', {
           state: {
@@ -398,20 +482,20 @@ const handlePayOnSiteBooking = async () => {
             currency: paymentResponse.data.data.currency,
             message: paymentResponse.data.data.message,
             instructions: paymentResponse.data.data.instructions,
-            bookingDetails: paymentResponse.data.data.bookingDetails
+            bookingDetails: paymentResponse.data.data.bookingDetails,
+            bookingType: firstItem.type === 'activity' ? 'activity' : 'hotel'
           }
         });
       }, 1500);
     }
 
   } catch (error) {
-    console.error('❌ Pay on Site booking error:', error);
-    console.error('❌ Error response:', error.response?.data);
+    console.error('❌ Pay on Site error:', error);
     
     let errorMessage = 'Booking failed. Please try again.';
     
     if (error.response?.status === 401) {
-      errorMessage = 'Your session has expired. Please login again.';
+      errorMessage = 'Session expired. Please login again.';
       localStorage.removeItem('token');
       localStorage.removeItem('userData');
       setShowAuthModal(true);
@@ -677,18 +761,29 @@ const handlePaymentSubmit = () => {
       
       <div className="space-y-4 mb-6">
         {checkoutItems.map((item, index) => (
-          <div key={index} className="flex justify-between items-start border-b pb-4">
+          <div key={index} className="flex gap-4 border-b pb-4">
+            {item.image && (
+              <img
+                src={item.image}
+                alt={item.type === 'activity' ? item.name : item.hotelName}
+                className="w-20 h-20 object-cover rounded"
+                onError={(e) => e.target.src = 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'}
+              />
+            )}
             <div className="flex-1">
-              <h3 className="font-medium text-gray-900">{item.hotelName}</h3>
-              <p className="text-sm text-gray-600">{item.roomName}</p>
+              <h3 className="font-medium text-gray-900">{item.type === 'activity' ? item.name : item.hotelName}</h3>
+              <p className="text-sm text-gray-600">{item.type === 'activity' ? item.modalityName : item.roomName}</p>
               <div className="flex items-center text-xs text-gray-500 mt-1">
                 <Calendar className="w-3 h-3 mr-1" />
-                {new Date(item.checkIn).toLocaleDateString()} - {new Date(item.checkOut).toLocaleDateString()}
+                {item.type === 'activity' 
+                  ? `${item.from} - ${item.to}`
+                  : `${new Date(item.checkIn).toLocaleDateString()} - ${new Date(item.checkOut).toLocaleDateString()}`
+                }
               </div>
             </div>
             <div className="text-right">
               <p className="font-semibold text-gray-900">
-                PKR {item.price.toLocaleString()}
+                {item.currency || 'PKR'} {parseFloat(item.price || item.totalPrice).toFixed(2)}
               </p>
             </div>
           </div>
@@ -699,7 +794,9 @@ const handlePaymentSubmit = () => {
       <div className="border-t pt-4 mb-6">
         <div className="flex justify-between items-center text-lg font-bold">
           <span>Total Amount:</span>
-          <span className="text-blue-600">PKR {totalAmount.toLocaleString()}</span>
+          <span className="text-blue-600">
+            {checkoutItems[0]?.currency || 'PKR'} {parseFloat(totalAmount).toFixed(2)}
+          </span>
         </div>
       </div>
 
@@ -740,7 +837,7 @@ const handlePaymentSubmit = () => {
             {paymentMethod === 'hblpay' ? (
               <>
                 <Lock className="w-4 h-4" />
-                <span>Pay with HBLPay - PKR {totalAmount.toLocaleString()}</span>
+                <span>Pay with HBLPay - {checkoutItems[0]?.currency || 'PKR'} {parseFloat(totalAmount).toFixed(2)}</span>
               </>
             ) : (
               <>

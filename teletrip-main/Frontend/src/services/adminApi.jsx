@@ -153,6 +153,39 @@ export const AdminDashboardAPI = {
     }
   },
 
+  cancelBooking: async (bookingId) => {
+    try {
+      const token = localStorage.getItem('adminToken');
+      const response = await axios.put(
+        `${API_BASE_URL}/api/bookings/${bookingId}/cancel`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      return { success: true, data: response.data.data };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.response?.data?.message || 'Failed to cancel booking' 
+      };
+    }
+  },
+
+  generateVoucher: async (bookingId) => {
+    try {
+      const token = localStorage.getItem('adminToken');
+      const response = await axios.get(
+        `${API_BASE_URL}/api/bookings/${bookingId}/voucher`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      return { success: true, data: response.data.data };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.response?.data?.message || 'Failed to generate voucher' 
+      };
+    }
+  },
+
   // ========== HOTEL MANAGEMENT ==========
   getAllHotels: async (filters = {}) => {
     try {

@@ -786,13 +786,12 @@ export const SlideOutCart = ({ isOpen, onClose, onProceedToCheckout }) => {
     onClose();
   };
 
-  // Calculate nights between dates
   const calculateNights = (checkIn, checkOut) => {
     const start = new Date(checkIn);
     const end = new Date(checkOut);
     const diffTime = Math.abs(end - start);
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
+    return diffDays || 1;
   };
 
   // Format date
@@ -897,15 +896,15 @@ export const SlideOutCart = ({ isOpen, onClose, onProceedToCheckout }) => {
                       key={index}
                       className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow"
                     >
-                      {/* Hotel Header */}
+                      {/* Item Header */}
                       <div className="bg-gray-50 px-3 py-2 flex items-center justify-between border-b">
                         <div className="flex items-center gap-2 flex-1 min-w-0">
                           <div className="w-8 h-8 bg-blue-100 rounded flex items-center justify-center flex-shrink-0">
-                            <span className="text-lg">🏨</span>
+                            <span className="text-lg">{item.type === 'activity' ? '🎭' : '🏨'}</span>
                           </div>
                           <div className="flex-1 min-w-0">
                             <h3 className="font-bold text-sm sm:text-base text-gray-900 truncate">
-                              {item.hotelName}
+                              {item.type === 'activity' ? item.name : item.hotelName}
                             </h3>
                             {item.location && (
                               <div className="flex items-center gap-1 text-xs text-gray-500">
@@ -928,24 +927,30 @@ export const SlideOutCart = ({ isOpen, onClose, onProceedToCheckout }) => {
                         </button>
                       </div>
 
-                      {/* Room Details */}
+                      {/* Details */}
                       <div className="p-3 space-y-2">
-                        {/* Room Type */}
+                        {/* Type */}
                         <div className="text-sm">
-                          <span className="font-medium text-gray-900">{item.roomType || '1 x Room'}</span>
+                          <span className="font-medium text-gray-900">
+                            {item.type === 'activity' ? item.modalityName : (item.roomType || '1 x Room')}
+                          </span>
                         </div>
 
-                        {/* Stay Details */}
+                        {/* Details */}
                         <div className="flex flex-wrap items-center gap-2 text-xs text-gray-600">
-                          <span className="bg-gray-100 px-2 py-1 rounded">
-                            {item.mealPlan || 'Room only (RO)'}
-                          </span>
+                          {item.type !== 'activity' && (
+                            <span className="bg-gray-100 px-2 py-1 rounded">
+                              {item.mealPlan || 'Room only (RO)'}
+                            </span>
+                          )}
                           <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded font-medium">
-                            {nights} {nights === 1 ? 'Night' : 'Nights'}
+                            {nights} {nights === 1 ? 'Day' : 'Days'}
                           </span>
-                          <span className="bg-gray-100 px-2 py-1 rounded">
-                            {item.adults || 2} {item.adults === 1 ? 'Adult' : 'Adults'}
-                          </span>
+                          {item.type !== 'activity' && (
+                            <span className="bg-gray-100 px-2 py-1 rounded">
+                              {item.adults || 2} {item.adults === 1 ? 'Adult' : 'Adults'}
+                            </span>
+                          )}
                         </div>
 
                         {/* Rate Class Badge */}
@@ -979,12 +984,12 @@ export const SlideOutCart = ({ isOpen, onClose, onProceedToCheckout }) => {
                               )}
                               <div className="flex items-baseline gap-1">
                                 <span className="text-lg sm:text-xl font-bold text-gray-900">
-                                  AED {totalPrice.toFixed(2)}
+                                  {item.currency || 'AED'} {totalPrice.toFixed(2)}
                                 </span>
                                 <span className="text-xs text-gray-500">total</span>
                               </div>
                               <p className="text-xs text-gray-500 mt-0.5">
-                                AED {item.price.toFixed(2)} per night
+                                {item.currency || 'AED'} {item.price.toFixed(2)} per {item.type === 'activity' ? 'person' : 'night'}
                               </p>
                             </div>
                           </div>

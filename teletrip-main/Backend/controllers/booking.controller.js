@@ -134,6 +134,133 @@ module.exports.createBooking = asyncErrorHandler(async (req, res) => {
   }
 });
 
+// Create activity booking
+module.exports.createActivityBooking = asyncErrorHandler(async (req, res) => {
+  const { holder, activities, clientReference } = req.body;
+  const userId = req.user._id;
+
+  if (!holder || !activities || activities.length === 0) {
+    return ApiResponse.badRequest(res, 'Holder info and activities are required');
+  }
+
+  const bookingReference = generateBookingReference('activity');
+  const totalAmount = activities.reduce((sum, act) => sum + (act.price || 0), 0);
+
+  const bookingData = {
+    user: userId,
+    bookingType: 'activity',
+    bookingReference,
+    status: 'pending',
+    
+    pricing: {
+      basePrice: totalAmount,
+      totalAmount,
+      currency: activities[0]?.currency || 'AED',
+      taxes: 0,
+      fees: 0,
+      discounts: 0
+    },
+    
+    guestInfo: {
+      primaryGuest: {
+        firstName: holder.name?.split(' ')[0] || holder.name,
+        lastName: holder.name?.split(' ').slice(1).join(' ') || '',
+        email: holder.email,
+        phone: holder.phone
+      },
+      totalGuests: {
+        adults: activities.reduce((sum, act) => sum + (act.paxes?.length || 1), 0),
+        children: 0,
+        infants: 0
+      }
+    },
+    
+    payment: {
+      status: 'pending',
+      method: null,
+      paidAmount: 0
+    },
+    
+    travelDates: {
+      departureDate: new Date(activities[0]?.date),
+      returnDate: new Date(activities[activities.length - 1]?.date),
+      duration: 1
+    },
+    
+    source: {
+      platform: 'web'
+    },
+    
+    backup: {
+      originalBookingData: {
+        holder,
+        activities,
+        clientReference
+      }
+    }
+  };
+
+  try {
+    const booking = await bookingModel.create(bookingData);
+    
+    try {
+      await notificationService.sendBookingNotification(
+        userId,
+        'bookingCreated',
+        { ...booking.toObject(), userDetails: req.user }
+      );
+    } catch (notificationError) {
+      console.log('Notification failed:', notificationError.message);
+    }
+
+    return ApiResponse.created(res, {
+      booking,
+      bookingReference: booking.bookingReference,
+      status: 'pending',
+      voucher: {
+        reference: booking.bookingReference,
+        activities: activities.map(a => ({
+          code: a.code,
+          name: a.name,
+          date: a.date,
+          paxes: a.paxes
+        }))
+      }
+    }, 'Activity booking created successfully');
+    
+  } catch (error) {
+    console.error('Activity booking creation error:', error);
+    
+    if (error.name === 'ValidationError') {
+      const validationErrors = Object.keys(error.errors).map(key => ({
+        field: key,
+        message: error.errors[key].message
+      }));
+      
+      return ApiResponse.badRequest(res, 'Validation failed', validationErrors);
+    }
+    
+    throw error;
+  }
+});
+
+// Get booking by reference
+module.exports.getBookingByReference = asyncErrorHandler(async (req, res) => {
+  const { bookingReference } = req.params;
+  const userId = req.user._id;
+
+  const booking = await bookingModel.findOne({
+    bookingReference,
+    user: userId
+  }).lean();
+
+  if (!booking) {
+    return ApiResponse.notFound(res, 'Booking not found');
+  }
+
+  return ApiResponse.success(res, booking, 'Booking retrieved successfully');
+});
+
 // Helper function to generate booking reference
 function generateBookingReference(type) {
   const prefix = type.charAt(0).toUpperCase();
@@ -269,8 +396,8 @@ module.exports.cancelBooking = asyncErrorHandler(async (req, res) => {
   const userId = req.user._id;
 
   const booking = await bookingModel.findOne({
-    $or: [{ _id: bookingId }, { bookingReference: bookingId }], // ✅ Changed to bookingReference
-    user: userId // ✅ Changed from userId to user
+    $or: [{ _id: bookingId }, { bookingReference: bookingId }],
+    user: userId
   });
 
   if (!booking) {
@@ -285,11 +412,17 @@ module.exports.cancelBooking = asyncErrorHandler(async (req, res) => {
     return ApiResponse.badRequest(res, 'Cannot cancel completed booking');
   }
 
+  // Calculate cancellation fee
+  const cancellationFee = calculateCancellationFee(booking);
+  const refundAmount = booking.pricing.totalAmount - cancellationFee;
+
   // Update booking status
   booking.status = 'cancelled';
   if (!booking.cancellation) booking.cancellation = {};
   booking.cancellation.cancelledAt = new Date();
   booking.cancellation.cancelledBy = userId;
+  booking.cancellation.cancellationFee = cancellationFee;
+  booking.cancellation.refundAmount = refundAmount;
   
   await booking.save();
 
@@ -301,19 +434,17 @@ module.exports.cancelBooking = asyncErrorHandler(async (req, res) => {
     });
     
     if (payment) {
-      // Create refund record
       await paymentModel.create({
         userId,
         bookingId: booking._id,
         paymentId: `REF_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        amount: -payment.amount,
+        amount: -refundAmount,
         method: 'Refund',
         status: 'completed',
         transactionId: `refund_${payment.transactionId}`,
         currency: payment.currency
       });
 
-      // Update payment status
       payment.status = 'refunded'; 
       await payment.save();
 
@@ -322,7 +453,6 @@ module.exports.cancelBooking = asyncErrorHandler(async (req, res) => {
     }
   }
 
-  // Send cancellation notification
   try {
     await notificationService.sendBookingNotification(
       userId, 
@@ -333,5 +463,104 @@ module.exports.cancelBooking = asyncErrorHandler(async (req, res) => {
     console.log('Notification failed:', notificationError.message);
   }
 
-  return ApiResponse.success(res, booking, 'Booking cancelled successfully');
+  return ApiResponse.success(res, {
+    booking,
+    cancellationFee,
+    refundAmount
+  }, 'Booking cancelled successfully');
+});
+
+// Calculate cancellation fee
+function calculateCancellationFee(booking) {
+  const now = new Date();
+  const departureDate = booking.travelDates?.departureDate;
+  
+  if (!departureDate) return 0;
+  
+  const daysUntilDeparture = Math.ceil((new Date(departureDate) - now) / (1000 * 60 * 60 * 24));
+  const totalAmount = booking.pricing.totalAmount;
+  
+  // Cancellation policy: 
+  // - More than 7 days: 10% fee
+  // - 3-7 days: 25% fee
+  // - 1-2 days: 50% fee
+  // - Less than 24 hours: 100% fee
+  
+  if (daysUntilDeparture > 7) return totalAmount * 0.1;
+  if (daysUntilDeparture >= 3) return totalAmount * 0.25;
+  if (daysUntilDeparture >= 1) return totalAmount * 0.5;
+  return totalAmount;
+}
+
+// Generate voucher
+module.exports.generateVoucher = asyncErrorHandler(async (req, res) => {
+  const { bookingId } = req.params;
+  const userId = req.user._id;
+
+  const booking = await bookingModel.findOne({
+    $or: [{ _id: bookingId }, { bookingReference: bookingId }],
+    user: userId
+  }).populate('user', 'fullname email phone');
+
+  if (!booking) {
+    return ApiResponse.notFound(res, 'Booking not found');
+  }
+
+  if (booking.status !== 'confirmed' && booking.status !== 'completed') {
+    return ApiResponse.badRequest(res, 'Voucher only available for confirmed bookings');
+  }
+
+  const voucher = {
+    bookingReference: booking.bookingReference,
+    bookingType: booking.bookingType,
+    status: booking.status,
+    guestName: `${booking.guestInfo?.primaryGuest?.firstName || ''} ${booking.guestInfo?.primaryGuest?.lastName || ''}`.trim(),
+    email: booking.guestInfo?.primaryGuest?.email,
+    phone: booking.guestInfo?.primaryGuest?.phone,
+    activities: booking.backup?.originalBookingData?.activities || [],
+    travelDates: booking.travelDates,
+    totalAmount: booking.pricing.totalAmount,
+    currency: booking.pricing.currency,
+    generatedAt: new Date()
+  };
+
+  return ApiResponse.success(res, voucher, 'Voucher generated successfully');
+});
+
+// List bookings with filters
+module.exports.listBookings = asyncErrorHandler(async (req, res) => {
+  const userId = req.user._id;
+  const { from, to, startDate, endDate, status, page = 1, limit = 10 } = req.query;
+
+  const query = { user: userId };
+  
+  if (from || to) {
+    query['travelDates.departureDate'] = {};
+    if (from) query['travelDates.departureDate'].$gte = new Date(from);
+    if (to) query['travelDates.departureDate'].$lte = new Date(to);
+  }
+  
+  if (startDate || endDate) {
+    query.createdAt = {};
+    if (startDate) query.createdAt.$gte = new Date(startDate);
+    if (endDate) query.createdAt.$lte = new Date(endDate);
+  }
+  
+  if (status) query.status = status;
+
+  const bookings = await bookingModel
+    .find(query)
+    .sort({ createdAt: -1 })
+    .limit(limit * 1)
+    .skip((page - 1) * limit)
+    .lean();
+
+  const total = await bookingModel.countDocuments(query);
+
+  return ApiResponse.paginated(res, bookings, {
+    page: parseInt(page),
+    limit: parseInt(limit),
+    total,
+    pages: Math.ceil(total / limit)
+  });
 });

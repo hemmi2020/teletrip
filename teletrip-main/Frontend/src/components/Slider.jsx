@@ -97,7 +97,7 @@ const Slider = () => {
           ))}
 
           {/* Hotel Search Form - CRITICAL FIX: Position at bottom, NOT overlapping header */}
-          <div className="absolute bottom-8 sm:bottom-12 md:bottom-16 lg:bottom-20 left-1/2 transform -translate-x-1/2 w-full max-w-7xl px-4 sm:px-6 lg:px-8 z-40">
+          <div className="absolute  bottom-8 sm:bottom-12 md:bottom-16 lg:bottom-20 left-1/2 transform -translate-x-1/2 w-full max-w-7xl px-4 sm:px-6 lg:px-8 z-40">
             <HotelSearchForm />
           </div>
 

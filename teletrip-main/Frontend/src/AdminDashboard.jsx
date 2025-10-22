@@ -287,16 +287,50 @@ const AdminDashboard = () => {
   // FIXED: Complete booking action handler
   const handleBookingAction = async (bookingId, action, notes = '') => {
     try {
-      const result = await AdminDashboardAPI.updateBookingStatus(bookingId, {
-        status: action,
-        notes: notes
-      });
-      
-      if (result.success) {
-        showToast(`Booking ${action} successfully`, 'success');
-        loadData();
+      if (action === 'cancel') {
+        if (!window.confirm('Cancel this booking? Cancellation fees may apply.')) return;
+        
+        const result = await AdminDashboardAPI.cancelBooking(bookingId);
+        if (result.success) {
+          showToast(`Booking cancelled. Refund: ${result.data.refundAmount}`, 'success');
+          loadData();
+        } else {
+          showToast(result.error, 'error');
+        }
+      } else if (action === 'voucher') {
+        const result = await AdminDashboardAPI.generateVoucher(bookingId);
+        if (result.success) {
+          const voucher = result.data;
+          const voucherText = `
+BOOKING VOUCHER
+================
+Ref: ${voucher.bookingReference}
+Guest: ${voucher.guestName}
+Email: ${voucher.email}
+Amount: ${voucher.currency} ${voucher.totalAmount}
+          `;
+          const blob = new Blob([voucherText], { type: 'text/plain' });
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `voucher-${voucher.bookingReference}.txt`;
+          a.click();
+          showToast('Voucher downloaded', 'success');
+        } else {
+          showToast(result.error, 'error');
+        }
       } else {
-        showToast(result.error, 'error');
+        const result = await AdminDashboardAPI.updateBookingStatus(bookingId, {
+          status: action,
+          notes: notes
+        });
+        
+        if (result.success) {
+          showToast(`Booking ${action} successfully`, 'success');
+          loadData();
+        } else {
+          showToast(result.error, 'error');
+        }
       }
     } catch (error) {
       showToast('Booking action failed', 'error');
@@ -642,7 +676,25 @@ const AdminDashboard = () => {
                       <Check className="w-4 h-4" />
                     </button>
                   )}
-                  {activeTab !== 'support' && activeTab !== 'payments' && (
+                  {activeTab === 'bookings' && displayStatus === 'confirmed' && (
+                    <>
+                      <button 
+                        onClick={() => handleBookingAction(item._id, 'voucher')}
+                        className="text-purple-600 hover:text-purple-800"
+                        title="Download Voucher"
+                      >
+                        <Download className="w-4 h-4" />
+                      </button>
+                      <button 
+                        onClick={() => handleBookingAction(item._id, 'cancel')}
+                        className="text-red-600 hover:text-red-800"
+                        title="Cancel Booking"
+                      >
+                        <XCircle className="w-4 h-4" />
+                      </button>
+                    </>
+                  )}
+                  {activeTab !== 'support' && activeTab !== 'payments' && activeTab !== 'bookings' && (
                     <button 
                       className="text-green-600 hover:text-green-800"
                       title="Approve"
@@ -650,12 +702,14 @@ const AdminDashboard = () => {
                       <Check className="w-4 h-4" />
                     </button>
                   )}
-                  <button 
-                    className="text-red-600 hover:text-red-800"
-                    title="Delete"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  {activeTab !== 'bookings' && (
+                    <button 
+                      className="text-red-600 hover:text-red-800"
+                      title="Delete"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
               </td>
             </tr>

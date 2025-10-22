@@ -16,7 +16,8 @@ const PaymentSuccessOnSite = () => {
     currency = 'PKR',
     message,
     instructions = [],
-    bookingDetails = {}
+    bookingDetails = {},
+    bookingType = 'hotel'
   } = bookingData;
 
   return (
@@ -66,7 +67,7 @@ const PaymentSuccessOnSite = () => {
 
               {bookingDetails.hotelName && (
                 <div className="flex justify-between items-center py-2 border-b">
-                  <span className="text-gray-600">Hotel</span>
+                  <span className="text-gray-600">{bookingType === 'activity' ? 'Activity' : 'Hotel'}</span>
                   <span className="font-medium text-gray-900">{bookingDetails.hotelName}</span>
                 </div>
               )}

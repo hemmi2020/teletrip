@@ -9,6 +9,8 @@ import Login from './Login';
 import Signup from './Signup';
 import HotelSearchResults from './HotelSearchResults';
 import HotelDetails from './HotelDetails';
+import ActivitySearchResults from './ActivitySearchResults';
+import ActivityDetails from './ActivityDetails';
 import Checkout from './Checkout';
 import AccountDashboard from './AccountDashboard';
 import PaymentSuccess from './components/PaymentSuccess';
@@ -75,6 +77,8 @@ const App = () => {
               <Route path="/home" element={<Home />} />
               <Route path="/hotel-search-results" element={<HotelSearchResults />} />
               <Route path="/hotel-details/:hotelCode" element={<HotelDetails />} />
+              <Route path="/activity-search-results" element={<ActivitySearchResults />} />
+              <Route path="/activity/:activityCode" element={<ActivityDetails />} />
               
               {/* User account routes */}
               <Route path="/account" element={<AccountDashboard />} />

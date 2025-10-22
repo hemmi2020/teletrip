@@ -463,6 +463,24 @@ const ProfileForm = ({ profile, onSave, onCancel, loading }) => {
 
 // Booking Card Component
 const BookingCard = ({ booking, onCancel, onViewDetails }) => {
+  const [activityName, setActivityName] = React.useState(null);
+  
+  React.useEffect(() => {
+    if (booking.bookingReference?.startsWith('A')) {
+      fetch(`${import.meta.env.VITE_BASE_URL}/api/bookings/reference/${booking.bookingReference}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      })
+        .then(res => res.json())
+        .then(data => {
+          const name = data?.data?.backup?.originalBookingData?.activities?.[0]?.name;
+          if (name) setActivityName(name);
+        })
+        .catch(err => console.error('Failed to fetch activity:', err));
+    }
+  }, [booking.bookingReference]);
+  
   const getStatusBadge = (status) => {
     const statusConfig = {
       completed: { color: "green", icon: CheckCircle, text: "Completed" },
@@ -502,7 +520,9 @@ const BookingCard = ({ booking, onCancel, onViewDetails }) => {
             </div>
             <div>
               <h3 className="text-lg font-semibold text-gray-900">
-                {booking.hotelId?.name || 'Hotel Name'}
+                {booking.bookingReference?.startsWith('A') 
+                  ? (activityName || 'Activity Booking')
+                  : (booking.hotelId?.name || 'Hotel Booking')}
               </h3>
               <p className="text-gray-600 flex items-center">
                 <MapPin className="w-4 h-4 mr-1" />
