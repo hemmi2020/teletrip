@@ -548,16 +548,16 @@ if (children > 0 && childAges.length > 0) {
 
         {/* Search Summary */}
         <div className="bg-gray-50 rounded-lg p-4 mb-8">
-          <div className="flex items-center justify-between text-sm text-gray-600">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 text-sm text-gray-600">
             <div className="flex items-center">
-              <Calendar className="w-4 h-4 mr-2" />
-              <span>
+              <Calendar className="w-4 h-4 mr-2 flex-shrink-0" />
+              <span className="text-xs md:text-sm">
                 {searchParams.get("checkIn")} - {searchParams.get("checkOut")}
               </span>
             </div>
             <div className="flex items-center">
-              <Users className="w-4 h-4 mr-2" />
-              <span>
+              <Users className="w-4 h-4 mr-2 flex-shrink-0" />
+              <span className="text-xs md:text-sm">
                 {searchParams.get("rooms")} Room(s), {searchParams.get("adults")} Adult(s)
                 {searchParams.get("children") &&
                   searchParams.get("children") !== "0" &&
@@ -569,10 +569,10 @@ if (children > 0 && childAges.length > 0) {
 
         {/* Rooms Section */}
         <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold">Available Rooms</h2>
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+            <h2 className="text-xl md:text-2xl font-bold">Available Rooms</h2>
             {hotel.rooms && hotel.rooms.length > 0 && (
-              <div className="text-sm text-gray-600">
+              <div className="text-xs md:text-sm text-gray-600">
                 Showing {Math.min(visibleRoomsCount, hotel.rooms.length)} of{" "}
                 {hotel.rooms.length} rooms
               </div>
@@ -583,25 +583,25 @@ if (children > 0 && childAges.length > 0) {
               key={room.code}
               className="bg-white rounded-lg shadow-lg overflow-hidden"
             >
-              <div className="p-6">
-                <div className="flex items-start justify-between mb-4">
+              <div className="p-4 md:p-6">
+                <div className="flex flex-col md:flex-row md:items-start md:justify-between mb-4">
                   <div>
-                    <h3 className="text-xl font-semibold mb-2">{room.name}</h3>
+                    <h3 className="text-lg md:text-xl font-semibold mb-2">{room.name}</h3>
                     <div className="flex items-center text-gray-600 mb-2">
                       <Bed className="w-4 h-4 mr-2" />
-                      <span>Room Code: {room.code}</span>
+                      <span className="text-sm">Room Code: {room.code}</span>
                     </div>
                   </div>
                 </div>
                 {/* Room Rates */}
                 <div className="space-y-4">
-                  <h4 className="font-medium text-gray-800">Available Rates:</h4>
+                  <h4 className="font-medium text-gray-800 text-sm md:text-base">Available Rates:</h4>
                   {room.rates?.map((rate, index) => (
                     <div
                       key={index}
-                      className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
+                      className="border rounded-lg p-3 md:p-4 hover:bg-gray-50 transition-colors"
                     >
-                      <div className="flex justify-between items-start mb-3">
+                      <div className="flex flex-col md:flex-row md:justify-between md:items-start mb-3 gap-4">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-2">
                             {getRateClassBadge(rate.rateClass)}
@@ -645,7 +645,7 @@ if (children > 0 && childAges.length > 0) {
                             </div>
                           )}
                         </div>
-                        <div className="text-right ml-4">
+                        <div className="md:text-right md:ml-4 flex-shrink-0">
     {(() => {
       // ✅ Calculate nights and prices HERE, inside the rate map
       const checkIn = searchParams.get("checkIn");
@@ -676,17 +676,17 @@ if (children > 0 && childAges.length > 0) {
       return (
         <>
           {/* Per night price */}
-          <div className="text-sm text-gray-600 mb-1">
+          <div className="text-xs md:text-sm text-gray-600 mb-1">
             {hotel.currency || '€'}{pricePerNight.toFixed(2)} per night
           </div>
           
           {/* Total price - LARGE */}
-          <div className="text-2xl font-bold text-blue-600">
+          <div className="text-xl md:text-2xl font-bold text-blue-600">
             {hotel.currency || '€'}{totalPrice.toFixed(2)}
           </div>
           
           {/* Clear label */}
-          <div className="text-sm font-semibold text-gray-700">
+          <div className="text-xs md:text-sm font-semibold text-gray-700">
             Total for {nights} {nights === 1 ? 'night' : 'nights'}
           </div>
         </>
@@ -699,8 +699,8 @@ if (children > 0 && childAges.length > 0) {
     
     <button
       onClick={() => handleBookRoom(room, rate)}
-      className="px-6 py-2 flex bg-blue-600 text-white rounded-lg hover:bg-blue-900 transition-colors font-semibold"
-    ><ShoppingCart className="w-4 h-4 mr-2" />  
+      className="w-full md:w-auto px-4 md:px-6 py-2 flex items-center justify-center bg-blue-600 text-white rounded-lg hover:bg-blue-900 transition-colors font-semibold text-sm md:text-base"
+    ><ShoppingCart className="w-4 h-4 mr-2 flex-shrink-0" />  
       Add to Cart
     </button>
   </div>
