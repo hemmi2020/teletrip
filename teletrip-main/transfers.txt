@@ -1,0 +1,1913 @@
+Availability Simple Transfers logo icon
+
+
+Availability is the first operation in the booking flow of APItude, it allows to check which available transfer services can be booked in the requested area for a given range of dates and for a given passengers group.
+
+
+Remenber API can work with following types codes :
+
+
+IATA : Airport standard (recommended).
+ATLAS : HB custom hotel codes (recommended).
+GPS : Latitude and longitude coordinates, A minimun of three decimal places is required to ensure adequate positional accuracy (description and complete address must be indicated during confirmation)
+PORT : HB custom port codes
+STATION : HB custom stations codes
+
+
+In case you already have stored the HB Atlas codes you can use them, as they will be the same, if not you must obtain and cache the routes and content (optional) usingTransfers CACHEAPI, as it's designed to return all the static information and routes needed to operate the Transfers BookingAPI as quickly and simple as possible.
+
+GET https://api.test.hotelbeds.com/transfer-api/1.0/availability/ {{language}} /from/ {{fromType}} / {{fromCode}} /to/ {{toType}} / {{toCode}} / {{outbound}} / {{inbound}} / {{adults}} / {{children}} / {{infants}}
+
+Request parameters
+Parameter	Type	Mandatory	Description
+language	String	Y	Requested language code shared with Experiences, mapping found in language codes
+fromType	String	Y	Pickup type code (IATA, ATLAS, GPS...)
+fromCode	String	Y	Pickup code (depending on selected type)
+toType	String	Y	Drop off type code (IATA, ATLAS, GPS...)
+toCode	String	Y	Drop off code (depending on selected type)
+outbound	String	Y	Departure dateTime
+inbound	String	N	Return dateTime (in case of roundtrip)
+adults	Int	Y	Number of adult passengers (13~99)
+children	Int	Y	Number of child passengers (3~12)
+infants	Int	Y	Number of infant passengers (0~2)
+
+
+See example of request simple one way:
+GET https://api.test.hotelbeds.com/transfer-api/1.0/availability/en/from/ATLAS/265/to/IATA/PMI/2021-08-17T12:15:00/2/0/0
+Providing only "outbound" dateTime, will return only one way.
+
+
+
+See example of request simple rountrip:
+GET https://api.test.hotelbeds.com/transfer-api/1.0/availability/en/from/ATLAS/265/to/IATA/PMI/2021-08-17T12:15:00/2021-08-25T20:00:00/2/0/0
+Providing "outbound" and "inbound" dateTime, will return round trip also
+
+
+
+NOTE: Additionally if you need to request a full itinerary, or multiple routes at once, you can use Multiple Availability
+
+
+
+Availability Response
+The transfer availability response contains all information necessary to confirm the reservation or to recheck availability for a particular transfer service.
+
+It is distributed in hotel nodes which contain the information about the hotel and the different rates with their room types and board types.
+
+Response Parameters
+Node/Attribute	Type	Description
+RS	Element	Top Element
+RS/search	Element	Information on the performed search
+RS/search/language	String	Code of the requested language
+RS/search/departure	Element	Departure datetime information
+RS/search/departure/date	String	Departure date
+RS/search/departure/time	String	Departure time
+RS/search/comeBack	String	Return datetime information
+RS/search/comeBack/date	String	Return date
+RS/search/comeBack/time	String	Return time
+RS/search/occupancy	Element	Passenger group information
+RS/search/occupancy/adults	Int	Number of adult passengers
+RS/search/occupancy/children	Int	Number of children passengers
+RS/search/occupancy/infants	Int	Number of infant passengers
+RS/search/from	Element	Departure point information
+RS/search/from/code	String	Departure location code
+RS/search/from/description	String	Departure location description
+RS/search/from/type	String	Departure location code type
+RS/search/to	Element	Destination point information
+RS/search/to/code	String	Destination point code
+RS/search/to/description	String	Destination location description
+RS/search/to/type	String	Destination location code type
+RS/services	Array of service elements	List of available transfer services
+RS/services/service	Element	Information of the transfer service
+RS/services/service/id	Int	Service id code
+RS/services/service/direction	String	
+Direction of travel. Possible values:
+
+DEPARTURE
+ARRIVAL
+RS/services/service/transferType	String	
+Transfer type. Possible values:
+
+SHARED
+PRIVATE
+RS/services/service/vehicle	Element	Information of the vehicle
+RS/services/service/vehicle/code	String	Vehicle code id
+RS/services/service/vehicle/name	String	Vehicle name
+RS/services/service/category	Element	Service category information
+RS/services/service/category/code	String	Category code
+RS/services/service/category/name	String	Category name
+RS/services/service/pickupInformation	Element	Information regarding the pickUp locations
+RS/services/service/pickupInformation/from	Element	Information regarding the pickUp origin location
+RS/services/service/pickupInformation/from/code	String	Code of the pickUp origin location
+RS/services/service/pickupInformation/from/description	String	Description of the pickUp origin location
+RS/services/service/pickupInformation/from/type	String	
+PickUp destination location code type. Possible values:
+
+ATLAS
+IATA
+PORT
+STATION
+GPS
+RS/services/service/pickupInformation/to	Element	Information regarding the pickUp destination location
+RS/services/service/pickupInformation/to/code	String	Code of the pickUp destination location
+RS/services/service/pickupInformation/to/description	String	Description of the pickUp destination location
+RS/services/service/pickupInformation/to/type	String	
+PickUp destination location code type. Possible values:
+
+ATLAS
+IATA
+PORT
+STATION
+GPS
+RS/services/service/pickupInformation/date	String	Pickup date
+RS/services/service/pickupInformation/time	String	Pickup time
+RS/services/service/pickupInformation/pickup	Element	Information of the pickup
+RS/services/service/pickupInformation/pickup/address	String	Physical address of the pickup
+RS/services/service/pickupInformation/pickup/number	String	Number of the address of the pickup
+RS/services/service/pickupInformation/pickup/town	String	City name of the address of the pickup
+RS/services/service/pickupInformation/pickup/zip	String	Postal code of the address of the pickup
+RS/services/service/pickupInformation/pickup/description	String	Pickup description an instructions to reach the place
+RS/services/service/pickupInformation/pickup/altitude	String	Elevation from sea level
+RS/services/service/pickupInformation/pickup/latitude	String	Latitude data for geolocation
+RS/services/service/pickupInformation/pickup/longitude	String	Longitude data for geolocation
+RS/services/service/pickupInformation/pickup/checkPickup	Int	Indicates if the provider offers website for checkin
+RS/services/service/pickupInformation/pickup/checkPickup/mustCheckPickupTime	Boolean	false means that it is not necessary to show this field, true means that the pick-up details time will be provided by supplier under the next conditions
+RS/services/service/pickupInformation/pickup/checkPickup/url	Int	Show the website where the supplier will load the pick-up time
+RS/services/service/pickupInformation/pickup/checkPickup/hoursBeforeConsulting	Int	Indicate with how many hours in advance will the supplier load the pick-up time on the website
+RS/services/service/pickupInformation/pickup/pickupId	Int	
+NEW: The information of this tag has been deprecated in the current API, the response will always be null
+RS/services/service/pickupInformation/pickup/stopName	String	
+NEW: The information of this tag has been deprecated in the current API, the response will always be null
+RS/services/service/pickupInformation/pickup/image	String	Image/map to help locate the pickup
+RS/services/service/minPaxCapacity	Int	Mininum number of passengers needed to book the transfer service
+RS/services/service/maxPaxCapacity	Int	Passenger limit of the transfer service
+RS/services/service/content	Element	Static information of the transfer service
+RS/services/service/content/vehicle	Element	Information of the vehicle used in the transfer service
+RS/services/service/content/vehicle/code	String	Vehicle code used in the transfer service
+RS/services/service/content/vehicle/name	String	Name of the type of the vehicle used in the transfer service
+RS/services/service/content/category	Element	Information of the category of the transfer service
+RS/services/service/content/category/code	String	Category code of the transfer service
+RS/services/service/content/category/name	String	Category name of the transfer service category
+RS/services/service/content/images	Array of image elements	List of transfer pictures
+RS/services/service/content/images/image	Element	Image information
+RS/services/service/content/images/image/url	String	Path of the picture file
+RS/services/service/content/images/image/type	String	
+Type name of the picture.
+
+NEW: The image size will be unique regardless the value selected.:
+SMALL
+MEDIUM
+LARGE
+EXTRALARGE
+RS/services/service/content/transferDetailInfo	Array of transferDetailInfo elements	Collection of detailed information about the transfer
+RS/services/service/content/transferDetailInfo/id	String	Information id
+RS/services/service/content/transferDetailInfo/name	String	Information name
+RS/services/service/content/transferDetailInfo/description	String	Details and information on the transfer
+RS/services/service/content/transferDetailInfo/type	String	
+Transfer detail info type. Possible values:
+
+GENERAL_INFO
+RS/services/service/content/transferDetailInfo/value	String	This value will be usually null can be ignored
+RS/services/service/content/customerTransferTimeInfo	String	
+NEW: The information of this tag has been deprecated in the current API, the response will always be null
+RS/services/service/content/supplierTransferTimeInfo	String	
+NEW: The information of this tag has been deprecated in the current API, the response will always be null
+RS/services/service/content/transferRemarks	String	Details of the transfer and pick-up would be indicated here for the final clients
+RS/services/service/content/transferRemarks/type	String	Would always come as CONTRACT
+RS/services/service/content/transferRemarks/description	String	Text with the Details of the transfer and pick-up, this very same field would be also provided at the confirmation response too
+RS/services/service/content/transferRemarks/mandatory	Boolean	Indicates if this text is mandatory or not to be shown during the certification
+RS/services/service/price	Element	Price information of the transfer service
+RS/services/service/price/totalAmount	Double	Total amount of the booking
+RS/services/service/price/netAmount	Double	Net amount of the booking
+RS/services/service/rateKey	String	Internal key of the rate, to be used for confirmation
+RS/services/service/cancellationPolicies	Array of cancellationPolicy elements	Information of cancellation policies
+RS/services/service/cancellationPolicies/cancellationPolicy	Element	Cancellation policy details
+RS/services/service/cancellationPolicies/cancellationPolicy/amount	Double	Cancellation cost
+RS/services/service/cancellationPolicies/cancellationPolicy/from	String	Date from which cancellation policy applies. The date and time are always based on the destination's local time
+RS/services/service/cancellationPolicies/cancellationPolicy/currencyId	String	Currency information
+RS/services/service/links	Array of link elements	Information on the navigation links available from the current operation
+RS/services/service/links/link	Element	Link information
+RS/services/service/links/link/rel	String	Specifies the relationship between the current document and the linked document/resource
+RS/services/service/links/link/href	String	Specifies the path of the resource the link goes to
+RS/services/service/factsheetId	Int	Content card number associated with the transfer, identifies the relationship between type of vehicle, type of service and type of transfer
+Availability Response
+{
+    "search": {
+        "language": "en",
+        "departure": {
+            "date": "2024-01-11",
+            "time": "11:25:00"
+        },
+        "comeBack": {
+            "date": "-999999999-01-01",
+            "time": "00:00:00"
+        },
+        "occupancy": {
+            "adults": 2,
+            "children": 0,
+            "infants": 0
+        },
+        "from": {
+            "code": "683772",
+            "description": "Staycity Aparthotels Venice Mestre",
+            "type": "ATLAS"
+        },
+        "to": {
+            "code": "VCE",
+            "description": "Venice Marco Polo Airport",
+            "type": "IATA"
+        }
+    },
+    "services": [
+        {
+            "id": 0,
+            "direction": "DEPARTURE",
+            "transferType": "PRIVATE",
+            "vehicle": {
+                "code": "CR",
+                "name": "Car"
+            },
+            "category": {
+                "code": "STND",
+                "name": "Standard"
+            },
+            "pickupInformation": {
+                "from": {
+                    "code": "683772",
+                    "description": "Staycity Aparthotels Venice Mestre",
+                    "type": "ATLAS"
+                },
+                "to": {
+                    "code": "VCE",
+                    "description": "Venice Marco Polo Airport",
+                    "type": "IATA"
+                },
+                "date": "2024-01-11",
+                "time": "08:35:00",
+                "pickup": {
+                    "address": null,
+                    "number": null,
+                    "town": null,
+                    "zip": null,
+                    "description": "FINDING YOUR DRIVER\n\nThe Supplier will send a letter with your pickup time & place to your hotel the day before departure. Please refer to your hotel's reception desk to pick up your letter and ensure that you are at your pick up point 10/15 minutes before the confirmed time. \n\nIdentify yourself by showing this confirmation to your Supplier, for whom we act as a booking agent.\n\n\nDIFFICULTY IN LOCATING YOUR DRIVER\nContact your supplier for assistance. Do not leave without having contacted your supplier on +39 3490555567 first.\n\nIn the event you are delayed for your departure pick up you must call the supplier.",
+                    "altitude": null,
+                    "latitude": 45.481012750000005,
+                    "longitude": 12.238736574310185,
+                    "checkPickup": {
+                        "mustCheckPickupTime": false,
+                        "url": null,
+                        "hoursBeforeConsulting": null
+                    },
+                    "pickupId": null,
+                    "stopName": null,
+                    "image": null
+                }
+            },
+            "minPaxCapacity": 1,
+            "maxPaxCapacity": 3,
+            "content": {
+                "vehicle": {
+                    "code": "CR",
+                    "name": "Car"
+                },
+                "category": {
+                    "code": "STND",
+                    "name": "Standard"
+                },
+                "images": [
+                    {
+                        "url": "https://assets.htxstaging.com/imgs/default/vehicle_set/private.jpg",
+                        "type": "EXTRALARGE"
+                    },
+                    {
+                        "url": "https://assets.htxstaging.com/imgs/default/vehicle_set/private.jpg",
+                        "type": "LARGE"
+                    },
+                    {
+                        "url": "https://assets.htxstaging.com/imgs/default/vehicle_set/private.jpg",
+                        "type": "MEDIUM"
+                    },
+                    {
+                        "url": "https://assets.htxstaging.com/imgs/default/vehicle_set/private.jpg",
+                        "type": "SMALL"
+                    }
+                ],
+                "transferDetailInfo": [
+                    {
+                        "id": "0",
+                        "name": "20 min. Estimated journey time",
+                        "description": "20 min. Estimated journey time",
+                        "type": "GENERAL_INFO"
+                    },
+                    {
+                        "id": "1",
+                        "name": "1 passenger(s) minimum",
+                        "description": "1 passenger(s) minimum",
+                        "type": "GENERAL_INFO"
+                    },
+                    {
+                        "id": "2",
+                        "name": "3 passenger(s) maximum",
+                        "description": "3 passenger(s) maximum",
+                        "type": "GENERAL_INFO"
+                    },
+                    {
+                        "id": "3",
+                        "name": "3 suitcases permitted",
+                        "description": "3 suitcases permitted",
+                        "type": "GENERAL_INFO"
+                    }
+                ],
+                "customerTransferTimeInfo": [],
+                "supplierTransferTimeInfo": [],
+                "transferRemarks": [
+                    {
+                        "type": "CONTRACT",
+                        "description": "FINDING YOUR DRIVER\n\nThe Supplier will send a letter with your pickup time & place to your hotel the day before departure. Please refer to your hotel's reception desk to pick up your letter and ensure that you are at your pick up point 10/15 minutes before the confirmed time. \n\nIdentify yourself by showing this confirmation to your Supplier, for whom we act as a booking agent.\n\n\nDIFFICULTY IN LOCATING YOUR DRIVER\nContact your supplier for assistance. Do not leave without having contacted your supplier on +39 3490555567 first.\n\nIn the event you are delayed for your departure pick up you must call the supplier.",
+                        "mandatory": true
+                    }
+                ]
+            },
+            "price": {
+                "totalAmount": 57.81,
+                "netAmount": 0.00,
+                "currencyId": "EUR"
+            },
+            "rateKey": "DEPARTURE|ATLAS|683772|IATA|VCE|2024-01-11|08:35|2024-01-11|11:25|2~0~0||3|||||207|PRVT||CR|STND|57.81||||43|VCE|SIMPLE|c3ac92dce02dad3ba3baef7ab71f6673|1255239|T|1b3814dfc98b4495220e3ecb1ff1ee6f",
+            "cancellationPolicies": [
+                {
+                    "amount": 57.81,
+                    "from": "2024-01-09T11:25:00",
+                    "currencyId": "EUR",
+                    "isForceMajeure": null
+                }
+            ],
+            "links": [
+                {
+                    "rel": "self",
+                    "href": "/availability",
+                    "method": "GET"
+                },
+                {
+                    "rel": "confirm",
+                    "href": "/booking",
+                    "method": "POST"
+                }
+            ],
+            "factsheetId": 43
+        }
+    ]
+}
+
+
+rrivalFlightNumber": "XR1234",
+                    "departureFlightNumber": null,
+                    "arrivalShipName": null,
+                    "departureShipName": null,
+                    "arrivalTrainInfo": null,
+                    "departureTrainInfo": null,
+                    "transferDetails": [
+                        {
+                            "type": "FLIGHT",
+                            "direction": "ARRIVAL",
+                            "code": "XR1234",
+                            "companyName": null
+                        }
+                    ],
+                    "sourceMarketEmergencyNumber": "34871180153",
+                    "links": [
+                        {
+                            "rel": "transferCancel",
+                            "href": "/booking/en/reference/102-14536491",
+                            "method": "DELETE"
+                        }
+                    ]
+                }
+            ],
+            "clientReference": "BOSTON#12-203#456754",
+            "remark": "",
+            "invoiceCompany": {
+                "code": "E14"
+            },
+            "supplier": {
+                "name": "HOTELBEDS SPAIN, S.L.U",
+                "vatNumber": "ESB28916765"
+            },
+            "totalAmount": 20.99,
+            "totalNetAmount": 20.99,
+            "pendingAmount": 20.99,
+            "currency": "USD",
+            "links": [
+                {
+                    "rel": "self",
+                    "href": "/booking/en/reference/102-14536491",
+                    "method": "GET"
+                },
+                {
+                    "rel": "bookingDetail",
+                    "href": "/booking/en/reference/102-14536491",
+                    "method": "GET"
+                },
+                {
+                    "rel": "bookingCancel",
+                    "href": "/booking/en/reference/102-14536491",
+                    "method": "DELETE"
+                }
+            ],
+            "paymentDataRequired": false
+        }
+    ]
+}
+Post Booking Operations
+Once you have confirmed bookings, there's a series of operations that can be performed:
+
+BookingDetail: To retrieve the information of a specific booking.
+BookingCancellation: To cancel a booking.
+Bear in mind that you will need the booking reference of the bookings you carried out to perform this operation
+
+
+Booking Detail Transfers logo icon
+
+The BookingDetail operation allows to retrieve a booking with all its details from the booking reference locator.
+
+
+
+BookingDetail Request
+Endpoint
+
+GET https://api.test.hotelbeds.com/transfer-api/1.0/bookings/{{language}}/reference/{{booking_reference}}
+
+Request parameters
+Parameter
+
+Type
+
+Mandatory
+
+Description
+
+language
+
+String
+
+Y
+
+Requested language code
+
+booking_reference
+
+String
+
+Y
+
+Booking reference number taken from the confirmation response or from the booking list functionFormat: XXX-XXXXXX
+
+
+
+
+BookingDetail Response
+The response of BookingDetail provides key information of the booking in the same format as Booking Response, including:
+
+Transfer confirmed
+Rate confirmed with the confirmed amounts and dates
+Holder and passengers
+Information of cancelled bookings can also be retrieved with BookingDetail, although names and surnames of passengers of cancelled bookings are not shown, as cancellation process deletes names of passengers and only passanger types remain in the passenger list of each service.
+
+
+
+Response parameters
+Node/Attribute
+
+Type
+
+Description
+
+RS	Element	Top level
+RS/bookings	Array of booking elements	List of bookings.
+NOTE: in confirmation step you'll always will receive only one booking in this array.
+RS/bookings/booking	Element	Booking information
+RS/bookings/booking/reference	String	
+Booking reference. Format: XXX-XXXXXX
+
+RS/bookings/booking/creationDate	Date	Booking creation date.
+Format: YYYY-MM-DD
+RS/bookings/booking/status	
+Booking status.
+
+CONFIRMED
+CANCELLED
+MODIFIED
+RS/bookings/booking/modificationsPolicies	Element	Information regarding the allowed modifications to the booking
+RS/bookings/booking/modificationsPolicies/cancellation	Boolean	Indicates if the booking can be cancelled
+RS/bookings/booking/modificationsPolicies/modification	Boolean	Indicates if the booking can be modified
+RS/bookings/booking/holder	Element	Booking lead passenger/holder information
+RS/bookings/booking/holder/name	String	First name of the lead passenger
+RS/bookings/booking/holder/surname	String	Last name of the lead passenger
+RS/bookings/booking/holder/email	String	Lead passenger contact email
+RS/bookings/booking/holder/phone	String	Lead passenger contact phone number
+RS/bookings/booking/transfers	Array of transfer elements	List of reserved transfer services
+RS/bookings/booking/transfers/transfer	Element	Information of one reserved transfer service
+RS/bookings/booking/transfers/transfer/id	Int	Transfer service id code
+RS/bookings/booking/transfers/transfer/direction	String	
+Direction of travel. Possible values:
+
+DEPARTURE
+RETURN
+RS/bookings/booking/transfers/transfer/status	String	
+Transfer service status.
+
+CONFIRMED
+CANCELLED
+RS/bookings/booking/transfers/transfer/transferType	String	
+Transfer type. Possible values:
+
+SHARED
+PRIVATE
+RS/bookings/booking/transfers/transfer/vehicle	Element	Information of the vehicle
+RS/bookings/booking/transfers/transfer/vehicle/code	String	Vehicle code id
+RS/bookings/booking/transfers/transfer/vehicle/name	String	Vehicle name
+RS/bookings/booking/transfers/transfer/category	Element	Service category information
+RS/bookings/booking/transfers/transfer/category/code	String	Category code
+RS/bookings/booking/transfers/transfer/category/name	String	Category name
+RS/bookings/booking/transfers/transfer/pickupInformation	Element	Information regarding the pickUp locations
+RS/bookings/booking/transfers/transfer/pickupInformation/from	Element	Information regarding the pickUp origin location
+RS/bookings/booking/transfers/transfer/pickupInformation/from/code	String	Code of the pickUp origin location
+RS/bookings/booking/transfers/transfer/pickupInformation/from/description	String	Description of the pickUp origin location
+RS/bookings/booking/transfers/transfer/pickupInformation/from/type	String	
+PickUp origin location code type. Possible values:
+
+GIATA
+ATLAS
+IATA
+PORT
+STATION
+GPS
+RS/bookings/booking/transfers/transfer/pickupInformation/to	Element	Information regarding the pickUp destination location
+RS/bookings/booking/transfers/transfer/pickupInformation/to/code	String	Code of the pickUp destination location
+RS/bookings/booking/transfers/transfer/pickupInformation/to/description	String	Description of the pickUp destination location
+RS/bookings/booking/transfers/transfer/pickupInformation/to/type	String	
+PickUp destination location code type. Possible values:
+
+GIATA
+ATLAS
+IATA
+PORT
+STATION
+GPS
+RS/bookings/booking/transfers/transfer/pickupInformation/date	String	Pickup date
+RS/bookings/booking/transfers/transfer/pickupInformation/time	String	Pickup time
+RS/bookings/booking/transfers/transfer/pickupInformation/pickup	Element	Information of the pickup
+RS/bookings/booking/transfers/transfer/pickupInformation/pickup/address	String	Physical address of the pickup
+RS/bookings/booking/transfers/transfer/pickupInformation/pickup/number	String	Number of the address of the pickup
+RS/bookings/booking/transfers/transfer/pickupInformation/pickup/town	String	City name of the address of the pickup
+RS/bookings/booking/transfers/transfer/pickupInformation/pickup/zip	String	Postal code of the address of the pickup
+RS/bookings/booking/transfers/transfer/pickupInformation/pickup/description	String	Pickup description an instrucctions to reach the place
+RS/bookings/booking/transfers/transfer/pickupInformation/pickup/altitude	String	Elevation from sea level
+RS/bookings/booking/transfers/transfer/pickupInformation/pickup/latitude	String	Latitude data for geolocation
+RS/bookings/booking/transfers/transfer/pickupInformation/pickup/longitude	String	Longitude data for geolocation
+RS/bookings/booking/transfers/transfer/pickupInformation/pickup/checkPickup	Element	Further instructions in order to confirm the exact pickup time
+RS/bookings/booking/transfers/transfer/pickupInformation/pickup/checkPickup/mustCheckPickupTime
+
+Boolean	
+Indicates whether the user needs to confirm exact pickup time on external website
+
+RS/bookings/booking/transfers/transfer/pickupInformation/pickup/checkPickup/url	String	
+URL the user needs to visit in order to confirm pickup time
+
+ RS/bookings/booking/transfers/transfer/pickupInformation/pickup/checkPickup/hoursBeforeConsulting	Int	
+Indicates how many hours before the service, the pickup time will be available on the website
+
+RS/bookings/booking/transfers/transfer/pickupInformation/pickup/pickupId	Int	Id of the pickup
+RS/bookings/booking/transfers/transfer/pickupInformation/pickup/stopName	String	Name of the stop where the pickup takes place
+RS/bookings/booking/transfers/transfer/pickupInformation/pickup/image	String	Image/map to help locate the pickup
+RS/bookings/booking/transfers/transfer/paxes	Array of pax elements	Collection of passengers in the reservation
+RS/bookings/booking/transfers/transfer/paxes/pax	Element	Passenger information
+RS/bookings/booking/transfers/transfer/paxes/pax/type	String	
+Passenger type. Possible values:
+
+ADULT
+CHILD
+INFANT
+RS/bookings/booking/transfers/transfer/content	Element	Static information of the transfer service
+RS/bookings/booking/transfers/transfer/content/vehicle	Element	Information of the vehicle used in the transfer service
+RS/bookings/booking/transfers/transfer/content/vehicle/code	String	Vehicle code used in the transfer service
+RS/bookings/booking/transfers/transfer/content/vehicle/name	String	Name of the type of the vehicle used in the transfer service
+RS/bookings/booking/transfers/transfer/content/category	Element	Information of the category of the transfer service
+RS/bookings/booking/transfers/transfer/content/category/code	String	Category code of the transfer service
+RS/bookings/booking/transfers/transfer/content/category/name	String	Category name of the ttransfer service category
+RS/bookings/booking/transfers/transfer/content/images	Array of image elements	List of transfer pictures
+RS/bookings/booking/transfers/transfer/content/images/image	Element	Image information
+RS/bookings/booking/transfers/transfer/content/images/image/url	String	Path of the picture file
+RS/bookings/booking/transfers/transfer/content/images/image/type	String	
+Type name of the picture.
+
+NEW: In the current API, the image size will be unique regardless the value selected.:
+SMALL
+MEDIUM
+LARGE
+EXTRALARGE
+RS/bookings/booking/transfers/transfer/content/transferDetailInfo	Array of transferDetailInfo elements	Collection of detailed information about the transfer
+RS/bookings/booking/transfers/transfer/content/transferDetailInfo/transferDetailInfo	Element	Transfer detailed information
+RS/bookings/booking/transfers/transfer/content/transferDetailInfo/transferDetailInfo/id	String	Information id
+RS/bookings/booking/transfers/transfer/content/transferDetailInfo/transferDetailInfo/name	String	Information name
+RS/bookings/booking/transfers/transfer/content/transferDetailInfo/transferDetailInfo/description	String	Details and information on the transfer
+RS/bookings/booking/transfers/transfer/content/transferDetailInfo/transferDetailInfo/type	String	
+Transfer detail info type. Possible values:
+
+GENERAL_INFO
+RS/bookings/booking/transfers/transfer/content/customerTransferTimeInfo	String	
+NEW: The information of this tag has been deprecated in the current API, the response will always be null
+RS/bookings/booking/transfers/transfer/content/supplierTransferTimeInfo	String	
+NEW: The information of this tag has been deprecated in the current API, the response will always be null
+RS/bookings/booking/transfers/transfer/content/transferRemarks	Element	 Transfer service remarks
+RS/bookings/booking/transfers/transfer/content/transferRemarks/type	String	
+Remark possible values:
+
+CONTRACT
+AGENCY
+RS/bookings/booking/transfers/transfer/content/transferRemarks/description	String	 Remark content
+RS/bookings/booking/transfers/transfer/content/transferRemarks/mandatory	Boolean	 Mandatory remark
+RS/bookings/booking/transfers/transfer/price	Element	Price information of the transfer service
+RS/bookings/booking/transfers/transfer/price/totalAmount	Double	Total amount of the booking
+RS/bookings/booking/transfers/transfer/price/netAmount	Double	Net amount of the booking
+RS/bookings/booking/transfers/transfer/price/currencyId	String	Currency
+RS/bookings/booking/transfers/transfer/rateKey	String	Does not apply on Booking response
+RS/bookings/booking/transfers/transfer/cancellationPolicies	Array of cancellationPolicy elements	List of cancellation policies applied to the transfer service
+RS/bookings/booking/transfers/transfer/cancellationPolicies/cancellationPolicy	Element	Information of the cancellation policy
+RS/bookings/booking/transfers/transfer/cancellationPolicies/cancellationPolicy/amount	Double	Amount to be charged in case booking is cancelled after the date specified in the '@from' field.
+RS/bookings/booking/transfers/transfer/cancellationPolicies/cancellationPolicy/from	String	Date from which the amount will be charged, format ISO 8601 (yyyy-MM-ddTHH:mm:ssZ)
+RS/bookings/booking/transfers/transfer/cancellationPolicies/cancellationPolicy/currencyId	String	Currency
+RS/bookings/booking/transfers/transfer/links	Array of link elements	Information on the navigation links available from the current operation
+RS/bookings/booking/transfers/transfer/links/link	Element	Link information
+RS/bookings/booking/transfers/transfer/links/link/rel	String	Specifies the relationship between the current document and the linked document/resource
+RS/bookings/booking/transfers/transfer/links/link/href	String	Specifies the path of the resource the link goes to
+RS/bookings/booking/transfers/transfer/links/link/method	String	HTTP method
+RS/bookings/booking/transfers/transfer/factsheetId	Int	Content card number associated with the transfer, identifies the relationship between type of vehicle, type of service and type of transfer
+RS/transfers/transfer/transferDetails	Array of transfer details elements	Information about the ride from which the transfer will pick up passengers.
+RS/transfers/transfer/transferDetails/transferDetail	Element	Ride information
+RS/transfers/transfer/transferDetails/transferDetail/type	String	Ride type. Possible values:
+FLIGHT
+CRUISE
+TRAIN
+RS/transfers/transfer/transferDetails/transferDetail/direction	String	Ride direction. Possible values:
+ARRIVAL
+DEPARTURE
+RS/transfers/transfer/transferDetails/transferDetail/code	String	Ride identification number(e.g., flight number)
+RS/transfers/transfer/transferDetails/transferDetail/companyName	String	Indicates the name of the company which operates the ride transport. NOTE: Normally used in ship transports.
+RS/transfers/transfer/sourceMarketEmergencyNumber
+
+String	
+Source market emergency number
+
+ookingRS/bookings/booking/clientReference	String	Client internal booking reference
+RS/bookings/booking/remark	String	Comments.NOTE:The character limit in this field is 2000 characters.
+RS/bookings/booking/invoiceCompany	Element	Element that contains information about the invoice company
+RS/bookings/booking/invoiceCompany/code	String	Code of the invoice company
+RS/bookings/booking/supplier	Element	Supplier information  
+RS/bookings/booking/supplier/name	String	Supplier name
+RS/bookings/booking/supplier/vatNumber	String	Supplier VAT number 
+RS/bookings/booking/totalAmount	String	Total amount
+RS/bookings/booking/totalNetAmount	String	Total net amount
+RS/bookings/booking/pendingAmount	String	Pending amount
+RS/bookings/booking/currency	String	Currency
+RS/bookings/booking/transfers/transfer/links	Array of link elements	Information on the navigation links available from the current operation
+RS/bookings/booking/transfers/transfer/links/link	Element	Link information
+RS/bookings/booking/transfers/transfer/links/link/rel	String	Specifies the relationship between the current document and the linked document/resource
+RS/bookings/booking/transfers/transfer/links/link/href	String	Specifies the path of the resource the link goes to
+RS/bookings/booking/transfers/transfer/links/link/method
+
+
+
+Booking Cancellation Transfers logo icon
+
+
+BookingCancellation is a DELETE method operation that can be used in different cases:
+
+
+To cancel the booking.
+To simulate a booking cancellation.
+To partially cancel booking (one service).
+
+
+NOTE: Cancellations always take into account day and time of the destination in order to calculate what cancellation policy should be apply.
+
+
+Booking Cancellation Request
+DELETE https://api.test.hotelbeds.com/transfer-api/1.0/bookings/{{language}} /reference/ {{booking_reference}}
+DELETE https://api.test.hotelbeds.com/transfer-api/1.0/bookings/{{language}} /reference/ {{booking_reference}}?simulation={{true/false}}
+DELETE https://api.test.hotelbeds.com/transfer-api/1.0/bookings/{{language}} /reference/ {{booking_reference}} /id/ {{service_id}}
+
+Request parameters
+Parameter	Type	Mandatory	Description
+language	String	Y	Response language
+reference	String	Y	
+Locator of the booking to be cancelled.
+
+simulation	Boolean	N	
+Defines if the operation will be a simulation or an actual cancellation.
+
+service_id	Int	N	
+Service id requesting partial cancellation. (returned in /bookings/booking/transfers/transfer/id)
+
+
+
+
+Request examples:
+
+
+Cancel :
+DELETE https://api.test.hotelbeds.com/transfer-api/1.0/bookings/en/reference/1-4135098
+Will directly cancel the booking
+
+
+
+Cancel Simulation :
+DELETE https://api.test.hotelbeds.com/transfer-api/1.0/bookings/en/reference/1-4135098?simulation=true
+Will simulate the booking cancellation, so you can check if charges will be applied (amount returned).
+
+
+Partial cancellation :
+DELETE https://api.test.hotelbeds.com/transfer-api/1.0/bookings/en/reference/1-4135098/id/2
+Will directly cancel the requested service id of the provided booking.
+
+Note: remember to make a booking details before in order to make sure you are cancelling the desired service id.
+
+
+Cancellation response
+The Cancellation response will be the same structure as the booking detail response with changed status.
+
+Note: if booking status is “canceled” and “totalAmount” is not “0” the amount are cancellation charges.
+
+
+
+Response parameters :
+Node/Attribute
+
+Type
+
+Description
+
+RS	Element	Top level
+RS/bookings	Array of booking elements	List of bookings.
+NOTE: in confirmation step you'll always will receive only one booking in this array.
+RS/bookings/booking	Element	Booking information
+RS/bookings/booking/reference	String	
+Booking reference. Format: XXX-XXXXXX
+
+RS/bookings/booking/creationDate	Date	Booking creation date.
+Format: YYYY-MM-DD
+RS/bookings/booking/status	
+Booking status.
+
+CONFIRMED
+CANCELLED
+MODIFIED
+RS/bookings/booking/modificationsPolicies	Element	Information regarding the allowed modifications to the booking
+RS/bookings/booking/modificationsPolicies/cancellation	Boolean	Indicates if the booking can be cancelled
+RS/bookings/booking/modificationsPolicies/modification	Boolean	Indicates if the booking can be modified
+RS/bookings/booking/holder	Element	Booking lead passenger/holder information
+RS/bookings/booking/holder/name	String	First name of the lead passenger
+RS/bookings/booking/holder/surname	String	Last name of the lead passenger
+RS/bookings/booking/holder/email	String	Lead passenger contact email
+RS/bookings/booking/holder/phone	String	Lead passenger contact phone number
+RS/bookings/booking/transfers	Array of transfer elements	List of reserved transfer services
+RS/bookings/booking/transfers/transfer	Element	Information of one reserved transfer service
+RS/bookings/booking/transfers/transfer/id	Int	Transfer service id code
+RS/bookings/booking/transfers/transfer/direction	String	
+Direction of travel. Possible values:
+
+DEPARTURE
+ARRIVAL
+RS/bookings/booking/transfers/transfer/status	String	
+Transfer service status.
+
+CONFIRMED
+CANCELLED
+MODIFIED
+RS/bookings/booking/transfers/transfer/transferType	String	
+Transfer type. Possible values:
+
+SHARED
+PRIVATE
+RS/bookings/booking/transfers/transfer/vehicle	Element	Information of the vehicle
+RS/bookings/booking/transfers/transfer/vehicle/code	String	Vehicle code id
+RS/bookings/booking/transfers/transfer/vehicle/name	String	Vehicle name
+RS/bookings/booking/transfers/transfer/category	Element	Service category information
+RS/bookings/booking/transfers/transfer/category/code	String	Category code
+RS/bookings/booking/transfers/transfer/category/name	String	Category name
+RS/bookings/booking/transfers/transfer/pickupInformation	Element	Information regarding the pickUp locations
+RS/bookings/booking/transfers/transfer/pickupInformation/from	Element	Information regarding the pickUp origin location
+RS/bookings/booking/transfers/transfer/pickupInformation/from/code	String	Code of the pickUp origin location
+RS/bookings/booking/transfers/transfer/pickupInformation/from/description	String	Description of the pickUp origin location
+RS/bookings/booking/transfers/transfer/pickupInformation/from/type	String	
+PickUp origin location code type. Possible values:
+
+GIATA
+ATLAS
+IATA
+PORT
+STATION
+GPS
+RS/bookings/booking/transfers/transfer/pickupInformation/to	Element	Information regarding the pickUp destination location
+RS/bookings/booking/transfers/transfer/pickupInformation/to/code	String	Code of the pickUp destination location
+RS/bookings/booking/transfers/transfer/pickupInformation/to/description	String	Description of the pickUp destination location
+RS/bookings/booking/transfers/transfer/pickupInformation/to/type	String	
+PickUp destination location code type. Possible values:
+
+GIATA
+ATLAS
+IATA
+PORT
+STATION
+GPS
+RS/bookings/booking/transfers/transfer/pickupInformation/date	String	Pickup date
+RS/bookings/booking/transfers/transfer/pickupInformation/time	String	Pickup time
+RS/bookings/booking/transfers/transfer/pickupInformation/pickup	Element	Information of the pickup
+RS/bookings/booking/transfers/transfer/pickupInformation/pickup/address	String	Physical address of the pickup
+RS/bookings/booking/transfers/transfer/pickupInformation/pickup/number	String	Number of the address of the pickup
+RS/bookings/booking/transfers/transfer/pickupInformation/pickup/town	String	City name of the address of the pickup
+RS/bookings/booking/transfers/transfer/pickupInformation/pickup/zip	String	Postal code of the address of the pickup
+RS/bookings/booking/transfers/transfer/pickupInformation/pickup/description	String	Pickup description an instrucctions to reach the place
+RS/bookings/booking/transfers/transfer/pickupInformation/pickup/altitude	String	Elevation from sea level
+RS/bookings/booking/transfers/transfer/pickupInformation/pickup/latitude	String	Latitude data for geolocation
+RS/bookings/booking/transfers/transfer/pickupInformation/pickup/longitude	String	Longitude data for geolocation
+RS/bookings/booking/transfers/transfer/pickupInformation/pickup/checkPickup	Element	Further instructions in order to confirm the exact pickup time
+RS/bookings/booking/transfers/transfer/pickupInformation/pickup/checkPickup/mustCheckPickupTime
+
+Boolean	
+Indicates whether the user needs to confirm exact pickup time on external website
+
+RS/bookings/booking/transfers/transfer/pickupInformation/pickup/checkPickup/url	String	
+URL the user needs to visit in order to confirm pickup time
+
+ RS/bookings/booking/transfers/transfer/pickupInformation/pickup/checkPickup/hoursBeforeConsulting	Int	
+Indicates how many hours before the service, the pickup time will be available on the website
+
+RS/bookings/booking/transfers/transfer/pickupInformation/pickup/pickupId	Int	Id of the pickup
+RS/bookings/booking/transfers/transfer/pickupInformation/pickup/stopName	String	Name of the stop where the pickup takes place
+RS/bookings/booking/transfers/transfer/pickupInformation/pickup/image	String	Image/map to help locate the pickup
+RS/bookings/booking/transfers/transfer/paxes	Array of pax elements	Collection of passengers in the reservation
+RS/bookings/booking/transfers/transfer/paxes/pax	Element	Passenger information
+RS/bookings/booking/transfers/transfer/paxes/pax/type	String	
+Passenger type. Possible values:
+
+ADULT
+CHILD
+INFANT
+RS/bookings/booking/transfers/transfer/content	Element	Static information of the transfer service
+RS/bookings/booking/transfers/transfer/content/vehicle	Element	Information of the vehicle used in the transfer service
+RS/bookings/booking/transfers/transfer/content/vehicle/code	String	Vehicle code used in the transfer service
+RS/bookings/booking/transfers/transfer/content/vehicle/name	String	Name of the type of the vehicle used in the transfer service
+RS/bookings/booking/transfers/transfer/content/category	Element	Information of the category of the transfer service
+RS/bookings/booking/transfers/transfer/content/category/code	String	Category code of the transfer service
+RS/bookings/booking/transfers/transfer/content/category/name	String	Category name of the ttransfer service category
+RS/bookings/booking/transfers/transfer/content/images	Array of image elements	List of transfer pictures
+RS/bookings/booking/transfers/transfer/content/images/image	Element	Image information
+RS/bookings/booking/transfers/transfer/content/images/image/url	String	Path of the picture file
+RS/bookings/booking/transfers/transfer/content/images/image/type	String	
+Type name of the picture. Possible values:
+
+SMALL
+MEDIUM
+LARGE
+EXTRALARGE
+RS/bookings/booking/transfers/transfer/content/transferDetailInfo	Array of transferDetailInfo elements	Collection of detailed information about the transfer
+RS/bookings/booking/transfers/transfer/content/transferDetailInfo/transferDetailInfo	Element	Transfer detailed information
+RS/bookings/booking/transfers/transfer/content/transferDetailInfo/transferDetailInfo/id	String	Information id
+RS/bookings/booking/transfers/transfer/content/transferDetailInfo/transferDetailInfo/name	String	Information name
+RS/bookings/booking/transfers/transfer/content/transferDetailInfo/transferDetailInfo/description	String	Details and information on the transfer
+RS/bookings/booking/transfers/transfer/content/transferDetailInfo/transferDetailInfo/type	String	
+Transfer detail info type. Possible values:
+
+GENERAL_INFO
+RS/bookings/booking/transfers/transfer/content/customerTransferTimeInfo	String	
+NEW: The information of this tag has been deprecated in the current API, the response will always be null
+RS/bookings/booking/transfers/transfer/content/supplierTransferTimeInfo	String	
+NEW: The information of this tag has been deprecated in the current API, the response will always be null
+RS/bookings/booking/transfers/transfer/content/supplierTransferTimeInfo/TransferTimeInfo/metric	String	Time unit type
+RS/bookings/booking/transfers/transfer/content/transferRemarks/type	String	
+Remark possible values:
+
+CONTRACT
+AGENCY
+RS/bookings/booking/transfers/transfer/content/transferRemarks/description	String	 Remark content
+RS/bookings/booking/transfers/transfer/content/transferRemarks/mandatory	Boolean	 Mandatory remark
+RS/bookings/booking/transfers/transfer/price	Element	Price information of the transfer service
+RS/bookings/booking/transfers/transfer/price/totalAmount	Double	Total amount of the booking
+RS/bookings/booking/transfers/transfer/price/netAmount	Double	Net amount of the booking
+RS/bookings/booking/transfers/transfer/price/currencyId	String	Currency
+RS/bookings/booking/transfers/transfer/rateKey	String	Does not apply on Booking response
+RS/bookings/booking/transfers/transfer/cancellationPolicies	Array of cancellationPolicy elements	List of cancellation policies applied to the transfer service
+RS/bookings/booking/transfers/transfer/cancellationPolicies/cancellationPolicy	Element	Information of the cancellation policy
+RS/bookings/booking/transfers/transfer/cancellationPolicies/cancellationPolicy/amount	Double	Amount to be charged in case booking is cancelled after the date specified in the '@from' field.
+RS/bookings/booking/transfers/transfer/cancellationPolicies/cancellationPolicy/from	String	Date from which the amount will be charged, format ISO 8601 (yyyy-MM-ddTHH:mm:ssZ)
+RS/bookings/booking/transfers/transfer/cancellationPolicies/cancellationPolicy/currencyId	String	Currency
+RS/bookings/booking/transfers/transfer/links	Array of link elements	Information on the navigation links available from the current operation
+RS/bookings/booking/transfers/transfer/links/link	Element	Link information
+RS/bookings/booking/transfers/transfer/links/link/rel	String	Specifies the relationship between the current document and the linked document/resource
+RS/bookings/booking/transfers/transfer/links/link/href	String	Specifies the path of the resource the link goes to
+RS/bookings/booking/transfers/transfer/links/link/method	String	HTTP method
+RS/bookings/booking/transfers/transfer/factsheetId	Int	Content card number associated with the transfer, identifies the relationship between type of vehicle, type of service and type of transfer
+RS/transfers/transfer/transferDetails	Array of transfer details elements	Information about the ride from which the transfer will pick up passengers.
+RS/transfers/transfer/transferDetails/transferDetail	Element	Ride information
+RS/transfers/transfer/transferDetails/transferDetail/type	String	Ride type. Possible values:
+FLIGHT
+CRUISE
+TRAIN
+RS/transfers/transfer/transferDetails/transferDetail/direction	String	Ride direction. Possible values:
+ARRIVAL
+DEPARTURE
+RS/transfers/transfer/transferDetails/transferDetail/code	String	Ride identification number(e.g., flight number)
+RS/transfers/transfer/transferDetails/transferDetail/companyName	String	Indicates the name of the company which operates the ride transport. NOTE: Normally used in ship transports.
+RS/transfers/transfer/sourceMarketEmergencyNumber
+
+String	
+Source market emergency number
+
+ookingRS/bookings/booking/clientReference	String	Client internal booking reference
+RS/bookings/booking/remark	String	Comments.NOTE:The character limit in this field is 2000 characters.
+RS/bookings/booking/invoiceCompany	Element	Element that contains information about the invoice company
+RS/bookings/booking/invoiceCompany/code	String	Code of the invoice company
+RS/bookings/booking/supplier	Element	Supplier information  
+RS/bookings/booking/supplier/name	String	Supplier name
+RS/bookings/booking/supplier/vatNumber	String	Supplier VAT number 
+RS/bookings/booking/totalAmount	String	Total amount
+RS/bookings/booking/totalNetAmount	String	Total net amount
+RS/bookings/booking/pendingAmount	String	Pending amount
+RS/bookings/booking/currency	String	Currency
+RS/bookings/booking/transfers/transfer/links	Array of link elements	Information on the navigation links available from the current operation
+RS/bookings/booking/transfers/transfer/links/link	Element	Link information
+RS/bookings/booking/transfers/transfer/links/link/rel	String	Specifies the relationship between the current document and the linked document/resource
+RS/bookings/booking/transfers/transfer/links/link/href	String	Specifies the path of the resource the link goes to
+RS/bookings/booking/transfers/transfer/links/link/method
+
+Booking ListTransfers logo icon
+
+
+The booking list api call main purpose is to look for and retrieve a list of bookings that were done by the client. This operation is used by some clients to allow a search of bookings for their customers.
+
+
+When performing the booking list the response will not include all the information that usually is returned in a booking detail response api call but a summary of it. Nevertheless you can always do a booking detail to obtain all information.
+
+
+Note: Maximum request date range is of 31 days (one month).
+
+
+
+Endpoint:
+GET https://api.test.hotelbeds.com/transfer-api/1.0/bookings/{{language}} ?fromDate= {{fromDate}} &toDate= {{toDate}} &dateType= {{dateType}} &offset= {{offset}} &limit= {{limit}}
+
+Request parameters :
+
+Parameter	Type	Mandatory	Description
+language	String	Y	Response language.
+fromDate	Date	Y	
+Date from.
+
+toDate	Date	Y	
+Date to.
+
+dateType	String	Y	
+Filter Type
+
+offset	String	N	
+It's the position in the dataset of a particular record. By specifying offset, you retrieve a subset of records starting with the offset value.
+
+limit	String	N	
+Allows you to set the number of objects returned in one page.
+
+
+
+Request example:
+GET https://api.test.hotelbeds.com/transfer-api/1.0/bookings/en?fromDate=2020-12-01&toDate=2020-12-20&dateType=FROM_DATE&offset=1 &limit= 100
+
+
+Response parameters :
+Node/Attribute
+
+Type
+
+Description
+
+RS	Element	Top level
+RS/bookings	Array of booking elements	List of bookings.
+RS/bookings/booking	Element	Booking information
+RS/bookings/booking/reference	String	
+Booking reference. Format: XXX-XXXXXX
+
+RS/bookings/booking/creationDate	Date	Booking creation date.
+Format: YYYY-MM-DD
+RS/bookings/booking/status	
+Booking status.
+
+CONFIRMED
+CANCELLED
+MODIFIED
+RS/bookings/booking/modificationsPolicies	Element	Information regarding the allowed modifications to the booking
+RS/bookings/booking/modificationsPolicies/cancellation	Boolean	Indicates if the booking can be cancelled
+RS/bookings/booking/modificationsPolicies/modification	Boolean	Indicates if the booking can be modified
+RS/bookings/booking/holder	Element	Booking lead passenger/holder information
+RS/bookings/booking/holder/name	String	First name of the lead passenger
+RS/bookings/booking/holder/surname	String	Last name of the lead passenger
+RS/bookings/booking/holder/email	String	Lead passenger contact email
+RS/bookings/booking/holder/phone	String	Lead passenger contact phone number
+RS/bookings/booking/transfers	Array of transfer elements	List of reserved transfer services
+RS/bookings/booking/transfers/transfer	Element	Information of one reserved transfer service
+RS/bookings/booking/transfers/transfer/status	String	
+Transfer service status.
+
+CONFIRMED
+CANCELLED
+MODIFIED
+RS/bookings/booking/transfers/transfer/transferType	String	
+Transfer type. Possible values:
+
+SHARED
+PRIVATE
+RS/bookings/booking/transfers/transfer/vehicle	Element	Information of the vehicle
+RS/bookings/booking/transfers/transfer/vehicle/code	String	Vehicle code id
+RS/bookings/booking/transfers/transfer/category	Element	Service category information
+RS/bookings/booking/transfers/transfer/category/code	String	Category code
+RS/bookings/booking/transfers/transfer/pickupInformation	Element	Information regarding the pickUp locations
+RS/bookings/booking/transfers/transfer/pickupInformation/from	Element	Information regarding the pickUp origin location
+RS/bookings/booking/transfers/transfer/pickupInformation/from/code	String	Code of the pickUp origin location
+RS/bookings/booking/transfers/transfer/pickupInformation/from/type	String	
+PickUp origin location code type. Possible values:
+
+GIATA
+ATLAS
+IATA
+PORT
+STATION
+GPS
+RS/bookings/booking/transfers/transfer/pickupInformation/to	Element	Information regarding the pickUp destination location
+RS/bookings/booking/transfers/transfer/pickupInformation/to/code	String	Code of the pickUp destination location
+RS/bookings/booking/transfers/transfer/pickupInformation/to/type	String	
+PickUp destination location code type. Possible values:
+
+GIATA
+ATLAS
+IATA
+PORT
+STATION
+GPS
+RS/bookings/booking/transfers/transfer/pickupInformation/date	String	Pickup date
+RS/bookings/booking/transfers/transfer/pickupInformation/time	String	Pickup time
+RS/bookings/booking/transfers/transfer/price	Element	Price information of the transfer service
+RS/bookings/booking/transfers/transfer/price/totalAmount	Double	Total amount of the booking
+RS/bookings/booking/transfers/transfer/price/netAmount	Double	Net amount of the booking
+RS/bookings/booking/transfers/transfer/price/currencyId	String	Currency
+RS/bookings/booking/transfers/transfer/cancellationPolicies	Array of cancellationPolicy elements	List of cancellation policies applied to the transfer service
+RS/bookings/booking/transfers/transfer/cancellationPolicies/cancellationPolicy	Element	Information of the cancellation policy
+RS/bookings/booking/transfers/transfer/cancellationPolicies/cancellationPolicy/amount	Double	Amount to be charged in case booking is cancelled after the date specified in the '@from' field.
+RS/bookings/booking/transfers/transfer/cancellationPolicies/cancellationPolicy/from	String	Date from which the amount will be charged, format ISO 8601 (yyyy-MM-ddTHH:mm:ssZ)
+RS/bookings/booking/transfers/transfer/links	Array of link elements	Information on the navigation links available from the current operation
+RS/bookings/booking/transfers/transfer/links/link	Element	Link information
+RS/bookings/booking/transfers/transfer/links/link/rel	String	Specifies the relationship between the current document and the linked document/resource
+RS/bookings/booking/transfers/transfer/links/link/href	String	Specifies the path of the resource the link goes to
+RS//booking/transfers/transfer/links/link/method	String	HTTP method
+Transfers API ERRORS
+HTTP Response codes
+All API requests may return error responses. The HTTP status code indicates the general category of the error, while the response body contains a standardized error code and a brief description.
+
+
+Messages are generic for customers to ensure clarity and stability across versions.
+
+HTTP status code
+
+Description
+
+200 OK
+
+The request was succesful - Request successful. The response body and headers contain the requested data.
+
+201 CREATED
+
+The request was succesful - Resource successfully created. The response includes relevant details in the body and headers.
+
+400 BAD REQUEST
+
+BAD_REQUEST_ERROR - The request is invalid. Check the request structure, required fields, and parameter values.
+
+401 UNAUTHORIZED
+
+Not authorized - Invalid or expired authentication token.
+
+403 FORBIDDEN
+
+The request was understood but refused (e.g., account inactive or quota exceeded).
+
+404 NOT FOUND
+
+Not found - The requested resource could not be found.
+
+406 NOT ACCEPTABLE
+
+Not Acceptable - The requested resource cannot generate content in the acceptable formats specified.
+
+409 CONFLICT
+
+The request conflicts with the current state of the resource (e.g., non-cancellable booking).
+
+415 UNSUPPORTED MEDIA TYPE
+
+Unsupported Media Type - The Content-Type header is not supported. Use application/json and ensure payload format is correct.
+
+500 INTERNAL SERVER ERROR
+
+SYSTEM_ERROR - An unexpected error occurred while processing the request. Try again later.
+
+502 BAD GATEWAY
+
+Bad Gateway - Invalid response received from an upstream server.
+
+503 SERVICE UNAVAILABLE
+
+Service Unavailable - The service is temporarily unavailable. Retry after a short delay.
+
+596 SERVICE NOT FOUND
+
+Service Not Found - Invalid endpoint. Verify the endpoint URL.
+
+Error Codes
+The following error codes may be returned in the response body.
+
+General Errors
+Code - Description
+
+(400) E_REQUEST_INVALID The request is not a valid JSON or XML.
+(400) E_REQUEST_PASTDATE Date is in the past.
+(400) E_REQUEST_ATLEASTONEADULT At least one adult (18+) is required.
+(400) E_REQUEST_INVALIDTERMINALCODE Invalid terminal code: %s.
+(400) E_REQUEST_GPSCOORDINATES Invalid GPS coordinates: %s.
+(400) E_REQUEST_ATLASCODE Invalid atlas code: %s.
+(400) E_REQUEST_INVALIDDATEFORMAT Invalid date format: %s. Expected: YYYY-MM-DDThh:mm:ss.
+(400) E_REQUEST_ADULTSDONTMATCH Number of adults in occupancies does not match number in paxes.
+(400) E_REQUEST_CHILDRENDONTMATCH Number of children in occupancies does not match number in paxes.
+(400) E_REQUEST_AGESDONTMATCH Number of children/infants does not match provided ages.
+(400) E_REQUEST_SAMEFROMTO Pickup and destination locations must differ.
+
+Confirmation Errors
+Code - Description
+
+(500) E_CONFIRMATION_DUPLICATEDSERVICES Duplicated services in booking confirmation request.
+(500) E_CONFIRMATION_WRONGLANGUAGE All services must be in the same language as availability.
+(500) E_CONFIRMATION_WRONGOFFICE All services must belong to the same office.
+(500) E_CONFIRMATION_WRONGCOMPANY All services must belong to the same company.
+(500) E_CONFIRMATION_PAXESDONOTMATCH Passenger ages at confirmation do not match those in details.
+(500) E_CONFIRMATION_SERVICENOTCONFIRMED Error confirming service: %s.
+(500) E_CONFIRMATION_NOTRESPONDING System not responding. Booking not confirmed. Retry later.
+(500) E_CONFIRMATION_INVALIDRATEKEY Product values have changed. Regenerate availability before confirming.
+(400) E_CONFIRMATION_EMPTYTRANSFERS No transfers to confirm.
+(400) E_CONFIRMATION_INSUFFICIENTSEATS Not enough capacity for all passengers in %s direction.
+(400) E_CONFIRMATION_INVALIDPICKUPDATE Invalid pickup date.
+(400) E_CONFIRMATION_INVALIDTRANSFERDATE Invalid transfer date.
+(400) E_CONFIRMATION_INVALIDPICKUP Pickup error: %s.
+(400) E_CONFIRMATION_INVALIDDROPOFF Dropoff error: %s.
+(400) E_CONFIRMATION_RATEKEYHASH Rate key has been altered.
+(400) E_CONFIRMATION_RATEKEYCREDENTIALS Invalid rate key credentials.
+(500) E_CONFIRMATION_DETAILSNOTEMPTY Transfer details cannot be empty.
+(400) E_CONFIRMATION_DETAILDIRECTIONNOTEMPTY Direction for %s should not be empty.
+(400) E_CONFIRMATION_DETAILTYPENOTEMPTY Type for %s should not be empty.
+(400)E_CONFIRMATION_DETAILCODENOTEMPTY Code for %s should not be empty.
+(400)E_CONFIRMATION_TRANSFER_TYPEINVALID Invalid transfer detail value %s for type %s.
+(400)E_CONFIRMATION_DETAILDIRECTIONSAMERATEKEY Direction for %s must match for rateKey %s.
+
+Detail Errors
+Code - Description
+
+(400) E_BOOKING_NOTFOUND No booking found for reference %s.
+(500) E_BOOKING_GETBOOKINGERROR Cannot retrieve booking %s.
+
+Cancellation Errors
+Code - Description
+
+(409) E_BOOKING_CANCELLATIONERROR Error cancelling booking %s: %s - %s.
+
+
+Transfers between terminals Transfers logo icon
+It is important to note that certain terminal-to-terminal transfers are not supported. Specifically, transfers between terminals of the same type- such as IATA to IATA (airport - airport), PORT to PORT and STATION to STATION (train station to train station) are not permitted.
+
+
+
+Please find below the correct usage, consider the following JSON request examples, basically the origin department of the service will have the consideration of ARRIVAL while the terminal of destination will have the consideration of DEPARTURE
+
+{
+  "language": "en",
+  "holder": {
+    "name": "Juan",
+    "surname": "Doe",
+    "email": "john.doe@hotelbeds.com",
+    "phone": "+16543245812"
+  },
+  "transfers": [
+    {
+      "rateKey": "DEPARTURE|PORT|278|IATA|MIA|14/06/2025|10:15|2~1~099|235|SHRDSH|STND|69.54||39|MIA|SIMPLE|706e273537f25a268ff6a89901016103|1313065|T|bfmghpcvn9jkxqcwnsfsbpn4",
+      "transferDetails": [
+        {
+          "type": "CRUISE",
+          "direction": "ARRIVAL",
+          "code": "TEST11",
+          "companyName": null
+        },
+        {
+          "type": "FLIGHT",
+          "direction": "DEPARTURE",
+          "code": "XR1234",
+          "companyName": null
+        }
+      ]
+    }
+  ],
+  "clientReference": "BOSTON#12",
+  "welcomeMessage": "Welcome",
+  "remark": "Booking."
+}
+{
+  "language": "en",
+  "holder": {
+    "name": "Juan",
+    "surname": "Doe",
+    "email": "john.doe@hotelbeds.com",
+    "phone": "+16543245812"
+  },
+  "transfers": [
+    {
+      "rateKey": "ARRIVAL|IATA|MIA|PORT|278|14/06/2025|10:15|14/06/2025|10:15|2~1~099|235|SHRDSH|STND|69.54||||39|278|SIMPLE|5698775c0751f774c1b56367ad43a61d|1313065|T|bfmghpcvn9jkxqcwnsfsbpn4",
+      "transferDetails": [
+        {
+          "type": "FLIGHT",
+          "direction": "ARRIVAL",
+          "code": "XR1234",
+          "companyName": null
+        },
+{
+          "type": "CRUISE",
+          "direction": "DEPARTURE",
+          "code": "TEST11",
+          "companyName": null
+        }
+      ]
+    }
+  ],
+  "clientReference": "BOSTON#12",
+  "welcomeMessage": "Welcome",
+  "remark": "Booking."
+}
+
+
+Booking Request Transfers logo icon
+
+
+This method will allow you to confirm ratekeys, remember you can confirm one ratekey as well as multiples with same booking reference.
+
+
+
+Endpoint:
+POST https://api.test.hotelbeds.com/transfer-api/1.0/bookings
+
+Request parameters
+
+Node/Attribute
+
+Type
+
+Mandatory
+
+Description
+
+RQ
+
+Element
+
+Y
+
+Top level
+
+RQ/language
+
+String
+
+Y
+
+Requested language code
+
+RQ/holder
+
+Element
+
+Y
+
+Booking holder/lead passenger information
+
+RQ/holder/name
+
+String
+
+Y
+
+Lead passenger first name
+
+RQ/holder/surname
+
+String
+
+Y
+
+Lead passenger last name
+
+RQ/holder/email
+
+String
+
+Y
+
+Lead passenger contact email
+
+RQ/holder/phone
+
+String
+
+Y
+
+Passenger phone number, in the international E.164 format
+
+RQ/transfers
+
+Array of transfer elements
+
+Y
+
+List of requested transfer services
+
+RQ/transfers/transfer
+
+Element
+
+Y
+
+Information of one requested transfer service
+
+RQ/transfers/transfer/rateKey
+
+String
+
+Y
+
+Rate key to be confirmed taken from the availability step
+
+RQ/transfers/transfer/pickupInformation	Element	N	Custom information used to override default pickup information for the confirmation of GPS services
+RQ/transfers/transfer/pickupInformation/name	String	Y	 Pickup address information. NOTE: Mandatory field if the pickupInformation element is sent in the request
+RQ/transfers/transfer/pickupInformation/address	String	Y	 Pickup address information. NOTE: Mandatory field if the pickupInformation element is sent in the request
+RQ/transfers/transfer/pickupInformation/town	String	Y	Pickup address information. NOTE: Mandatory field if the pickupInformation element is sent in the request
+RQ/transfers/transfer/pickupInformation/country	String	Y	Pickup address information. NOTE: Mandatory field if the pickupInformation element is sent in the request
+RQ/transfers/transfer/pickupInformation/zip	String	Y	Pickup address information. NOTE: Mandatory field if the pickupInformation element is sent in the request
+RQ/transfers/transfer/dropoffInformation	String	N	Custom information used to override default dropoff information for the confirmation of GPS services
+RQ/transfers/transfer/dropoffInformation/name	String	Y	Dropoff address information.  NOTE: Mandatory field if the dropoffInformation element is sent in the request
+RQ/transfers/transfer/dropoffInformation/address	String	Y	Dropoff address information. NOTE: Mandatory field if the dropoffInformation element is sent in the request
+RQ/transfers/transfer/dropoffInformation/town	String	Y	Dropoff address information. NOTE: Mandatory field if the dropoffInformation element is sent in the request
+RQ/transfers/transfer/dropoffInformation/country	String	Y	Dropoff address information. NOTE: Mandatory field if the dropoffInformation element is sent in the request
+RQ/transfers/transfer/dropoffInformation/zip	String	Y	Dropoff address information.  NOTE: Mandatory field if the dropoffInformation element is sent in the request
+RQ/transfers/transfer/transferDetails	Array of transfer details elements	Y	Information about the ride from which the transfer will pick up passengers.
+RQ/transfers/transfer/transferDetails/transferDetail	Element	Y	Ride information
+RQ/transfers/transfer/transferDetails/transferDetail/type	String	Y	Ride type. Possible values:
+FLIGHT
+CRUISE
+TRAIN
+RQ/transfers/transfer/transferDetails/transferDetail/direction	String	Y	Ride direction. Possible values:
+ARRIVAL
+DEPARTURE
+RQ/transfers/transfer/transferDetails/transferDetail/code	String	Y	Ride identification number(e.g., flight number). NOTE: The character limit in this field is 7 characters.
+RQ/transfers/transfer/transferDetails/transferDetail/companyName	String	N	Indicates the name of the company which operates the ride transport. NOTE: Normally used in ship transports.
+RQ/clientReference
+
+String
+
+N
+
+Client internal booking reference
+
+RQ/remark
+
+String
+
+N
+
+Comments. NOTE: The character limit in this field is 2000 characters.
+
+
+
+
+Request example (one service)
+{
+	"language": "en",
+    "holder": {
+        "name": "John",
+        "surname": "Doe",
+        "email": "john.doe@hotelbeds.com",
+        "phone": "+16543245812"
+    },
+    "transfers": [
+        {
+            "rateKey": "ARRIVAL|IATA|BCN|ATLAS|398692|2024-01-11|15:25|2024-01-11|15:25|2~0~0||99|||||102|SHRD||SH|STND|20.01||||39|398692|SIMPLE|173a9268801b66cdac4a1bbe6430b137|1269799|T|1b3814dfc98b4495220e3ecb1ff1ee6f",
+            "transferDetails": [
+            	{
+            		"type": "FLIGHT",
+            		"direction": "ARRIVAL",
+            		"code": "XR1234",
+            		"companyName": "null"
+            	}
+        	]
+        }
+    ],
+    
+    "clientReference": "BOSTON#12-203#456754",
+    "welcomeMessage": "Welcome Mr. John Doe",
+    "remark": "Booking remarks go here."
+}
+This will confirm only one service.
+
+
+
+Confirming multiple ratekeys (services)
+Useful to confirm roundtrips or confirm twice the same service in case the requested paxes can't fit in one service (vehicle).
+
+{
+    "language": "es",
+    "holder": {
+        "name": "John",
+        "surname": "Doe",
+        "email": "john.doe@hotelbeds.com",
+        "phone": "+16543245812"
+    },
+    "transfers": [
+        {
+            "rateKey": "ARRIVAL|IATA|BCN|ATLAS|398692|2024-01-11|03:25|2024-01-11|03:25|2~0~0||99|||||102|SHRD||SH|STND|21.74||||39|398692|SIMPLE|7152346f9266ec84477e88405ab3a3f0|1269799|T|1b3814dfc98b4495220e3ecb1ff1ee6f",
+            "transferDetails": [
+            	{
+            		"type": "FLIGHT",
+            		"direction": "ARRIVAL",
+            		"code": "XR1234",
+            		"companyName": "RYANAIR"
+            	}
+        	]
+        },
+        {
+            "rateKey": "DEPARTURE|ATLAS|398692|IATA|BCN|2024-01-15|03:25|2024-01-15|03:25|2~0~0||99|||||102|SHRD||SH|STND|21.74||||39|BCN|SIMPLE|b0abec268a99c5d615c22b696dfec96e|1269799|T|1b3814dfc98b4495220e3ecb1ff1ee6f",
+            "transferDetails": [
+            	{
+            		"type": "FLIGHT",
+            		"direction": "DEPARTURE",
+            		"code": "XR1234",
+            		"companyName": "IBERIA"
+            	}
+        	]
+        }
+    ],
+    "clientReference": "BOSTON#12-203#456754",
+    "welcomeMessage": "Welcome Mr. John Doe",
+    "remark": "Booking remarks go here."
+}
+Note, all ratekeys confirmed in same request will have same booking reference
+
+
+
+
+Post Booking Operations
+
+Once you have confirmed bookings, there's a series of operations that can be performed:
+
+
+BookingCancellation : To cancel a booking or servic in booking.
+BookingDetail : To retrieve the information of a specific booking.
+BookingList : To retrieve booking list of a specific dates range.
+
+Bear in mind that you will need the booking HB reference of the bookings you carried out to perform post booking operations.
+
+
+
+Booking response example
+When the confirmation of a rateKey is successful; the booking reference is provided, along with key information of the booking, which includes:
+
+Transfer service confirmed, with its locator
+Holder and pax confirmed
+Rate confirmed with the confirmed amounts and dates
+Please make sure to keep the HB booking reference of all bookings performed with your credentials, as they are needed for post booking operations such as modification or cancellation.
+
+
+
+Response parameters
+Node/Attribute
+
+Type
+
+Description
+
+RS	Element	Top level
+RS/bookings	Array of booking elements	List of bookings.
+NOTE: in confirmation step you'll always will receive only one booking in this array.
+RS/bookings/booking	Element	Booking information
+RS/bookings/booking/reference	String	
+Booking reference. Format: XXX-XXXXXX
+
+RS/bookings/booking/creationDate	Date	Booking creation date.
+Format: YYYY-MM-DD
+RS/bookings/booking/status	
+Booking status.
+
+CONFIRMED
+CANCELLED
+MODIFIED
+RS/bookings/booking/modificationsPolicies	Element	Information regarding the allowed modifications to the booking
+RS/bookings/booking/modificationsPolicies/cancellation	Boolean	Indicates if the booking can be cancelled
+RS/bookings/booking/modificationsPolicies/modification	Boolean	Indicates if the booking can be modified
+RS/bookings/booking/holder	Element	Booking lead passenger/holder information
+RS/bookings/booking/holder/name	String	First name of the lead passenger
+RS/bookings/booking/holder/surname	String	Last name of the lead passenger
+RS/bookings/booking/holder/email	String	Lead passenger contact email
+RS/bookings/booking/holder/phone	String	Lead passenger contact phone number
+RS/bookings/booking/transfers	Array of transfer elements	List of reserved transfer services
+RS/bookings/booking/transfers/transfer	Element	Information of one reserved transfer service
+RS/bookings/booking/transfers/transfer/id	Int	Transfer service id code
+RS/bookings/booking/transfers/transfer/direction	String	
+Direction of travel. Possible values:
+
+DEPARTURE
+ARRIVAL
+RS/bookings/booking/transfers/transfer/status	String	
+Transfer service status.
+
+CONFIRMED
+CANCELLED
+RS/bookings/booking/transfers/transfer/transferType	String	
+Transfer type. Possible values:
+
+SHARED
+PRIVATE
+RS/bookings/booking/transfers/transfer/vehicle	Element	Information of the vehicle
+RS/bookings/booking/transfers/transfer/vehicle/code	String	Vehicle code id
+RS/bookings/booking/transfers/transfer/vehicle/name	String	Vehicle name
+RS/bookings/booking/transfers/transfer/category	Element	Service category information
+RS/bookings/booking/transfers/transfer/category/code	String	Category code
+RS/bookings/booking/transfers/transfer/category/name	String	Category name
+RS/bookings/booking/transfers/transfer/pickupInformation	Element	Information regarding the pickUp locations
+RS/bookings/booking/transfers/transfer/pickupInformation/from	Element	Information regarding the pickUp origin location
+RS/bookings/booking/transfers/transfer/pickupInformation/from/code	String	Code of the pickUp origin location
+RS/bookings/booking/transfers/transfer/pickupInformation/from/description	String	Description of the pickUp origin location
+RS/bookings/booking/transfers/transfer/pickupInformation/from/type	String	
+PickUp origin location code type. Possible values:
+
+GIATA
+ATLAS
+IATA
+PORT
+STATION
+GPS
+RS/bookings/booking/transfers/transfer/pickupInformation/to	Element	Information regarding the pickUp destination location
+RS/bookings/booking/transfers/transfer/pickupInformation/to/code	String	Code of the pickUp destination location
+RS/bookings/booking/transfers/transfer/pickupInformation/to/description	String	Description of the pickUp destination location
+RS/bookings/booking/transfers/transfer/pickupInformation/to/type	String	
+PickUp destination location code type. Possible values:
+
+GIATA
+ATLAS
+IATA
+PORT
+STATION
+GPS
+RS/bookings/booking/transfers/transfer/pickupInformation/date	String	Pickup date
+RS/bookings/booking/transfers/transfer/pickupInformation/time	String	Pickup time
+RS/bookings/booking/transfers/transfer/pickupInformation/pickup	Element	Information of the pickup
+RS/bookings/booking/transfers/transfer/pickupInformation/pickup/address	String	Physical address of the pickup
+RS/bookings/booking/transfers/transfer/pickupInformation/pickup/number	String	Number of the address of the pickup
+RS/bookings/booking/transfers/transfer/pickupInformation/pickup/town	String	City name of the address of the pickup
+RS/bookings/booking/transfers/transfer/pickupInformation/pickup/zip	String	Postal code of the address of the pickup
+RS/bookings/booking/transfers/transfer/pickupInformation/pickup/description	String	Pickup description an instrucctions to reach the place
+RS/bookings/booking/transfers/transfer/pickupInformation/pickup/altitude	String	Elevation from sea level
+RS/bookings/booking/transfers/transfer/pickupInformation/pickup/latitude	String	Latitude data for geolocation
+RS/bookings/booking/transfers/transfer/pickupInformation/pickup/longitude	String	Longitude data for geolocation
+RS/bookings/booking/transfers/transfer/pickupInformation/pickup/checkPickup	Element	Further instructions in order to confirm the exact pickup time
+RS/bookings/booking/transfers/transfer/pickupInformation/pickup/checkPickup/mustCheckPickupTime
+
+Boolean	
+Indicates whether the user needs to confirm exact pickup time on external website
+
+RS/bookings/booking/transfers/transfer/pickupInformation/pickup/checkPickup/url	String	
+URL the user needs to visit in order to confirm pickup time
+
+ RS/bookings/booking/transfers/transfer/pickupInformation/pickup/checkPickup/hoursBeforeConsulting	Int	
+Indicates how many hours before the service, the pickup time will be available on the website
+
+RS/bookings/booking/transfers/transfer/pickupInformation/pickup/pickupId	Int	
+NEW: The information of this tag has been deprecated in the current API, the response will always be null
+RS/bookings/booking/transfers/transfer/pickupInformation/pickup/stopName	String	
+NEW: The information of this tag has been deprecated in the current API, the response will always be null
+RS/bookings/booking/transfers/transfer/pickupInformation/pickup/image	String	Image/map to help locate the pickup
+RS/bookings/booking/transfers/transfer/paxes	Array of pax elements	Collection of passengers in the reservation
+RS/bookings/booking/transfers/transfer/paxes/pax	Element	Passenger information
+RS/bookings/booking/transfers/transfer/paxes/pax/type	String	
+Passenger type. Possible values:
+
+ADULT
+CHILD
+INFANT
+RS/bookings/booking/transfers/transfer/content	Element	Static information of the transfer service
+RS/bookings/booking/transfers/transfer/content/vehicle	Element	Information of the vehicle used in the transfer service
+RS/bookings/booking/transfers/transfer/content/vehicle/code	String	Vehicle code used in the transfer service
+RS/bookings/booking/transfers/transfer/content/vehicle/name	String	Name of the type of the vehicle used in the transfer service
+RS/bookings/booking/transfers/transfer/content/category	Element	Information of the category of the transfer service
+RS/bookings/booking/transfers/transfer/content/category/code	String	Category code of the transfer service
+RS/bookings/booking/transfers/transfer/content/category/name	String	Category name of the ttransfer service category
+RS/bookings/booking/transfers/transfer/content/images	Array of image elements	List of transfer pictures
+RS/bookings/booking/transfers/transfer/content/images/image	Element	Image information
+RS/bookings/booking/transfers/transfer/content/images/image/url	String	Path of the picture file
+RS/bookings/booking/transfers/transfer/content/images/image/type	String	
+Type name of the picture.
+
+NEW: The image size will be unique regardless the value selected:
+SMALL
+MEDIUM
+LARGE
+EXTRALARGE
+RS/bookings/booking/transfers/transfer/content/transferDetailInfo	Array of transferDetailInfo elements	Collection of detailed information about the transfer
+RS/bookings/booking/transfers/transfer/content/transferDetailInfo/transferDetailInfo	Element	Transfer detailed information
+RS/bookings/booking/transfers/transfer/content/transferDetailInfo/transferDetailInfo/id	String	Information id
+RS/bookings/booking/transfers/transfer/content/transferDetailInfo/transferDetailInfo/name	String	Information name
+RS/bookings/booking/transfers/transfer/content/transferDetailInfo/transferDetailInfo/description	String	Details and information on the transfer
+RS/bookings/booking/transfers/transfer/content/transferDetailInfo/transferDetailInfo/type	String	
+Transfer detail info type. Possible values:
+
+GENERAL_INFO
+RS/bookings/booking/transfers/transfer/content/customerTransferTimeInfo	Element	
+NEW: The information of this tag has been deprecated in the current API, the response will always be null
+RS/bookings/booking/transfers/transfer/content/supplierTransferTimeInfo	Element	
+NEW: The information of this tag has been deprecated in the current API, the response will always be null
+RS/bookings/booking/transfers/transfer/content/transferRemarks	Element	 Transfer service remarks
+RS/bookings/booking/transfers/transfer/content/transferRemarks/type	String	
+Remark possible values:
+
+CONTRACT
+AGENCY
+RS/bookings/booking/transfers/transfer/content/transferRemarks/description	String	 Remark content
+RS/bookings/booking/transfers/transfer/content/transferRemarks/mandatory	Boolean	 Mandatory remark
+RS/bookings/booking/transfers/transfer/price	Element	Price information of the transfer service
+RS/bookings/booking/transfers/transfer/price/totalAmount	Double	Total amount of the booking
+RS/bookings/booking/transfers/transfer/price/netAmount	Double	Net amount of the booking
+RS/bookings/booking/transfers/transfer/price/currencyId	String	Currency
+RS/bookings/booking/transfers/transfer/rateKey	String	Does not apply on Booking response
+RS/bookings/booking/transfers/transfer/cancellationPolicies	Array of cancellationPolicy elements	List of cancellation policies applied to the transfer service
+RS/bookings/booking/transfers/transfer/cancellationPolicies/cancellationPolicy	Element	Information of the cancellation policy
+RS/bookings/booking/transfers/transfer/cancellationPolicies/cancellationPolicy/amount	Double	Amount to be charged in case booking is cancelled after the date specified in the '@from' field.
+RS/bookings/booking/transfers/transfer/cancellationPolicies/cancellationPolicy/from	String	Date from which the amount will be charged, format ISO 8601 (yyyy-MM-ddTHH:mm:ssZ)
+RS/bookings/booking/transfers/transfer/cancellationPolicies/cancellationPolicy/currencyId	String	Currency
+RS/bookings/booking/transfers/transfer/links	Array of link elements	Information on the navigation links available from the current operation
+RS/bookings/booking/transfers/transfer/links/link	Element	Link information
+RS/bookings/booking/transfers/transfer/links/link/rel	String	Specifies the relationship between the current document and the linked document/resource
+RS/bookings/booking/transfers/transfer/links/link/href	String	Specifies the path of the resource the link goes to
+RS/bookings/booking/transfers/transfer/links/link/method	String	HTTP method
+RS/bookings/booking/transfers/transfer/factsheetId	Int	Content card number associated with the transfer, identifies the relationship between type of vehicle, type of service and type of transfer
+RS/transfers/transfer/transferDetails	Array of transfer details elements	Information about the ride from which the transfer will pick up passengers.
+RS/transfers/transfer/transferDetails/transferDetail	Element	Ride information
+RS/transfers/transfer/transferDetails/transferDetail/type	String	Ride type. Possible values:
+FLIGHT
+CRUISE
+TRAIN
+RS/transfers/transfer/transferDetails/transferDetail/direction	String	Ride direction. Possible values:
+ARRIVAL
+DEPARTURE
+RS/transfers/transfer/transferDetails/transferDetail/code	String	Ride identification number(e.g., flight number)
+RS/transfers/transfer/transferDetails/transferDetail/companyName	String	Indicates the name of the company which operates the ride transport. NOTE: Normally used in ship transports.
+RS/transfers/transfer/sourceMarketEmergencyNumber
+
+String	
+Source market emergency number
+
+ookingRS/bookings/booking/clientReference	String	Client internal booking reference
+RS/bookings/booking/remark	String	Comments.NOTE:The character limit in this field is 2000 characters.
+RS/bookings/booking/invoiceCompany	Element	Element that contains information about the invoice company
+RS/bookings/booking/invoiceCompany/code	String	Code of the invoice company
+RS/bookings/booking/supplier	Element	Supplier information  
+RS/bookings/booking/supplier/name	String	Supplier name
+RS/bookings/booking/supplier/vatNumber	String	Supplier VAT number 
+RS/bookings/booking/totalAmount	String	Total amount
+RS/bookings/booking/totalNetAmount	String	Total net amount
+RS/bookings/booking/pendingAmount	String	Pending amount
+RS/bookings/booking/currency	String	Currency
+RS/bookings/booking/transfers/transfer/links	Array of link elements	Information on the navigation links available from the current operation
+RS/bookings/booking/transfers/transfer/links/link	Element	Link information
+RS/bookings/booking/transfers/transfer/links/link/rel	String	Specifies the relationship between the current document and the linked document/resource
+RS/bookings/booking/transfers/transfer/links/link/href	String	Specifies the path of the resource the link goes to
+RS/bookings/booking/transfers/transfer/links/link/method	String	HTTP method
+{
+    "bookings": [
+        {
+            "reference": "102-14536491",
+            "bookingFileId": null,
+            "creationDate": "2023-11-24T11:32:41",
+            "status": "CONFIRMED",
+            "modificationsPolicies": {
+                "cancellation": true,
+                "modification": true
+            },
+            "holder": {
+                "name": "John",
+                "surname": "Doe",
+                "email": "john.doe@hotelbeds.com",
+                "phone": "+16543245812"
+            },
+            "transfers": [
+                {
+                    "id": 1,
+                    "rateKey": "ARRIVAL|IATA|BCN|ATLAS|398692|2024-01-11|15:25|2024-01-11|15:25|2~0~0||99|||||102|SHRD||SH|STND|20.01||||39|398692|SIMPLE|173a9268801b66cdac4a1bbe6430b137|1269799|T|1b3814dfc98b4495220e3ecb1ff1ee6f",
+                    "status": "CONFIRMED",
+                    "transferType": "SHARED",
+                    "vehicle": {
+                        "code": "SH",
+                        "name": "Shuttle"
+                    },
+                    "category": {
+                        "code": "STND",
+                        "name": "Standard"
+                    },
+                    "pickupInformation": {
+                        "from": {
+                            "code": "BCN",
+                            "description": "Barcelona Airport",
+                            "type": "IATA"
+                        },
+                        "to": {
+                            "code": "398692",
+                            "description": "Lugaris Rambla",
+                            "type": "ATLAS"
+                        },
+                        "date": "2024-01-11",
+                        "time": "15:25:00",
+                        "pickup": {
+                            "address": null,
+                            "number": null,
+                            "town": null,
+                            "zip": null,
+                            "description": "\nIMPORTANT NOTE: CONSTRUCTION WORKS IN TERMINAL 2B from OCT '22 - APR '23. Please proceed to the FROM2 office located in the Departures Area. Once you reach check-in desk 71, continue past the construction works and on the left-hand side of the escalators, opposite the construction, you will find the FROM2 office.  \n\n\nNote: To check the drop off / pick up point assigned to your hotel, please access: http://confirm.from2travel.com/ and navigate to “PLEASE CLICK FOR DIRECTIONS TO HOTEL/PICK UP POINT”\n\nFINDING YOUR DRIVER\n\nTERMINAL 1\nApril - Oct: Exit INTO the arrivals hall, turn right and make your way to the Catalonia Tourism office. You will find a From2 representative (orange t-shirt) that will assist you in finding the From2 office. If there is no representative visible please wait for a few moments as they may be returning to the terminal from the coach park.\n\nNov - Mar: From2 desk is located in TERMINAL 2B, opposite desks 95 - 97. Follow the airport signs to the downstairs exit door. Take the FREE GREEN TERMINALS SHUTTLE BUS to TERMINAL 2B\n\nTERMINAL 2\nFrom2 desk is located in TERMINAL 2B, opposite desks 95 - 97.\n\nIf you arrive at Terminal 2B exit into the arrivals hall and make your way to From2 desk.\nIf you arrive at Terminal 2A exit the terminal building and make your way to Terminal 2B.\nIf you arrive at Terminal 2C exit the terminal building and make your way to Terminal 2B.\n\nIdentify yourself by showing this confirmation to your Supplier, for whom we act as a booking agent.\n\n\n\nDIFFICULTY IN LOCATING YOUR DRIVER\nContact your supplier for assistance. Do not leave without having contacted your supplier on +34 937672836 first.\n\nThere may be a wait for your shuttle at the airport as they run on a schedule. (Maximum wait time 1 hour from the moment you meet the driver/representative). In event you are delayed during the arrival process you must contact the supplier.\n\n Please note shuttles will not stop at private addresses/villas and may not offer a door to door service.",
+                            "altitude": null,
+                            "latitude": 41.3989153,
+                            "longitude": 2.20509,
+                            "checkPickup": {
+                                "mustCheckPickupTime": true,
+                                "url": "www.checkpickup.com",
+                                "hoursBeforeConsulting": null
+                            },
+                            "pickupId": null,
+                            "stopName": null,
+                            "image": null
+                        }
+                    },
+                    "paxes": [
+                        {
+                            "type": "ADULT",
+                            "age": 30
+                        },
+                        {
+                            "type": "ADULT",
+                            "age": 30
+                        }
+                    ],
+                    "content": {
+                        "vehicle": {
+                            "code": "SH",
+                            "name": "Shuttle"
+                        },
+                        "category": {
+                            "code": "STND",
+                            "name": "Standard"
+                        },
+                        "images": [
+                            {
+                                "url": "https://assets.htxstaging.com/imgs/default/vehicle_set/shuttle1min3.jpg",
+                                "type": "EXTRALARGE"
+                            },
+                            {
+                                "url": "https://assets.htxstaging.com/imgs/default/vehicle_set/shuttle1min3.jpg",
+                                "type": "LARGE"
+                            },
+                            {
+                                "url": "https://assets.htxstaging.com/imgs/default/vehicle_set/shuttle1min3.jpg",
+                                "type": "MEDIUM"
+                            },
+                            {
+                                "url": "https://assets.htxstaging.com/imgs/default/vehicle_set/shuttle1min3.jpg",
+                                "type": "SMALL"
+                            }
+                        ],
+                        "transferDetailInfo": [
+                            {
+                                "id": "0",
+                                "name": "transfertime",
+                                "description": "50 min. Estimated journey time",
+                                "type": "GENERAL_INFO"
+                            },
+                            {
+                                "id": "1",
+                                "name": "minpax",
+                                "description": "1 passenger(s) minimum",
+                                "type": "GENERAL_INFO"
+                            },
+                            {
+                                "id": "2",
+                                "name": "maxpax",
+                                "description": "99 passenger(s) maximum",
+                                "type": "GENERAL_INFO"
+                            },
+                            {
+                                "id": "3",
+                                "name": "luggage",
+                                "description": "suitcases permitted",
+                                "type": "GENERAL_INFO"
+                            }
+                        ],
+                        "customerTransferTimeInfo": [],
+                        "supplierTransferTimeInfo": [],
+                        "transferRemarks": [
+                            {
+                                "type": "CONTRACT",
+                                "description": "\nIMPORTANT NOTE: CONSTRUCTION WORKS IN TERMINAL 2B from OCT '22 - APR '23. Please proceed to the FROM2 office located in the Departures Area. Once you reach check-in desk 71, continue past the construction works and on the left-hand side of the escalators, opposite the construction, you will find the FROM2 office.  \n\n\nNote: To check the drop off / pick up point assigned to your hotel, please access: http://confirm.from2travel.com/ and navigate to “PLEASE CLICK FOR DIRECTIONS TO HOTEL/PICK UP POINT”\n\nFINDING YOUR DRIVER\n\nTERMINAL 1\nApril - Oct: Exit INTO the arrivals hall, turn right and make your way to the Catalonia Tourism office. You will find a From2 representative (orange t-shirt) that will assist you in finding the From2 office. If there is no representative visible please wait for a few moments as they may be returning to the terminal from the coach park.\n\nNov - Mar: From2 desk is located in TERMINAL 2B, opposite desks 95 - 97. Follow the airport signs to the downstairs exit door. Take the FREE GREEN TERMINALS SHUTTLE BUS to TERMINAL 2B\n\nTERMINAL 2\nFrom2 desk is located in TERMINAL 2B, opposite desks 95 - 97.\n\nIf you arrive at Terminal 2B exit into the arrivals hall and make your way to From2 desk.\nIf you arrive at Terminal 2A exit the terminal building and make your way to Terminal 2B.\nIf you arrive at Terminal 2C exit the terminal building and make your way to Terminal 2B.\n\nIdentify yourself by showing this confirmation to your Supplier, for whom we act as a booking agent.\n\n\n\nDIFFICULTY IN LOCATING YOUR DRIVER\nContact your supplier for assistance. Do not leave without having contacted your supplier on +34 937672836 first.\n\nThere may be a wait for your shuttle at the airport as they run on a schedule. (Maximum wait time 1 hour from the moment you meet the driver/representative). In event you are delayed during the arrival process you must contact the supplier.\n\n Please note shuttles will not stop at private addresses/villas and may not offer a door to door service.",
+                                "mandatory": true
+                            }
+                        ]
+                    },
+                    "price": {
+                        "totalAmount": 20.01,
+                        "netAmount": 0.00,
+                        "currencyId": "EUR"
+                    },
+                    "cancellationPolicies": [
+                        {
+                            "amount": 20.99,
+                            "from": "2024-01-10T00:00:00",
+                            "currencyId": "USD",
+                            "isForceMajeure": false
+                        }
+                    ],
+                    "factsheetId": null,
+                    "arrivalFlightNumber": "XR1234",
+                    "departureFlightNumber": null,
+                    "arrivalShipName": null,
+                    "departureShipName": null,
+                    "arrivalTrainInfo": null,
+                    "departureTrainInfo": null,
+                    "transferDetails": [
+                        {
+                            "type": "FLIGHT",
+                            "direction": "ARRIVAL",
+                            "code": "XR1234",
+                            "companyName": null
+                        }
+                    ],
+                    "sourceMarketEmergencyNumber": "34871180153",
+                    "links": [
+                        {
+                            "rel": "transferCancel",
+                            "href": "/booking/en/reference/102-14536491",
+                            "method": "DELETE"
+                        }
+                    ]
+                }
+            ],
+            "clientReference": "BOSTON#12-203#456754",
+            "remark": "",
+            "invoiceCompany": {
+                "code": "E14"
+            },
+            "supplier": {
+                "name": "HOTELBEDS SPAIN, S.L.U",
+                "vatNumber": "ESB28916765"
+            },
+            "totalAmount": 20.99,
+            "totalNetAmount": 20.99,
+            "pendingAmount": 20.99,
+            "currency": "USD",
+            "links": [
+                {
+                    "rel": "self",
+                    "href": "/booking/en/reference/102-14536491",
+                    "method": "GET"
+                },
+                {
+                    "rel": "bookingDetail",
+                    "href": "/booking/en/reference/102-14536491",
+                    "method": "GET"
+                },
+                {
+                    "rel": "bookingCancel",
+                    "href": "/booking/en/reference/102-14536491",
+                    "method": "DELETE"
+                }
+            ],
+            "paymentDataRequired": false
+        }
+    ]
+}
+Post Booking Operations
+Once you have confirmed bookings, there's a series of operations that can be performed:
+
+BookingDetail: To retrieve the information of a specific booking.
+BookingCancellation: To cancel a booking.
+Bear in mind that you will need the booking reference of the bookings you carried out to perform this operation

@@ -2,8 +2,338 @@ import React, { useState, useEffect, useRef } from 'react';
 import { MapPin, Calendar, Users, Search, ChevronDown, X, Plus, Minus, Loader2, Star, Clock, Tag } from 'lucide-react';
 import { DateRange } from 'react-date-range';
 import { addDays, format } from 'date-fns';
+import { searchTransfers } from '../services/transfersApi';
+import axios from 'axios';
 import 'react-date-range/dist/styles.css';
 import 'react-date-range/dist/theme/default.css';
+
+// Transfers Tab Component
+const TransfersTab = () => {
+  const [pickupQuery, setPickupQuery] = useState('');
+  const [dropoffQuery, setDropoffQuery] = useState('');
+  const [showPickupDropdown, setShowPickupDropdown] = useState(false);
+  const [showDropoffDropdown, setShowDropoffDropdown] = useState(false);
+  const [transferLocations, setTransferLocations] = useState([]);
+  const [isLoadingLocations, setIsLoadingLocations] = useState(false);
+  const [filteredPickupLocations, setFilteredPickupLocations] = useState([]);
+  const [filteredDropoffLocations, setFilteredDropoffLocations] = useState([]);
+  const [selectedPickup, setSelectedPickup] = useState(null);
+  const [selectedDropoff, setSelectedDropoff] = useState(null);
+  const [transferDate, setTransferDate] = useState('');
+  const [adults, setAdults] = useState(1);
+  const [children, setChildren] = useState(0);
+  const [infants, setInfants] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const pickupRef = useRef(null);
+  const dropoffRef = useRef(null);
+
+  useEffect(() => {
+    const fetchLocations = async () => {
+      setIsLoadingLocations(true);
+      try {
+        const response = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/locations/transfers`);
+        if (response.data.success) {
+          setTransferLocations(response.data.data);
+        }
+      } catch (error) {
+        console.error('Error fetching transfer locations:', error);
+      } finally {
+        setIsLoadingLocations(false);
+      }
+    };
+    fetchLocations();
+  }, []);
+
+  useEffect(() => {
+    if (pickupQuery.trim() === '') {
+      setFilteredPickupLocations([]);
+      return;
+    }
+    const query = pickupQuery.toLowerCase().trim();
+    const filtered = transferLocations.filter(loc => 
+      loc.name.toLowerCase().includes(query) || 
+      loc.city.toLowerCase().includes(query) ||
+      loc.code.toLowerCase().includes(query)
+    );
+    setFilteredPickupLocations(filtered);
+  }, [pickupQuery, transferLocations]);
+
+  useEffect(() => {
+    if (dropoffQuery.trim() === '') {
+      setFilteredDropoffLocations([]);
+      return;
+    }
+    const query = dropoffQuery.toLowerCase().trim();
+    const filtered = transferLocations.filter(loc => 
+      loc.name.toLowerCase().includes(query) || 
+      loc.city.toLowerCase().includes(query) ||
+      loc.code.toLowerCase().includes(query)
+    );
+    setFilteredDropoffLocations(filtered);
+  }, [dropoffQuery, transferLocations]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (pickupRef.current && !pickupRef.current.contains(event.target)) {
+        setShowPickupDropdown(false);
+      }
+      if (dropoffRef.current && !dropoffRef.current.contains(event.target)) {
+        setShowDropoffDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!selectedPickup || !selectedDropoff) {
+      setError('Please select both pickup and dropoff locations');
+      return;
+    }
+    if (!transferDate) {
+      setError('Please select date and time');
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      if (!selectedPickup?.code || !selectedDropoff?.code) {
+        setError('Please select valid pickup and dropoff locations with codes');
+        setLoading(false);
+        return;
+      }
+      const dateTime = transferDate.includes('T') ? transferDate : transferDate.replace(' ', 'T');
+      const searchParams = {
+        language: 'en',
+        fromType: selectedPickup.type || 'ATLAS',
+        fromCode: selectedPickup.code,
+        toType: selectedDropoff.type || 'IATA',
+        toCode: selectedDropoff.code,
+        outbound: dateTime + ':00',
+        adults,
+        children,
+        infants
+      };
+      console.log('Calling searchTransfers API...');
+      const results = await searchTransfers(searchParams);
+      console.log('API Response:', results);
+      sessionStorage.setItem('transferResults', JSON.stringify(results.data));
+      sessionStorage.setItem('transferSearch', JSON.stringify(searchParams));
+      window.location.href = '/transfers';
+    } catch (err) {
+      console.error('Search error:', err);
+      const errorMsg = err.response?.data?.error;
+      if (Array.isArray(errorMsg)) {
+        setError(errorMsg.map(e => e.msg).join(', '));
+      } else {
+        setError(typeof errorMsg === 'string' ? errorMsg : err.response?.data?.message || 'Search failed');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded-lg text-sm">
+          {error}
+        </div>
+      )}
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+        <div className="relative" ref={pickupRef}>
+          <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2 px-1">
+            Pickup Location <span className="text-red-500">*</span>
+          </label>
+          <div className="relative">
+            <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+            <input
+              type="text"
+              value={pickupQuery}
+              onChange={(e) => {
+                setPickupQuery(e.target.value);
+                setShowPickupDropdown(true);
+                if (e.target.value.trim() === '') setSelectedPickup(null);
+              }}
+              onFocus={() => setShowPickupDropdown(true)}
+              placeholder="e.g., London"
+              required
+              className="w-full pl-10 pr-10 py-2.5 sm:py-3 border border-gray-300 bg-white rounded-lg focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
+            />
+            {pickupQuery && (
+              <button
+                type="button"
+                onClick={() => {
+                  setPickupQuery('');
+                  setSelectedPickup(null);
+                  setFilteredPickupLocations([]);
+                }}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                <X size={18} />
+              </button>
+            )}
+          </div>
+          {showPickupDropdown && pickupQuery.trim() !== '' && (
+            <div className="absolute z-50 w-full mt-2 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+              {filteredPickupLocations.length > 0 ? (
+                <ul>
+                  {filteredPickupLocations.map((location, index) => (
+                    <li
+                      key={index}
+                      onClick={() => {
+                        setSelectedPickup(location);
+                        setPickupQuery(location.name);
+                        setShowPickupDropdown(false);
+                      }}
+                      className="px-4 py-2.5 hover:bg-blue-50 cursor-pointer border-b last:border-b-0"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <MapPin size={16} className="text-blue-600" />
+                        <div>
+                          <div className="font-medium text-sm">{location.name}</div>
+                          <div className="text-xs text-gray-500">{location.type} - {location.code}</div>
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <div className="p-3 text-center text-gray-500 text-sm">No locations found</div>
+              )}
+            </div>
+          )}
+        </div>
+
+        <div className="relative" ref={dropoffRef}>
+          <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2 px-1">
+            Dropoff Location <span className="text-red-500">*</span>
+          </label>
+          <div className="relative">
+            <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+            <input
+              type="text"
+              value={dropoffQuery}
+              onChange={(e) => {
+                setDropoffQuery(e.target.value);
+                setShowDropoffDropdown(true);
+                if (e.target.value.trim() === '') setSelectedDropoff(null);
+              }}
+              onFocus={() => setShowDropoffDropdown(true)}
+              placeholder="e.g., Paris"
+              required
+              className="w-full pl-10 pr-10 py-2.5 sm:py-3 border border-gray-300 bg-white rounded-lg focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
+            />
+            {dropoffQuery && (
+              <button
+                type="button"
+                onClick={() => {
+                  setDropoffQuery('');
+                  setSelectedDropoff(null);
+                  setFilteredDropoffLocations([]);
+                }}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                <X size={18} />
+              </button>
+            )}
+          </div>
+          {showDropoffDropdown && dropoffQuery.trim() !== '' && (
+            <div className="absolute z-50 w-full mt-2 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+              {filteredDropoffLocations.length > 0 ? (
+                <ul>
+                  {filteredDropoffLocations.map((location, index) => (
+                    <li
+                      key={index}
+                      onClick={() => {
+                        setSelectedDropoff(location);
+                        setDropoffQuery(location.name);
+                        setShowDropoffDropdown(false);
+                      }}
+                      className="px-4 py-2.5 hover:bg-blue-50 cursor-pointer border-b last:border-b-0"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <MapPin size={16} className="text-blue-600" />
+                        <div>
+                          <div className="font-medium text-sm">{location.name}</div>
+                          <div className="text-xs text-gray-500">{location.type} - {location.code}</div>
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <div className="p-3 text-center text-gray-500 text-sm">No locations found</div>
+              )}
+            </div>
+          )}
+        </div>
+
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+        <div>
+          <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2 px-1">
+            Date & Time <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="datetime-local"
+            value={transferDate}
+            onChange={(e) => setTransferDate(e.target.value)}
+            required
+            min={new Date().toISOString().slice(0, 16)}
+            className="w-full px-4 py-2.5 sm:py-3 border border-gray-300 bg-white rounded-lg focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
+          />
+        </div>
+
+        <div className="grid grid-cols-3 gap-2">
+          <div>
+            <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2 px-1">Adults</label>
+            <input
+              type="number"
+              min="1"
+              value={adults}
+              onChange={(e) => setAdults(parseInt(e.target.value) || 1)}
+              className="w-full px-2 py-2.5 sm:py-3 border border-gray-300 bg-white rounded-lg focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
+            />
+          </div>
+          <div>
+            <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2 px-1">Children</label>
+            <input
+              type="number"
+              min="0"
+              value={children}
+              onChange={(e) => setChildren(parseInt(e.target.value) || 0)}
+              className="w-full px-2 py-2.5 sm:py-3 border border-gray-300 bg-white rounded-lg focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
+            />
+          </div>
+          <div>
+            <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2 px-1">Infants</label>
+            <input
+              type="number"
+              min="0"
+              value={infants}
+              onChange={(e) => setInfants(parseInt(e.target.value) || 0)}
+              className="w-full px-2 py-2.5 sm:py-3 border border-gray-300 bg-white rounded-lg focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
+            />
+          </div>
+        </div>
+      </div>
+
+      <button
+        type="submit"
+        disabled={loading}
+        className="w-full md:w-auto px-6 sm:px-8 py-2.5 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition-colors font-medium flex items-center justify-center space-x-2 text-sm sm:text-base"
+      >
+        <Search size={18} />
+        <span>{loading ? 'Searching...' : 'Search Transfers'}</span>
+      </button>
+    </form>
+  );
+};
 
 // Experiences Tab Component
 const ExperiencesTab = () => {
@@ -747,9 +1077,10 @@ const HotelSearchForm = () => {
             </form>
           )}
 
+          {activeTab === 'transfers' && <TransfersTab />}
           {activeTab === 'experiences' && <ExperiencesTab />}
 
-          {activeTab !== 'stays' && activeTab !== 'experiences' && (
+          {activeTab !== 'stays' && activeTab !== 'transfers' && activeTab !== 'experiences' && (
             <div className="text-center py-8 sm:py-12 text-gray-500">
               <p className="text-base sm:text-lg">{tabs.find(t => t.id === activeTab)?.label} feature coming soon!</p>
             </div>

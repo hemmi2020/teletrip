@@ -9,6 +9,8 @@ const activityRoutes = require('./routes/activity.route');
 const activityContentRoutes = require('./routes/activityContent.route');
 const paymentRoutes = require('./routes/payment.route');
 const bookingRoutes = require('./routes/booking.route');
+const transfersRoutes = require('./routes/transfers.route');
+const locationsRoutes = require('./routes/locations.route');
 const { globalErrorHandler } = require('./middlewares/errorHandler.middleware');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
@@ -116,6 +118,8 @@ app.use('/api/activities', activityRoutes);
 app.use('/api/activity-content', activityContentRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/bookings', bookingRoutes);
+app.use('/api/transfers', transfersRoutes);
+app.use('/api/locations', locationsRoutes);
 app.use('/api/user', userDashboardRoutes);
 app.use('/api/admin', adminDashboardRoutes);
 

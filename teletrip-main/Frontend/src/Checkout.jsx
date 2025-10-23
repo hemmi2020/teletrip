@@ -145,10 +145,45 @@ const Checkout = () => {
 
       const firstItem = checkoutItems[0];
       const isActivity = firstItem?.type === 'activity';
+      const isTransfer = firstItem?.type === 'transfer';
       
       let bookingResponse;
       
-      if (isActivity) {
+      if (isTransfer) {
+        const transferBookingPayload = {
+          holder: {
+            name: `${billingInfo.firstName} ${billingInfo.lastName}`,
+            surname: billingInfo.lastName,
+            email: billingInfo.email,
+            phone: billingInfo.phone
+          },
+          transfers: checkoutItems.map(item => ({
+            rateKey: item.rateKey,
+            transferDetails: [{
+              type: 'PICKUP',
+              date: item.pickupDate,
+              time: item.pickupTime,
+              pickupInformation: {
+                from: { code: item.fromCode, type: item.fromType },
+                to: { code: item.toCode, type: item.toType }
+              },
+              passengers: Array(item.adults || 1).fill({ name: billingInfo.firstName, surname: billingInfo.lastName, type: 'ADULT' })
+            }]
+          })),
+          clientReference: `TRANSFER_${Date.now()}`
+        };
+        
+        bookingResponse = await axios.post(
+          `${import.meta.env.VITE_BASE_URL}/api/transfers/booking`,
+          transferBookingPayload,
+          {
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('token')}`,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+      } else if (isActivity) {
         const activityBookingPayload = {
           holder: {
             name: `${billingInfo.firstName} ${billingInfo.lastName}`,

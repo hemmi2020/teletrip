@@ -11,6 +11,7 @@ import HotelSearchResults from './HotelSearchResults';
 import HotelDetails from './HotelDetails';
 import ActivitySearchResults from './ActivitySearchResults';
 import ActivityDetails from './ActivityDetails';
+import TransferSearch from './TransferSearch';
 import Checkout from './Checkout';
 import AccountDashboard from './AccountDashboard';
 import PaymentSuccess from './components/PaymentSuccess';
@@ -79,6 +80,7 @@ const App = () => {
               <Route path="/hotel-details/:hotelCode" element={<HotelDetails />} />
               <Route path="/activity-search-results" element={<ActivitySearchResults />} />
               <Route path="/activity/:activityCode" element={<ActivityDetails />} />
+              <Route path="/transfers" element={<TransferSearch />} />
               
               {/* User account routes */}
               <Route path="/account" element={<AccountDashboard />} />

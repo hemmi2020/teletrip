@@ -49,7 +49,7 @@ const bookingSchema = new mongoose.Schema({
   
   bookingType: {
     type: String,
-    enum: ['hotel', 'flight', 'package', 'car_rental', 'activity', 'insurance'],
+    enum: ['hotel', 'flight', 'package', 'car_rental', 'activity', 'insurance', 'transfer'],
     required: true,
     index: true // Index for type-based queries
   },
@@ -125,6 +125,51 @@ const bookingSchema = new mongoose.Schema({
     confirmationNumber: String
   },
   
+  // Transfer booking details
+  transferBooking: {
+    searchId: String,
+    transferCode: String,
+    rateKey: String,
+    holder: {
+      name: String,
+      surname: String,
+      email: String,
+      phone: String
+    },
+    transfers: [{
+      transferType: String,
+      vehicle: String,
+      category: String,
+      pickupDate: { type: Date, index: true },
+      pickupTime: String,
+      pickupLocation: {
+        type: String,
+        code: String,
+        description: String
+      },
+      dropoffLocation: {
+        type: String,
+        code: String,
+        description: String
+      },
+      passengers: [{
+        name: String,
+        surname: String,
+        type: { type: String, enum: ['ADULT', 'CHILD', 'INFANT'] }
+      }],
+      duration: String,
+      capacity: Number
+    }],
+    voucher: mongoose.Schema.Types.Mixed,
+    cancellationPolicies: [{
+      amount: Number,
+      from: Date,
+      currency: String
+    }],
+    clientReference: String,
+    confirmationNumber: String
+  },
+
   // Flight booking details
   flightBooking: {
     airline: String,
