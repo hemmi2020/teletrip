@@ -81,27 +81,39 @@ export class DashboardAPIService {
   }
 
   static async updateProfile(profileData) {
-    try {
-      const response = await apiClient.put('/api/user/profile', profileData);
-      return {
-        success: true,
-        data: response.data.data,
-        message: response.data.message
-      };
-    } catch (error) {
-      console.error('Update profile error:', error);
-      return {
-        success: false,
-        error: error.response?.data?.message || 'Failed to update profile',
-        status: error.response?.status,
-        validationErrors: error.response?.data?.errors
-      };
-    }
+  try {
+    const response = await apiClient.put('/api/user/profile', { // Remove v1 from URL
+      fullname: {
+        firstname: profileData.firstName,
+        lastname: profileData.lastName
+      },
+      email: profileData.email,
+      phone: profileData.phone,
+      dateOfBirth: profileData.dateOfBirth,
+      gender: profileData.gender,
+      nationality: profileData.nationality,
+      address: profileData.address
+    });
+    
+    return {
+      success: true,
+      data: response.data.data,
+      message: response.data.message
+    };
+  } catch (error) {
+    console.error('Update profile error:', error);
+    return {
+      success: false,
+      error: error.response?.data?.message || 'Failed to update profile',
+      status: error.response?.status,
+      validationErrors: error.response?.data?.errors
+    };
   }
+}
 
   static async updatePassword(passwordData) {
     try {
-      const response = await apiClient.put('/api/user/profile/password', passwordData);
+      const response = await apiClient.post('/users/change-password', passwordData);
       return {
         success: true,
         data: response.data.data,
@@ -210,7 +222,7 @@ export class DashboardAPIService {
 
   static async cancelBooking(bookingId, reason) {
     try {
-      const response = await apiClient.put(`/api/user/bookings/${bookingId}/cancel`, { reason });
+      const response = await apiClient.put(`/users/bookings/${bookingId}/cancel`, { reason });
       return {
         success: true,
         data: response.data.data,

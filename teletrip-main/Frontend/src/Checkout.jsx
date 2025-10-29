@@ -16,7 +16,8 @@ import {
   AlertCircle,
   Building2,
   Wallet,
-  Loader2
+  Loader2,
+  Users
 } from 'lucide-react';
 
 const Checkout = () => {
@@ -150,6 +151,7 @@ const Checkout = () => {
       let bookingResponse;
       
       if (isTransfer) {
+        console.log('🚐 Creating transfer booking...');
         const transferBookingPayload = {
           holder: {
             name: `${billingInfo.firstName} ${billingInfo.lastName}`,
@@ -174,7 +176,7 @@ const Checkout = () => {
         };
         
         bookingResponse = await axios.post(
-          `${import.meta.env.VITE_BASE_URL}/api/transfers/booking`,
+          `${import.meta.env.VITE_BASE_URL}/api/transfers/bookings`,
           transferBookingPayload,
           {
             headers: {
@@ -517,7 +519,14 @@ const handlePayOnSiteBooking = async () => {
             currency: paymentResponse.data.data.currency,
             message: paymentResponse.data.data.message,
             instructions: paymentResponse.data.data.instructions,
-            bookingDetails: paymentResponse.data.data.bookingDetails,
+            bookingDetails: {
+              ...paymentResponse.data.data.bookingDetails,
+              roomName: firstItem.roomName || firstItem.modalityName,
+              guests: firstItem.guests || firstItem.adults || 1,
+              adults: firstItem.adults,
+              children: firstItem.children,
+              rooms: firstItem.rooms
+            },
             bookingType: firstItem.type === 'activity' ? 'activity' : 'hotel'
           }
         });
@@ -815,6 +824,14 @@ const handlePaymentSubmit = () => {
                   : `${new Date(item.checkIn).toLocaleDateString()} - ${new Date(item.checkOut).toLocaleDateString()}`
                 }
               </div>
+              {item.type !== 'activity' && (
+                <div className="flex items-center gap-2 text-xs text-gray-600 mt-1">
+                  <Users className="w-3 h-3" />
+                  <span>{item.adults || 2} Adult{(item.adults || 2) > 1 ? 's' : ''}</span>
+                  {item.children > 0 && <span>, {item.children} Child{item.children > 1 ? 'ren' : ''}</span>}
+                  <span>• {item.rooms || 1} Room{(item.rooms || 1) > 1 ? 's' : ''}</span>
+                </div>
+              )}
             </div>
             <div className="text-right">
               <p className="font-semibold text-gray-900">
@@ -920,7 +937,8 @@ const handlePaymentSubmit = () => {
         <div className="max-w-7xl mx-auto px-4 py-8">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900">Secure Checkout</h1>
-            <p className="text-gray-600 mt-2">Complete your booking with HBLPay</p>
+            <p className="text-gray-600 mt-2">Complete your booking</p>
+            <p className="text-gray-600 mt-2">Complete your booking</p>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

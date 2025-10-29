@@ -29,7 +29,7 @@ module.exports.registerUser = asyncErrorHandler(async (req, res) => {
     const isUserAlreadyExist = await userModel.findOne({ email });
     
     if (isUserAlreadyExist) {
-        return ApiResponse.badRequest(res, 'User is already registered');
+        return ApiResponse.badRequest(res, 'Email already registered. Please login instead.');
     }
 
     const hashedPassword = await userModel.hashPassword(password);
@@ -181,7 +181,7 @@ module.exports.getUserProfile = asyncErrorHandler(async (req, res) => {
         return ApiResponse.unauthorized(res, 'Authentication required');
     }
 
-    const user = await userModel.findById(req.user._id);
+    const user = await userModel.findById(req.user._id).select('+password');
 
     if (!user) {
         return ApiResponse.notFound(res, 'User not found');
@@ -193,6 +193,9 @@ module.exports.getUserProfile = asyncErrorHandler(async (req, res) => {
         fullname: user.fullname,
         email: user.email,
         phone: user.phone || '',
+        dateOfBirth: user.dateOfBirth,
+        googleId: user.googleId,
+        hasPassword: !!user.password,
         address: user.address || '',
         preferences: user.preferences || { emailNotifications: true, twoFactorAuth: false },
         role: user.role,
@@ -232,17 +235,38 @@ module.exports.updateUserProfile = asyncErrorHandler(async (req, res) => {
   }
 
   const userId = req.user._id;
-  const { fullname, phone, address } = req.body;
+  const { fullname, phone, address, dateOfBirth, gender, nationality } = req.body;
 
   const updateData = {};
+  
+  // Update fullname
   if (fullname) {
     updateData.fullname = fullname;
   }
+  
+  // Update phone
   if (phone !== undefined) {
     updateData.phone = phone;
   }
+  
+  // Update address
   if (address !== undefined) {
     updateData.address = address;
+  }
+  
+  // Update dateOfBirth
+  if (dateOfBirth !== undefined) {
+    updateData.dateOfBirth = dateOfBirth;
+  }
+  
+  // Update gender
+  if (gender !== undefined) {
+    updateData.gender = gender;
+  }
+  
+  // Update nationality
+  if (nationality !== undefined) {
+    updateData.nationality = nationality;
   }
 
   const updatedUser = await userModel.findByIdAndUpdate(
@@ -358,6 +382,7 @@ module.exports.updateUserPreferences = asyncErrorHandler(async (req, res) => {
 
 // Cancel booking
 module.exports.cancelBooking = asyncErrorHandler(async (req, res) => {
+  console.log('Cancel booking called with ID:', req.params.bookingId);
   const { bookingId } = req.params;
   const userId = req.user._id;
 
@@ -366,10 +391,11 @@ module.exports.cancelBooking = asyncErrorHandler(async (req, res) => {
       { _id: bookingId },
       { bookingId: bookingId }
     ],
-    userId
+    user: userId
   });
 
   if (!booking) {
+    console.log('Booking not found for ID:', bookingId, 'User:', userId);
     return ApiResponse.notFound(res, 'Booking not found');
   }
 
@@ -391,7 +417,7 @@ module.exports.cancelBooking = asyncErrorHandler(async (req, res) => {
       userId,
       bookingId: booking._id,
       paymentId: `REF-${Date.now()}`,
-      amount: -booking.totalAmount, // Negative amount for refund
+      amount: -booking.totalAmount,
       method: 'Refund',
       status: 'completed'
     });
@@ -401,6 +427,7 @@ module.exports.cancelBooking = asyncErrorHandler(async (req, res) => {
     await booking.save();
   }
 
+  console.log('Booking cancelled successfully:', bookingId);
   return ApiResponse.success(res, { booking }, 'Booking cancelled successfully');
 });
 
@@ -442,4 +469,44 @@ module.exports.deleteUserAccount = asyncErrorHandler(async (req, res) => {
 
   res.clearCookie('token');
   return ApiResponse.success(res, null, 'Account deleted successfully');
+});
+
+// Change/Set password
+module.exports.changePassword = asyncErrorHandler(async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+  const userId = req.user._id;
+
+  if (!newPassword) {
+    return ApiResponse.badRequest(res, 'New password is required');
+  }
+
+  const user = await userModel.findById(userId).select('+password');
+  
+  if (!user) {
+    return ApiResponse.notFound(res, 'User not found');
+  }
+
+  // Check if user has existing password AND is not a Google OAuth user
+  // Google users can reset password without knowing current one
+  const hasExistingPassword = user.password && typeof user.password === 'string' && user.password.length > 0;
+  const requireCurrentPassword = hasExistingPassword && !user.googleId;
+
+  // If user has existing password and is NOT a Google user, require current password
+  if (requireCurrentPassword) {
+    if (!currentPassword) {
+      return ApiResponse.badRequest(res, 'Current password is required');
+    }
+    
+    const isMatch = await user.comparePassword(currentPassword);
+    if (!isMatch) {
+      return ApiResponse.unauthorized(res, 'Current password is incorrect');
+    }
+  }
+
+  // Set or update password
+  user.password = newPassword;
+  await user.save();
+
+  const message = hasExistingPassword ? 'Password changed successfully' : 'Password set successfully';
+  return ApiResponse.success(res, null, message);
 });

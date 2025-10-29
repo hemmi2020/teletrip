@@ -2308,6 +2308,7 @@ module.exports.extractHBLData = (req, res) => {
 };
 
 module.exports.createPayOnSiteBooking = asyncErrorHandler(async (req, res) => {
+  const startTime = Date.now();
   const { bookingData, userData, amount, currency = 'PKR', bookingId } = req.body;
   const userId = req.user._id;
 
@@ -2440,26 +2441,24 @@ module.exports.createPayOnSiteBooking = asyncErrorHandler(async (req, res) => {
 
     console.log('✅ Booking updated with pending payment status');
 
-    // ✅ SEND CONFIRMATION EMAIL
-    try {
-      await notificationService.sendPayOnSiteConfirmation({
-        user: {
-          email: userData.email,
-          fullname: `${userData.firstName} ${userData.lastName}`
-        },
-        booking: bookingRecord,
-        payment: {
-          paymentId,
-          orderId,
-          amount: paymentAmount,
-          currency
-        }
-      });
+    // ✅ SEND CONFIRMATION EMAIL (async - don't wait)
+    notificationService.sendPayOnSiteConfirmation({
+      user: {
+        email: userData.email,
+        fullname: `${userData.firstName} ${userData.lastName}`
+      },
+      booking: bookingRecord,
+      payment: {
+        paymentId,
+        orderId,
+        amount: paymentAmount,
+        currency
+      }
+    }).then(() => {
       console.log('📧 Pay on Site confirmation email sent');
-    } catch (emailError) {
+    }).catch(emailError => {
       console.warn('⚠️ Failed to send confirmation email:', emailError.message);
-      // Don't fail the request if email fails
-    }
+    });
 
     // ✅ RETURN SUCCESS RESPONSE
     return ApiResponse.success(res, {

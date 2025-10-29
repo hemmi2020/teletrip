@@ -572,14 +572,38 @@ Amount: ${voucher.currency} ${voucher.totalAmount}
           } 
           else if (activeTab === 'bookings') {
             displayId = item.bookingReference || item._id?.slice(-6) || 'N/A';
+            
+            const cancellationPolicies = item.hotelBooking?.rooms?.[0]?.cancellationPolicies || [];
+            const now = new Date();
+            const freeCancellation = cancellationPolicies.find(policy => {
+              const policyDate = new Date(policy.from);
+              return now < policyDate && policy.amount === 0;
+            });
+            const refundAmount = freeCancellation ? item.totalAmount : 
+              cancellationPolicies.length > 0 ? item.totalAmount - cancellationPolicies[0].amount : 0;
+            
             displayDetails = (
               <div>
                 <p className="font-medium truncate">
-                  {item.hotelBooking?.hotelName || item.user?.fullname?.firstname || 'Booking'}
+                  {item.hotelId?.name || item.hotelBooking?.hotelName || 'Booking'}
                 </p>
                 <p className="text-sm text-gray-500 truncate">
-                  {item.user?.email || `${item.hotelBooking?.nights || 0} nights`}
+                  {item.hotelId?.location?.city || item.hotelBooking?.hotelAddress?.city || ''} • {item.nights || 0} nights
                 </p>
+                <p className="text-xs text-gray-400 truncate">
+                  Guest: {item.guestInfo?.primaryGuest?.firstName || item.user?.fullname?.firstname || 'N/A'} • 
+                  Payment: {item.hotelBooking?.rooms?.[0]?.paymentType === 'AT_WEB' ? 'Card' : 'Pay on Site'}
+                </p>
+                {freeCancellation && (
+                  <p className="text-xs text-green-600 mt-1">
+                    ✓ Free cancellation • Full refund available
+                  </p>
+                )}
+                {!freeCancellation && cancellationPolicies.length > 0 && (
+                  <p className="text-xs text-yellow-600 mt-1">
+                    Refund: PKR {refundAmount.toFixed(2)} (Fee: PKR {cancellationPolicies[0].amount.toFixed(2)})
+                  </p>
+                )}
               </div>
             );
             displayStatus = item.status || 'pending';

@@ -82,10 +82,26 @@ const PaymentSuccessOnSite = () => {
               )}
 
               {bookingDetails.checkOut && (
-                <div className="flex justify-between items-center py-2">
+                <div className="flex justify-between items-center py-2 border-b">
                   <span className="text-gray-600">Check-out</span>
                   <span className="font-medium text-gray-900">
                     {new Date(bookingDetails.checkOut).toLocaleDateString()}
+                  </span>
+                </div>
+              )}
+
+              {bookingDetails.roomName && (
+                <div className="flex justify-between items-center py-2 border-b">
+                  <span className="text-gray-600">Room Type</span>
+                  <span className="font-medium text-gray-900">{bookingDetails.roomName}</span>
+                </div>
+              )}
+
+              {bookingDetails.guests && (
+                <div className="flex justify-between items-center py-2">
+                  <span className="text-gray-600">Travelers</span>
+                  <span className="font-medium text-gray-900">
+                    {bookingDetails.guests} Guest{bookingDetails.guests > 1 ? 's' : ''}
                   </span>
                 </div>
               )}
@@ -132,7 +148,7 @@ const PaymentSuccessOnSite = () => {
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-4">
             <button
-              onClick={() => navigate('/dashboard')}
+              onClick={() => navigate('/account')}
               className="flex-1 bg-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
             >
               <FileText className="w-5 h-5" />

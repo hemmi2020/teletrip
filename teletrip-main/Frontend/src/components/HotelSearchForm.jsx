@@ -323,14 +323,16 @@ const TransfersTab = () => {
         </div>
       </div>
 
-      <button
-        type="submit"
-        disabled={loading}
-        className="w-full md:w-auto px-6 sm:px-8 py-2.5 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition-colors font-medium flex items-center justify-center space-x-2 text-sm sm:text-base"
-      >
-        <Search size={18} />
-        <span>{loading ? 'Searching...' : 'Search Transfers'}</span>
-      </button>
+      <div className="flex justify-end">
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full md:w-auto px-6 sm:px-8 py-2.5 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition-colors font-medium flex items-center justify-center space-x-2 text-sm sm:text-base"
+        >
+          <Search size={18} />
+          <span>{loading ? 'Searching...' : 'Search Transfers'}</span>
+        </button>
+      </div>
     </form>
   );
 };
@@ -523,8 +525,8 @@ const ExperiencesTab = () => {
             </span>
           </div>
           {showCalendar && (
-            <div className="fixed sm:absolute z-50 inset-x-0 sm:inset-x-auto top-1/2 sm:top-auto left-1/2 sm:left-auto transform -translate-x-1/2 -translate-y-1/2 sm:translate-x-0 sm:translate-y-0 sm:mt-2 bg-white border border-gray-300 rounded-lg shadow-xl max-w-full overflow-hidden">
-              <div className="overflow-x-auto">
+            <div className="fixed sm:absolute z-50 left-1/2 top-1/2 sm:top-auto transform -translate-x-1/2 -translate-y-1/2 sm:translate-y-0 sm:mt-2 bg-white border border-gray-300 rounded-lg shadow-xl">
+              <div style={{ transform: 'scale(0.85)', transformOrigin: 'top center' }}>
                 <DateRange
                   ranges={dateRange}
                   onChange={(item) => setDateRange([item.selection])}
@@ -557,13 +559,15 @@ const ExperiencesTab = () => {
         </div>
       </div>
 
-      <button
-        type="submit"
-        className="w-full md:w-auto px-6 sm:px-8 py-2.5 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center justify-center space-x-2 text-sm sm:text-base"
-      >
-        <Search size={18} />
-        <span>Search Experiences</span>
-      </button>
+      <div className="flex justify-end">
+        <button
+          type="submit"
+          className="w-full md:w-auto px-6 sm:px-8 py-2.5 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center justify-center space-x-2 text-sm sm:text-base"
+        >
+          <Search size={18} />
+          <span>Search Experiences</span>
+        </button>
+      </div>
     </form>
   );
 };
@@ -930,8 +934,8 @@ const HotelSearchForm = () => {
                   </div>
 
                   {showCalendar && (
-                    <div className="fixed sm:absolute z-50 inset-x-0 sm:inset-x-auto top-1/2 sm:top-auto left-1/2 sm:left-auto transform -translate-x-1/2 -translate-y-1/2 sm:translate-x-0 sm:translate-y-0 sm:mt-2 bg-white border border-gray-300 rounded-lg shadow-xl max-w-full overflow-hidden">
-                      <div className="overflow-x-auto">
+                    <div className="fixed sm:absolute z-50 left-1/2 top-1/2 sm:top-auto transform -translate-x-1/2 -translate-y-1/2 sm:translate-y-0 sm:mt-2 bg-white border border-gray-300 rounded-lg shadow-xl">
+                      <div style={{ transform: 'scale(0.85)', transformOrigin: 'top center' }}>
                         <DateRange
                           ranges={dateRange}
                           onChange={(item) => setDateRange([item.selection])}
@@ -940,7 +944,6 @@ const HotelSearchForm = () => {
                           months={window.innerWidth < 640 ? 1 : 2}
                           direction="horizontal"
                           rangeColors={['#2563eb']}
-                          className="text-sm sm:text-base"
                         />
                       </div>
                     </div>
@@ -1066,14 +1069,16 @@ const HotelSearchForm = () => {
               </div>
 
               {/* Search Button */}
-              <button
-                type="submit"
-                style={{ cursor: 'pointer' }}
-                className="w-full md:w-auto px-6 sm:px-8 py-2.5 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center justify-center space-x-2 cursor-pointer text-sm sm:text-base"
-              >
-                <Search size={18} />
-                <span>Search Hotels</span>
-              </button>
+              <div className="flex justify-end">
+                <button
+                  type="submit"
+                  style={{ cursor: 'pointer' }}
+                  className="w-full md:w-auto px-6 sm:px-8 py-2.5 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center justify-center space-x-2 cursor-pointer text-sm sm:text-base"
+                >
+                  <Search size={18} />
+                  <span>Search Hotels</span>
+                </button>
+              </div>
             </form>
           )}
 

@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, useState, useEffect } from "react";
+import React, { Suspense, lazy, useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import HotelSearchForm from "./components/HotelSearchForm";
 import DestinationCard from "./components/DestinationCard";
@@ -11,6 +11,61 @@ import Row01 from "./components/Row01";
 import Accommodation from "./components/Accomodation";
 import Services from "./components/Services";
 import Footer from "./components/Footer";
+
+const TestimonialsCarousel = ({ testimonials, isMobile }) => {
+  const [isPaused, setIsPaused] = useState(false);
+  const duplicatedTestimonials = [...testimonials, ...testimonials];
+
+  return (
+    <motion.section
+      className="py-12 md:py-16 bg-gray-50 overflow-hidden"
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, amount: 0.2 }}
+    >
+      <div className="container mx-auto px-4">
+        <motion.h2
+          className="text-2xl md:text-3xl font-bold text-center mb-8 underline"
+          variants={isMobile ? fadeInUpMobile : fadeInUp}
+        >
+          What Our Customers Say
+        </motion.h2>
+
+        <div className="relative">
+          <style>{`
+            @keyframes scroll {
+              0% { transform: translateX(0); }
+              100% { transform: translateX(-50%); }
+            }
+            .animate-scroll {
+              animation: scroll 20s linear infinite;
+            }
+            .animate-scroll.paused {
+              animation-play-state: paused;
+            }
+          `}</style>
+          
+          <div 
+            className={`flex ${isPaused ? 'animate-scroll paused' : 'animate-scroll'}`}
+            onMouseEnter={() => setIsPaused(true)}
+            onMouseLeave={() => setIsPaused(false)}
+          >
+            {duplicatedTestimonials.map((testimonial, index) => (
+              <div key={`${testimonial.id}-${index}`} className="w-80 flex-shrink-0 px-3">
+                <TestimonialCard
+                  name={testimonial.name}
+                  image={testimonial.image}
+                  rating={testimonial.rating}
+                  text={testimonial.text}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </motion.section>
+  );
+};
 
 // Animation variants
 const fadeInUp = {
@@ -73,6 +128,7 @@ const scaleInMobile = {
 
 const Home = () => {
   const [isMobile, setIsMobile] = useState(false);
+  const timeoutRef = useRef(null);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -145,6 +201,27 @@ const Home = () => {
       image: "https://ui-avatars.com/api/?name=Emily+Davis&size=100&background=8b5cf6&color=fff",
       rating: 5,
       text: "We've used this service for all our trips and have never been disappointed.",
+    },
+    {
+      id: 4,
+      name: "David Wilson",
+      image: "https://ui-avatars.com/api/?name=David+Wilson&size=100&background=f59e0b&color=fff",
+      rating: 5,
+      text: "Fantastic experience! The platform is user-friendly and offers great deals.",
+    },
+    {
+      id: 5,
+      name: "Jessica Martinez",
+      image: "https://ui-avatars.com/api/?name=Jessica+Martinez&size=100&background=ec4899&color=fff",
+      rating: 5,
+      text: "Best travel booking site I've used. Highly recommend to everyone!",
+    },
+    {
+      id: 6,
+      name: "Robert Taylor",
+      image: "https://ui-avatars.com/api/?name=Robert+Taylor&size=100&background=6366f1&color=fff",
+      rating: 4,
+      text: "Quick booking process and excellent customer support. Very satisfied!",
     },
   ];
   return (
@@ -221,40 +298,8 @@ const Home = () => {
         </motion.div>
         
 
-        {/* Testimonials */}
-        <motion.section 
-          className="py-12 md:py-16 bg-gray-50"
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.2 }}
-        >
-          <div className="container mx-auto px-4">
-            <motion.h2 
-              className="text-2xl md:text-3xl font-bold text-center mb-8 md:mb-12 underline"
-              variants={isMobile ? fadeInUpMobile : fadeInUp}
-            >
-              What Our Customers Say
-            </motion.h2>
-            <motion.div 
-              className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8"
-              variants={isMobile ? staggerContainerMobile : staggerContainer}
-            >
-              {testimonials.map((testimonial) => (
-                <motion.div
-                  key={testimonial.id}
-                  variants={isMobile ? scaleInMobile : scaleIn}
-                >
-                  <TestimonialCard
-                    name={testimonial.name}
-                    image={testimonial.image}
-                    rating={testimonial.rating}
-                    text={testimonial.text}
-                  />
-                </motion.div>
-              ))}
-            </motion.div>
-          </div>
-        </motion.section>
+        {/* Testimonials Carousel */}
+        <TestimonialsCarousel testimonials={testimonials} isMobile={isMobile} />
         <motion.div
           initial="hidden"
           whileInView="visible"

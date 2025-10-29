@@ -116,7 +116,7 @@ const Header = () => {
           <div className="flex justify-between items-center h-16">
             {/* Logo on the left */}
             <NavLink to="/home" className="flex-shrink-0">
-              <img src={logo} alt="Logo" className="h-10" />
+              <img src={logo} alt="Logo" className="h-14" />
             </NavLink>
 
             {/* Mobile Menu Button */}
@@ -131,53 +131,6 @@ const Header = () => {
 
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center space-x-8">
-              {/* Form Menu Dropdown - Only show on non-home pages */}
-              {!isHomePage && (
-                <div className="relative form-menu-container">
-                  <button
-                    onClick={() => setIsFormMenuOpen(!isFormMenuOpen)}
-                    className="flex items-center space-x-1 text-gray-700 hover:text-blue-600 font-medium transition-colors duration-200"
-                  >
-                    <span>Book Now</span>
-                    <svg 
-                      className={`w-4 h-4 transition-transform duration-200 ${isFormMenuOpen ? 'rotate-180' : ''}`}
-                      fill="none" 
-                      stroke="currentColor" 
-                      viewBox="0 0 24 24"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-                  
-                  {/* Dropdown Menu */}
-                  {isFormMenuOpen && (
-                    <div className="absolute top-full left-0 mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50">
-                      <button
-                        onClick={() => handleFormMenuClick('hotels')}
-                        className="w-full text-left px-4 py-2.5 hover:bg-blue-50 transition-colors flex items-center space-x-3"
-                      >
-                        <span className="text-xl">🏨</span>
-                        <span className="text-gray-700 hover:text-blue-600 font-medium">Hotels</span>
-                      </button>
-                      <button
-                        onClick={() => handleFormMenuClick('tours')}
-                        className="w-full text-left px-4 py-2.5 hover:bg-blue-50 transition-colors flex items-center space-x-3"
-                      >
-                        <span className="text-xl">🎭</span>
-                        <span className="text-gray-700 hover:text-blue-600 font-medium">Tours</span>
-                      </button>
-                      <button
-                        onClick={() => handleFormMenuClick('transfers')}
-                        className="w-full text-left px-4 py-2.5 hover:bg-blue-50 transition-colors flex items-center space-x-3"
-                      >
-                        <span className="text-xl">🚐</span>
-                        <span className="text-gray-700 hover:text-blue-600 font-medium">Transfers</span>
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
-
               {/* Regular Navigation Links */}
               <NavLink
                 to="/home"
@@ -265,34 +218,6 @@ const Header = () => {
         {isMobileMenuOpen && (
           <div className="md:hidden bg-white border-t border-gray-200 shadow-lg">
             <div className="px-4 py-3 space-y-3">
-              {/* Form Menu Items for Mobile - Show on all pages including home */}
-              <div className="border-b border-gray-200 pb-3 mb-3">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
-                  Book Now
-                </p>
-                <button
-                  onClick={() => handleFormMenuClick('hotels')}
-                  className="w-full text-left px-4 py-2.5 hover:bg-blue-50 rounded-lg transition-colors flex items-center space-x-3"
-                >
-                  <span className="text-xl">🏨</span>
-                  <span className="text-gray-700 font-medium">Hotels</span>
-                </button>
-                <button
-                  onClick={() => handleFormMenuClick('tours')}
-                  className="w-full text-left px-4 py-2.5 hover:bg-blue-50 rounded-lg transition-colors flex items-center space-x-3"
-                >
-                  <span className="text-xl">🎭</span>
-                  <span className="text-gray-700 font-medium">Tours</span>
-                </button>
-                <button
-                  onClick={() => handleFormMenuClick('transfers')}
-                  className="w-full text-left px-4 py-2.5 hover:bg-blue-50 rounded-lg transition-colors flex items-center space-x-3"
-                >
-                  <span className="text-xl">🚐</span>
-                  <span className="text-gray-700 font-medium">Transfers</span>
-                </button>
-              </div>
-
               {/* Regular Navigation */}
               <NavLink
                 to="/home"
@@ -386,6 +311,7 @@ const Header = () => {
         onClose={() => setShowAuthModal(false)}
         onAuthSuccess={handleAuthSuccess}
         defaultTab="login"
+        returnUrl={location.pathname}
       />
     </>
   );

@@ -205,24 +205,16 @@ const HotelDetails = () => {
 
   // Amenity icon mapping
   const getAmenityIcon = (amenity) => {
-    switch (amenity) {
-      case "WIFI":
-        return <Wifi className="w-4 h-4 text-blue-600" title="WiFi" />;
-      case "BREAKFAST":
-        return <Coffee className="w-4 h-4 text-orange-600" title="Breakfast" />;
-      case "PARKING":
-        return <Car className="w-4 h-4 text-gray-600" title="Parking" />;
-      case "POOL":
-        return <Pool className="w-4 h-4 text-blue-500" title="Pool" />;
-      case "GYM":
-        return <Gym className="w-4 h-4 text-red-600" title="Gym" />;
-      case "SPA":
-        return <Spa className="w-4 h-4 text-purple-600" title="Spa" />;
-      case "RESTAURANT":
-        return <Restaurant className="w-4 h-4 text-green-600" title="Restaurant" />;
-      default:
-        return null;
-    }
+    const amenityMap = {
+      WIFI: { icon: Wifi, color: "text-blue-600", name: "WiFi" },
+      BREAKFAST: { icon: Coffee, color: "text-orange-600", name: "Breakfast" },
+      PARKING: { icon: Car, color: "text-gray-600", name: "Parking" },
+      POOL: { icon: Pool, color: "text-blue-500", name: "Pool" },
+      GYM: { icon: Gym, color: "text-red-600", name: "Gym" },
+      SPA: { icon: Spa, color: "text-purple-600", name: "Spa" },
+      RESTAURANT: { icon: Restaurant, color: "text-green-600", name: "Restaurant" },
+    };
+    return amenityMap[amenity] || null;
   };
 
   // Rate class badge
@@ -382,9 +374,13 @@ if (children > 0 && childAges.length > 0) {
         // Transform hotel data
         const transformedHotel = {
           id: foundHotel.code,
+          code: foundHotel.code,
           name: foundHotel.name,
           category: foundHotel.categoryName || foundHotel.categoryCode || "N/A",
+          categoryName: foundHotel.categoryName,
           address: `${foundHotel.destinationName}, ${foundHotel.zoneName}`,
+          destinationName: foundHotel.destinationName,
+          zoneName: foundHotel.zoneName,
           thumbnail: foundHotel.thumbnail,
           minRate: foundHotel.minRate,
           maxRate: foundHotel.maxRate,
@@ -393,6 +389,8 @@ if (children > 0 && childAges.length > 0) {
             lat: parseFloat(foundHotel.latitude),
             lng: parseFloat(foundHotel.longitude),
           },
+          latitude: foundHotel.latitude,
+          longitude: foundHotel.longitude,
           amenities: foundHotel.amenities || [],
           images: foundHotel.images || [],
           facilities: foundHotel.facilities || [],
@@ -531,15 +529,20 @@ if (children > 0 && childAges.length > 0) {
       {/* Amenities */}
       {hotel.amenities && hotel.amenities.length > 0 && (
         <div className="flex gap-3 flex-wrap">
-          {hotel.amenities.map((amenity, index) => (
-            <div
-              key={index}
-              className="flex items-center bg-gray-100 px-3 py-1 rounded-full"
-            >
-              {getAmenityIcon(amenity)}
-              <span className="ml-2 text-sm">{amenity}</span>
-            </div>
-          ))}
+          {[...new Set(hotel.amenities)].map((amenity, index) => {
+            const amenityData = getAmenityIcon(amenity);
+            if (!amenityData) return null;
+            const IconComponent = amenityData.icon;
+            return (
+              <div
+                key={index}
+                className="flex items-center bg-gray-100 px-3 py-1 rounded-full"
+              >
+                <IconComponent className={`w-4 h-4 ${amenityData.color}`} />
+                <span className="ml-2 text-sm">{amenityData.name}</span>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

@@ -90,7 +90,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     trim: true,
     sparse: true, // Allow null values but create index for non-null values
-    match: [/^\+?[\d\s-()]+$/, 'Please enter a valid phone number']
+    match: [/^\+?[\d\s\-()]{7,20}$/, 'Please enter a valid phone number']
   },
   
   dateOfBirth: { 
@@ -116,6 +116,10 @@ profilePicture: {
     type: String,
     enum: ['male', 'female', 'other', 'prefer_not_to_say'],
     default: 'prefer_not_to_say'
+  },
+  nationality: {
+    type: String,
+    default: ''
   },
   customerId: {
   type: Number,

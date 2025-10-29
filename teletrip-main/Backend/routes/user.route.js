@@ -67,7 +67,8 @@ router.post('/google-auth', async (req, res) => {
         _id: user._id,
         email: user.email,
         fullname: user.fullname,
-        profilePicture: user.profilePicture
+        profilePicture: user.profilePicture,
+        googleId: user.googleId
       }
     });
 
@@ -106,6 +107,11 @@ router.put('/preferences', [
 router.delete('/account', [
   body('password').notEmpty().withMessage('Password is required for account deletion')
 ], authMiddleware.authUser, userController.deleteUserAccount);
+
+// Change/Set password
+router.post('/change-password', [
+  body('newPassword').isLength({ min: 6 }).withMessage('Password must be at least 6 characters long')
+], authMiddleware.authUser, userController.changePassword);
 
 // Forgot password
 router.post('/forgot-password', [

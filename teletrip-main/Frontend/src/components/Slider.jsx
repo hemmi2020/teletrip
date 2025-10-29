@@ -1,29 +1,26 @@
 // Slider.js - FINAL CORRECT VERSION
 import React, { useEffect, useState, useRef } from "react";
-import image1 from "../images/1.jpg";
-import image2 from "../images/2.jpg";
-import image3 from "../images/3.jpg";
 import HotelSearchForm from "./HotelSearchForm";
 
 const Slider = () => {
   const items = [
     {
       id: 1,
-      url: image1,
+      url: "/images/slider1.jpg",
       title: "Welcome to Telitrip Holidays",
       description:
         "Discover the Wonders of Sri Lanka with Ayla Holidays. At Ayla Holidays, we specialize in creating unforgettable travel experiences in the breathtaking island of Sri Lanka.",
     },
     {
       id: 2,
-      url: image2,
+      url: "/images/slider2.webp",
       title: "Discover the Wonders of Sri Lanka",
       description:
         "From pristine beaches and lush tea plantations to ancient temples and vibrant wildlife. we offer tailor-made tours that showcase the best of our beautiful country.",
     },
     {
       id: 3,
-      url: image3,
+      url: "/images/slider3.jpg",
       title: "Get unforgettable travel experiences",
       description:
         "Book Your Adventure Today! Experience the magic of Sri Lanka with Ayla Holidays. We look forward to welcoming you and making your travel dreams come true.",
@@ -62,13 +59,13 @@ const Slider = () => {
               }`}
             >
               {/* Background Image with Overlay */}
-              <div
-                className="w-full h-full bg-cover bg-center transition-all duration-1000"
-                style={{ backgroundImage: `url(${item.url})` }}
-              >
-                {/* Dark overlay for better text readability */}
-                <div className="absolute inset-0 bg-black/40"></div>
-              </div>
+              <img
+                src={item.url}
+                alt={item.title}
+                className="absolute inset-0 w-full h-full object-cover object-center transition-all duration-1000"
+              />
+              {/* Dark overlay for better text readability */}
+              <div className="absolute inset-0 bg-black/40"></div>
               
               {/* Text Content - Positioned ABOVE the form */}
               <div className="absolute top-24 sm:top-28 md:top-32 left-1/2 transform -translate-x-1/2 w-full max-w-6xl px-4 sm:px-6 lg:px-8 z-10">

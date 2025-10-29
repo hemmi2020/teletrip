@@ -92,7 +92,7 @@ const LoadingSpinner = ({ size = "default", text = "" }) => {
 
 // Error Message Component
 const ErrorMessage = ({ message, onRetry, onClose }) => (
-  <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+  <div className="fixed top-20 right-4 z-50 bg-red-50 border border-red-200 rounded-lg p-4 shadow-lg animate-slide-in">
     <div className="flex items-start justify-between">
       <div className="flex items-start">
         <AlertCircle className="w-5 h-5 text-red-600 mr-2 mt-0.5" />
@@ -109,7 +109,7 @@ const ErrorMessage = ({ message, onRetry, onClose }) => (
         </div>
       </div>
       {onClose && (
-        <button onClick={onClose} className="text-red-400 hover:text-red-600">
+        <button onClick={onClose} className="text-red-400 hover:text-red-600 ml-4">
           <X className="w-4 h-4" />
         </button>
       )}
@@ -119,14 +119,14 @@ const ErrorMessage = ({ message, onRetry, onClose }) => (
 
 // Success Message Component
 const SuccessMessage = ({ message, onClose }) => (
-  <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+  <div className="fixed top-20 right-4 z-50 bg-green-50 border border-green-200 rounded-lg p-4 shadow-lg animate-slide-in">
     <div className="flex items-center justify-between">
       <div className="flex items-center">
         <CheckCircle className="w-5 h-5 text-green-600 mr-2" />
         <p className="text-green-800">{message}</p>
       </div>
       {onClose && (
-        <button onClick={onClose} className="text-green-400 hover:text-green-600">
+        <button onClick={onClose} className="text-green-400 hover:text-green-600 ml-4">
           <X className="w-4 h-4" />
         </button>
       )}
@@ -200,8 +200,8 @@ const DashboardStats = ({ stats, loading }) => {
 // Profile Form Component
 const ProfileForm = ({ profile, onSave, onCancel, loading }) => {
   const [formData, setFormData] = useState({
-    firstName: profile.firstName || '',
-    lastName: profile.lastName || '',
+    firstName: profile.fullname?.firstname || profile.firstName || '',
+    lastName: profile.fullname?.lastname || profile.lastName || '',
     email: profile.email || '',
     phone: profile.phone || '',
     dateOfBirth: profile.dateOfBirth ? profile.dateOfBirth.split('T')[0] : '',
@@ -211,7 +211,7 @@ const ProfileForm = ({ profile, onSave, onCancel, loading }) => {
       street: profile.address?.street || '',
       city: profile.address?.city || '',
       state: profile.address?.state || '',
-      zipCode: profile.address?.zipCode || '',
+      zipCode: profile.address?.postalCode || profile.address?.zipCode || '',
       country: profile.address?.country || ''
     }
   });
@@ -245,22 +245,25 @@ const ProfileForm = ({ profile, onSave, onCancel, loading }) => {
   };
 
   const handleSubmit = (e) => {
-    e.preventDefault();
-    
-    const validation = validateForm(formData, {
-      firstName: { required: true, minLength: 2, label: 'First Name' },
-      lastName: { required: true, minLength: 2, label: 'Last Name' },
-      email: { required: true, email: true, label: 'Email' },
-      phone: { phone: true, label: 'Phone' }
-    });
-
-    if (!validation.isValid) {
-      setValidationErrors(validation.errors);
-      return;
-    }
-
-    onSave(formData);
-  };
+  e.preventDefault();
+  
+  // Basic validation
+  const errors = {};
+  if (!formData.firstName) errors.firstName = 'First name is required';
+  if (!formData.lastName) errors.lastName = 'Last name is required';
+  if (!formData.email) errors.email = 'Email is required';
+  
+  if (Object.keys(errors).length > 0) {
+    setValidationErrors(errors);
+    return;
+  }
+  
+  // Clear validation errors
+  setValidationErrors({});
+  
+  // Call the onSave prop with form data
+  onSave(formData);
+};
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -462,8 +465,9 @@ const ProfileForm = ({ profile, onSave, onCancel, loading }) => {
 };
 
 // Booking Card Component
-const BookingCard = ({ booking, onCancel, onViewDetails }) => {
+const BookingCard = ({ booking, onCancel, onViewDetails, onPayNow }) => {
   const [activityName, setActivityName] = React.useState(null);
+  const [showDetails, setShowDetails] = React.useState(false);
   
   React.useEffect(() => {
     if (booking.bookingReference?.startsWith('A')) {
@@ -500,16 +504,31 @@ const BookingCard = ({ booking, onCancel, onViewDetails }) => {
     );
   };
 
+  const canCancel = (booking.status === 'confirmed' || booking.status === 'pending') && booking.status !== 'cancelled';
+  const cancellationPolicies = booking.hotelBooking?.rooms?.[0]?.cancellationPolicies || [];
+  const hasRefundPolicy = cancellationPolicies.length > 0;
+  
+  // Check if free cancellation is available
+  const now = new Date();
+  const freeCancellation = cancellationPolicies.find(policy => {
+    const policyDate = new Date(policy.from);
+    return now < policyDate && policy.amount === 0;
+  });
+  
+  const refundAmount = freeCancellation ? booking.totalAmount : 
+    cancellationPolicies.length > 0 ? 
+    booking.totalAmount - cancellationPolicies[0].amount : 0;
+
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
       <div className="p-6">
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center space-x-4">
             <div className="w-16 h-16 bg-gray-200 rounded-lg overflow-hidden">
-              {booking.hotelId?.images?.[0] ? (
+              {(booking.hotelId?.images?.[0] || booking.hotelBooking?.images?.[0]) ? (
                 <img 
-                  src={booking.hotelId.images[0]} 
-                  alt={booking.hotelId.name}
+                  src={booking.hotelId?.images?.[0] || booking.hotelBooking.images[0]} 
+                  alt={booking.hotelId?.name || booking.hotelBooking?.hotelName}
                   className="w-full h-full object-cover"
                 />
               ) : (
@@ -522,11 +541,13 @@ const BookingCard = ({ booking, onCancel, onViewDetails }) => {
               <h3 className="text-lg font-semibold text-gray-900">
                 {booking.bookingReference?.startsWith('A') 
                   ? (activityName || 'Activity Booking')
-                  : (booking.hotelId?.name || 'Hotel Booking')}
+                  : (booking.hotelId?.name || booking.hotelBooking?.hotelName || 'Hotel Booking')}
               </h3>
               <p className="text-gray-600 flex items-center">
                 <MapPin className="w-4 h-4 mr-1" />
-                {booking.hotelId?.location?.city || booking.hotelId?.location || 'Location'}
+                {booking.hotelId?.location?.city || 
+                 booking.hotelBooking?.hotelAddress?.city || 
+                 'Location'}
               </p>
               <p className="text-sm text-gray-500">
                 Ref: {booking.bookingReference}
@@ -536,7 +557,7 @@ const BookingCard = ({ booking, onCancel, onViewDetails }) => {
           <div className="text-right">
             {getStatusBadge(booking.status)}
             <p className="text-lg font-bold text-gray-900 mt-2">
-              {formatCurrency(booking.totalAmount)}
+              {formatCurrency(booking.totalAmount || booking.pricing?.totalAmount)}
             </p>
           </div>
         </div>
@@ -544,40 +565,146 @@ const BookingCard = ({ booking, onCancel, onViewDetails }) => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 text-sm">
           <div>
             <p className="text-gray-500">Check-in</p>
-            <p className="font-medium">{formatDate(booking.checkInDate)}</p>
+            <p className="font-medium">{formatDate(booking.checkInDate || booking.hotelBooking?.checkIn)}</p>
           </div>
           <div>
             <p className="text-gray-500">Check-out</p>
-            <p className="font-medium">{formatDate(booking.checkOutDate)}</p>
+            <p className="font-medium">{formatDate(booking.checkOutDate || booking.hotelBooking?.checkOut)}</p>
           </div>
           <div>
             <p className="text-gray-500">Guests</p>
-            <p className="font-medium">{booking.guests} {booking.guests === 1 ? 'guest' : 'guests'}</p>
+            <p className="font-medium">
+              {booking.guests || booking.guestInfo?.totalGuests?.adults || 1} {(booking.guests || booking.guestInfo?.totalGuests?.adults || 1) === 1 ? 'guest' : 'guests'}
+            </p>
           </div>
           <div>
             <p className="text-gray-500">Room Type</p>
-            <p className="font-medium">{booking.roomType || 'Standard'}</p>
+            <p className="font-medium">{booking.roomType || booking.hotelBooking?.rooms?.[0]?.roomName || 'Standard'}</p>
           </div>
         </div>
 
+        {/* Traveler Information */}
+        {booking.guestInfo?.primaryGuest && (
+          <div className="bg-gray-50 rounded-lg p-4 mb-4">
+            <h4 className="text-sm font-semibold text-gray-900 mb-2 flex items-center">
+              <User className="w-4 h-4 mr-1" />
+              Primary Traveler
+            </h4>
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              <div>
+                <span className="text-gray-500">Name:</span>
+                <span className="ml-2 text-gray-900">
+                  {booking.guestInfo.primaryGuest.firstName} {booking.guestInfo.primaryGuest.lastName}
+                </span>
+              </div>
+              <div>
+                <span className="text-gray-500">Email:</span>
+                <span className="ml-2 text-gray-900">{booking.guestInfo.primaryGuest.email}</span>
+              </div>
+              {booking.guestInfo.primaryGuest.phone && (
+                <div>
+                  <span className="text-gray-500">Phone:</span>
+                  <span className="ml-2 text-gray-900">{booking.guestInfo.primaryGuest.phone}</span>
+                </div>
+              )}
+              {booking.guestInfo.additionalGuests?.length > 0 && (
+                <div>
+                  <span className="text-gray-500">Additional Guests:</span>
+                  <span className="ml-2 text-gray-900">{booking.guestInfo.additionalGuests.length}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Cancellation Policy */}
+        {hasRefundPolicy && (
+          <div className={`border rounded-lg p-3 mb-4 ${
+            freeCancellation ? 'bg-green-50 border-green-200' : 'bg-yellow-50 border-yellow-200'
+          }`}>
+            <p className={`text-xs flex items-center ${
+              freeCancellation ? 'text-green-800' : 'text-yellow-800'
+            }`}>
+              <AlertCircle className="w-3 h-3 mr-1" />
+              {freeCancellation ? (
+                <span>
+                  ✓ Free cancellation until {formatDate(freeCancellation.from)}
+                  {refundAmount > 0 && ` • Full refund: ${formatCurrency(refundAmount)}`}
+                </span>
+              ) : cancellationPolicies[0] ? (
+                <span>
+                  Cancellation fee: {formatCurrency(cancellationPolicies[0].amount)} • Refund: {formatCurrency(refundAmount)}
+                </span>
+              ) : (
+                <span>Cancellation policy applies</span>
+              )}
+            </p>
+          </div>
+        )}
+
         <div className="flex justify-end space-x-3">
           <button
-            onClick={() => onViewDetails(booking._id)}
+            onClick={() => setShowDetails(!showDetails)}
             className="flex items-center space-x-2 px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
           >
             <Eye className="w-4 h-4" />
-            <span>View Details</span>
+            <span>{showDetails ? 'Hide Details' : 'View Details'}</span>
           </button>
-          {booking.status === 'confirmed' && (
+          {booking.status === 'pending' && (
+            <button
+              onClick={() => onPayNow(booking)}
+              className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white border border-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              <DollarSign className="w-4 h-4" />
+              <span>Pay Now</span>
+            </button>
+          )}
+          {canCancel && (
             <button
               onClick={() => onCancel(booking._id)}
-              className="flex items-center space-x-2 px-4 py-2 text-red-600 border border-red-300 rounded-lg hover:bg-red-50 transition-colors"
+              className={`flex items-center space-x-2 px-4 py-2 border rounded-lg transition-colors ${
+                freeCancellation 
+                  ? 'text-green-600 border-green-300 hover:bg-green-50' 
+                  : 'text-red-600 border-red-300 hover:bg-red-50'
+              }`}
             >
               <XCircle className="w-4 h-4" />
-              <span>Cancel</span>
+              <span>
+                {freeCancellation ? 'Cancel & Get Full Refund' : `Cancel (Refund: ${formatCurrency(refundAmount)})`}
+              </span>
             </button>
           )}
         </div>
+
+        {/* Expanded Details */}
+        {showDetails && (
+          <div className="mt-4 pt-4 border-t border-gray-200">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              {/* Room Details */}
+              {booking.hotelBooking?.rooms?.map((room, idx) => (
+                <div key={idx} className="bg-gray-50 rounded p-3">
+                  <h5 className="font-semibold text-gray-900 mb-2">Room {idx + 1}</h5>
+                  <p className="text-gray-600">{room.roomName}</p>
+                  <p className="text-gray-500 text-xs">{room.boardName}</p>
+                  <p className="text-gray-900 font-medium mt-1">
+                    {room.adults} Adult(s) {room.children > 0 && `• ${room.children} Child(ren)`}
+                  </p>
+                </div>
+              ))}
+              
+              {/* Payment Info */}
+              <div className="bg-gray-50 rounded p-3">
+                <h5 className="font-semibold text-gray-900 mb-2">Payment</h5>
+                <p className="text-gray-600">
+                  Method: {booking.hotelBooking?.rooms?.[0]?.paymentType === 'AT_WEB' ? 'Card' : 'Pay on Site'}
+                </p>
+                <p className="text-gray-600">
+                  Status: {booking.status === 'confirmed' ? 'Paid' : booking.status === 'pending' ? 'Pending' : booking.status}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -587,6 +714,7 @@ const BookingCard = ({ booking, onCancel, onViewDetails }) => {
 const AccountDashboard = () => {
   const { user, setUser } = useContext(UserDataContext);
   const [activeTab, setActiveTab] = useState("overview");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { loading, error, success, setError, setSuccess, makeApiCall } = useDashboardData();
 
   // State management
@@ -643,12 +771,17 @@ const AccountDashboard = () => {
           ]);
           setDashboardStats(statsRes || {});
           setProfile(profileRes || {});
+          console.log('📊 Profile loaded:', profileRes);
           break;
         }
           
         case "profile": {
           const profileData = await makeApiCall(() => DashboardAPIService.getProfile());
           setProfile(profileData || {});
+          console.log('👤 Profile tab data:', profileData);
+          console.log('👤 Has googleId?', profileData?.googleId);
+          console.log('👤 Has phone?', profileData?.phone);
+          console.log('👤 Has dateOfBirth?', profileData?.dateOfBirth);
           break;
         }
           
@@ -693,19 +826,37 @@ const AccountDashboard = () => {
   };
 
   // Profile management functions
-  const handleUpdateProfile = async (profileData) => {
-    try {
-      const updatedProfile = await makeApiCall(
-        () => DashboardAPIService.updateProfile(profileData),
-        "Profile updated successfully!"
-      );
-      setProfile(updatedProfile);
-      setUser({ ...user, ...updatedProfile });
+ const handleUpdateProfile = async (profileData) => {
+  try {
+    const response = await DashboardAPIService.updateProfile({
+      firstName: profileData.firstName,
+      lastName: profileData.lastName,
+      email: profileData.email,
+      phone: profileData.phone,
+      dateOfBirth: profileData.dateOfBirth,
+      gender: profileData.gender,
+      nationality: profileData.nationality,
+      address: {
+        street: profileData.address.street,
+        city: profileData.address.city,
+        state: profileData.address.state,
+        country: profileData.address.country,
+        postalCode: profileData.address.zipCode
+      }
+    });
+
+    if (response.success) {
+      await loadTabData('profile');
       setIsEditingProfile(false);
-    } catch (error) {
-      console.error('Profile update error:', error);
+      setSuccess('Profile updated successfully');
+    } else {
+      setError(response.error || 'Failed to update profile');
     }
-  };
+  } catch (error) {
+    console.error('Profile update error:', error);
+    setError(error.message || 'Failed to update profile');
+  }
+};
 
   const handleUpdatePassword = async () => {
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
@@ -719,12 +870,13 @@ const AccountDashboard = () => {
     }
 
     try {
+      const message = profile.googleId && !profile.hasPassword ? 'Password set successfully!' : 'Password changed successfully!';
       await makeApiCall(
         () => DashboardAPIService.updatePassword({
           currentPassword: passwordForm.currentPassword,
           newPassword: passwordForm.newPassword
         }),
-        "Password updated successfully!"
+        message
       );
       setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
     } catch (error) {
@@ -753,7 +905,7 @@ const AccountDashboard = () => {
         () => DashboardAPIService.uploadProfilePicture(file),
         "Profile picture updated successfully!"
       );
-      setProfile({ ...profile, profilePicture: result.profilePicture });
+      setProfile(prev => ({ ...prev, profilePicture: result?.profilePicture }));
     } catch (error) {
       console.error('File upload error:', error);
     }
@@ -761,17 +913,79 @@ const AccountDashboard = () => {
 
   // Booking management functions
   const handleCancelBooking = async (bookingId) => {
-    const reason = prompt("Please provide a reason for cancellation:");
-    if (!reason) return;
+    if (!window.confirm("Are you sure you want to cancel this booking?")) return;
+    
+    const reason = prompt("Please provide a reason for cancellation (optional):") || "User requested cancellation";
 
     try {
-      await makeApiCall(
-        () => DashboardAPIService.cancelBooking(bookingId, reason),
-        "Booking cancelled successfully!"
-      );
-      await loadTabData("bookings");
+      const result = await DashboardAPIService.cancelBooking(bookingId, reason);
+      if (result.success) {
+        setSuccess("Booking cancelled successfully!");
+        await loadTabData("bookings");
+      } else {
+        setError(result.error || "Failed to cancel booking");
+      }
     } catch (error) {
       console.error('Cancel booking error:', error);
+      setError("Failed to cancel booking");
+    }
+  };
+
+  const handlePayNow = async (booking) => {
+    try {
+      setSuccess("Initiating payment...");
+      
+      const paymentData = {
+        bookingId: booking._id,
+        amount: booking.totalAmount || booking.pricing?.totalAmount,
+        currency: booking.pricing?.currency || 'PKR',
+        orderId: booking.bookingReference,
+        bookingData: {
+          hotelName: booking.hotelId?.name || booking.hotelBooking?.hotelName,
+          checkIn: booking.checkInDate || booking.hotelBooking?.checkIn,
+          checkOut: booking.checkOutDate || booking.hotelBooking?.checkOut,
+          guests: booking.guests || booking.guestInfo?.totalGuests?.adults,
+          items: [{
+            name: booking.hotelId?.name || 'Hotel Booking',
+            quantity: 1,
+            price: booking.totalAmount || booking.pricing?.totalAmount
+          }]
+        },
+        userData: {
+          firstName: user?.fullname?.firstname || booking.guestInfo?.primaryGuest?.firstName || 'Guest',
+          lastName: user?.fullname?.lastname || booking.guestInfo?.primaryGuest?.lastName || 'User',
+          email: user?.email || booking.guestInfo?.primaryGuest?.email,
+          phone: (user?.phone || booking.guestInfo?.primaryGuest?.phone || '03001234567').replace(/[^0-9]/g, ''),
+          address: user?.address?.street || booking.guestInfo?.primaryGuest?.address || '123 Main Street',
+          city: user?.address?.city || booking.hotelBooking?.hotelAddress?.city || 'Karachi',
+          state: user?.address?.state || 'SD',
+          country: 'PK',
+          postalCode: user?.address?.postalCode || '75500'
+        }
+      };
+
+      console.log('Payment data:', paymentData);
+
+      const response = await fetch(`${import.meta.env.VITE_BASE_URL}/api/payments/hblpay/initiate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(paymentData)
+      });
+
+      const result = await response.json();
+      console.log('Payment response:', result);
+
+      if (result.success && result.data?.paymentUrl) {
+        window.location.href = result.data.paymentUrl;
+      } else {
+        setError(result.message || result.error || 'Failed to initiate payment');
+      }
+    } catch (error) {
+      console.error('Payment initiation error:', error);
+      setError('Failed to initiate payment');
     }
   };
 
@@ -859,18 +1073,35 @@ const AccountDashboard = () => {
     <div className="min-h-screen bg-gray-50">
       <Header />
       
+      <style>{`
+        @keyframes slide-in {
+          from {
+            transform: translateX(100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+        .animate-slide-in {
+          animation: slide-in 0.3s ease-out;
+        }
+      `}</style>
+      
+      {/* Fixed Toast Notifications */}
+      {success && <SuccessMessage message={success} onClose={() => setSuccess("")} />}
+      {error && <ErrorMessage message={error} onClose={() => setError("")} />}
+      
       <div className="pt-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Messages */}
-          {success && <SuccessMessage message={success} onClose={() => setSuccess("")} />}
-          {error && <ErrorMessage message={error} onClose={() => setError("")} />}
 
           {/* Header */}
           <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
             <div className="flex items-center space-x-4">
               <div className="relative">
                 <div className="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center overflow-hidden">
-                  {profile.profilePicture ? (
+                  {profile?.profilePicture ? (
                     <img 
                       src={profile.profilePicture} 
                       alt="Profile" 
@@ -892,10 +1123,10 @@ const AccountDashboard = () => {
               </div>
               <div>
                 <h1 className="text-3xl font-bold text-gray-900">
-                  Welcome back, {profile.firstName || user.fullname?.firstname || user.email}!
+                  Welcome back, {profile?.fullname?.firstname || profile?.firstName || user?.fullname?.firstname || user?.email || 'User'}!
                 </h1>
                 <p className="text-gray-600 mt-1">Manage your account and view your bookings</p>
-                {profile.createdAt && (
+                {profile?.createdAt && (
                   <p className="text-sm text-gray-500 mt-1">
                     Member since {formatDate(profile.createdAt)}
                   </p>
@@ -906,13 +1137,55 @@ const AccountDashboard = () => {
 
           {/* Tab Navigation */}
           <div className="bg-white rounded-lg shadow-sm mb-8">
-            <div className="border-b border-gray-200">
-              <nav className="flex space-x-8 px-6">
+            {/* Mobile Tab Selector */}
+            <div className="md:hidden border-b border-gray-200">
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="w-full flex items-center justify-between px-6 py-4 text-left"
+              >
+                <div className="flex items-center space-x-2">
+                  {tabs.find(t => t.id === activeTab) && (
+                    <>
+                      {React.createElement(tabs.find(t => t.id === activeTab).icon, { className: "w-5 h-5 text-blue-600" })}
+                      <span className="font-medium text-gray-900">{tabs.find(t => t.id === activeTab).label}</span>
+                    </>
+                  )}
+                </div>
+                <svg className={`w-5 h-5 text-gray-400 transition-transform ${mobileMenuOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              {mobileMenuOpen && (
+                <div className="border-t border-gray-200">
+                  {tabs.map(({ id, label, icon: Icon }) => (
+                    <button
+                      key={id}
+                      onClick={() => {
+                        handleTabChange(id);
+                        setMobileMenuOpen(false);
+                      }}
+                      className={`w-full flex items-center space-x-3 px-6 py-3 text-left transition-colors ${
+                        activeTab === id
+                          ? "bg-blue-50 text-blue-600 border-l-4 border-blue-600"
+                          : "text-gray-700 hover:bg-gray-50"
+                      }`}
+                    >
+                      <Icon className="w-5 h-5" />
+                      <span className="font-medium">{label}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Desktop Tab Navigation */}
+            <div className="hidden md:block border-b border-gray-200">
+              <nav className="flex space-x-8 px-6 overflow-x-auto">
                 {tabs.map(({ id, label, icon: Icon }) => (
                   <button
                     key={id}
                     onClick={() => handleTabChange(id)}
-                    className={`flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                    className={`flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors whitespace-nowrap ${
                       activeTab === id
                         ? "border-blue-500 text-blue-600"
                         : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
@@ -1006,7 +1279,7 @@ const AccountDashboard = () => {
                 <div>
                   <div className="flex justify-between items-center mb-6">
                     <h2 className="text-xl font-semibold text-gray-900">Profile Information</h2>
-                    {!isEditingProfile && (
+                    {!isEditingProfile && profile && (
                       <button
                         onClick={() => setIsEditingProfile(true)}
                         className="flex items-center space-x-2 px-4 py-2 text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50"
@@ -1024,6 +1297,7 @@ const AccountDashboard = () => {
                         onSave={handleUpdateProfile}
                         onCancel={() => setIsEditingProfile(false)}
                         loading={loading}
+                        
                       />
                     </div>
                   ) : (
@@ -1037,7 +1311,7 @@ const AccountDashboard = () => {
                             <div>
                               <p className="text-sm text-gray-500">Full Name</p>
                               <p className="font-medium text-gray-900">
-                                {profile.firstName} {profile.lastName}
+                                {profile?.fullname?.firstname || profile?.firstName || ''} {profile?.fullname?.lastname || profile?.lastName || ''}
                               </p>
                             </div>
                           </div>
@@ -1045,14 +1319,14 @@ const AccountDashboard = () => {
                             <Mail className="w-5 h-5 text-gray-400" />
                             <div>
                               <p className="text-sm text-gray-500">Email</p>
-                              <p className="font-medium text-gray-900">{profile.email}</p>
+                              <p className="font-medium text-gray-900">{profile?.email || 'Not provided'}</p>
                             </div>
                           </div>
                           <div className="flex items-center space-x-3">
                             <Phone className="w-5 h-5 text-gray-400" />
                             <div>
                               <p className="text-sm text-gray-500">Phone</p>
-                              <p className="font-medium text-gray-900">{profile.phone || 'Not provided'}</p>
+                              <p className="font-medium text-gray-900">{profile?.phone || 'Not provided'}</p>
                             </div>
                           </div>
                           <div className="flex items-center space-x-3">
@@ -1060,59 +1334,131 @@ const AccountDashboard = () => {
                             <div>
                               <p className="text-sm text-gray-500">Date of Birth</p>
                               <p className="font-medium text-gray-900">
-                                {profile.dateOfBirth ? formatDate(profile.dateOfBirth) : 'Not provided'}
+                                {profile?.dateOfBirth ? formatDate(profile.dateOfBirth) : 'Not provided'}
                               </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-3">
+                            <User className="w-5 h-5 text-gray-400" />
+                            <div>
+                              <p className="text-sm text-gray-500">Gender</p>
+                              <p className="font-medium text-gray-900">{profile?.gender || 'Not provided'}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-3">
+                            <MapPin className="w-5 h-5 text-gray-400" />
+                            <div>
+                              <p className="text-sm text-gray-500">Nationality</p>
+                              <p className="font-medium text-gray-900">{profile?.nationality || 'Not provided'}</p>
                             </div>
                           </div>
                         </div>
                       </div>
 
-                      {/* Change Password */}
-                      <div className="bg-white rounded-lg shadow-sm p-6">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-6">Change Password</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Current Password
-                            </label>
-                            <input
-                              type="password"
-                              value={passwordForm.currentPassword}
-                              onChange={(e) => setPasswordForm({...passwordForm, currentPassword: e.target.value})}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                            />
+                      {/* Address Information */}
+                      {(profile?.address?.street || profile?.address?.city) && (
+                        <div className="bg-white rounded-lg shadow-sm p-6">
+                          <h3 className="text-lg font-semibold text-gray-900 mb-4">Address Information</h3>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="flex items-center space-x-3">
+                              <Home className="w-5 h-5 text-gray-400" />
+                              <div>
+                                <p className="text-sm text-gray-500">Street</p>
+                                <p className="font-medium text-gray-900">{profile?.address?.street || 'Not provided'}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center space-x-3">
+                              <MapPin className="w-5 h-5 text-gray-400" />
+                              <div>
+                                <p className="text-sm text-gray-500">City</p>
+                                <p className="font-medium text-gray-900">{profile?.address?.city || 'Not provided'}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center space-x-3">
+                              <MapPin className="w-5 h-5 text-gray-400" />
+                              <div>
+                                <p className="text-sm text-gray-500">State</p>
+                                <p className="font-medium text-gray-900">{profile?.address?.state || 'Not provided'}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center space-x-3">
+                              <MapPin className="w-5 h-5 text-gray-400" />
+                              <div>
+                                <p className="text-sm text-gray-500">Postal Code</p>
+                                <p className="font-medium text-gray-900">{profile?.address?.postalCode || 'Not provided'}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center space-x-3">
+                              <MapPin className="w-5 h-5 text-gray-400" />
+                              <div>
+                                <p className="text-sm text-gray-500">Country</p>
+                                <p className="font-medium text-gray-900">{profile?.address?.country || 'Not provided'}</p>
+                              </div>
+                            </div>
                           </div>
+                        </div>
+                      )}
+
+                      {/* Change/Set Password */}
+                      <div className="bg-white rounded-lg shadow-sm p-6">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                          {profile.googleId && !profile.hasPassword ? 'Set Password' : 'Change Password'}
+                        </h3>
+                        {profile.googleId && !profile.hasPassword && (
+                          <p className="text-sm text-gray-600 mb-4">
+                            Set a password to enable password-based login as a backup to Google Sign-In
+                          </p>
+                        )}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                          {/* Only show current password for users who have a password */}
+                          {(!profile.googleId || profile.hasPassword) && (
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Current Password *
+                              </label>
+                              <input
+                                type="password"
+                                value={passwordForm.currentPassword}
+                                onChange={(e) => setPasswordForm({...passwordForm, currentPassword: e.target.value})}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                required
+                              />
+                            </div>
+                          )}
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                              New Password
+                              New Password *
                             </label>
                             <input
                               type="password"
                               value={passwordForm.newPassword}
                               onChange={(e) => setPasswordForm({...passwordForm, newPassword: e.target.value})}
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                              placeholder="Min. 6 characters"
+                              required
                             />
                           </div>
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Confirm Password
+                              Confirm Password *
                             </label>
                             <input
                               type="password"
                               value={passwordForm.confirmPassword}
                               onChange={(e) => setPasswordForm({...passwordForm, confirmPassword: e.target.value})}
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                              required
                             />
                           </div>
                         </div>
                         <div className="mt-4">
                           <button
                             onClick={handleUpdatePassword}
-                            disabled={loading || !passwordForm.currentPassword || !passwordForm.newPassword}
+                            disabled={loading || !passwordForm.newPassword || ((!profile.googleId || profile.hasPassword) && !passwordForm.currentPassword)}
                             className="flex items-center space-x-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
                           >
                             <Shield className="w-4 h-4" />
-                            <span>{loading ? 'Updating...' : 'Update Password'}</span>
+                            <span>{loading ? 'Processing...' : (profile.googleId && !profile.hasPassword ? 'Set Password' : 'Update Password')}</span>
                           </button>
                         </div>
                       </div>
@@ -1163,6 +1509,7 @@ const AccountDashboard = () => {
                           booking={booking}
                           onCancel={handleCancelBooking}
                           onViewDetails={handleViewBookingDetails}
+                          onPayNow={handlePayNow}
                         />
                       ))}
                       
@@ -1543,7 +1890,7 @@ const AccountDashboard = () => {
                     ) : !loading && (
                       <div className="text-center py-8">
                         <Bell className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                        <p className="text-gray-500">No notifications</p>
+                        <p className="text-gray-500">Some features are coming soon…</p>
                       </div>
                     )}
                   </div>

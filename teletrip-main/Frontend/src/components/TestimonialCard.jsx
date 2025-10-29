@@ -2,7 +2,7 @@ import React from "react";
 
 const TestimonialCard = ({ name, image, rating, text }) => {
   return (
-    <div className="bg-white rounded-lg p-6 shadow-lg">
+    <div className="bg-white rounded-lg p-6 shadow-lg h-48 flex flex-col">
       <div className="flex items-center mb-4">
         <img src={image} alt={name} className="w-12 h-12 rounded-full mr-4" />
         <div>
@@ -14,7 +14,7 @@ const TestimonialCard = ({ name, image, rating, text }) => {
           </div>
         </div>
       </div>
-      <p className="text-gray-600 italic">"{text}"</p>
+      <p className="text-gray-600 italic flex-1 overflow-hidden">"{text}"</p>
     </div>
   );
 };

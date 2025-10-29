@@ -242,12 +242,32 @@ const getRateClassBadge = (rateClass) => {
   }
 };
 
+// Toast Notification Component
+const Toast = ({ message, type, onClose }) => {
+  useEffect(() => {
+    const timer = setTimeout(onClose, 4000);
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  return (
+    <div className={`fixed top-20 right-4 z-[200] px-6 py-4 rounded-lg shadow-lg flex items-center gap-3 animate-slide-in ${
+      type === 'error' ? 'bg-red-500 text-white' : 'bg-green-500 text-white'
+    }`}>
+      <span>{message}</span>
+      <button onClick={onClose} className="hover:opacity-70">
+        <X className="w-4 h-4" />
+      </button>
+    </div>
+  );
+};
+
 // FIXED AuthModal Component
-export const AuthModal = ({ isOpen, onClose, defaultTab = 'login' }) => {
+export const AuthModal = ({ isOpen, onClose, defaultTab = 'login', returnUrl }) => {
   const [activeTab, setActiveTab] = useState(defaultTab);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [toast, setToast] = useState(null);
   const Navigate = useNavigate();
 
   const { setUser } = useContext(UserDataContext);
@@ -346,7 +366,7 @@ export const AuthModal = ({ isOpen, onClose, defaultTab = 'login' }) => {
     userData: !!result.data.user
   });
       onClose();
-      Navigate('/home');
+      Navigate(returnUrl || '/home');
     }
   } catch (error) {
     console.error('❌ Google login error:', error);
@@ -378,13 +398,23 @@ export const AuthModal = ({ isOpen, onClose, defaultTab = 'login' }) => {
         userData
       );
       
+      console.log('✅ Login response:', response.data);
+      
       if (response.status === 200 || response.status === 201) {
-        const data = response.data;
-        setUser(data.user);
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('userData', JSON.stringify(data.user)); // ✅ ADD THIS LINE
+        // Backend returns: { success: true, data: { token, user }, message }
+        const responseData = response.data.data || response.data;
+        const token = responseData.token;
+        const user = responseData.user;
+        
+        console.log('✅ Extracted data:', { token: !!token, user: !!user });
+        
+        setUser(user);
+        localStorage.setItem('token', token);
+        localStorage.setItem('userData', JSON.stringify(user));
+        
+        console.log('✅ Saved to localStorage, closing modal');
         onClose();
-        Navigate('/home');
+        Navigate(returnUrl || '/home');
       }
     } catch (error) {
       console.error("Login error:", error);
@@ -420,11 +450,13 @@ export const AuthModal = ({ isOpen, onClose, defaultTab = 'login' }) => {
         localStorage.setItem('token', data.token);
         localStorage.setItem('userData', JSON.stringify(data.user)); // ✅ ADD THIS LINE
         onClose();
-        Navigate('/home');
+        Navigate(returnUrl || '/home');
       }
     } catch (error) {
       console.error("Registration error:", error);
-      setError(error.response?.data?.message || "Failed to register. Please try again.");
+      const errorMessage = error.response?.data?.message || "Failed to register. Please try again.";
+      setToast({ message: errorMessage, type: 'error' });
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -440,8 +472,16 @@ export const AuthModal = ({ isOpen, onClose, defaultTab = 'login' }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg w-full max-w-md relative pt-15">
+    <>
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
+      <div className="fixed inset-0 bg-white/10 backdrop-blur-md flex items-center justify-center z-[150] p-4">
+      <div className="bg-white rounded-lg w-full max-w-md relative max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b">
           <h2 className="text-xl font-semibold">
@@ -724,12 +764,13 @@ export const AuthModal = ({ isOpen, onClose, defaultTab = 'login' }) => {
           )}
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 };
 
 // Updated SlideOut Cart Component with Authentication Check
-const CartAuthModal = ({ isOpen, onClose, onAuthSuccess, defaultTab }) => {
+const CartAuthModal = ({ isOpen, onClose, onAuthSuccess, defaultTab, returnUrl }) => {
   if (!isOpen) return null;
   
   return (
@@ -739,6 +780,7 @@ const CartAuthModal = ({ isOpen, onClose, onAuthSuccess, defaultTab }) => {
         onClose={onClose}
         onAuthSuccess={onAuthSuccess}
         defaultTab={defaultTab}
+        returnUrl={returnUrl}
       />
     </div>
   );
@@ -1048,6 +1090,7 @@ export const SlideOutCart = ({ isOpen, onClose, onProceedToCheckout }) => {
         onClose={() => setShowAuthModal(false)}
         onAuthSuccess={handleAuthSuccess}
         defaultTab="login"
+        returnUrl={window.location.pathname}
       />
     </>
   );

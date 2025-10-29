@@ -995,9 +995,7 @@ if (children > 0 && childAges.length > 0) {
                         {hotel.images.length}
                       </div>
                     )}
-                    <button className="absolute top-2 left-2 bg-white bg-opacity-90 p-2 rounded-full hover:bg-opacity-100 transition-all">
-                      <Heart className="w-5 h-5 text-gray-600 hover:text-red-500" />
-                    </button>
+
                   </div>
 
                   {/* Hotel Details */}
@@ -1074,17 +1072,20 @@ if (children > 0 && childAges.length > 0) {
                       </div>
 
                       <div className="flex gap-3 mb-4 flex-wrap">
-                        {hotel.amenities.slice(0, 6).map((amenity, index) => (
-                          <div key={index} className="flex items-center bg-gray-50 px-3 py-1 rounded-full">
-                            {getAmenityIcon(amenity)}
-                            <span className="ml-2 text-sm text-gray-700">
-                              {availableAmenities.find(a => a.id === amenity)?.name || amenity}
-                            </span>
-                          </div>
-                        ))}
-                        {hotel.amenities.length > 6 && (
+                        {[...new Set(hotel.amenities)].slice(0, 6).map((amenity, index) => {
+                          const amenityData = availableAmenities.find(a => a.id === amenity);
+                          if (!amenityData) return null;
+                          const IconComponent = amenityData.icon;
+                          return (
+                            <div key={index} className="flex items-center bg-gray-50 px-3 py-1 rounded-full">
+                              <IconComponent className="w-4 h-4 text-blue-600" />
+                              <span className="ml-2 text-sm text-gray-700">{amenityData.name}</span>
+                            </div>
+                          );
+                        })}
+                        {[...new Set(hotel.amenities)].length > 6 && (
                           <span className="text-sm text-gray-500 self-center">
-                            +{hotel.amenities.length - 6} more
+                            +{[...new Set(hotel.amenities)].length - 6} more
                           </span>
                         )}
                       </div>

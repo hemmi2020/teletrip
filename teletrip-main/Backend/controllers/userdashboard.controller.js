@@ -169,23 +169,27 @@ const getProfile = asyncErrorHandler(async (req, res) => {
 });
 
 const updateProfile = asyncErrorHandler(async (req, res) => {
-  const allowedUpdates = [
-    'firstName', 'lastName', 'phone', 'dateOfBirth', 'gender',
-    'address', 'preferences', 'emergencyContact', 'nationality'
-  ];
-  
-  const updates = {};
-  Object.keys(req.body).forEach(key => {
-    if (allowedUpdates.includes(key)) {
-      updates[key] = req.body[key];
-    }
-  });
+  const { firstName, lastName, email, phone, dateOfBirth, gender, nationality, address } = req.body;
+
+  const updates = {
+    'fullname.firstname': firstName,
+    'fullname.lastname': lastName,
+    email,
+    phone,
+    dateOfBirth,
+    gender,
+    nationality,
+    address
+  };
+
+  // Remove undefined values
+  Object.keys(updates).forEach(key => updates[key] === undefined && delete updates[key]);
 
   const user = await User.findByIdAndUpdate(
     req.user.id,
     { $set: updates },
     { new: true, runValidators: true }
-  ).select('-password -refreshTokens');
+  ).select('-password');
 
   if (!user) {
     return ApiResponse.error(res, 'User not found', 404);
