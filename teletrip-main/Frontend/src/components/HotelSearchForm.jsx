@@ -811,9 +811,7 @@ const HotelSearchForm = () => {
   const tabs = [
     { id: 'stays', label: 'Stays', icon: '🏨 ' },
     { id: 'transfers', label: 'Transfers', icon: '🚐 ' },
-    { id: 'experiences', label: 'Experiences', icon: '🎭 ' },
-    { id: 'car-rental', label: 'Car Rental', icon: '🚗 ' },
-    { id: 'theme-parks', label: 'Theme parks', icon: '🎢 ' }
+    { id: 'experiences', label: 'Experiences', icon: '🎭 ' }
   ];
 
   return (

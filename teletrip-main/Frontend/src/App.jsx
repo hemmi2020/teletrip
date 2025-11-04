@@ -14,6 +14,8 @@ import ActivityDetails from './ActivityDetails';
 import TransferSearch from './TransferSearch';
 import Checkout from './Checkout';
 import AccountDashboard from './AccountDashboard';
+import BookingManagement from './components/hotels/BookingManagement';
+import BookingDetails from './components/hotels/BookingDetails';
 import PaymentSuccess from './components/PaymentSuccess';
 import PaymentCancel from './components/PaymentCancel';
 import PaymentSuccessOnSite from './PaymentSuccessOnSite';
@@ -84,6 +86,8 @@ const App = () => {
               
               {/* User account routes */}
               <Route path="/account" element={<AccountDashboard />} />
+              <Route path="/bookings" element={<BookingManagement />} />
+              <Route path="/bookings/:bookingId" element={<BookingDetails />} />
               
               {/* Checkout & Payment routes */}
               <Route path="/checkout" element={<Checkout />} />

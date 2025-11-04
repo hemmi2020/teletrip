@@ -104,4 +104,39 @@ const optionalAuth = async (req, res, next) => {
     next();
 };
  
-module.exports = { authUser, requireRole, optionalAuth };
+// Admin authentication middleware
+const authenticateAdmin = async (req, res, next) => {
+    try {
+        const token = req.cookies?.token || 
+                      (req.headers.authorization?.startsWith('Bearer ') ?
+                       req.headers.authorization.split(' ')[1] : null);
+
+        if (!token) {
+            return res.status(401).json({ message: 'No token provided' });
+        }
+
+        const isBlacklisted = await blacklistTokenModel.findOne({ token });
+        if (isBlacklisted) {
+            return res.status(401).json({ message: 'Token has been revoked' });
+        }
+
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const user = await userModel.findById(decoded._id);
+
+        if (!user) {
+            return res.status(401).json({ message: 'User not found' });
+        }
+
+        if (user.role !== 'admin') {
+            return res.status(403).json({ message: 'Access denied. Admin only.' });
+        }
+
+        req.user = user;
+        next();
+    } catch (err) {
+        console.error('Admin auth error:', err);
+        return res.status(401).json({ message: 'Authentication failed' });
+    }
+};
+
+module.exports = { authUser, requireRole, optionalAuth, authenticateAdmin };

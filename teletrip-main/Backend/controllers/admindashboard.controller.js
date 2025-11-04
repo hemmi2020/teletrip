@@ -498,10 +498,30 @@ const getBookingDetails = asyncErrorHandler(async (req, res) => {
   const { bookingId } = req.params;
 
   // ✅ FIXED: Use correct field names from your schema
-  const booking = await Booking.findById(bookingId).populate([
-    { path: 'user', select: 'fullname email phone address' },  // Changed from 'userId'
-    { path: 'hotel', select: 'name location images rating amenities contactInfo' }  // Changed from 'hotelId'
-  ]);
+  const booking = await Booking.findById(bookingId)
+    .populate('user', 'fullname email phone address')
+    .lean();
+  
+  // Add cancellation policy information
+  if (booking && booking.hotelBooking?.rooms?.[0]?.cancellationPolicies) {
+    const now = new Date();
+    const policies = booking.hotelBooking.rooms[0].cancellationPolicies;
+    
+    // Find if free cancellation is available
+    const freeCancellation = policies.find(policy => {
+      const policyDate = new Date(policy.from);
+      return now < policyDate && policy.amount === 0;
+    });
+    
+    booking.cancellationInfo = {
+      canCancel: booking.status === 'confirmed' || booking.status === 'pending',
+      freeCancellation: !!freeCancellation,
+      freeCancellationUntil: freeCancellation?.from,
+      cancellationFee: freeCancellation ? 0 : (policies[0]?.amount || 0),
+      refundAmount: freeCancellation ? booking.pricing?.totalAmount : 
+        (booking.pricing?.totalAmount - (policies[0]?.amount || 0))
+    };
+  }
 
   if (!booking) {
     return ApiResponse.error(res, 'Booking not found', 404);
@@ -1294,6 +1314,9 @@ const markPayOnSiteAsPaid = asyncErrorHandler(async (req, res) => {
 });
 
 
+// Bulk Actions
+const bulkActions = require('./bulkActions.controller');
+
 module.exports = {
   getDashboardOverview,
   getAllUsers,
@@ -1318,5 +1341,11 @@ module.exports = {
   getAnalytics,
   exportData,
   getPayOnSiteBookings,
-  markPayOnSiteAsPaid
+  markPayOnSiteAsPaid,
+  bulkUpdateUsers: bulkActions.bulkUpdateUsers,
+  bulkUpdateBookings: bulkActions.bulkUpdateBookings,
+  bulkUpdateHotels: bulkActions.bulkUpdateHotels,
+  bulkUpdateTickets: bulkActions.bulkUpdateTickets,
+  bulkExport: bulkActions.bulkExport,
+  bulkEmail: bulkActions.bulkEmail
 };

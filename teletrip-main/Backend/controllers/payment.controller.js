@@ -12,6 +12,7 @@ const notificationService = require('../services/notification.service');
 const logger = require('../utils/logger.util'); // Enhanced logging utility
 const querystring = require('querystring');
 const forge = require('node-forge');
+const { confirmBookingWithHotelbeds } = require('../services/hotelbeds.booking.service');
 
 
 // HBLPay Configuration
@@ -590,12 +591,42 @@ module.exports.handlePaymentSuccess = asyncErrorHandler(async (req, res) => {
         });
 
         if (payment.bookingId && isSuccess) {
-          await bookingModel.findByIdAndUpdate(payment.bookingId, {
+          // Update booking status to paid
+          const booking = await bookingModel.findByIdAndUpdate(payment.bookingId, {
             paymentStatus: 'paid',
             status: 'confirmed',
             confirmedAt: new Date(),
             updatedAt: new Date()
-          });
+          }, { new: true });
+
+          // ✅ CALL HOTELBEDS BOOKING API
+          if (booking && booking.hotelBooking && payment.bookingDetails?.hotelbedsBookingRequest) {
+            console.log('🏨 [HBLPAY-SUCCESS] Confirming booking with Hotelbeds...');
+            
+            const hotelbedsResult = await confirmBookingWithHotelbeds(
+              payment.bookingDetails.hotelbedsBookingRequest
+            );
+
+            if (hotelbedsResult.success) {
+              console.log('✅ [HBLPAY-SUCCESS] Hotelbeds booking confirmed:', hotelbedsResult.hotelbedsReference);
+              
+              // Store Hotelbeds reference in booking
+              await bookingModel.findByIdAndUpdate(booking._id, {
+                'hotelBooking.confirmationNumber': hotelbedsResult.hotelbedsReference,
+                'backup.hotelbedsBookingData': hotelbedsResult.hotelbedsData,
+                updatedAt: new Date()
+              });
+            } else {
+              console.error('❌ [HBLPAY-SUCCESS] Hotelbeds booking failed:', hotelbedsResult.error);
+              
+              // Store error but don't fail the payment (already paid)
+              await bookingModel.findByIdAndUpdate(booking._id, {
+                'backup.hotelbedsError': hotelbedsResult.error,
+                'internal.notes': `Payment successful but Hotelbeds booking failed: ${hotelbedsResult.error}`,
+                updatedAt: new Date()
+              });
+            }
+          }
         }
       }
     }
@@ -2338,42 +2369,9 @@ module.exports.createPayOnSiteBooking = asyncErrorHandler(async (req, res) => {
     return ApiResponse.error(res, 'Booking ID is required', 400);
   }
 
-  // ✅ VERIFY BOOKING EXISTS
-  let bookingRecord = null;
-  try {
-    console.log('🔍 Looking for booking:', {
-      bookingId,
-      userId: userId.toString()
-    });
-
-    bookingRecord = await bookingModel.findOne({
-      _id: bookingId,
-      $or: [
-        { userId: userId },
-        { user: userId }
-      ]
-    });
-
-    if (!bookingRecord) {
-      console.error('❌ Booking not found:', { bookingId, userId: userId.toString() });
-      return ApiResponse.error(res, 'Booking not found', 404);
-    }
-
-    console.log('✅ Booking found:', {
-      bookingId: bookingRecord._id.toString(),
-      status: bookingRecord.status,
-      paymentStatus: bookingRecord.payment?.status || bookingRecord.paymentStatus
-    });
-
-    // Check if booking is already paid
-    if (bookingRecord.payment?.status === 'paid' || bookingRecord.paymentStatus === 'paid') {
-      return ApiResponse.error(res, 'This booking is already paid', 400);
-    }
-
-  } catch (error) {
-    console.error('❌ Error finding booking:', error);
-    return ApiResponse.error(res, 'Database error while finding booking: ' + error.message, 500);
-  }
+  // ✅ SKIP BOOKING VERIFICATION FOR HOTELBEDS (external API bookings)
+  // Hotelbeds bookings are created directly via their API and don't exist in MongoDB
+  console.log('ℹ️ Skipping MongoDB booking verification for Hotelbeds booking:', bookingId);
 
   // ✅ CREATE PAYMENT RECORD
   try {
@@ -2389,11 +2387,11 @@ module.exports.createPayOnSiteBooking = asyncErrorHandler(async (req, res) => {
     const payment = new paymentModel({
       paymentId,
       userId,
-      bookingId: bookingRecord._id,
+      bookingId: bookingId, // Store Hotelbeds reference as-is
       amount: paymentAmount,
       currency,
-      status: 'pending', // ✅ KEY: Payment status is PENDING
-      paymentMethod: 'pay_on_site', // ✅ NEW payment method
+      status: 'pending',
+      paymentMethod: 'pay_on_site',
       orderId: orderId,
       billing: {
         firstName: userData.firstName,
@@ -2411,7 +2409,7 @@ module.exports.createPayOnSiteBooking = asyncErrorHandler(async (req, res) => {
       userDetails: userData,
       bookingDetails: bookingData,
       createdAt: new Date(),
-      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // Expires in 24 hours
+      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
       gateway: {
         provider: 'Pay on Site',
         orderRefNumber: orderId,
@@ -2421,7 +2419,8 @@ module.exports.createPayOnSiteBooking = asyncErrorHandler(async (req, res) => {
         source: 'web',
         ipAddress: req.ip,
         userAgent: req.get('User-Agent'),
-        paymentType: 'pay_on_site'
+        paymentType: 'pay_on_site',
+        hotelbedsReference: bookingId
       },
       initiatedAt: new Date()
     });
@@ -2429,49 +2428,58 @@ module.exports.createPayOnSiteBooking = asyncErrorHandler(async (req, res) => {
     await payment.save();
     console.log('💾 Pay on Site payment record created:', paymentId);
 
-    // ✅ UPDATE BOOKING STATUS
-    await bookingRecord.updateOne({
-      status: 'pending', // ✅ Booking is pending until paid
-      paymentStatus: 'pending',
-      'payment.method': 'pay_on_site',
-      'payment.status': 'pending',
-      'payment.orderId': orderId,
-      updatedAt: new Date()
-    });
+    // ✅ CALL HOTELBEDS BOOKING API IMMEDIATELY
+    let hotelbedsReference = null;
+    let hotelbedsError = null;
 
-    console.log('✅ Booking updated with pending payment status');
+    if (bookingData.hotelbedsBookingRequest) {
+      console.log('🏨 [PAY-ON-SITE] Confirming booking with Hotelbeds...');
+      
+      const hotelbedsResult = await confirmBookingWithHotelbeds(
+        bookingData.hotelbedsBookingRequest
+      );
 
-    // ✅ SEND CONFIRMATION EMAIL (async - don't wait)
-    notificationService.sendPayOnSiteConfirmation({
-      user: {
-        email: userData.email,
-        fullname: `${userData.firstName} ${userData.lastName}`
-      },
-      booking: bookingRecord,
-      payment: {
-        paymentId,
-        orderId,
-        amount: paymentAmount,
-        currency
+      if (hotelbedsResult.success) {
+        console.log('✅ [PAY-ON-SITE] Hotelbeds booking confirmed:', hotelbedsResult.hotelbedsReference);
+        hotelbedsReference = hotelbedsResult.hotelbedsReference;
+        
+        // Update payment with Hotelbeds reference
+        await payment.updateOne({
+          'metadata.hotelbedsReference': hotelbedsReference,
+          'metadata.hotelbedsBookingData': hotelbedsResult.hotelbedsData,
+          updatedAt: new Date()
+        });
+      } else {
+        console.error('❌ [PAY-ON-SITE] Hotelbeds booking failed:', hotelbedsResult.error);
+        hotelbedsError = hotelbedsResult.error;
+        
+        // Update payment with error
+        await payment.updateOne({
+          'metadata.hotelbedsError': hotelbedsError,
+          updatedAt: new Date()
+        });
+        
+        // Return error to user - don't create booking if Hotelbeds fails
+        return ApiResponse.error(res, 
+          `Hotel booking failed: ${hotelbedsError}. Please try again or contact support.`, 
+          400
+        );
       }
-    }).then(() => {
-      console.log('📧 Pay on Site confirmation email sent');
-    }).catch(emailError => {
-      console.warn('⚠️ Failed to send confirmation email:', emailError.message);
-    });
+    }
 
     // ✅ RETURN SUCCESS RESPONSE
     return ApiResponse.success(res, {
       success: true,
-      bookingId: bookingRecord._id,
-      bookingReference: bookingRecord.bookingReference,
+      bookingId: bookingId,
+      bookingReference: hotelbedsReference || bookingId,
+      hotelbedsReference: hotelbedsReference,
       paymentId,
       orderId,
       amount: paymentAmount,
       currency,
       paymentMethod: 'pay_on_site',
-      status: 'pending',
-      message: 'Booking confirmed! Payment will be collected on site.',
+      status: 'confirmed',
+      message: 'Booking confirmed with hotel! Payment will be collected on site.',
       instructions: [
         'Your booking is confirmed',
         'Payment will be collected when you arrive',

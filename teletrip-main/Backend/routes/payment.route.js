@@ -233,8 +233,9 @@ router.post('/pay-on-site',
       .isIn(['PKR', 'USD', 'EUR', 'GBP'])
       .withMessage('Invalid currency'),
     body('bookingId')
-      .isMongoId()
-      .withMessage('Valid booking ID required'),
+      .notEmpty()
+      .trim()
+      .withMessage('Booking ID is required'),
     body('userData.firstName')
       .notEmpty()
       .trim()

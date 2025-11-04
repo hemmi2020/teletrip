@@ -1020,18 +1020,18 @@ export const SlideOutCart = ({ isOpen, onClose, onProceedToCheckout }) => {
                                     -{discountPercent}%
                                   </span>
                                   <span className="text-xs text-gray-500 line-through">
-                                    AED {item.originalPrice?.toFixed(2)}
+                                    {item.currency || 'EUR'} {item.originalPrice?.toFixed(2)}
                                   </span>
                                 </div>
                               )}
                               <div className="flex items-baseline gap-1">
                                 <span className="text-lg sm:text-xl font-bold text-gray-900">
-                                  {item.currency || 'AED'} {totalPrice.toFixed(2)}
+                                  {item.currency || 'EUR'} {totalPrice.toFixed(2)}
                                 </span>
                                 <span className="text-xs text-gray-500">total</span>
                               </div>
                               <p className="text-xs text-gray-500 mt-0.5">
-                                {item.currency || 'AED'} {item.price.toFixed(2)} per {item.type === 'activity' ? 'person' : 'night'}
+                                {item.currency || 'EUR'} {item.price.toFixed(2)} per {item.type === 'activity' ? 'person' : 'night'}
                               </p>
                             </div>
                           </div>
@@ -1052,7 +1052,7 @@ export const SlideOutCart = ({ isOpen, onClose, onProceedToCheckout }) => {
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-gray-600">Subtotal</span>
                   <span className="font-semibold text-gray-900">
-                    AED {getTotalPrice().toFixed(2)}
+                    {items[0]?.currency || 'EUR'} {getTotalPrice().toFixed(2)}
                   </span>
                 </div>
 
@@ -1060,7 +1060,7 @@ export const SlideOutCart = ({ isOpen, onClose, onProceedToCheckout }) => {
                 <div className="flex items-center justify-between pt-3 border-t">
                   <span className="text-base sm:text-lg font-bold text-gray-900">Total</span>
                   <span className="text-xl sm:text-2xl font-bold text-blue-600">
-                    AED {getTotalPrice().toFixed(2)}
+                    {items[0]?.currency || 'EUR'} {getTotalPrice().toFixed(2)}
                   </span>
                 </div>
 

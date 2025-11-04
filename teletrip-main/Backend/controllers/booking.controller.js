@@ -4,8 +4,88 @@ const ApiResponse = require('../utils/response.util');
 const DateUtil = require('../utils/date.util');
 const { asyncErrorHandler } = require('../middlewares/errorHandler.middleware');
 const notificationService = require('../services/notification.service');
+const crypto = require('crypto');
+const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 
-// Create booking - FIXED VERSION
+// Hotelbeds API configuration
+const HOTELBEDS_API_KEY = process.env.HOTELBEDS_API_KEY;
+const HOTELBEDS_SECRET = process.env.HOTELBEDS_SECRET;
+const HOTELBEDS_BASE_URL = process.env.HOTELBEDS_BASE_URL || 'https://api.test.hotelbeds.com';
+
+// Generate signature for Hotelbeds API
+function generateHotelbedsSignature(apiKey, secret, timestamp) {
+    const stringToSign = apiKey + secret + timestamp;
+    return crypto.createHash('sha256').update(stringToSign).digest('hex');
+}
+
+// Call Hotelbeds Booking API
+async function confirmHotelbedsBooking(bookingData, rateKey) {
+    const timestamp = Math.floor(Date.now() / 1000);
+    const signature = generateHotelbedsSignature(HOTELBEDS_API_KEY, HOTELBEDS_SECRET, timestamp);
+
+    // Build paxes array for all guests
+    const paxes = [];
+    const adults = bookingData.guestInfo.totalGuests.adults || 1;
+    const children = bookingData.guestInfo.totalGuests.children || 0;
+
+    // Add all adults
+    for (let i = 0; i < adults; i++) {
+        paxes.push({
+            roomId: 1,
+            type: "AD",
+            name: i === 0 ? bookingData.guestInfo.primaryGuest.firstName : "Adult",
+            surname: i === 0 ? bookingData.guestInfo.primaryGuest.lastName : `Guest${i + 1}`
+        });
+    }
+
+    // Add all children with ages
+    if (children > 0 && bookingData.childAges) {
+        for (let i = 0; i < children; i++) {
+            paxes.push({
+                roomId: 1,
+                type: "CH",
+                age: bookingData.childAges[i] || 10,
+                name: "Child",
+                surname: `Guest${i + 1}`
+            });
+        }
+    }
+
+    const hotelbedsRequest = {
+        holder: {
+            name: bookingData.guestInfo.primaryGuest.firstName,
+            surname: bookingData.guestInfo.primaryGuest.lastName
+        },
+        rooms: [{
+            rateKey: rateKey,
+            paxes: paxes
+        }],
+        clientReference: bookingData.bookingReference,
+        remark: bookingData.specialRequests || "",
+        tolerance: 2.00
+    };
+
+    const response = await fetch(`${HOTELBEDS_BASE_URL}/hotel-api/1.0/bookings`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Api-key': HOTELBEDS_API_KEY,
+            'X-Signature': signature,
+            'Accept': 'application/json',
+            'Accept-Encoding': 'gzip'
+        },
+        body: JSON.stringify(hotelbedsRequest)
+    });
+
+    if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Hotelbeds booking failed: ${errorText}`);
+    }
+
+    return await response.json();
+}
+
+// Create booking - WITH HOTELBEDS API INTEGRATION
 module.exports.createBooking = asyncErrorHandler(async (req, res) => {
   const {
     hotelName,
@@ -17,8 +97,15 @@ module.exports.createBooking = asyncErrorHandler(async (req, res) => {
     totalAmount,
     boardType = 'Room Only',
     rateClass = 'NOR',
+    rateKey, // ⚠️ CRITICAL: Must be passed from frontend
+    specialRequests,
     items = []
   } = req.body;
+
+  // Validate rateKey
+  if (!rateKey) {
+    return ApiResponse.badRequest(res, 'rateKey is required for booking');
+  }
 
   // Get user ID from JWT token (already available in req.user)
   const userId = req.user._id;
@@ -73,12 +160,22 @@ module.exports.createBooking = asyncErrorHandler(async (req, res) => {
     
     // Guest information
     guestInfo: {
+      primaryGuest: {
+        firstName: req.user.fullname?.firstname || req.user.email.split('@')[0],
+        lastName: req.user.fullname?.lastname || '',
+        email: req.user.email,
+        phone: req.user.phone || ''
+      },
       totalGuests: {
         adults: guests || 1,
         children: 0,
         infants: 0
       }
     },
+    
+    // Store rateKey and special requests
+    rateKey: rateKey,
+    specialRequests: specialRequests,
     
     // Payment information
     payment: {
@@ -101,7 +198,18 @@ module.exports.createBooking = asyncErrorHandler(async (req, res) => {
   };
 
   try {
-    // Create booking
+    // ⚠️ STEP 1: Call Hotelbeds Booking API
+    console.log('📞 Calling Hotelbeds Booking API...');
+    const hotelbedsResponse = await confirmHotelbedsBooking(bookingData, rateKey);
+    
+    // ⚠️ STEP 2: Store Hotelbeds booking reference
+    bookingData.hotelbedsReference = hotelbedsResponse.booking.reference;
+    bookingData.status = 'confirmed'; // Update status to confirmed
+    bookingData.backup = {
+      hotelbedsResponse: hotelbedsResponse
+    };
+    
+    // STEP 3: Save to local database
     const booking = await bookingModel.create(bookingData);
     
     // Send confirmation notification (optional)
@@ -116,10 +224,19 @@ module.exports.createBooking = asyncErrorHandler(async (req, res) => {
       // Don't fail the booking creation if notification fails
     }
 
-    return ApiResponse.created(res, booking, 'Booking created successfully');
+    return ApiResponse.created(res, {
+      booking,
+      hotelbedsReference: hotelbedsResponse.booking.reference,
+      voucher: hotelbedsResponse.booking
+    }, 'Booking confirmed successfully');
     
   } catch (error) {
     console.error('Booking creation error:', error);
+    
+    // If Hotelbeds booking fails, don't save to database
+    if (error.message && error.message.includes('Hotelbeds')) {
+      return ApiResponse.error(res, 'Booking failed: ' + error.message, 500);
+    }
     
     if (error.name === 'ValidationError') {
       const validationErrors = Object.keys(error.errors).map(key => ({

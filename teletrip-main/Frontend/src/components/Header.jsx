@@ -135,7 +135,7 @@ const Header = () => {
               <NavLink
                 to="/home"
                 className={({ isActive }) =>
-                  `text-gray-700 hover:text-blue-600 font-medium transition-colors duration-200 ${
+                  `text-gray-700 hover:text-blue-600 font-bold transition-colors duration-200 flex items-center ${
                     isActive ? 'text-blue-600 border-b-2 border-blue-600' : ''
                   }`
                 }
@@ -145,7 +145,7 @@ const Header = () => {
               <NavLink
                 to="/contact"
                 className={({ isActive }) =>
-                  `text-gray-700 hover:text-blue-600 font-medium transition-colors duration-200 ${
+                  `text-gray-700 hover:text-blue-600 font-bold transition-colors duration-200 flex items-center ${
                     isActive ? 'text-blue-600 border-b-2 border-blue-600' : ''
                   }`
                 }

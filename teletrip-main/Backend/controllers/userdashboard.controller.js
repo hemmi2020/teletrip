@@ -262,6 +262,12 @@ const transformBookingData = (booking) => {
             booking.guestInfo?.totalGuests?.adults || 1,
     roomType: booking.hotelBooking?.rooms?.[0]?.roomName || 'Standard',
     
+    // Add Hotelbeds-specific fields
+    hotelBooking: booking.hotelBooking, // Include full hotel booking data
+    guestInfo: booking.guestInfo, // Include guest information
+    paymentMethod: booking.hotelBooking?.rooms?.[0]?.paymentType === 'AT_WEB' ? 'card' : 'pay_on_site',
+    cancellationPolicies: booking.hotelBooking?.rooms?.[0]?.cancellationPolicies || [],
+    
     // Add other fields the frontend might need
     createdAt: booking.createdAt,
     bookedAt: booking.bookedAt,

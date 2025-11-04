@@ -5,6 +5,7 @@ import { useCart } from './components/CartSystem';
 import { AuthModal } from './components/CartSystem';
 import Header from './components/Header';
 import axios from 'axios';
+import { hotelApi } from './services/hotelApi';
 import { 
   User, 
   Mail, 
@@ -226,7 +227,9 @@ const Checkout = () => {
           guests: firstItem?.guests || firstItem?.adults || 1,
           totalAmount: parseFloat(totalAmount),
           boardType: firstItem?.boardName || 'Room Only',
-          rateClass: firstItem?.rateClass || 'NOR'
+          rateClass: firstItem?.rateClass || 'NOR',
+          rateKey: firstItem?.rateKey, // ⚠️ CRITICAL: Pass rateKey for Hotelbeds booking
+          specialRequests: billingInfo?.specialRequests || ''
         };
         
         console.log('📋 Creating hotel booking:', hotelBookingPayload);
@@ -243,13 +246,15 @@ const Checkout = () => {
         );
       }
 
-      const bookingId = bookingResponse.data.data?.booking?._id || 
-                        bookingResponse.data.data?._id || 
-                        bookingResponse.data.data?.id || 
-                        bookingResponse.data.data?.bookingId ||
-                        bookingResponse.data._id || 
-                        bookingResponse.data.id ||
-                        bookingResponse.data.bookingId;
+      const bookingId = bookingResponse.data?.booking?.reference ||
+                        bookingResponse.data?.data?.booking?.reference ||
+                        bookingResponse.data?.data?.booking?._id || 
+                        bookingResponse.data?.data?._id || 
+                        bookingResponse.data?.data?.id || 
+                        bookingResponse.data?.data?.bookingId ||
+                        bookingResponse.data?._id || 
+                        bookingResponse.data?.id ||
+                        bookingResponse.data?.bookingId;
       
       if (!bookingId) {
         console.error('❌ No booking ID found:', bookingResponse.data);
@@ -258,7 +263,43 @@ const Checkout = () => {
 
       console.log('✅ Booking created with ID:', bookingId);
 
-      // Step 2: Initiate HBLPay payment
+      // Step 2: Build Hotelbeds booking request for hotels
+      let hotelbedsBookingRequest = null;
+      if (!isActivity && !isTransfer && firstItem.rateKey) {
+        // Call checkRate to get fresh rateKey
+        const checkRateResponse = await hotelApi.checkRate(firstItem.rateKey);
+        const finalRateKey = checkRateResponse.data?.hotel?.rooms?.[0]?.rates?.[0]?.rateKey || firstItem.rateKey;
+        
+        hotelbedsBookingRequest = {
+          holder: {
+            name: billingInfo.firstName,
+            surname: billingInfo.lastName
+          },
+          rooms: [{
+            rateKey: finalRateKey,
+            paxes: [
+              ...Array(firstItem.adults || 2).fill(null).map((_, i) => ({
+                roomId: 1,
+                type: 'AD',
+                name: i === 0 ? billingInfo.firstName : 'Guest',
+                surname: i === 0 ? billingInfo.lastName : 'Surname'
+              })),
+              ...Array(firstItem.children || 0).fill(null).map((_, i) => ({
+                roomId: 1,
+                type: 'CH',
+                age: 10,
+                name: 'Child',
+                surname: 'Surname'
+              }))
+            ]
+          }],
+          clientReference: `TELI_${Date.now()}`,
+          remark: billingInfo?.specialRequests || 'Booking via TeleTrip',
+          tolerance: 2.00
+        };
+      }
+
+      // Step 3: Initiate HBLPay payment
       const paymentPayload = {
         userData: {
           firstName: billingInfo.firstName.trim(),
@@ -273,6 +314,8 @@ const Checkout = () => {
         },
         bookingData: {
           hotelName: isActivity ? firstItem.name : (firstItem?.hotelName || 'Hotel Booking'),
+          checkIn: firstItem?.checkIn,
+          checkOut: firstItem?.checkOut,
           items: checkoutItems.map(item => ({
             name: item.type === 'activity' ? item.name : (item.hotelName || 'Hotel Booking'),
             quantity: 1,
@@ -282,7 +325,8 @@ const Checkout = () => {
             item.type === 'activity' 
               ? `${item.name} - ${item.from} to ${item.to}`
               : `${item.hotelName} - ${item.checkIn} to ${item.checkOut}`
-          ).join('; ')
+          ).join('; '),
+          hotelbedsBookingRequest: hotelbedsBookingRequest
         },
         amount: parseFloat(totalAmount),
         currency: 'PKR',
@@ -350,6 +394,8 @@ const Checkout = () => {
         localStorage.removeItem('token');
         localStorage.removeItem('userData');
         setShowAuthModal(true);
+      } else if (error.response?.data?.error) {
+        errorMessage = error.response.data.error;
       } else if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
       } else if (error.message) {
@@ -421,21 +467,80 @@ const handlePayOnSiteBooking = async () => {
       
       console.log('📥 Activity booking response:', bookingResponse.data);
     } else {
-      const hotelBookingPayload = {
-        hotelName: firstItem?.hotelName || 'Hotel Booking',
-        roomName: firstItem?.roomName || 'Standard Room',
-        location: firstItem?.location || 'Karachi, Pakistan',
-        checkIn: firstItem?.checkIn || new Date().toISOString(),
-        checkOut: firstItem?.checkOut || new Date(Date.now() + 86400000).toISOString(),
-        guests: firstItem?.guests || firstItem?.adults || 1,
-        totalAmount: parseFloat(totalAmount),
-        boardType: firstItem?.boardName || 'Room Only',
-        rateClass: firstItem?.rateClass || 'NOR'
+      // Always call CheckRate to get fresh rateKey
+      console.log('🔄 Calling CheckRate API to get fresh rateKey...');
+      const checkRateResponse = await hotelApi.checkRate(firstItem.rateKey);
+      
+      if (!checkRateResponse.success) {
+        throw new Error('Rate validation failed. Room may no longer be available.');
+      }
+      
+      const finalRateKey = checkRateResponse.data?.hotel?.rooms?.[0]?.rates?.[0]?.rateKey || firstItem.rateKey;
+      console.log('✅ Rate validated, new rateKey:', finalRateKey);
+      
+      // Build Hotelbeds booking request
+      const hotelbedsBookingRequest = {
+        holder: {
+          name: billingInfo.firstName,
+          surname: billingInfo.lastName
+        },
+        rooms: [{
+          rateKey: finalRateKey,
+          paxes: [
+            ...Array(firstItem.adults || 2).fill(null).map((_, i) => ({
+              roomId: 1,
+              type: 'AD',
+              name: i === 0 ? billingInfo.firstName : 'Guest',
+              surname: i === 0 ? billingInfo.lastName : 'Surname'
+            })),
+            ...Array(firstItem.children || 0).fill(null).map((_, i) => ({
+              roomId: 1,
+              type: 'CH',
+              age: 10,
+              name: 'Child',
+              surname: 'Surname'
+            }))
+          ]
+        }],
+        clientReference: `TELI_${Date.now()}`,
+        remark: billingInfo?.specialRequests || 'Booking via TeleTrip',
+        tolerance: 2.00
       };
       
+      // Send to Pay on Site endpoint with Hotelbeds request
+      const payOnSitePayload = {
+        userData: {
+          firstName: billingInfo.firstName.trim(),
+          lastName: billingInfo.lastName.trim(),
+          email: billingInfo.email.trim().toLowerCase(),
+          phone: billingInfo.phone.trim().replace(/\s+/g, ''),
+          address: billingInfo.address.trim(),
+          city: billingInfo.city.trim(),
+          state: billingInfo.state,
+          country: billingInfo.country,
+          postalCode: billingInfo.postalCode || ''
+        },
+        bookingData: {
+          hotelName: firstItem?.hotelName || 'Hotel Booking',
+          checkIn: firstItem?.checkIn,
+          checkOut: firstItem?.checkOut,
+          guests: firstItem?.guests || firstItem?.adults || 1,
+          items: checkoutItems.map(item => ({
+            name: item.hotelName || 'Hotel Booking',
+            quantity: 1,
+            price: parseFloat(item.price || item.totalPrice || 0)
+          })),
+          hotelbedsBookingRequest: hotelbedsBookingRequest
+        },
+        amount: parseFloat(totalAmount),
+        currency: checkoutItems[0]?.currency || 'PKR',
+        bookingId: `HOTELBEDS_${Date.now()}`
+      };
+      
+      console.log('📤 Sending Pay on Site booking with Hotelbeds request');
       bookingResponse = await axios.post(
-        `${import.meta.env.VITE_BASE_URL}/api/bookings/create`,
-        hotelBookingPayload,
+        `${import.meta.env.VITE_BASE_URL}/api/payments/pay-on-site`,
+        payOnSitePayload,
         {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -443,84 +548,26 @@ const handlePayOnSiteBooking = async () => {
           }
         }
       );
+      console.log('📥 Pay on Site response:', bookingResponse.data);
     }
 
-    const bookingId = bookingResponse.data.data?.booking?._id || 
-                      bookingResponse.data.data?._id || 
-                      bookingResponse.data.data?.id || 
-                      bookingResponse.data.data?.bookingId ||
-                      bookingResponse.data._id || 
-                      bookingResponse.data.id ||
-                      bookingResponse.data.bookingId;
-    
-    if (!bookingId) {
-      console.error('❌ No booking ID found:', bookingResponse.data);
-      throw new Error('No booking ID returned from server');
-    }
-
-    console.log('✅ Booking created:', bookingId);
-
-    const payOnSitePayload = {
-      userData: {
-        firstName: billingInfo.firstName.trim(),
-        lastName: billingInfo.lastName.trim(),
-        email: billingInfo.email.trim().toLowerCase(),
-        phone: billingInfo.phone.trim().replace(/\s+/g, ''),
-        address: billingInfo.address.trim(),
-        city: billingInfo.city.trim(),
-        state: billingInfo.state,
-        country: billingInfo.country,
-        postalCode: billingInfo.postalCode || ''
-      },
-      bookingData: {
-        hotelName: firstItem.type === 'activity' ? firstItem.name : (firstItem?.hotelName || 'Hotel Booking'),
-        roomName: firstItem.type === 'activity' ? firstItem.modalityName : (firstItem?.roomName || 'Standard Room'),
-        checkIn: firstItem.type === 'activity' ? firstItem.from : firstItem?.checkIn,
-        checkOut: firstItem.type === 'activity' ? firstItem.to : firstItem?.checkOut,
-        guests: firstItem?.guests || firstItem?.adults || 1,
-        items: checkoutItems.map(item => ({
-          name: item.type === 'activity' ? item.name : (item.hotelName || 'Hotel Booking'),
-          quantity: 1,
-          price: parseFloat(item.price || item.totalPrice || 0)
-        }))
-      },
-      amount: parseFloat(totalAmount),
-      currency: checkoutItems[0]?.currency || 'PKR',
-      bookingId: bookingId
-    };
-
-    console.log('💳 Creating Pay on Site payment...');
-
-    const paymentResponse = await axios.post(
-      `${import.meta.env.VITE_BASE_URL}/api/payments/pay-on-site`,
-      payOnSitePayload,
-      {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json'
-        }
-      }
-    );
-
-    console.log('✅ Pay on Site payment created');
-
-    if (paymentResponse.data.success) {
+    if (bookingResponse.data.success) {
       setSuccess('Booking confirmed! Payment will be collected on site.');
       clearCart();
 
       setTimeout(() => {
         navigate('/payment-success-onsite', {
           state: {
-            bookingId: paymentResponse.data.data.bookingId,
-            bookingReference: paymentResponse.data.data.bookingReference,
-            paymentId: paymentResponse.data.data.paymentId,
-            orderId: paymentResponse.data.data.orderId,
-            amount: paymentResponse.data.data.amount,
-            currency: paymentResponse.data.data.currency,
-            message: paymentResponse.data.data.message,
-            instructions: paymentResponse.data.data.instructions,
+            bookingId: bookingResponse.data.data.bookingId,
+            bookingReference: bookingResponse.data.data.bookingReference || bookingResponse.data.data.hotelbedsReference,
+            paymentId: bookingResponse.data.data.paymentId,
+            orderId: bookingResponse.data.data.orderId,
+            amount: bookingResponse.data.data.amount,
+            currency: bookingResponse.data.data.currency,
+            message: bookingResponse.data.data.message,
+            instructions: bookingResponse.data.data.instructions,
             bookingDetails: {
-              ...paymentResponse.data.data.bookingDetails,
+              ...bookingResponse.data.data.bookingDetails,
               roomName: firstItem.roomName || firstItem.modalityName,
               guests: firstItem.guests || firstItem.adults || 1,
               adults: firstItem.adults,
@@ -543,6 +590,8 @@ const handlePayOnSiteBooking = async () => {
       localStorage.removeItem('token');
       localStorage.removeItem('userData');
       setShowAuthModal(true);
+    } else if (error.response?.data?.error) {
+      errorMessage = error.response.data.error;
     } else if (error.response?.data?.message) {
       errorMessage = error.response.data.message;
     } else if (error.message) {
@@ -854,15 +903,34 @@ const handlePaymentSubmit = () => {
 
       {/* Error/Success Messages */}
       {error && (
-        <div className="flex items-center space-x-2 text-red-600 text-sm mb-4 p-3 bg-red-50 rounded-lg">
-          <AlertCircle className="w-4 h-4 flex-shrink-0" />
-          <span>{error}</span>
+        <div className="mb-4 p-4 bg-red-50 border-l-4 border-red-500 rounded-r-lg shadow-sm">
+          <div className="flex items-start">
+            <AlertCircle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
+            <div className="ml-3 flex-1">
+              <h3 className="text-sm font-semibold text-red-800">Booking Failed</h3>
+              <p className="text-sm text-red-700 mt-1">{error}</p>
+              {error.includes('no longer available') && (
+                <button onClick={() => navigate('/hotel-search-results')} className="mt-2 text-xs text-red-600 underline hover:text-red-800">
+                  Search for available rooms →
+                </button>
+              )}
+            </div>
+          </div>
         </div>
       )}
 
       {success && (
-        <div className="flex items-center space-x-2 text-green-600 text-sm mb-4 p-3 bg-green-50 rounded-lg">
-          <span>✅ {success}</span>
+        <div className="mb-4 p-4 bg-green-50 border-l-4 border-green-500 rounded-r-lg shadow-sm">
+          <div className="flex items-start">
+            <div className="flex-shrink-0">
+              <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
+              </svg>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm font-medium text-green-800">{success}</p>
+            </div>
+          </div>
         </div>
       )}
 

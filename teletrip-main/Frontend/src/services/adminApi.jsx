@@ -431,6 +431,101 @@ export const AdminDashboardAPI = {
       };
     }
   },
+
+  // ========== BULK ACTIONS ==========
+  bulkUpdateUsers: async (userIds, action, data = {}) => {
+    try {
+      const response = await adminApi.post(`/api/admin/users/bulk/${action}`, {
+        userIds,
+        ...data
+      });
+      return { success: true, data: response.data.data };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.response?.data?.message || 'Failed to perform bulk action' 
+      };
+    }
+  },
+
+  bulkUpdateBookings: async (bookingIds, action, data = {}) => {
+    try {
+      const response = await adminApi.post(`/api/admin/bookings/bulk/${action}`, {
+        bookingIds,
+        ...data
+      });
+      return { success: true, data: response.data.data };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.response?.data?.message || 'Failed to perform bulk action' 
+      };
+    }
+  },
+
+  bulkUpdateHotels: async (hotelIds, action, data = {}) => {
+    try {
+      const response = await adminApi.post(`/api/admin/hotels/bulk/${action}`, {
+        hotelIds,
+        ...data
+      });
+      return { success: true, data: response.data.data };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.response?.data?.message || 'Failed to perform bulk action' 
+      };
+    }
+  },
+
+  bulkUpdateTickets: async (ticketIds, action, data = {}) => {
+    try {
+      const response = await adminApi.post(`/api/admin/support/tickets/bulk/${action}`, {
+        ticketIds,
+        ...data
+      });
+      return { success: true, data: response.data.data };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.response?.data?.message || 'Failed to perform bulk action' 
+      };
+    }
+  },
+
+  bulkExport: async (type, ids) => {
+    try {
+      const response = await adminApi.post(`/api/admin/export/bulk`, {
+        type,
+        ids
+      }, {
+        responseType: 'blob'
+      });
+      return { success: true, data: response.data };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.response?.data?.message || 'Failed to export data' 
+      };
+    }
+  },
+
+  bulkEmail: async (type, ids, emailData) => {
+    try {
+      const response = await adminApi.post(`/api/admin/email/bulk`, {
+        type,
+        ids,
+        subject: emailData.subject,
+        message: emailData.message
+      });
+      return { success: true, data: response.data.data };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.response?.data?.message || 'Failed to send bulk email' 
+      };
+    }
+  },
 };
 
 // ========== UTILITY FUNCTIONS ==========

@@ -26,8 +26,7 @@ const paymentSchema = new mongoose.Schema({
   },
   
   bookingId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'booking',
+    type: mongoose.Schema.Types.Mixed, // Support both ObjectId (internal) and String (Hotelbeds)
     required: true,
     index: true
   },

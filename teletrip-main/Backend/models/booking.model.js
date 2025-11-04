@@ -454,7 +454,9 @@ const bookingSchema = new mongoose.Schema({
   backup: {
     originalBookingData: mongoose.Schema.Types.Mixed,
     supplierBookingData: mongoose.Schema.Types.Mixed,
-    paymentData: mongoose.Schema.Types.Mixed
+    paymentData: mongoose.Schema.Types.Mixed,
+    hotelbedsBookingData: mongoose.Schema.Types.Mixed,
+    hotelbedsError: String
   },
   
   // Timestamps
@@ -465,7 +467,30 @@ const bookingSchema = new mongoose.Schema({
   },
   confirmedAt: Date,
   completedAt: Date,
-  expiresAt: Date
+  expiresAt: Date,
+
+  // Booking Management Fields
+  messages: [{
+    id: Number,
+    sender: String,
+    message: String,
+    type: String,
+    timestamp: Date
+  }],
+  notes: [{
+    id: Number,
+    text: String,
+    author: String,
+    timestamp: Date
+  }],
+  timeline: [{
+    id: Number,
+    event: String,
+    description: String,
+    timestamp: Date,
+    type: String,
+    icon: String
+  }]
 
 }, {
   timestamps: true, // This creates createdAt and updatedAt fields with indexes

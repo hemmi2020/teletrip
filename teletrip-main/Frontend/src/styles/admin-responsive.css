@@ -1,0 +1,146 @@
+/* Global Responsive Utilities */
+* { box-sizing: border-box; }
+button, a, [role="button"] { min-width: 44px; min-height: 44px; }
+
+/* Mobile - 0 to 640px */
+@media (max-width: 640px) {
+  .admin-header h1 { font-size: 1.25rem !important; }
+  .stat-card { padding: 1rem !important; }
+  .stat-card h3 { font-size: 1.5rem !important; }
+  .admin-table { display: none !important; }
+  .mobile-card-view { display: block !important; }
+  .filter-panel { flex-direction: column !important; }
+  .filter-panel > * { width: 100% !important; }
+  .action-buttons { flex-wrap: wrap !important; gap: 0.5rem !important; }
+  .action-buttons button { min-width: 44px !important; min-height: 44px !important; }
+  .chart-container { height: 200px !important; }
+  .modal-content { width: 95vw !important; max-height: 90vh !important; margin: 1rem !important; }
+  .sidebar { width: 100% !important; }
+  .grid-cols-2, .grid-cols-3, .grid-cols-4 { grid-template-columns: repeat(1, minmax(0, 1fr)) !important; }
+  .pagination { flex-direction: column !important; gap: 0.5rem !important; }
+  input, select, textarea { font-size: 16px !important; }
+  
+  /* Reports Section */
+  .report-builder, .scheduled-reports, .quick-reports { padding: 1rem !important; }
+  .report-builder form { flex-direction: column !important; }
+  .report-builder button { width: 100% !important; margin-top: 0.5rem !important; }
+  
+  /* Financial Section */
+  .financial-dashboard, .profit-calculator, .refund-management { padding: 1rem !important; }
+  .financial-card { margin-bottom: 1rem !important; }
+  
+  /* Hotel Management */
+  .hotel-approval, .room-inventory, .pricing-calendar { padding: 1rem !important; }
+  .hotel-card { flex-direction: column !important; }
+  
+  /* Booking Management */
+  .booking-modification, .cancellation-policy, .refund-preview { padding: 1rem !important; }
+  .guest-communication, .booking-notes, .special-requests { padding: 1rem !important; }
+  .timeline-view { padding: 1rem !important; }
+  
+  /* Filters */
+  .advanced-filter { padding: 1rem !important; }
+  .filter-chips { flex-wrap: wrap !important; }
+  .filter-preset { width: 100% !important; }
+  
+  /* Bulk Actions */
+  .bulk-actions-bar { flex-direction: column !important; padding: 1rem !important; }
+  .bulk-actions-bar button { width: 100% !important; margin-top: 0.5rem !important; }
+  
+  /* Analytics */
+  .analytics-chart { height: 250px !important; }
+  .real-time-metrics { grid-template-columns: repeat(1, 1fr) !important; }
+  .system-status { padding: 1rem !important; }
+  
+  /* Notifications */
+  .notification-bell { position: relative !important; }
+  .notification-dropdown { right: 0 !important; left: auto !important; width: 90vw !important; }
+  
+  /* Activity Feed */
+  .activity-feed { padding: 1rem !important; }
+  .activity-item { flex-direction: column !important; align-items: flex-start !important; }
+  
+  /* View Toggle & Column Toggle */
+  .view-toggle, .column-toggle { display: none !important; }
+  
+  /* Dark Mode Toggle */
+  .dark-mode-toggle { padding: 0.5rem !important; }
+  
+  /* Card View */
+  .card-view { grid-template-columns: repeat(1, 1fr) !important; }
+  
+  /* Draggable Widgets */
+  .draggable-widgets { grid-template-columns: repeat(1, 1fr) !important; }
+  
+  /* All Buttons */
+  button { font-size: 14px !important; padding: 0.75rem 1rem !important; }
+  
+  /* All Inputs */
+  input, select, textarea { width: 100% !important; }
+  
+  /* Modals */
+  .modal { padding: 1rem !important; }
+  .modal-header { flex-direction: column !important; gap: 0.5rem !important; }
+  .modal-body { padding: 1rem !important; }
+  .modal-footer { flex-direction: column !important; }
+  .modal-footer button { width: 100% !important; }
+  
+  /* Tables */
+  table { font-size: 12px !important; }
+  th, td { padding: 0.5rem !important; }
+  
+  /* Sidebar */
+  .sidebar nav button { padding: 0.75rem 1rem !important; font-size: 14px !important; }
+  
+  /* Header Actions */
+  .header-actions { gap: 0.5rem !important; }
+  .header-actions > * { padding: 0.5rem !important; }
+  
+  /* Period Selector */
+  .period-selector { width: 100% !important; }
+  .period-selector button { width: 100% !important; margin-bottom: 0.5rem !important; }
+  
+  /* All Cards */
+  .bg-white, .bg-gray-50 { padding: 1rem !important; }
+  
+  /* Overflow */
+  .overflow-x-auto { overflow-x: auto !important; -webkit-overflow-scrolling: touch !important; }
+}
+
+/* Tablet - 641px to 1024px */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .grid-cols-4 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+  .sidebar { width: 200px !important; }
+  .chart-container { height: 250px !important; }
+}
+
+/* Desktop - 1025px+ */
+@media (min-width: 1025px) {
+  .mobile-card-view { display: none !important; }
+  .admin-table { display: table !important; }
+}
+
+/* Touch Devices */
+@media (hover: none) and (pointer: coarse) {
+  button, a, .clickable { min-width: 48px !important; min-height: 48px !important; padding: 0.875rem !important; }
+  .dropdown-menu { min-width: 200px !important; }
+  input, select, textarea { font-size: 16px !important; }
+  
+  /* Prevent zoom on input focus */
+  input:focus, select:focus, textarea:focus { font-size: 16px !important; }
+}
+
+/* Landscape Mobile */
+@media (max-width: 896px) and (orientation: landscape) {
+  .sidebar { transform: translateX(-100%) !important; }
+  .sidebar.open { transform: translateX(0) !important; }
+  .main-content { margin-left: 0 !important; }
+}
+
+/* Print */
+@media print {
+  .sidebar, .header-actions, .bulk-actions-bar, button, .filter-panel { display: none !important; }
+  .main-content { width: 100% !important; margin: 0 !important; }
+  .mobile-card-view { display: none !important; }
+  .admin-table { display: block !important; }
+}

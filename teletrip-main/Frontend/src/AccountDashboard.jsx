@@ -1204,6 +1204,30 @@ const AccountDashboard = () => {
               {activeTab === "overview" && (
                 <div>
                   <h2 className="text-xl font-semibold text-gray-900 mb-6">Dashboard Overview</h2>
+                  
+                  {/* Pay on Site Alert */}
+                  {dashboardStats.pendingPayOnSite?.count > 0 && (
+                    <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6 rounded-lg">
+                      <div className="flex items-center">
+                        <AlertCircle className="w-5 h-5 text-yellow-600 mr-3" />
+                        <div className="flex-1">
+                          <h3 className="text-sm font-medium text-yellow-800">
+                            {dashboardStats.pendingPayOnSite.count} Booking{dashboardStats.pendingPayOnSite.count > 1 ? 's' : ''} with Pay on Site
+                          </h3>
+                          <p className="text-sm text-yellow-700 mt-1">
+                            {dashboardStats.pendingPayOnSite.message}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => setActiveTab('bookings')}
+                          className="ml-4 px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 text-sm font-medium"
+                        >
+                          View Bookings
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                  
                   <DashboardStats stats={dashboardStats} loading={loading} />
 
                   {/* Recent Activity Grid */}

@@ -336,6 +336,110 @@ router.get('/hotels/details/:hotelCode', async (req, res) => {
     }
 });
 
+// Hotelbeds Booking Confirmation endpoint
+router.post('/hotels/book', authUser, async (req, res) => {
+    try {
+        const timestamp = Math.floor(Date.now() / 1000);
+        const signature = generateHotelbedsSignature(HOTELBEDS_API_KEY, HOTELBEDS_SECRET, timestamp);
+
+        const response = await fetch(`${HOTELBEDS_BASE_URL}/hotel-api/1.0/bookings`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Api-key': HOTELBEDS_API_KEY,
+                'X-Signature': signature,
+                'Accept': 'application/json',
+                'Accept-Encoding': 'gzip'
+            },
+            body: JSON.stringify(req.body)
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Hotelbeds Booking Error:', response.status, errorText);
+            
+            let errorMessage = 'Failed to create booking';
+            try {
+                const errorData = JSON.parse(errorText);
+                if (errorData.error?.message) {
+                    errorMessage = errorData.error.message;
+                    if (errorMessage === 'Insufficient allotment') {
+                        errorMessage = 'This room is no longer available. Please search again for updated availability.';
+                    } else if (errorMessage.includes('Price has changed') || errorMessage.includes('price difference exceeds') || errorMessage.includes('Please do not retry')) {
+                        errorMessage = 'Room price or availability has changed. Please search again for updated options.';
+                    }
+                }
+            } catch (e) {}
+            
+            return res.status(response.status).json({
+                success: false,
+                error: errorMessage,
+                details: errorText
+            });
+        }
+
+        const data = await response.json();
+
+        res.json({
+            success: true,
+            data: data
+        });
+
+    } catch (error) {
+        console.error('Booking Error:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Internal server error',
+            message: error.message
+        });
+    }
+});
+
+// CheckRate endpoint - Re-validate pricing before booking
+router.post('/hotels/checkrate', async (req, res) => {
+    try {
+        const timestamp = Math.floor(Date.now() / 1000);
+        const signature = generateHotelbedsSignature(HOTELBEDS_API_KEY, HOTELBEDS_SECRET, timestamp);
+
+        const response = await fetch(`${HOTELBEDS_BASE_URL}/hotel-api/1.0/checkrates`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Api-key': HOTELBEDS_API_KEY,
+                'X-Signature': signature,
+                'Accept': 'application/json',
+                'Accept-Encoding': 'gzip'
+            },
+            body: JSON.stringify(req.body)
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Hotelbeds CheckRate Error:', response.status, errorText);
+            return res.status(response.status).json({
+                success: false,
+                error: 'Failed to check rate',
+                details: errorText
+            });
+        }
+
+        const data = await response.json();
+
+        res.json({
+            success: true,
+            data: data
+        });
+
+    } catch (error) {
+        console.error('CheckRate Error:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Internal server error',
+            message: error.message
+        });
+    }
+});
+
 // Search TripAdvisor for hotel location ID
 async function searchTripAdvisorLocation(hotelName, city) {
   try {
@@ -504,6 +608,185 @@ router.get('/geocode', async (req, res) => {
             error: 'Geocoding failed',
             message: error.message
         });
+    }
+});
+
+// Booking List - Get all bookings with filters
+router.get('/hotels/bookings', authUser, async (req, res) => {
+    try {
+        const timestamp = Math.floor(Date.now() / 1000);
+        const signature = generateHotelbedsSignature(HOTELBEDS_API_KEY, HOTELBEDS_SECRET, timestamp);
+
+        const { filterType, status, from, to, start, end, clientReference, creationUser, country, destination, hotel } = req.query;
+        
+        const params = new URLSearchParams();
+        if (filterType) params.append('filterType', filterType);
+        if (status) params.append('status', status);
+        if (from) params.append('from', from);
+        if (to) params.append('to', to);
+        if (start) params.append('start', start);
+        if (end) params.append('end', end);
+        if (clientReference) params.append('clientReference', clientReference);
+        if (creationUser) params.append('creationUser', creationUser);
+        if (country) params.append('country', country);
+        if (destination) params.append('destination', destination);
+        if (hotel) params.append('hotel', hotel);
+
+        const response = await fetch(`${HOTELBEDS_BASE_URL}/hotel-api/1.0/bookings?${params}`, {
+            method: 'GET',
+            headers: {
+                'Api-key': HOTELBEDS_API_KEY,
+                'X-Signature': signature,
+                'Accept': 'application/json',
+                'Accept-Encoding': 'gzip'
+            }
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            return res.status(response.status).json({ success: false, error: 'Failed to fetch bookings', details: errorText });
+        }
+
+        const data = await response.json();
+        res.json({ success: true, data });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Booking Detail - Get specific booking by reference
+router.get('/hotels/bookings/:bookingId', authUser, async (req, res) => {
+    try {
+        const timestamp = Math.floor(Date.now() / 1000);
+        const signature = generateHotelbedsSignature(HOTELBEDS_API_KEY, HOTELBEDS_SECRET, timestamp);
+        const { bookingId } = req.params;
+        const { language } = req.query;
+
+        const url = `${HOTELBEDS_BASE_URL}/hotel-api/1.0/bookings/${bookingId}${language ? `?language=${language}` : ''}`;
+
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Api-key': HOTELBEDS_API_KEY,
+                'X-Signature': signature,
+                'Accept': 'application/json',
+                'Accept-Encoding': 'gzip'
+            }
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            return res.status(response.status).json({ success: false, error: 'Failed to fetch booking', details: errorText });
+        }
+
+        const data = await response.json();
+        res.json({ success: true, data });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Booking Change/Modification
+router.put('/hotels/bookings/:bookingId', authUser, async (req, res) => {
+    try {
+        const timestamp = Math.floor(Date.now() / 1000);
+        const signature = generateHotelbedsSignature(HOTELBEDS_API_KEY, HOTELBEDS_SECRET, timestamp);
+        const { bookingId } = req.params;
+
+        const response = await fetch(`${HOTELBEDS_BASE_URL}/hotel-api/1.0/bookings/${bookingId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Api-key': HOTELBEDS_API_KEY,
+                'X-Signature': signature,
+                'Accept': 'application/json',
+                'Accept-Encoding': 'gzip'
+            },
+            body: JSON.stringify(req.body)
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            return res.status(response.status).json({ success: false, error: 'Failed to modify booking', details: errorText });
+        }
+
+        const data = await response.json();
+        res.json({ success: true, data });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Booking Cancellation
+router.delete('/hotels/bookings/:bookingId', authUser, async (req, res) => {
+    try {
+        const timestamp = Math.floor(Date.now() / 1000);
+        const signature = generateHotelbedsSignature(HOTELBEDS_API_KEY, HOTELBEDS_SECRET, timestamp);
+        const { bookingId } = req.params;
+        const { cancellationFlag, language } = req.query;
+
+        const params = new URLSearchParams();
+        if (cancellationFlag) params.append('cancellationFlag', cancellationFlag);
+        if (language) params.append('language', language);
+
+        const response = await fetch(`${HOTELBEDS_BASE_URL}/hotel-api/1.0/bookings/${bookingId}?${params}`, {
+            method: 'DELETE',
+            headers: {
+                'Api-key': HOTELBEDS_API_KEY,
+                'X-Signature': signature,
+                'Accept': 'application/json',
+                'Accept-Encoding': 'gzip'
+            }
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            return res.status(response.status).json({ success: false, error: 'Failed to cancel booking', details: errorText });
+        }
+
+        const data = await response.json();
+        res.json({ success: true, data });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Booking Reconfirmation
+router.get('/hotels/bookings/reconfirmations', authUser, async (req, res) => {
+    try {
+        const timestamp = Math.floor(Date.now() / 1000);
+        const signature = generateHotelbedsSignature(HOTELBEDS_API_KEY, HOTELBEDS_SECRET, timestamp);
+
+        const { from, to, start, end, filterType, clientReferences, references } = req.query;
+        
+        const params = new URLSearchParams();
+        params.append('from', from || 1);
+        params.append('to', to || 10);
+        if (start) params.append('start', start);
+        if (end) params.append('end', end);
+        if (filterType) params.append('filterType', filterType);
+        if (clientReferences) params.append('clientReferences', clientReferences);
+        if (references) params.append('references', references);
+
+        const response = await fetch(`${HOTELBEDS_BASE_URL}/hotel-api/1.0/bookings/reconfirmations?${params}`, {
+            method: 'GET',
+            headers: {
+                'Api-key': HOTELBEDS_API_KEY,
+                'X-Signature': signature,
+                'Accept': 'application/json',
+                'Accept-Encoding': 'gzip'
+            }
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            return res.status(response.status).json({ success: false, error: 'Failed to fetch reconfirmations', details: errorText });
+        }
+
+        const data = await response.json();
+        res.json({ success: true, data });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
     }
 });
 

@@ -470,6 +470,99 @@ router.post('/support/tickets/:ticketId/responses',
   adminDashboardController.addTicketResponse
 );
 
+// ========== BULK ACTIONS ==========
+/**
+ * @route   POST /api/admin/users/bulk/:action
+ * @desc    Bulk update users (activate/deactivate/delete)
+ * @access  Private (Admin only)
+ */
+router.post('/users/bulk/:action',
+  ...requireAdmin,
+  [
+    param('action').isIn(['activate', 'deactivate', 'delete']).withMessage('Invalid action'),
+    body('userIds').isArray({ min: 1 }).withMessage('User IDs array required')
+  ],
+  validateRequest,
+  adminDashboardController.bulkUpdateUsers
+);
+
+/**
+ * @route   POST /api/admin/bookings/bulk/:action
+ * @desc    Bulk update bookings (approve/reject)
+ * @access  Private (Admin only)
+ */
+router.post('/bookings/bulk/:action',
+  ...requireAdmin,
+  [
+    param('action').isIn(['approve', 'reject']).withMessage('Invalid action'),
+    body('bookingIds').isArray({ min: 1 }).withMessage('Booking IDs array required')
+  ],
+  validateRequest,
+  adminDashboardController.bulkUpdateBookings
+);
+
+/**
+ * @route   POST /api/admin/hotels/bulk/:action
+ * @desc    Bulk update hotels (approve/reject/delete)
+ * @access  Private (Admin only)
+ */
+router.post('/hotels/bulk/:action',
+  ...requireAdmin,
+  [
+    param('action').isIn(['approve', 'reject', 'delete']).withMessage('Invalid action'),
+    body('hotelIds').isArray({ min: 1 }).withMessage('Hotel IDs array required')
+  ],
+  validateRequest,
+  adminDashboardController.bulkUpdateHotels
+);
+
+/**
+ * @route   POST /api/admin/support/tickets/bulk/:action
+ * @desc    Bulk update support tickets (close)
+ * @access  Private (Admin only)
+ */
+router.post('/support/tickets/bulk/:action',
+  ...requireAdmin,
+  [
+    param('action').isIn(['close']).withMessage('Invalid action'),
+    body('ticketIds').isArray({ min: 1 }).withMessage('Ticket IDs array required')
+  ],
+  validateRequest,
+  adminDashboardController.bulkUpdateTickets
+);
+
+/**
+ * @route   POST /api/admin/export/bulk
+ * @desc    Bulk export data
+ * @access  Private (Admin only)
+ */
+router.post('/export/bulk',
+  ...requireAdmin,
+  [
+    body('type').isIn(['users', 'bookings', 'hotels', 'payments', 'support']).withMessage('Invalid type'),
+    body('ids').isArray({ min: 1 }).withMessage('IDs array required')
+  ],
+  validateRequest,
+  adminDashboardController.bulkExport
+);
+
+/**
+ * @route   POST /api/admin/email/bulk
+ * @desc    Send bulk emails
+ * @access  Private (Admin only)
+ */
+router.post('/email/bulk',
+  ...requireAdmin,
+  [
+    body('type').isIn(['users', 'bookings', 'hotels', 'payments', 'support']).withMessage('Invalid type'),
+    body('ids').isArray({ min: 1 }).withMessage('IDs array required'),
+    body('subject').trim().notEmpty().withMessage('Subject required'),
+    body('message').trim().notEmpty().withMessage('Message required')
+  ],
+  validateRequest,
+  adminDashboardController.bulkEmail
+);
+
 // ========== ANALYTICS & REPORTS ==========
 /**
  * @route   GET /api/v1/admin/analytics
