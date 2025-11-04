@@ -28,7 +28,6 @@ import {
   TrendingDown,
   Activity,
   DollarSign,
-  Users,
   Hotel,
   Filter,
   Search,
@@ -38,8 +37,6 @@ import {
   Heart,
   MessageSquare,
   FileText,
-  Award,
-  Target,
   Building2
 } from "lucide-react";
 import { UserDataContext } from './components/CartSystem';
@@ -1065,7 +1062,7 @@ const AccountDashboard = () => {
     { id: "overview", label: "Overview", icon: Activity },
     { id: "profile", label: "Profile", icon: User },
     { id: "bookings", label: "My Bookings", icon: Package },
-    { id: "payments", label: "Payment History", icon: CreditCard },
+    { id: "payments", label: "Payments", icon: CreditCard },
     { id: "settings", label: "Settings", icon: Settings }
   ];
 
@@ -1203,6 +1200,31 @@ const AccountDashboard = () => {
               {/* Overview Tab */}
               {activeTab === "overview" && (
                 <div>
+                  {/* Quick Actions */}
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+                    <button
+                      onClick={() => window.location.href = '/home'}
+                      className="bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-lg p-4 hover:from-blue-600 hover:to-blue-700 transition-all shadow-sm hover:shadow-md"
+                    >
+                      <Plus className="w-6 h-6 mx-auto mb-2" />
+                      <p className="text-sm font-medium">New Booking</p>
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('bookings')}
+                      className="bg-gradient-to-br from-green-500 to-green-600 text-white rounded-lg p-4 hover:from-green-600 hover:to-green-700 transition-all shadow-sm hover:shadow-md"
+                    >
+                      <Package className="w-6 h-6 mx-auto mb-2" />
+                      <p className="text-sm font-medium">My Trips</p>
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('payments')}
+                      className="bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-lg p-4 hover:from-purple-600 hover:to-purple-700 transition-all shadow-sm hover:shadow-md"
+                    >
+                      <CreditCard className="w-6 h-6 mx-auto mb-2" />
+                      <p className="text-sm font-medium">Payments</p>
+                    </button>
+                  </div>
+
                   <h2 className="text-xl font-semibold text-gray-900 mb-6">Dashboard Overview</h2>
                   
                   {/* Pay on Site Alert */}
@@ -1819,6 +1841,8 @@ const AccountDashboard = () => {
                 </div>
               )}
 
+
+
               {/* Settings Tab */}
               {activeTab === "settings" && (
                 <div className="space-y-8">
@@ -1988,6 +2012,41 @@ const AccountDashboard = () => {
                           View Activity
                         </button>
                       </div>
+                    </div>
+                  </div>
+
+                  {/* Help & Support */}
+                  <div className="bg-white rounded-lg shadow-sm p-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-6">Help & Support</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <a href="/help" className="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                        <MessageSquare className="w-5 h-5 text-blue-600" />
+                        <div>
+                          <h4 className="text-sm font-medium text-gray-900">Help Center</h4>
+                          <p className="text-xs text-gray-500">Browse FAQs and guides</p>
+                        </div>
+                      </a>
+                      <a href="/contact" className="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                        <Phone className="w-5 h-5 text-green-600" />
+                        <div>
+                          <h4 className="text-sm font-medium text-gray-900">Contact Support</h4>
+                          <p className="text-xs text-gray-500">Get help from our team</p>
+                        </div>
+                      </a>
+                      <a href="/feedback" className="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                        <MessageSquare className="w-5 h-5 text-purple-600" />
+                        <div>
+                          <h4 className="text-sm font-medium text-gray-900">Send Feedback</h4>
+                          <p className="text-xs text-gray-500">Share your thoughts</p>
+                        </div>
+                      </a>
+                      <a href="/terms" className="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                        <FileText className="w-5 h-5 text-gray-600" />
+                        <div>
+                          <h4 className="text-sm font-medium text-gray-900">Terms & Privacy</h4>
+                          <p className="text-xs text-gray-500">View policies</p>
+                        </div>
+                      </a>
                     </div>
                   </div>
                 </div>
