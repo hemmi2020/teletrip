@@ -30,6 +30,10 @@ const Checkout = () => {
   // Get cart data from navigation state or use current cart
   const checkoutItems = location.state?.cartItems || cartItems;
   const totalAmount = location.state?.totalAmount || getTotalPrice();
+  
+  // Currency conversion state
+  const [currencyConversion, setCurrencyConversion] = useState(null);
+  const [isLoadingConversion, setIsLoadingConversion] = useState(false);
 
   // State management
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -84,6 +88,39 @@ const Checkout = () => {
       }));
     }
   }, [user]);
+  
+  // Convert EUR to PKR when component loads
+  useEffect(() => {
+    const convertCurrency = async () => {
+      // Check if items are in EUR
+      const firstItem = checkoutItems[0];
+      if (!firstItem || firstItem.currency !== 'EUR') {
+        return; // Already in PKR or other currency
+      }
+      
+      setIsLoadingConversion(true);
+      try {
+        const response = await axios.post(
+          `${import.meta.env.VITE_BASE_URL}/api/currency/convert`,
+          { amount: totalAmount, currency: 'EUR' },
+          { headers: { 'Content-Type': 'application/json' } }
+        );
+        
+        if (response.data.success) {
+          setCurrencyConversion(response.data.data);
+          console.log('💱 Currency converted:', response.data.data);
+        }
+      } catch (error) {
+        console.error('Currency conversion error:', error);
+      } finally {
+        setIsLoadingConversion(false);
+      }
+    };
+    
+    if (checkoutItems && checkoutItems.length > 0) {
+      convertCurrency();
+    }
+  }, [checkoutItems, totalAmount]);
 
   // Redirect if no items to checkout
   useEffect(() => {
@@ -328,8 +365,9 @@ const Checkout = () => {
           ).join('; '),
           hotelbedsBookingRequest: hotelbedsBookingRequest
         },
-        amount: parseFloat(totalAmount),
+        amount: currencyConversion ? currencyConversion.totalPKR : parseFloat(totalAmount),
         currency: 'PKR',
+        currencyConversion: currencyConversion, // Store conversion details
         bookingId: bookingId,
         orderId: `ORDER_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
       };
@@ -532,8 +570,9 @@ const handlePayOnSiteBooking = async () => {
           })),
           hotelbedsBookingRequest: hotelbedsBookingRequest
         },
-        amount: parseFloat(totalAmount),
-        currency: checkoutItems[0]?.currency || 'PKR',
+        amount: currencyConversion ? currencyConversion.totalPKR : parseFloat(totalAmount),
+        currency: 'PKR',
+        currencyConversion: currencyConversion,
         bookingId: `HOTELBEDS_${Date.now()}`
       };
       
@@ -891,12 +930,40 @@ const handlePaymentSubmit = () => {
         ))}
       </div>
 
+      {/* Price Breakdown */}
+      {currencyConversion && (
+        <div className="border-t pt-4 mb-4 space-y-2 text-sm">
+          <div className="flex justify-between text-gray-600">
+            <span>Original Price:</span>
+            <span>€{currencyConversion.amountInEUR.toFixed(2)} EUR</span>
+          </div>
+          <div className="flex justify-between text-gray-600">
+            <span>Exchange Rate:</span>
+            <span>{currencyConversion.exchangeRate.toFixed(2)} PKR/EUR</span>
+          </div>
+          <div className="flex justify-between text-gray-600">
+            <span>Base Amount:</span>
+            <span>{currencyConversion.basePKR.toFixed(2)} PKR</span>
+          </div>
+          <div className="flex justify-between text-gray-600">
+            <span>Service Fee:</span>
+            <span>{currencyConversion.markupAmount.toFixed(2)} PKR</span>
+          </div>
+        </div>
+      )}
+      
       {/* Total */}
       <div className="border-t pt-4 mb-6">
         <div className="flex justify-between items-center text-lg font-bold">
           <span>Total Amount:</span>
           <span className="text-blue-600">
-            {checkoutItems[0]?.currency || 'PKR'} {parseFloat(totalAmount).toFixed(2)}
+            {isLoadingConversion ? (
+              <span className="text-sm">Converting...</span>
+            ) : currencyConversion ? (
+              `PKR ${currencyConversion.totalPKR.toFixed(2)}`
+            ) : (
+              `${checkoutItems[0]?.currency || 'PKR'} ${parseFloat(totalAmount).toFixed(2)}`
+            )}
           </span>
         </div>
       </div>
@@ -957,7 +1024,7 @@ const handlePaymentSubmit = () => {
             {paymentMethod === 'hblpay' ? (
               <>
                 <Lock className="w-4 h-4" />
-                <span>Pay with HBLPay - {checkoutItems[0]?.currency || 'PKR'} {parseFloat(totalAmount).toFixed(2)}</span>
+                <span>Pay with HBLPay - PKR {currencyConversion ? currencyConversion.totalPKR.toFixed(2) : parseFloat(totalAmount).toFixed(2)}</span>
               </>
             ) : (
               <>

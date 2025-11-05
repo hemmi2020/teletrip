@@ -46,6 +46,7 @@ import RefundManagement from './components/RefundManagement';
 import CommissionTracker from './components/CommissionTracker';
 import PaymentReconciliation from './components/PaymentReconciliation';
 import FinancialForecasting from './components/FinancialForecasting';
+import CurrencySettings from './components/CurrencySettings';
 import HotelApprovalWorkflow from './components/HotelApprovalWorkflow';
 import RoomInventoryManager from './components/RoomInventoryManager';
 import PricingCalendar from './components/PricingCalendar';
@@ -1006,6 +1007,14 @@ Amount: ${voucher.currency} ${voucher.totalAmount}
       );
     }
 
+    if (activeTab === 'settings') {
+      return (
+        <div className="space-y-6">
+          <CurrencySettings showToast={showToast} />
+        </div>
+      );
+    }
+
     if (activeTab === 'overview') {
       return (
         <div className="space-y-4 sm:space-y-6">
@@ -1492,6 +1501,7 @@ Amount: ${voucher.currency} ${voucher.totalAmount}
     { id: 'support', label: 'Support', icon: MessageSquare },
     { id: 'reports', label: 'Reports', icon: FileText },
     { id: 'financial', label: 'Financial', icon: DollarSign },
+    { id: 'settings', label: 'Settings', icon: Settings },
   ];
 
   return (

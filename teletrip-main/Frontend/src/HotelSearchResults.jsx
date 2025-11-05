@@ -584,17 +584,23 @@ const closeReviewsModal = () => {
           throw new Error("Missing required search parameters");
         }
 
+        let lat, lon;
+        
         const geoResponse = await fetch(
           `${API_BASE_URL}/geocode?q=${encodeURIComponent(
             city + ", " + convertCountryCode(country)
           )}`
         );
 
-        if (!geoResponse.ok) throw new Error("Failed to fetch coordinates");
-
-        const geoResult = await geoResponse.json();  
-        const { lat, lon } = geoResult?.data?.[0] || {};
-        if (!lat || !lon) throw new Error("Invalid coordinates");
+        if (geoResponse.ok) {
+          const geoResult = await geoResponse.json();  
+          lat = geoResult?.data?.[0]?.lat;
+          lon = geoResult?.data?.[0]?.lon;
+        }
+        
+        if (!lat || !lon) {
+          throw new Error(`Unable to find coordinates for ${city}`);
+        }
 
 
         const occupancy = { 
@@ -619,6 +625,8 @@ if (children > 0 && childAges.length > 0) {
             unit: "km",
           },
         };
+        
+        console.log('🔍 Hotel Search Request:', JSON.stringify(requestBody, null, 2));
 
         let hotelResponse;
         let isAuthenticated = false;
@@ -649,11 +657,19 @@ if (children > 0 && childAges.length > 0) {
           });
         }
 
-        if (!hotelResponse.ok) throw new Error("Hotel search failed");
+        if (!hotelResponse.ok) {
+          const errorText = await hotelResponse.text();
+          console.error('❌ Hotel API Error:', errorText);
+          throw new Error(`Hotel search failed: ${hotelResponse.status}`);
+        }
 
         const hotelResult = await hotelResponse.json();
+        console.log('✅ Hotel API Response:', hotelResult);
 
-        if (!hotelResult.success) throw new Error("No hotels found");
+        if (!hotelResult.success) {
+          console.error('❌ No hotels found in response');
+          throw new Error("No hotels found");
+        }
 
         if (isAuthenticated && hotelResult.user) {
           setUser(hotelResult.user);

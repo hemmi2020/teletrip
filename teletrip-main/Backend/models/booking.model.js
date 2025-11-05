@@ -335,6 +335,10 @@ const bookingSchema = new mongoose.Schema({
     refundProcessed: { type: Boolean, default: false }
   },
   
+  // Simple cancellation fields (for backward compatibility)
+  cancellationReason: String,
+  cancelledAt: Date,
+  
   modification: {
     isModifiable: { type: Boolean, default: true },
     modificationFee: Number,
@@ -450,13 +454,28 @@ const bookingSchema = new mongoose.Schema({
     discountApplied: Number
   },
   
+  // Currency conversion details
+  currencyConversion: {
+    originalAmount: Number,
+    originalCurrency: { type: String, default: 'EUR' },
+    exchangeRate: Number,
+    markupPerEuro: Number,
+    basePKR: Number,
+    markupAmount: Number,
+    totalPKR: Number,
+    conversionDate: { type: Date, default: Date.now }
+  },
+  
   // Backup and recovery
   backup: {
     originalBookingData: mongoose.Schema.Types.Mixed,
     supplierBookingData: mongoose.Schema.Types.Mixed,
     paymentData: mongoose.Schema.Types.Mixed,
     hotelbedsBookingData: mongoose.Schema.Types.Mixed,
-    hotelbedsError: String
+    hotelbedsError: String,
+    hotelbedsCancellationData: mongoose.Schema.Types.Mixed,
+    cancellationReference: String,
+    hotelbedsCancellationError: String
   },
   
   // Timestamps

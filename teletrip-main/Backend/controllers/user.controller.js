@@ -384,6 +384,7 @@ module.exports.updateUserPreferences = asyncErrorHandler(async (req, res) => {
 module.exports.cancelBooking = asyncErrorHandler(async (req, res) => {
   console.log('Cancel booking called with ID:', req.params.bookingId);
   const { bookingId } = req.params;
+  const { reason } = req.body;
   const userId = req.user._id;
 
   const booking = await bookingModel.findOne({
@@ -407,8 +408,37 @@ module.exports.cancelBooking = asyncErrorHandler(async (req, res) => {
     return ApiResponse.badRequest(res, 'Cannot cancel completed booking');
   }
 
+  // Cancel with Hotelbeds if booking has Hotelbeds reference
+  let cancellationReference = null;
+  let refundAmount = 0;
+  
+  if (booking.backup?.hotelbedsBookingData?.booking?.reference) {
+    const hotelbedsReference = booking.backup.hotelbedsBookingData.booking.reference;
+    console.log('🚫 Cancelling Hotelbeds booking:', hotelbedsReference);
+    
+    const { cancelBookingWithHotelbeds } = require('../services/hotelbeds.booking.service');
+    const cancellationResult = await cancelBookingWithHotelbeds(hotelbedsReference, 'CANCELLATION');
+    
+    if (cancellationResult.success) {
+      cancellationReference = cancellationResult.cancellationReference;
+      refundAmount = cancellationResult.refundAmount;
+      
+      // Store cancellation data
+      booking.backup.hotelbedsCancellationData = cancellationResult.cancellationData;
+      booking.backup.cancellationReference = cancellationReference;
+      
+      console.log('✅ Hotelbeds cancellation successful:', cancellationReference);
+    } else {
+      console.error('❌ Hotelbeds cancellation failed:', cancellationResult.error);
+      // Continue with local cancellation even if Hotelbeds fails
+      booking.backup.hotelbedsCancellationError = cancellationResult.error;
+    }
+  }
+
   // Update booking status
   booking.status = 'cancelled';
+  booking.cancellationReason = reason || 'User requested cancellation';
+  booking.cancelledAt = new Date();
   await booking.save();
 
   // Create refund payment record if payment was made
@@ -417,9 +447,13 @@ module.exports.cancelBooking = asyncErrorHandler(async (req, res) => {
       userId,
       bookingId: booking._id,
       paymentId: `REF-${Date.now()}`,
-      amount: -booking.totalAmount,
+      amount: refundAmount || booking.totalAmount,
       method: 'Refund',
-      status: 'completed'
+      status: 'pending',
+      metadata: {
+        cancellationReference,
+        originalAmount: booking.totalAmount
+      }
     });
     await refundPayment.save();
     
@@ -428,7 +462,11 @@ module.exports.cancelBooking = asyncErrorHandler(async (req, res) => {
   }
 
   console.log('Booking cancelled successfully:', bookingId);
-  return ApiResponse.success(res, { booking }, 'Booking cancelled successfully');
+  return ApiResponse.success(res, { 
+    booking,
+    cancellationReference,
+    refundAmount: refundAmount || booking.totalAmount
+  }, 'Booking cancelled successfully');
 });
 
 module.exports.deleteUserAccount = asyncErrorHandler(async (req, res) => {

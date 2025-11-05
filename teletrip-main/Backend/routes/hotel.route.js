@@ -566,7 +566,7 @@ router.get('/hotels/:hotelCode/reviews', async (req, res) => {
 });
 
 
-// Geocoding route (existing)
+// Geocoding route using Nominatim (free, no API key required)
 router.get('/geocode', async (req, res) => {  
     try {
         const { q } = req.query; 
@@ -579,11 +579,19 @@ router.get('/geocode', async (req, res) => {
         }
 
         const response = await fetch( 
-            `https://geocode.maps.co/search?q=${encodeURIComponent(q)}&apiKey=${process.env.GEOCODING_API_KEY}`
+            `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=5`,
+            {
+                headers: {
+                    'User-Agent': 'TeleTrip-Hotel-Booking-App'
+                }
+            }
         );
 
         if (!response.ok) {
-            throw new Error('Geocoding service failed');  
+            return res.status(response.status).json({
+                success: false,
+                error: 'Geocoding service failed'
+            });
         }
 
         const data = await response.json();
@@ -591,7 +599,7 @@ router.get('/geocode', async (req, res) => {
         if (!data || !Array.isArray(data) || data.length === 0) {
             return res.status(404).json({
                 success: false,
-                error: 'Location not found'
+                error: `Location "${q}" not found`
             });
         }
 
@@ -599,13 +607,12 @@ router.get('/geocode', async (req, res) => {
             success: true,
             data: data
         });
-        
 
     } catch (error) {
         console.error('Geocoding Error:', error);
         res.status(500).json({
             success: false,
-            error: 'Geocoding failed',
+            error: 'Geocoding service error',
             message: error.message
         });
     }

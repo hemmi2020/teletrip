@@ -204,6 +204,18 @@ const paymentSchema = new mongoose.Schema({
     min: 0
   },
   
+  // Currency conversion details
+  currencyConversion: {
+    originalAmount: Number,
+    originalCurrency: String,
+    exchangeRate: Number,
+    markupPerEuro: Number,
+    basePKR: Number,
+    markupAmount: Number,
+    totalPKR: Number,
+    conversionDate: Date
+  },
+  
   // Metadata
   metadata: {
     ipAddress: String,

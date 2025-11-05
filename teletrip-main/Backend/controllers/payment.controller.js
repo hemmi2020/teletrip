@@ -592,12 +592,19 @@ module.exports.handlePaymentSuccess = asyncErrorHandler(async (req, res) => {
 
         if (payment.bookingId && isSuccess) {
           // Update booking status to paid
-          const booking = await bookingModel.findByIdAndUpdate(payment.bookingId, {
+          const updateData = {
             paymentStatus: 'paid',
             status: 'confirmed',
             confirmedAt: new Date(),
             updatedAt: new Date()
-          }, { new: true });
+          };
+          
+          // Add currency conversion to booking if available
+          if (payment.currencyConversion) {
+            updateData.currencyConversion = payment.currencyConversion;
+          }
+          
+          const booking = await bookingModel.findByIdAndUpdate(payment.bookingId, updateData, { new: true });
 
           // ✅ CALL HOTELBEDS BOOKING API
           if (booking && booking.hotelBooking && payment.bookingDetails?.hotelbedsBookingRequest) {
@@ -1667,8 +1674,10 @@ module.exports.initiateHBLPayPayment = asyncErrorHandler(async (req, res) => {
     const finalOrderId = orderId || generateOrderId();
     const paymentId = generatePaymentId();
     const paymentAmount = validAmount; // Use the validated amount
+    const { currencyConversion } = req.body;
 
     console.log('💰 Final payment amount:', { paymentAmount, type: typeof paymentAmount });
+    console.log('💱 Currency conversion:', currencyConversion);
 
     // Create payment record
     const payment = new paymentModel({
@@ -1695,6 +1704,16 @@ module.exports.initiateHBLPayPayment = asyncErrorHandler(async (req, res) => {
     },
       userDetails: userData,
       bookingDetails: bookingData,
+      currencyConversion: currencyConversion ? {
+        originalAmount: currencyConversion.amountInEUR,
+        originalCurrency: 'EUR',
+        exchangeRate: currencyConversion.exchangeRate,
+        markupPerEuro: currencyConversion.markupPerEuro,
+        basePKR: currencyConversion.basePKR,
+        markupAmount: currencyConversion.markupAmount,
+        totalPKR: currencyConversion.totalPKR,
+        conversionDate: new Date()
+      } : null,
       createdAt: new Date(),
       expiresAt: new Date(Date.now() + 30 * 60 * 1000),
       gateway: {

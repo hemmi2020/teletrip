@@ -368,7 +368,7 @@ const cancelBooking = asyncErrorHandler(async (req, res) => {
 
   const booking = await Booking.findOne({
     _id: bookingId,
-    userId: req.user.id,
+    user: req.user.id,
     status: { $in: ['pending', 'confirmed'] }
   });
 
@@ -376,32 +376,56 @@ const cancelBooking = asyncErrorHandler(async (req, res) => {
     return ApiResponse.error(res, 'Booking not found or cannot be cancelled', 404);
   }
 
-  // Check cancellation policy
-  const checkInDate = new Date(booking.checkInDate);
-  const now = new Date();
-  const hoursUntilCheckIn = (checkInDate - now) / (1000 * 60 * 60);
-
-  let cancellationFee = 0;
-  if (hoursUntilCheckIn < 24) {
-    cancellationFee = booking.totalAmount * 0.5; // 50% fee for cancellation within 24 hours
-  } else if (hoursUntilCheckIn < 48) {
-    cancellationFee = booking.totalAmount * 0.25; // 25% fee for cancellation within 48 hours
+  // Cancel with Hotelbeds if booking has Hotelbeds reference
+  let cancellationReference = null;
+  let refundAmount = booking.pricing?.totalAmount || 0;
+  
+  if (booking.backup?.hotelbedsBookingData?.booking?.reference) {
+    const hotelbedsReference = booking.backup.hotelbedsBookingData.booking.reference;
+    console.log('🚫 Cancelling Hotelbeds booking:', hotelbedsReference);
+    
+    const { cancelBookingWithHotelbeds } = require('../services/hotelbeds.booking.service');
+    const cancellationResult = await cancelBookingWithHotelbeds(hotelbedsReference, 'CANCELLATION');
+    
+    if (cancellationResult.success) {
+      cancellationReference = cancellationResult.cancellationReference;
+      refundAmount = cancellationResult.refundAmount;
+      
+      booking.backup.hotelbedsCancellationData = cancellationResult.cancellationData;
+      booking.backup.cancellationReference = cancellationReference;
+      
+      console.log('✅ Hotelbeds cancellation successful:', cancellationReference);
+    } else {
+      console.error('❌ Hotelbeds cancellation failed:', cancellationResult.error);
+      booking.backup.hotelbedsCancellationError = cancellationResult.error;
+    }
   }
 
+  // Update booking status
   booking.status = 'cancelled';
+  booking.cancellationReason = reason || 'User requested cancellation';
+  booking.cancelledAt = new Date();
   booking.cancellation = {
-    reason,
+    ...booking.cancellation,
+    reason: reason || 'User requested cancellation',
     cancelledAt: new Date(),
-    fee: cancellationFee,
-    refundAmount: booking.totalAmount - cancellationFee
+    refundAmount
   };
-
+  
   await booking.save();
 
   // Send cancellation notification
-  await notificationService.sendBookingCancellation(req.user.email, booking);
+  try {
+    await notificationService.sendBookingCancellation(req.user.email, booking);
+  } catch (emailError) {
+    console.error('Failed to send cancellation email:', emailError);
+  }
 
-  return ApiResponse.success(res, booking, 'Booking cancelled successfully');
+  return ApiResponse.success(res, {
+    booking,
+    cancellationReference,
+    refundAmount
+  }, 'Booking cancelled successfully');
 });
 
 // ========== PAYMENT MANAGEMENT ==========
