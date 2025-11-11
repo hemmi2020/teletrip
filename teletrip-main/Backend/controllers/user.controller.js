@@ -32,13 +32,11 @@ module.exports.registerUser = asyncErrorHandler(async (req, res) => {
         return ApiResponse.badRequest(res, 'Email already registered. Please login instead.');
     }
 
-    const hashedPassword = await userModel.hashPassword(password);
-
     const user = await userService.createUser({
         firstname: fullname.firstname,
         lastname: fullname.lastname,
         email,
-        password: hashedPassword
+        password: password
     });
     
     const token = user.generateAuthToken();
@@ -81,9 +79,11 @@ module.exports.loginUser = asyncErrorHandler(async (req, res) => {
         return ApiResponse.unauthorized(res, 'Invalid email or password');
     }
 
-    console.log('🔐 Comparing password...'); // ADD THIS
+    console.log('🔐 Comparing password...');
+    console.log('📝 Stored hash:', user.password);
+    console.log('📝 Input password:', password);
     const isMatch = await user.comparePassword(password);
-    console.log('🔑 Password match:', isMatch ? 'YES' : 'NO'); // ADD THIS
+    console.log('🔑 Password match:', isMatch ? 'YES' : 'NO');
     
     if (!isMatch) {
         console.log('❌ Password incorrect'); // ADD THIS

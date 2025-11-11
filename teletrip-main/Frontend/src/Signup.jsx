@@ -34,9 +34,13 @@ const Signup = () => {
       console.log("Registration response:", response.data);
 
       if (response.status === 200 || response.status === 201) {
-        const data = response.data;
-        setUser(data.user);
-        localStorage.setItem('token', data.token);
+        const responseData = response.data.data || response.data;
+        const token = responseData.token;
+        const user = responseData.user;
+        
+        setUser(user);
+        localStorage.setItem('token', token);
+        localStorage.setItem('userData', JSON.stringify(user));
         navigate('/home');
       } else {
         setError(`Registration failed with status: ${response.status}`);
