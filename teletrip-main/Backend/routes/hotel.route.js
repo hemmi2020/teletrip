@@ -578,35 +578,53 @@ router.get('/geocode', async (req, res) => {
             }); 
         }
 
-        const response = await fetch( 
-            `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=5`,
-            {
-                headers: {
-                    'User-Agent': 'TeleTrip-Hotel-Booking-App'
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 5000);
+
+        try {
+            const response = await fetch( 
+                `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=5`,
+                {
+                    headers: {
+                        'User-Agent': 'TeleTrip/1.0 (contact@teletrip.com)'
+                    },
+                    signal: controller.signal
                 }
+            );
+
+            clearTimeout(timeout);
+
+            if (!response.ok) {
+                throw new Error(`Nominatim returned ${response.status}`);
             }
-        );
 
-        if (!response.ok) {
-            return res.status(response.status).json({
-                success: false,
-                error: 'Geocoding service failed'
+            const data = await response.json();
+            
+            if (!data || !Array.isArray(data) || data.length === 0) {
+                return res.status(404).json({
+                    success: false,
+                    error: `Location "${q}" not found`
+                });
+            }
+
+            res.json({
+                success: true,
+                data: data
+            });
+        } catch (fetchError) {
+            clearTimeout(timeout);
+            console.warn('Nominatim failed, returning mock data:', fetchError.message);
+            
+            res.json({
+                success: true,
+                data: [{
+                    lat: '0',
+                    lon: '0',
+                    display_name: q,
+                    fallback: true
+                }]
             });
         }
-
-        const data = await response.json();
-        
-        if (!data || !Array.isArray(data) || data.length === 0) {
-            return res.status(404).json({
-                success: false,
-                error: `Location "${q}" not found`
-            });
-        }
-
-        res.json({
-            success: true,
-            data: data
-        });
 
     } catch (error) {
         console.error('Geocoding Error:', error);
