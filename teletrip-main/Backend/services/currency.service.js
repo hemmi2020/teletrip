@@ -72,9 +72,10 @@ async function getMarkupPerEuro() {
     if (!settings) {
       settings = await CurrencySettings.create({
         markupPerEuro: 20,
+        transactionFeePercentage: 1,
         isActive: true
       });
-      console.log('✅ Created default currency settings: 20 PKR markup per EUR');
+      console.log('✅ Created default currency settings: 20 PKR markup per EUR, 1% transaction fee');
     }
 
     return settings.markupPerEuro;
@@ -85,15 +86,38 @@ async function getMarkupPerEuro() {
 }
 
 /**
- * Convert EUR to PKR with admin markup
+ * Get admin-configured transaction fee percentage
+ */
+async function getTransactionFeePercentage() {
+  try {
+    let settings = await CurrencySettings.findOne({ isActive: true });
+    
+    if (!settings) {
+      settings = await CurrencySettings.create({
+        markupPerEuro: 20,
+        transactionFeePercentage: 1,
+        isActive: true
+      });
+    }
+
+    return settings.transactionFeePercentage;
+  } catch (error) {
+    console.error('❌ Error fetching transaction fee:', error.message);
+    return 1; // Default fallback
+  }
+}
+
+/**
+ * Convert EUR to PKR with admin markup and transaction fee
  * @param {number} amountInEUR - Amount in EUR
  * @returns {Promise<Object>} - Conversion details
  */
 async function convertEURtoPKR(amountInEUR) {
   try {
-    const [exchangeRate, markupPerEuro] = await Promise.all([
+    const [exchangeRate, markupPerEuro, transactionFeePercentage] = await Promise.all([
       getExchangeRate(),
-      getMarkupPerEuro()
+      getMarkupPerEuro(),
+      getTransactionFeePercentage()
     ]);
 
     // Calculate base PKR amount
@@ -102,15 +126,24 @@ async function convertEURtoPKR(amountInEUR) {
     // Calculate markup (markup per EUR * number of EURs)
     const markupAmount = amountInEUR * markupPerEuro;
     
-    // Total PKR with markup
-    const totalPKR = basePKR + markupAmount;
+    // Subtotal before transaction fee
+    const subtotal = basePKR + markupAmount;
+    
+    // Calculate transaction fee (percentage of subtotal)
+    const transactionFee = (subtotal * transactionFeePercentage) / 100;
+    
+    // Total PKR with markup and transaction fee
+    const totalPKR = subtotal + transactionFee;
 
     const result = {
       amountInEUR,
       exchangeRate,
       markupPerEuro,
+      transactionFeePercentage,
       basePKR: Math.round(basePKR * 100) / 100,
       markupAmount: Math.round(markupAmount * 100) / 100,
+      subtotal: Math.round(subtotal * 100) / 100,
+      transactionFee: Math.round(transactionFee * 100) / 100,
       totalPKR: Math.round(totalPKR * 100) / 100,
       currency: 'PKR'
     };
@@ -134,6 +167,7 @@ async function updateMarkup(newMarkup, adminId) {
     if (!settings) {
       settings = new CurrencySettings({
         markupPerEuro: newMarkup,
+        transactionFeePercentage: 1,
         isActive: true,
         lastUpdatedBy: adminId
       });
@@ -153,6 +187,35 @@ async function updateMarkup(newMarkup, adminId) {
 }
 
 /**
+ * Update transaction fee percentage (Admin only)
+ */
+async function updateTransactionFee(newFeePercentage, adminId) {
+  try {
+    let settings = await CurrencySettings.findOne({ isActive: true });
+    
+    if (!settings) {
+      settings = new CurrencySettings({
+        markupPerEuro: 20,
+        transactionFeePercentage: newFeePercentage,
+        isActive: true,
+        lastUpdatedBy: adminId
+      });
+    } else {
+      settings.transactionFeePercentage = newFeePercentage;
+      settings.lastUpdatedBy = adminId;
+    }
+
+    await settings.save();
+    console.log(`✅ Transaction fee updated to ${newFeePercentage}% by admin ${adminId}`);
+    
+    return settings;
+  } catch (error) {
+    console.error('❌ Error updating transaction fee:', error.message);
+    throw error;
+  }
+}
+
+/**
  * Get current currency settings
  */
 async function getCurrencySettings() {
@@ -164,6 +227,7 @@ async function getCurrencySettings() {
 
     return {
       markupPerEuro: settings?.markupPerEuro || 20,
+      transactionFeePercentage: settings?.transactionFeePercentage || 1,
       currentExchangeRate: exchangeRate,
       lastUpdated: settings?.updatedAt,
       lastUpdatedBy: settings?.lastUpdatedBy
@@ -178,6 +242,8 @@ module.exports = {
   convertEURtoPKR,
   getExchangeRate,
   getMarkupPerEuro,
+  getTransactionFeePercentage,
   updateMarkup,
+  updateTransactionFee,
   getCurrencySettings
 };

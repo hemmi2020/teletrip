@@ -34,10 +34,12 @@ router.get('/rate', async (req, res) => {
   try {
     const rate = await currencyService.getExchangeRate();
     const markup = await currencyService.getMarkupPerEuro();
+    const transactionFee = await currencyService.getTransactionFeePercentage();
     
     return ApiResponse.success(res, {
       exchangeRate: rate,
       markupPerEuro: markup,
+      transactionFeePercentage: transactionFee,
       effectiveRate: rate + markup
     }, 'Exchange rate retrieved successfully');
   } catch (error) {
@@ -83,6 +85,31 @@ router.put('/settings/markup', [
   } catch (error) {
     console.error('Markup update error:', error);
     return ApiResponse.error(res, 'Failed to update markup', 500);
+  }
+});
+
+/**
+ * @route   PUT /api/currency/settings/transaction-fee
+ * @desc    Update transaction fee percentage (Admin only)
+ * @access  Private (Admin)
+ */
+router.put('/settings/transaction-fee', [
+  authUser,
+  body('transactionFeePercentage').isFloat({ min: 0, max: 10 }).withMessage('Transaction fee must be between 0 and 10%')
+], validateRequest, async (req, res) => {
+  try {
+    // Check if user is admin
+    if (req.user.role !== 'admin') {
+      return ApiResponse.error(res, 'Unauthorized. Admin access required.', 403);
+    }
+
+    const { transactionFeePercentage } = req.body;
+    const settings = await currencyService.updateTransactionFee(transactionFeePercentage, req.user._id);
+    
+    return ApiResponse.success(res, settings, 'Transaction fee updated successfully');
+  } catch (error) {
+    console.error('Transaction fee update error:', error);
+    return ApiResponse.error(res, 'Failed to update transaction fee', 500);
   }
 });
 

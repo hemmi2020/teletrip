@@ -7,6 +7,13 @@ const currencySettingsSchema = new mongoose.Schema({
     min: 0,
     required: true
   },
+  transactionFeePercentage: {
+    type: Number,
+    default: 1,
+    min: 0,
+    max: 10,
+    required: true
+  },
   isActive: {
     type: Boolean,
     default: true

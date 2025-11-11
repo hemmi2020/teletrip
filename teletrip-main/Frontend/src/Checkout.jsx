@@ -930,27 +930,7 @@ const handlePaymentSubmit = () => {
         ))}
       </div>
 
-      {/* Price Breakdown */}
-      {currencyConversion && (
-        <div className="border-t pt-4 mb-4 space-y-2 text-sm">
-          <div className="flex justify-between text-gray-600">
-            <span>Original Price:</span>
-            <span>€{currencyConversion.amountInEUR.toFixed(2)} EUR</span>
-          </div>
-          <div className="flex justify-between text-gray-600">
-            <span>Exchange Rate:</span>
-            <span>{currencyConversion.exchangeRate.toFixed(2)} PKR/EUR</span>
-          </div>
-          <div className="flex justify-between text-gray-600">
-            <span>Base Amount:</span>
-            <span>{currencyConversion.basePKR.toFixed(2)} PKR</span>
-          </div>
-          <div className="flex justify-between text-gray-600">
-            <span>Service Fee:</span>
-            <span>{currencyConversion.markupAmount.toFixed(2)} PKR</span>
-          </div>
-        </div>
-      )}
+      {/* Price Breakdown - Hidden from users */}
       
       {/* Total */}
       <div className="border-t pt-4 mb-6">
@@ -1072,7 +1052,6 @@ const handlePaymentSubmit = () => {
         <div className="max-w-7xl mx-auto px-4 py-8">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900">Secure Checkout</h1>
-            <p className="text-gray-600 mt-2">Complete your booking</p>
             <p className="text-gray-600 mt-2">Complete your booking</p>
           </div>
 

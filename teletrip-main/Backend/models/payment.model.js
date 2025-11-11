@@ -210,8 +210,11 @@ const paymentSchema = new mongoose.Schema({
     originalCurrency: String,
     exchangeRate: Number,
     markupPerEuro: Number,
+    transactionFeePercentage: Number,
     basePKR: Number,
     markupAmount: Number,
+    subtotal: Number,
+    transactionFee: Number,
     totalPKR: Number,
     conversionDate: Date
   },

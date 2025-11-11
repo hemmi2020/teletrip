@@ -460,8 +460,11 @@ const bookingSchema = new mongoose.Schema({
     originalCurrency: { type: String, default: 'EUR' },
     exchangeRate: Number,
     markupPerEuro: Number,
+    transactionFeePercentage: Number,
     basePKR: Number,
     markupAmount: Number,
+    subtotal: Number,
+    transactionFee: Number,
     totalPKR: Number,
     conversionDate: { type: Date, default: Date.now }
   },

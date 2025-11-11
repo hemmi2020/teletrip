@@ -4,9 +4,11 @@ import { DollarSign, TrendingUp, Save, RefreshCw, AlertCircle } from 'lucide-rea
 
 const CurrencySettings = ({ showToast }) => {
   const [markup, setMarkup] = useState(20);
+  const [transactionFee, setTransactionFee] = useState(1);
   const [currentRate, setCurrentRate] = useState(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [savingFee, setSavingFee] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
   const [lastUpdated, setLastUpdated] = useState(null);
 
@@ -25,6 +27,7 @@ const CurrencySettings = ({ showToast }) => {
       
       if (response.data.success) {
         setMarkup(response.data.data.markupPerEuro);
+        setTransactionFee(response.data.data.transactionFeePercentage || 1);
         setCurrentRate(response.data.data.currentExchangeRate);
         setLastUpdated(response.data.data.lastUpdated);
       }
@@ -72,10 +75,47 @@ const CurrencySettings = ({ showToast }) => {
     }
   };
 
+  const handleUpdateTransactionFee = async () => {
+    if (transactionFee < 0 || transactionFee > 10) {
+      setMessage({ type: 'error', text: 'Transaction fee must be between 0 and 10%' });
+      return;
+    }
+
+    setSavingFee(true);
+    setMessage({ type: '', text: '' });
+
+    try {
+      const token = localStorage.getItem('adminToken') || localStorage.getItem('token');
+      const response = await axios.put(
+        `${import.meta.env.VITE_BASE_URL}/api/currency/settings/transaction-fee`,
+        { transactionFeePercentage: transactionFee },
+        { headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }}
+      );
+
+      if (response.data.success) {
+        setMessage({ type: 'success', text: 'Transaction fee updated successfully!' });
+        setLastUpdated(response.data.data.updatedAt);
+        if (showToast) showToast('Transaction fee updated successfully!', 'success');
+        setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+      }
+    } catch (error) {
+      const errorMsg = error.response?.data?.message || 'Failed to update transaction fee';
+      setMessage({ type: 'error', text: errorMsg });
+      if (showToast) showToast(errorMsg, 'error');
+    } finally {
+      setSavingFee(false);
+    }
+  };
+
   const exampleAmount = 30;
   const exampleBase = currentRate ? (exampleAmount * currentRate).toFixed(2) : 0;
   const exampleMarkup = (exampleAmount * markup).toFixed(2);
-  const exampleTotal = currentRate ? (parseFloat(exampleBase) + parseFloat(exampleMarkup)).toFixed(2) : 0;
+  const exampleSubtotal = currentRate ? (parseFloat(exampleBase) + parseFloat(exampleMarkup)).toFixed(2) : 0;
+  const exampleTransactionFee = ((parseFloat(exampleSubtotal) * transactionFee) / 100).toFixed(2);
+  const exampleTotal = (parseFloat(exampleSubtotal) + parseFloat(exampleTransactionFee)).toFixed(2);
 
   if (loading) {
     return (
@@ -159,6 +199,45 @@ const CurrencySettings = ({ showToast }) => {
           </p>
         </div>
 
+        {/* Transaction Fee Configuration */}
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Transaction Fee (%)
+          </label>
+          <div className="flex items-center gap-4">
+            <input
+              type="number"
+              value={transactionFee}
+              onChange={(e) => setTransactionFee(Number(e.target.value))}
+              min="0"
+              max="10"
+              step="0.1"
+              className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg"
+              placeholder="Enter transaction fee percentage"
+            />
+            <button
+              onClick={handleUpdateTransactionFee}
+              disabled={savingFee}
+              className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-colors"
+            >
+              {savingFee ? (
+                <>
+                  <RefreshCw className="w-5 h-5 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="w-5 h-5" />
+                  Update Fee
+                </>
+              )}
+            </button>
+          </div>
+          <p className="text-sm text-gray-500 mt-2">
+            Percentage fee applied to subtotal (0-10%)
+          </p>
+        </div>
+
         {/* Example Calculation */}
         <div className="bg-gray-50 rounded-lg p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Example Calculation</h3>
@@ -178,6 +257,20 @@ const CurrencySettings = ({ showToast }) => {
               <span className="text-gray-700">Service Fee (Markup):</span>
               <span className="font-semibold">
                 {exampleAmount} × {markup} = {exampleMarkup} PKR
+              </span>
+            </div>
+            
+            <div className="flex justify-between items-center py-2 border-b border-gray-200">
+              <span className="text-gray-700">Subtotal:</span>
+              <span className="font-semibold">
+                {exampleSubtotal} PKR
+              </span>
+            </div>
+            
+            <div className="flex justify-between items-center py-2 border-b border-gray-200">
+              <span className="text-gray-700">Transaction Fee ({transactionFee}%):</span>
+              <span className="font-semibold">
+                {exampleSubtotal} × {transactionFee}% = {exampleTransactionFee} PKR
               </span>
             </div>
             
