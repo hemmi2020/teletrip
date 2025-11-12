@@ -61,6 +61,7 @@ import BookingNotesComments from './components/BookingNotesComments';
 import SpecialRequestHandling from './components/SpecialRequestHandling';
 import BookingTimelineView from './components/BookingTimelineView';
 import MobileTable from './components/MobileTable';
+import BookingReconfirmation from './components/BookingReconfirmation';
 import './styles/admin-responsive.css';
 
 // Toast Component
@@ -988,6 +989,7 @@ Amount: ${voucher.currency} ${voucher.totalAmount}
     if (activeTab === 'booking-management') {
       return (
         <div className="space-y-4 sm:space-y-6">
+          <BookingReconfirmation showToast={showToast} />
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             <CancellationPolicyCalculator booking={selectedItem} />
             <RefundAmountPreview 

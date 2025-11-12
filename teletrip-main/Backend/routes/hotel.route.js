@@ -776,7 +776,7 @@ router.delete('/hotels/bookings/:bookingId', authUser, async (req, res) => {
     }
 });
 
-// Booking Reconfirmation
+// Booking Reconfirmation - Get hotel confirmation numbers
 router.get('/hotels/bookings/reconfirmations', authUser, async (req, res) => {
     try {
         const timestamp = Math.floor(Date.now() / 1000);
@@ -786,7 +786,7 @@ router.get('/hotels/bookings/reconfirmations', authUser, async (req, res) => {
         
         const params = new URLSearchParams();
         params.append('from', from || 1);
-        params.append('to', to || 10);
+        params.append('to', to || 100);
         if (start) params.append('start', start);
         if (end) params.append('end', end);
         if (filterType) params.append('filterType', filterType);
