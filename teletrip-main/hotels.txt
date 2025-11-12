@@ -6307,3 +6307,740 @@ The clientEmailAdress should be provided by the client and will be validated and
 Email sample
 Below an example of the email that you will receive:
 
+Booking cancellation
+BookingCancellation is used either to simulate a cancellation or to perform the actual cancellation.Cancellations always take into account day and time of the destination in order to calculate what cancellation policy should be applied. Timeout for this operation is 60 seconds.
+
+AUTHORIZATIONS:
+(ApikeyXsignature)
+PATH PARAMETERS
+bookingId
+required
+string
+Booking reference number taken from the confirmation response or from the booking list function. Format: XXX-YYYYYY
+
+QUERY PARAMETERS
+cancellationFlag	
+string
+Default: "CANCELLATION"
+Enum: "CANCELLATION" "SIMULATION"
+Type of cancellation method to be used.
+
+language	
+string
+Language in which the description texts will be returned in the response
+
+HEADER PARAMETERS
+Accept
+required
+string
+Enum: "application/json" "application/xml"
+Response format.
+
+Accept-Encoding
+required
+string
+Default: gzip
+Defines type of encoding used on the data.
+
+Responses
+200
+Sample
+
+RESPONSE SCHEMA: 
+application/json
+application/json
+auditData
+required
+object (ApiAuditData)
+Relevant internal information.
+
+processTime	
+string
+Server process time in milliseconds.
+
+timestamp	
+string
+GMT Date/time when the request has been processed .
+
+requestHost	
+string
+IP address of the system host.
+
+serverId	
+string
+Server code or ID (for internal use).
+
+environment	
+string
+Environment where the request has been sent and processed.
+
+release	
+string
+Release version identifier.
+
+token	
+string
+Token identifier of the operation.
+
+error	
+object (apiError)
+Information on the error. Only returned in case of error.
+
+code
+required
+string
+Internal token code of the error.
+
+message	
+string
+Descriptive message of the cause of the error.
+
+booking	
+object (ApiBooking)
+The Booking object. Contains all data related with the booking itself.
+
+reference	
+string
+Booking locator. Format: XXXXXXXX-XXXXXXXX
+
+cancellationReference	
+string
+Unique cancellation reference. Only appears for cancelled bookings.
+
+clientReference	
+string [ 1 .. 20 ] characters
+Client internal booking reference.
+
+creationDate	
+string <date>
+Booking creation date.
+
+status	
+string
+Enum: "CONFIRMED" "CANCELLED"
+Current status of the booking.
+
+modificationPolicies	
+object (ApiModificationPolicies)
+Information regarding the allowed modifications to the booking.
+
+cancellation
+required
+boolean
+Default: false
+Indicates if the booking allows cancellation.
+
+modification
+required
+boolean
+Default: false
+Indicates if the booking allows modification.
+
+agCommision	
+string
+commisionVAT	
+string
+Share of the commission corresponding to the Value Added Tax.
+
+creationUser	
+string
+The apiKey used to create the booking.
+
+holder	
+object (ApiHolder)
+Information of the holder of the booking. Please use this tag to inform about name of lead passenger that is going to do the check In at the hotel. This information will be sent to hotelier for the Check In process
+
+name
+required
+string [ 1 .. 50 ] characters
+Booking holder name for all the rooms of the booking.
+
+surname
+required
+string [ 1 .. 50 ] characters
+Booking holder surname for all rooms of the booking.
+
+remark	
+string [ 0 .. 2000 ] characters
+Free text that is sent to the hotelier as a comment from the client. It can be used to request or inform of special requests to hotelier like: “Non-smoking room preferred, Twin bed please, Upper floor preferred, Late arrival...”
+
+invoiceCompany	
+object (ApiReceptive)
+Information about the invoice company.
+
+registrationNumber	
+string
+Registration number of the invoice company.
+
+code	
+string
+Code of the invoice company.
+
+name	
+string
+Name of the invoice company.
+
+totalSellingRate	
+number
+Total amount of the booking. See: https://developer.hotelbeds.com/documentation/hotels/knowledge-base/pricing-models/
+
+totalNet	
+number
+Total amount of the booking.
+
+pendingAmount	
+number
+Remaining amount to be paid.
+
+currency	
+string
+Currency of the monetary amount.
+
+hotel	
+object (ApiHotel)
+Information about an hotel and its associated room rates.
+
+checkOut	
+string <date>
+Check-out date.
+
+checkIn	
+string <date>
+Check-in date.
+
+code	
+integer <int32>
+Hotelbeds internal hotel code.
+
+name	
+string
+Name of the hotel.
+
+description	
+string
+Hotel description.
+
+exclusiveDeal	
+integer <int32>
+The value follows a qualitative scale, the number 1 being always the top priority/preferential, and the rest of the product defined by our commercial departments. As of today, the possible values are: 1: Identifies preferential product with exclusive guaranteed availability. 2: Identifies top hotels. 3: Identifies the rest of hotels. In case new values are added in the future, a proper communication campaign will be carried out to inform you.
+
+categoryCode	
+string
+Hotelbeds code of the hotel category.
+
+categoryName	
+string
+Name of the hotel category.
+
+destinationCode	
+string
+Code of the destination of the hotel location.
+
+destinationName	
+string
+Name of the destination of the hotel location.
+
+zoneCode	
+integer <int32>
+Code of the zone of the hotel location.
+
+zoneName	
+string
+Name of the zone of the hotel location.
+
+latitude	
+string
+Latitude coordinate of the hotel location.
+
+longitude	
+string
+Longitude coordinate of the hotel location.
+
+minRate	
+string
+Minimum hotel room price.
+
+maxRate	
+string
+Maximum hotel room price.
+
+totalSellingRate	
+number
+Total amount of the booking. See: https://developer.hotelbeds.com/documentation/hotels/knowledge-base/pricing-models/
+
+totalNet	
+number
+Total amount of the booking.
+
+pendingAmount	
+number
+Remaining amount to be paid.
+
+currency	
+string
+Client currency.
+
+supplier	
+object (ApiSupplier)
+Supplier information.
+
+name	
+string
+Supplier name.
+
+vatNumber	
+string
+Supplier VAT number.
+
+clientComments	
+string
+cancellationAmount	
+string
+upselling	
+object (ApiUpselling)
+Additional room options with superior category available at the same hotel that was requested.
+
+rooms	
+Array of objects (room)
+List of available rooms with superior category.
+
+Array 
+status	
+string
+Enum: "CONFIRMED" "CANCELLED"
+Booking status of the room.
+
+id	
+integer <int32>
+Room reservation identifier.
+
+code	
+string
+Internal room code.
+
+name	
+string
+Room name/description.
+
+supplierReference	
+string
+Booking reference of the booking/room for external supplier bookings.
+
+paxes	
+Array of objects (ApiPax)
+List of paxes for the room.
+
+rates	
+Array of objects (ApiRate)
+List of rates associated to the room.
+
+keywords	
+Array of objects (ApiKeyword)
+Array 
+code
+required
+integer <int32>
+Keyword code.
+
+rating	
+integer <int32>
+reviews	
+Array of objects (ApiReview)
+Array 
+rate	
+string
+Rating value.
+
+reviewCount	
+integer <int32>
+Total number of ratings for that particular hotel.
+
+type	
+string
+Source of the review. Posible values: TRIPADVISOR, HOTELBEDS.
+
+rooms	
+Array of objects (room)
+Array 
+status	
+string
+Enum: "CONFIRMED" "CANCELLED"
+Booking status of the room.
+
+id	
+integer <int32>
+Room reservation identifier.
+
+code	
+string
+Internal room code.
+
+name	
+string
+Room name/description.
+
+supplierReference	
+string
+Booking reference of the booking/room for external supplier bookings.
+
+paxes	
+Array of objects (ApiPax)
+List of paxes for the room.
+
+Array 
+roomId	
+integer <int32> >= 1
+type
+required
+string
+Enum: "AD" "CH"
+Passenger type, defines if the passenger is adult or child.
+
+age	
+integer <int32> [ 0 .. 99 ]
+Age of the passenger (required for children passengers). Please make sure to use the same ages in confirmation step to those you used in the availability step; the ages cannot be changed once the booking flow has started
+
+name	
+string [ 1 .. 50 ] characters
+Name of the passenger.
+
+surname	
+string [ 0 .. 50 ] characters
+Surname of the passenger.
+
+rates	
+Array of objects (ApiRate)
+List of rates associated to the room.
+
+Array 
+rateKey	
+string <20190615|20190616|W|1|297|DBT.ST|NRF-SUMMERHB|HB||1~2~0||N@9ECC4527810D418C8C9420715BEC35D01617>
+Internal key that represents a combination of room type, category, board and occupancy. Is returned in Availability and used to valuate a rate and confirm a booking.
+
+rateClass	
+string
+Class of the rate.
+
+rateType	
+string
+Enum: "BOOKABLE" "RECHECK"
+Determines if can booked directly (BOOKABLE) or if it needs to be checked with the ‘CheckRate’ operation (RECHECK).
+
+net	
+string
+Net price of the rate.
+
+discount	
+string
+Profit margin that the agency would take if it sells at that recommended price.
+
+discountPCT	
+string
+Percentual share of the price corresponding to the profit margin the agency would take if it sells at that recommended price.
+
+sellingRate	
+string
+Gross price of the room in case it is included.
+
+hotelMandatory	
+boolean
+Default: false
+Identifies if the rate price is recommended.
+
+allotment	
+integer <int32>
+Number of rooms available for a particular room type.
+
+commission	
+string
+Profit margin the agency takes (commissionable model).
+
+commissionVAT	
+string
+Share of the commission corresponding to the Value Added Tax.
+
+commissionPCT	
+string
+Percentual share of the price corresponding to commision.
+
+rateCommentsId	
+string
+Comments associated to this rate (more information on Hotel Content API ).
+
+rateComments	
+string
+Rate comments that contain important information.
+
+packaging	
+boolean
+Default: false
+Defines if the rate is for packaging.
+
+boardCode	
+string
+Internal board code.
+
+boardName	
+string
+Board name/description.
+
+rooms	
+integer <int32>
+Number of rooms requested.
+
+adults	
+integer <int32>
+Number of adults requested for each room.
+
+children	
+integer <int32>
+Number of children requested for each room.
+
+childrenAges	
+string
+Ages of the children (if any).
+
+rateup	
+string
+Difference between original rate price and upselling rate price.
+
+brand	
+string
+Brand of the hotel.
+
+resident	
+boolean
+Default: false
+Indicates if the rate is only for residents (only appears when resident rates are requested).
+
+cancellationPolicies	
+Array of objects (ApiCancellationPolicy)
+List of cancellation policies on the rate.
+
+taxes	
+object (ApiTaxes)
+Information of taxes.
+
+promotions	
+Array of objects (ApiPromotion)
+List of promotions on the rate.
+
+offers	
+Array of objects (ApiOffer)
+List of offers on the rate.
+
+shiftRates	
+Array of objects (ApiShiftRate)
+Information about rates for alternative dates.
+
+dailyRates	
+Array of objects (ApiDailyRate)
+Breakdown of the rate for each day of the stay.
+
+creditCards	
+Array of objects (ApiCreditCard)
+List of credit cards accepted by the hotel.
+
+Array 
+code	
+string
+Credit card code.
+
+name	
+string
+Credit card name.
+
+paymentDataRequired	
+boolean
+Default: false
+Indicates the need for payment data(i.e.: credit card details) in order to finish the booking.
+
+401
+UNAUTHORIZED - Authentication has failed or has not been provided.
+
+Authorization field missing
+
+Request signature verification failed
+
+403
+FORBIDDEN - The credentials are correct and authorization was succesful, but access to this resource/operation is not allowed.
+
+406
+NOT ACCEPTABLE - The resource identified by the request is only capable of generating response entities which have content characteristics not acceptable according to the accept headers sent in the request.
+
+410
+error repeated
+
+429
+Rate limit exceeded - The user has sent too many requests in a given amount of time.
+
+500
+INTERNAL SERVER ERROR - An unexpected condition was encountered. Possible causes
+
+SYSTEM_ERROR - These are internal server errors, please send us these errors together with the complete logs (JSON or XML requests and responses) at apitude@hotelbeds.com so that our team can review them.
+
+PRODUCT_ERROR - This type of error is produced due to product restrictions or due to other account set-up limitations. In all cases, the end result is that the booking cannot be confirmed. Here is a list of common product errors:
+
+Insufficient allotment: This means that the user is trying to book a room which is no longer available. This may happen if the room was still available in the Availability stage but someone else has made a reservation for this room or rooms.
+Price has increased: The price increase between booking steps has exceeded the allowed tolerance that was set. This is a setting to protect clients from booking a room with a higher price than expected.
+Contract is closed/Office or branch not active/Cannot find channel quotation: There are problems related to the contract.
+Stop sales: This means that the hotel is forbidding sales on the requested dates.
+Booking confirmation error XXX-YYYYYY: A confirmation error occurred. Please try again later.
+Release violated
+There's a stop sales for the date/s
+CONFIGURATION_ERROR - This type of error is produced by configuration restrictions set-up at account level. Usually this results in the inability to perform an specific operation. Here is a list of common configuration errors:
+
+This apikey is not associated with a valid client: This means that the provided apiKey belongs to an inactive client/agency. If you need information regarding the cause for this please contact our support team at apitude@hotelbeds.com.
+
+DELETE
+/bookings/{bookingId}
+Response samples
+200401403406500
+Content type
+
+application/json
+application/json
+
+Copy
+Expand allCollapse all
+{
+"auditData": {
+"processTime": "803",
+"timestamp": "2018-03-23 09:40:59.157",
+"requestHost": "212.66.164.12",
+"serverId": "sa37AUX3ROLBLIS.env",
+"environment": "[int]",
+"release": "5c2a98762e8da116cf86a57a17c9db9d2e4d80eb",
+"token": "24b3b38c-8a53-44aa-9019-429534bf7c05",
+"internal": "null||||0|1||||||||||||1|||0|0||0|null|||"
+},
+"booking": {
+"reference": "1-3816248",
+"cancellationReference": "PPFPPJXXVZ",
+"clientReference": "TESTBOOKING",
+"creationDate": "2018-03-23",
+"status": "CANCELLED",
+"modificationPolicies": {},
+"creationUser": "wuupfvswdqfz342cejxfv3ku",
+"holder": {},
+"hotel": {},
+"remark": "Booking remarks are to be written here.",
+"invoiceCompany": {},
+"totalNet": 0,
+"pendingAmount": 0,
+"currency": "EUR"
+}
+}
+Booking reconfirmation
+The Reconfirmation operation allows to retrieve the reconfirmation numbers (The confirmation number of the Hotel, both for the Hotelbeds product and for that of external suppliers product) of the bookings made by the client when requested in a GET call to our endpoint.
+
+Obtaining this reconfirmation numbers from hoteliers is an asynchronous service: reconfirmation numbers are not available at the time of the booking, and as such they can't be informed at the time of the booking, hence the need for this operation.
+
+The Reconfirmation operation offers a wide variety of filters to help narrowing down reconfirmation number results. Only one filter can be used at the same time. Below the four possible filters you can use:
+
+between two cheking dates
+between two reconfirmation dates
+list of clientReference ids
+list of booking Ids
+Reconfirmation Service
+Additionally we offer you the capacity to receive the reconfirmation numbers automatically in our reconformation service, designed to automatically send you the reconfirmation information as soon as is available from the hoteliers in two different ways:
+
+Push Service : The messages will be automatically sent in JSON format to an endpoint of your choice.
+Email Service: The messages will be automatically sent in an email to an address of your choice.
+Contact our support team at apitude@hotelbeds.com to learn more about this features.
+
+AUTHORIZATIONS:
+(ApikeyXsignature)
+QUERY PARAMETERS
+from
+required
+integer <int32>
+Example: from=1
+Lowest value of the range of bookings with supplierConfirmationCodes to be returned (as in a paginated response).
+
+to
+required
+integer <int32>
+Example: to=10
+Highest value of the range of bookings with supplierConfirmationCodes to be returned (as in a paginated response).
+
+start	
+string <date>
+Example: start=2020-01-10
+Date from when the method will start checking reconfirmation numbers. The format must be YYYY-MM-DD. In case of using start and end parameters, the use of filterType parameter is mandatory.
+
+end	
+string <date>
+Example: end=2020-01-15
+Date to when the method will finish checking reconfirmation numbers. The format must be YYYY-MM-DD. In case of using start and end parameters, the use of filterType parameter is mandatory.
+
+filterType	
+string
+Enum: "CHECKIN" "RECONFIRMATION"
+The parameter is used to identify if the reconfirmation numbers is by check-in date or by reconfirmation date. Values:
+
+CHECKIN: for the check-in date.
+RECONFIRMATION: for the reconfirmation date the booking was included in Hotelbeds systems.
+In case of using filterType parameters, the use of start and end parameters is mandatory.
+
+clientReferences	
+Array of strings
+Example: clientReferences=XX270220113856831889,XX270220113856831889
+Parameter to filter the results by the booking reference in client API side.Can include multiple values separated by ",". Max 80 values.
+
+references	
+Array of strings
+Example: references=77-1322905,77-1322904
+Parameter to filter the results by the booking reference in Hotelbeds side.Can include multiple values separated by ",". Max 80 values.
+
+HEADER PARAMETERS
+Accept
+required
+string
+Enum: "application/json" "application/xml"
+Response format.
+
+Accept-Encoding
+required
+string
+Default: gzip
+Defines type of encoding used on the data.
+
+Responses
+200
+Sucessful response
+
+
+GET
+/bookings/reconfirmations
+Response samples
+200
+Content type
+application/json
+
+Copy
+Expand allCollapse all
+{
+"auditData": {
+"processTime": "2125",
+"timestamp": "2020-02-12 08:43:59.876",
+"requestHost": "0:0:0:0:0:0:0:1",
+"serverId": "PMI-L-7RDKRV2#A+",
+"environment": "[local, awseuwest1]",
+"release": "97aaaf050e97f38dba4b0be9075523e501bf3dc7",
+"token": "87AB1EF792B8415F8FAE352076795DF3",
+"internal": "null||||0|0||||||||||||0|||0|0||0|null|||"
+},
+"bookings": [
+{},
+{}
+]
+}
+Do you have the right APItude?
+FOLLOW US ON TWITTER
+twitter logo icon
+Terms of Use
+Cookie Policy
+Privacy Policy
+APItude Logo
+©APItude 2020

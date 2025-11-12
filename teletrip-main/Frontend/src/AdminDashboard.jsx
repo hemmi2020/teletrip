@@ -1565,7 +1565,6 @@ Amount: ${voucher.currency} ${voucher.totalAmount}
             </div>
             
             <div className="flex items-center gap-4">
-              <DarkModeToggle />
               <NotificationBell
                 notifications={notifications}
                 onMarkAsRead={handleMarkAsRead}
@@ -1573,10 +1572,10 @@ Amount: ${voucher.currency} ${voucher.totalAmount}
               />
               <div className="hidden sm:flex items-center gap-3">
                 <span className="text-sm text-gray-600">
-                  {userData.fullname?.firstname} {userData.fullname?.lastname}
+                  Hello Admin
                 </span>
                 <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold">
-                  {userData.fullname?.firstname?.charAt(0) || 'A'}
+                  A
                 </div>
               </div>
               <button

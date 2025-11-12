@@ -529,17 +529,49 @@ module.exports.cancelBooking = asyncErrorHandler(async (req, res) => {
     return ApiResponse.badRequest(res, 'Cannot cancel completed booking');
   }
 
-  // Calculate cancellation fee
-  const cancellationFee = calculateCancellationFee(booking);
+  // ⚠️ STEP 1: Cancel with Hotelbeds API
+  let hotelbedsResponse = null;
+  if (booking.hotelbedsReference) {
+    try {
+      const timestamp = Math.floor(Date.now() / 1000);
+      const signature = generateHotelbedsSignature(HOTELBEDS_API_KEY, HOTELBEDS_SECRET, timestamp);
+
+      const response = await fetch(`${HOTELBEDS_BASE_URL}/hotel-api/1.0/bookings/${booking.hotelbedsReference}`, {
+        method: 'DELETE',
+        headers: {
+          'Api-key': HOTELBEDS_API_KEY,
+          'X-Signature': signature,
+          'Accept': 'application/json',
+          'Accept-Encoding': 'gzip'
+        }
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Hotelbeds cancellation failed:', errorText);
+        return ApiResponse.error(res, 'Failed to cancel booking with hotel provider', 500);
+      }
+
+      hotelbedsResponse = await response.json();
+      console.log('✅ Hotelbeds booking cancelled:', hotelbedsResponse);
+    } catch (error) {
+      console.error('Hotelbeds cancellation error:', error);
+      return ApiResponse.error(res, 'Failed to cancel booking with hotel provider', 500);
+    }
+  }
+
+  // STEP 2: Calculate cancellation fee from Hotelbeds response or local policy
+  const cancellationFee = hotelbedsResponse?.booking?.totalNet || calculateCancellationFee(booking);
   const refundAmount = booking.pricing.totalAmount - cancellationFee;
 
-  // Update booking status
+  // STEP 3: Update local booking status
   booking.status = 'cancelled';
   if (!booking.cancellation) booking.cancellation = {};
   booking.cancellation.cancelledAt = new Date();
   booking.cancellation.cancelledBy = userId;
   booking.cancellation.cancellationFee = cancellationFee;
   booking.cancellation.refundAmount = refundAmount;
+  booking.cancellation.cancellationReference = hotelbedsResponse?.booking?.cancellationReference;
   
   await booking.save();
 
