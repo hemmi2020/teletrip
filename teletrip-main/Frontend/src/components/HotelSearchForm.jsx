@@ -483,7 +483,7 @@ const ExperiencesTab = () => {
               <ul>
                 {filteredLocations.map((location, index) => (
                   <li
-                    key={index}
+                    key={index} 
                     onClick={() => handleLocationSelect(location)}
                     className="px-3 sm:px-4 py-2.5 sm:py-3 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors"
                   >
@@ -665,34 +665,31 @@ const HotelSearchForm = () => {
   const [childAges, setChildAges] = useState([]);
   const [activeTab, setActiveTab] = useState('stays');
 
-  // Fetch all cities on mount (countries excluded)
+  // Fetch capital cities from REST Countries API
   useEffect(() => {
     const fetchLocations = async () => {
       setIsLoadingLocations(true);
       try {
-        const response = await fetch('https://countriesnow.space/api/v0.1/countries/');
+        const response = await fetch('https://restcountries.com/v3.1/all?fields=name,capital,cca2');
         const data = await response.json();
         
-        if (!data.error) {
-          const locations = [];
-          data.data.forEach(country => {
-            // Only add cities (not countries)
-            if (country.cities && country.cities.length > 0) {
-              country.cities.forEach(city => {
-                locations.push({
-                  type: 'city',
-                  city: city,
-                  country: country.country,
-                  countryCode: country.iso3,
-                  displayName: `${city}, ${country.country}`,
-                  searchText: `${city} ${country.country}`.toLowerCase()
-                });
+        const locations = [];
+        data.forEach(country => {
+          if (country.capital && country.capital.length > 0) {
+            country.capital.forEach(city => {
+              locations.push({
+                type: 'city',
+                city: city,
+                country: country.name.common,
+                countryCode: country.cca2,
+                displayName: `${city}, ${country.name.common}`,
+                searchText: `${city} ${country.name.common}`.toLowerCase()
               });
-            }
-          });
+            });
+          }
+        });
 
-          setAllLocations(locations);
-        }
+        setAllLocations(locations);
       } catch (error) {
         console.error('Error fetching locations:', error);
       } finally {
@@ -713,7 +710,7 @@ const HotelSearchForm = () => {
     const query = searchQuery.toLowerCase().trim();
     const filtered = allLocations
       .filter(location => location.searchText.includes(query))
-      .slice(0, 50); // Limit to 50 results for performance
+      .slice(0, 50);
 
     setFilteredLocations(filtered);
   }, [searchQuery, allLocations]);
@@ -874,7 +871,7 @@ const HotelSearchForm = () => {
                 </div>
 
                 {/* Dropdown Results */}
-                {showLocationDropdown && (searchQuery.trim() !== '' || isLoadingLocations) && (
+                {showLocationDropdown && searchQuery.trim() !== '' && (
                   <div className="absolute z-50 w-full mt-2 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 sm:max-h-80 overflow-y-auto">
                     {isLoadingLocations ? (
                       <div className="p-3 sm:p-4 text-center text-gray-500 text-sm sm:text-base">Loading locations...</div>
