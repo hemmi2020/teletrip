@@ -665,31 +665,32 @@ const HotelSearchForm = () => {
   const [childAges, setChildAges] = useState([]);
   const [activeTab, setActiveTab] = useState('stays');
 
-  // Fetch capital cities from REST Countries API
+  // Fetch all cities from CountriesNow API
   useEffect(() => {
     const fetchLocations = async () => {
       setIsLoadingLocations(true);
       try {
-        const response = await fetch('https://restcountries.com/v3.1/all?fields=name,capital,cca2');
+        const response = await fetch('https://countriesnow.space/api/v0.1/countries/');
         const data = await response.json();
         
-        const locations = [];
-        data.forEach(country => {
-          if (country.capital && country.capital.length > 0) {
-            country.capital.forEach(city => {
-              locations.push({
-                type: 'city',
-                city: city,
-                country: country.name.common,
-                countryCode: country.cca2,
-                displayName: `${city}, ${country.name.common}`,
-                searchText: `${city} ${country.name.common}`.toLowerCase()
+        if (!data.error) {
+          const locations = [];
+          data.data.forEach(country => {
+            if (country.cities && country.cities.length > 0) {
+              country.cities.forEach(city => {
+                locations.push({
+                  type: 'city',
+                  city: city,
+                  country: country.country,
+                  countryCode: country.iso3,
+                  displayName: `${city}, ${country.country}`,
+                  searchText: `${city} ${country.country}`.toLowerCase()
+                });
               });
-            });
-          }
-        });
-
-        setAllLocations(locations);
+            }
+          });
+          setAllLocations(locations);
+        }
       } catch (error) {
         console.error('Error fetching locations:', error);
       } finally {
