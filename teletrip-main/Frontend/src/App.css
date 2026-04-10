@@ -1,16 +1,28 @@
 @import "tailwindcss";
 
-/* Global boxed layout */
+/* Full-width site, boxed content */
 body {
-  background-color: #f3f4f6;
+  background-color: #ffffff;
 }
 
 #root {
-  max-width: 1440px;
-  margin: 0 auto;
-  background-color: #ffffff;
+  width: 100%;
   min-height: 100vh;
-  box-shadow: 0 0 40px rgba(0, 0, 0, 0.04);
+}
+
+/* Boxed content container — applies to main page content, not header/footer */
+.container {
+  max-width: 1280px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+@media (min-width: 1536px) {
+  .container {
+    max-width: 1400px;
+  }
 }
 
 /* Global cursor pointer for all interactive elements */
