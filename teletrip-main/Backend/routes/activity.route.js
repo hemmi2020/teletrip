@@ -72,6 +72,9 @@ router.post('/search', async (req, res) => {
       let activityType = activity.content?.activityFactsheetType;
       let contentSegmentationGroups = [];
       let contentScheduling = null;
+      let contentSupplier = null;
+      let contentVoucherType = null;
+      let contentServices = [];
 
       try {
         const contentData = await activityContentService.getActivityContentSimple(language, activity.code);
@@ -89,6 +92,17 @@ router.post('/search', async (req, res) => {
         if (content?.activityFactsheetType) activityType = content.activityFactsheetType;
         if (content?.segmentationGroups) contentSegmentationGroups = content.segmentationGroups;
         if (content?.scheduling) contentScheduling = content.scheduling;
+        if (content?.supplier?.name) contentSupplier = content.supplier.name;
+        if (content?.redeemInfo?.type) contentVoucherType = content.redeemInfo.type;
+        // Extract services from feature groups or tags
+        const svcTags = [];
+        if (content?.featureGroups) {
+          content.featureGroups.forEach(g => {
+            (g.included || []).forEach(f => { if (f.description) svcTags.push(f.description); });
+          });
+        }
+        if (content?.tags) content.tags.forEach(t => { if (t.name) svcTags.push(t.name); });
+        contentServices = svcTags;
       } catch (err) {
         // Content API not available for this activity - use search data
       }
@@ -132,7 +146,10 @@ router.post('/search', async (req, res) => {
         destination: activity.destination?.name || destination,
         activityFactsheetType: activityType,
         segmentationGroups: contentSegmentationGroups,
-        scheduling: contentScheduling
+        scheduling: contentScheduling,
+        supplier: activity.supplier?.name || contentSupplier || null,
+        voucherType: contentVoucherType || null,
+        services: contentServices || [],
       };
     }));
     

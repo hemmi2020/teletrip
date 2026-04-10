@@ -17,6 +17,9 @@ const ActivitySearchResults = () => {
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [selectedDaytimes, setSelectedDaytimes] = useState([]);
   const [selectedRecommended, setSelectedRecommended] = useState([]);
+  const [selectedSuppliers, setSelectedSuppliers] = useState([]);
+  const [selectedVoucherTypes, setSelectedVoucherTypes] = useState([]);
+  const [selectedServices, setSelectedServices] = useState([]);
   const [priceMin, setPriceMin] = useState('');
   const [priceMax, setPriceMax] = useState('');
   const [expandedSections, setExpandedSections] = useState({
@@ -24,6 +27,9 @@ const ActivitySearchResults = () => {
     categories: true,
     daytime: false,
     recommended: false,
+    supplier: false,
+    voucherValidity: false,
+    services: false,
     price: true,
   });
 
@@ -77,23 +83,19 @@ const ActivitySearchResults = () => {
     setSelectedCategories([]);
     setSelectedDaytimes([]);
     setSelectedRecommended([]);
+    setSelectedSuppliers([]);
+    setSelectedVoucherTypes([]);
+    setSelectedServices([]);
     setPriceMin('');
     setPriceMax('');
   };
 
   // Dynamic filter options from data
   const dynamicCategories = [...new Set(activities.map(a => a.activityFactsheetType).filter(Boolean))].sort();
-  const dynamicDaytimes = [...new Set(activities.flatMap(a => {
-    const times = [];
-    const sched = a.scheduling;
-    if (sched?.opened) times.push('Daytime');
-    if (sched?.duration?.hours >= 4) times.push('Full Day');
-    if (sched?.duration?.hours && sched.duration.hours < 4) times.push('Half Day');
-    const name = (a.name || '').toLowerCase();
-    if (name.includes('night') || name.includes('evening') || name.includes('sunset')) times.push('Night / Evening');
-    if (name.includes('morning') || name.includes('sunrise')) times.push('Morning');
-    return times.length > 0 ? times : ['Daytime'];
-  }))].sort();
+  
+  // Daytime options matching Hotelbeds B2B: Full day, Morning, Afternoon, Evening, Flexible
+  const daytimeOptions = ['Full day', 'Morning', 'Afternoon', 'Evening', 'Flexible'];
+  
   const dynamicRecommended = [...new Set(activities.flatMap(a => {
     const groups = [];
     if (a.segmentationGroups && Array.isArray(a.segmentationGroups)) {
@@ -102,28 +104,46 @@ const ActivitySearchResults = () => {
         if (g.name) groups.push(g.name);
       });
     }
-    // Fallback: derive from name/description
     if (groups.length === 0) {
       const text = ((a.name || '') + ' ' + (a.summary || '')).toLowerCase();
       if (text.includes('family') || text.includes('kid')) groups.push('Families');
       if (text.includes('couple') || text.includes('romantic')) groups.push('Couples');
-      if (text.includes('adventure') || text.includes('thrill')) groups.push('Adventure Seekers');
-      if (text.includes('group') || text.includes('team')) groups.push('Groups');
+      if (text.includes('youth') || text.includes('young')) groups.push('Youth');
+      if (text.includes('senior')) groups.push('Senior');
     }
     return groups;
   }))].filter(Boolean).sort();
 
-  // Derive daytime tag for a single activity (for filtering)
+  const dynamicSuppliers = [...new Set(activities.map(a => a.supplier).filter(Boolean))].sort();
+  const dynamicVoucherTypes = [...new Set(activities.map(a => a.voucherType).filter(Boolean))].sort();
+  const dynamicServices = [...new Set(activities.flatMap(a => {
+    const svcs = [];
+    if (a.services && Array.isArray(a.services)) svcs.push(...a.services);
+    // Derive from name/description
+    const text = ((a.name || '') + ' ' + (a.summary || '') + ' ' + (a.description || '')).toLowerCase();
+    if (text.includes('private')) svcs.push('Private');
+    if (text.includes('small group')) svcs.push('Small group');
+    if (text.includes('wheelchair') || text.includes('accessible')) svcs.push('Wheelchair accessible');
+    return svcs;
+  }))].filter(Boolean).sort();
+
+  // Derive daytime tag for a single activity
   const getActivityDaytimes = (activity) => {
     const times = new Set();
     const sched = activity.scheduling;
-    if (sched?.opened) times.add('Daytime');
-    if (sched?.duration?.hours >= 4) times.add('Full Day');
-    if (sched?.duration?.hours && sched.duration.hours < 4) times.add('Half Day');
     const name = (activity.name || '').toLowerCase();
-    if (name.includes('night') || name.includes('evening') || name.includes('sunset')) times.add('Night / Evening');
-    if (name.includes('morning') || name.includes('sunrise')) times.add('Morning');
-    if (times.size === 0) times.add('Daytime');
+    const desc = (activity.description || '').toLowerCase();
+    const text = name + ' ' + desc;
+    
+    if (sched?.duration?.hours >= 6) times.add('Full day');
+    if (text.includes('morning') || text.includes('sunrise')) times.add('Morning');
+    if (text.includes('afternoon')) times.add('Afternoon');
+    if (text.includes('evening') || text.includes('night') || text.includes('sunset')) times.add('Evening');
+    if (text.includes('flexible') || (sched && !sched.duration)) times.add('Flexible');
+    if (sched?.duration?.hours && sched.duration.hours >= 3 && sched.duration.hours < 6) {
+      if (!times.has('Morning') && !times.has('Afternoon')) times.add('Morning');
+    }
+    if (times.size === 0) times.add('Flexible');
     return times;
   };
 
@@ -139,28 +159,39 @@ const ActivitySearchResults = () => {
       const text = ((activity.name || '') + ' ' + (activity.summary || '')).toLowerCase();
       if (text.includes('family') || text.includes('kid')) groups.add('Families');
       if (text.includes('couple') || text.includes('romantic')) groups.add('Couples');
-      if (text.includes('adventure') || text.includes('thrill')) groups.add('Adventure Seekers');
-      if (text.includes('group') || text.includes('team')) groups.add('Groups');
+      if (text.includes('youth') || text.includes('young')) groups.add('Youth');
+      if (text.includes('senior')) groups.add('Senior');
     }
     return groups;
   };
 
+  const getActivityServices = (activity) => {
+    const svcs = new Set();
+    if (activity.services && Array.isArray(activity.services)) activity.services.forEach(s => svcs.add(s));
+    const text = ((activity.name || '') + ' ' + (activity.summary || '') + ' ' + (activity.description || '')).toLowerCase();
+    if (text.includes('private')) svcs.add('Private');
+    if (text.includes('small group')) svcs.add('Small group');
+    if (text.includes('wheelchair') || text.includes('accessible')) svcs.add('Wheelchair accessible');
+    return svcs;
+  };
+
   const filteredActivities = activities.filter(a => {
-    // Name search
     if (nameSearch && !a.name.toLowerCase().includes(nameSearch.toLowerCase())) return false;
-    // Category
     if (selectedCategories.length > 0 && !selectedCategories.includes(a.activityFactsheetType)) return false;
-    // Daytime
     if (selectedDaytimes.length > 0) {
       const times = getActivityDaytimes(a);
       if (!selectedDaytimes.some(d => times.has(d))) return false;
     }
-    // Recommended
     if (selectedRecommended.length > 0) {
       const recs = getActivityRecommended(a);
       if (!selectedRecommended.some(r => recs.has(r))) return false;
     }
-    // Price
+    if (selectedSuppliers.length > 0 && !selectedSuppliers.includes(a.supplier)) return false;
+    if (selectedVoucherTypes.length > 0 && !selectedVoucherTypes.includes(a.voucherType)) return false;
+    if (selectedServices.length > 0) {
+      const svcs = getActivityServices(a);
+      if (!selectedServices.some(s => svcs.has(s))) return false;
+    }
     const price = parseFloat(a.pricing?.amount || 0);
     if (priceMin && price < parseFloat(priceMin)) return false;
     if (priceMax && price > parseFloat(priceMax)) return false;
@@ -265,29 +296,27 @@ const ActivitySearchResults = () => {
               )}
 
               {/* 3. Daytime */}
-              {dynamicDaytimes.length > 0 && (
-                <div className="mb-5">
-                  <button onClick={() => toggleSection('daytime')} className="flex items-center justify-between w-full text-left font-semibold text-gray-800 mb-2 cursor-pointer">
-                    <span className="font-bold text-sm">Daytime</span>
-                    {expandedSections.daytime ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                  </button>
-                  {expandedSections.daytime && (
-                    <div className="space-y-2">
-                      {dynamicDaytimes.map(time => (
-                        <label key={time} className="flex items-center cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={selectedDaytimes.includes(time)}
-                            onChange={() => setSelectedDaytimes(prev => prev.includes(time) ? prev.filter(t => t !== time) : [...prev, time])}
-                            className="mr-2 h-4 w-4 text-blue-600 border-gray-300 rounded"
-                          />
-                          <span className="text-sm text-gray-700">{time}</span>
-                        </label>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
+              <div className="mb-5">
+                <button onClick={() => toggleSection('daytime')} className="flex items-center justify-between w-full text-left font-semibold text-gray-800 mb-2 cursor-pointer">
+                  <span className="font-bold text-sm">Daytime</span>
+                  {expandedSections.daytime ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                </button>
+                {expandedSections.daytime && (
+                  <div className="space-y-2">
+                    {daytimeOptions.map(time => (
+                      <label key={time} className="flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={selectedDaytimes.includes(time)}
+                          onChange={() => setSelectedDaytimes(prev => prev.includes(time) ? prev.filter(t => t !== time) : [...prev, time])}
+                          className="mr-2 h-4 w-4 text-blue-600 border-gray-300 rounded"
+                        />
+                        <span className="text-sm text-gray-700">{time}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
 
               {/* 4. Recommended Activity For */}
               {dynamicRecommended.length > 0 && (
@@ -314,7 +343,82 @@ const ActivitySearchResults = () => {
                 </div>
               )}
 
-              {/* 5. Price Min & Max */}
+              {/* 5. Supplier */}
+              {dynamicSuppliers.length > 0 && (
+                <div className="mb-5">
+                  <button onClick={() => toggleSection('supplier')} className="flex items-center justify-between w-full text-left font-semibold text-gray-800 mb-2 cursor-pointer">
+                    <span className="font-bold text-sm">Supplier</span>
+                    {expandedSections.supplier ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                  </button>
+                  {expandedSections.supplier && (
+                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                      {dynamicSuppliers.map(sup => (
+                        <label key={sup} className="flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={selectedSuppliers.includes(sup)}
+                            onChange={() => setSelectedSuppliers(prev => prev.includes(sup) ? prev.filter(s => s !== sup) : [...prev, sup])}
+                            className="mr-2 h-4 w-4 text-blue-600 border-gray-300 rounded"
+                          />
+                          <span className="text-sm text-gray-700">{sup}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* 6. Voucher Validity */}
+              {dynamicVoucherTypes.length > 0 && (
+                <div className="mb-5">
+                  <button onClick={() => toggleSection('voucherValidity')} className="flex items-center justify-between w-full text-left font-semibold text-gray-800 mb-2 cursor-pointer">
+                    <span className="font-bold text-sm">Voucher Validity</span>
+                    {expandedSections.voucherValidity ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                  </button>
+                  {expandedSections.voucherValidity && (
+                    <div className="space-y-2">
+                      {dynamicVoucherTypes.map(vt => (
+                        <label key={vt} className="flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={selectedVoucherTypes.includes(vt)}
+                            onChange={() => setSelectedVoucherTypes(prev => prev.includes(vt) ? prev.filter(v => v !== vt) : [...prev, vt])}
+                            className="mr-2 h-4 w-4 text-blue-600 border-gray-300 rounded"
+                          />
+                          <span className="text-sm text-gray-700">{vt}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* 7. Services */}
+              {dynamicServices.length > 0 && (
+                <div className="mb-5">
+                  <button onClick={() => toggleSection('services')} className="flex items-center justify-between w-full text-left font-semibold text-gray-800 mb-2 cursor-pointer">
+                    <span className="font-bold text-sm">Services</span>
+                    {expandedSections.services ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                  </button>
+                  {expandedSections.services && (
+                    <div className="space-y-2">
+                      {dynamicServices.map(svc => (
+                        <label key={svc} className="flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={selectedServices.includes(svc)}
+                            onChange={() => setSelectedServices(prev => prev.includes(svc) ? prev.filter(s => s !== svc) : [...prev, svc])}
+                            className="mr-2 h-4 w-4 text-blue-600 border-gray-300 rounded"
+                          />
+                          <span className="text-sm text-gray-700">{svc}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* 8. Price Min & Max */}
               <div className="mb-5">
                 <button onClick={() => toggleSection('price')} className="flex items-center justify-between w-full text-left font-semibold text-gray-800 mb-2 cursor-pointer">
                   <span className="font-bold text-sm">Price Range</span>
