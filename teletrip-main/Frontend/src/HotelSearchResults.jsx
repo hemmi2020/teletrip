@@ -67,20 +67,20 @@ const HotelSearchResults = () => {
   const [selectedEstablishment, setSelectedEstablishment] = useState([]);
   const [selectedPackaging, setSelectedPackaging] = useState("");
   const [expandedSections, setExpandedSections] = useState({
-    hotelName: false,
-    board: false,
-    category: false,
-    reviews: false,
-    cancellation: false,
-    price: false,
-    zone: false,
+    hotelName: true,
+    board: true,
+    category: true,
+    reviews: true,
+    cancellation: true,
+    price: true,
+    zone: true,
     accommodationType: true,
-    amenities: false,
-    promos: false,
-    discounts: false,
-    chain: false,
-    establishment: false,
-    packaging: false,
+    amenities: true,
+    promos: true,
+    discounts: true,
+    chain: true,
+    establishment: true,
+    packaging: true,
     sortBy: true,
   });
   const [hotelReviews, setHotelReviews] = useState({});
@@ -876,15 +876,15 @@ if (children > 0 && childAges.length > 0) {
       <Header />
       <div className="pt-16 flex">
         {/* Mobile Filter Toggle */}
-        <div className="lg:hidden fixed top-24 left-4 z-50">
-          <button onClick={() => setShowFilters(!showFilters)} className="bg-white text-gray-700 p-2.5 rounded-lg shadow-md border border-gray-200 hover:bg-gray-50 cursor-pointer flex items-center gap-2">
+        <div className="lg:hidden fixed top-32 left-4 z-50">
+          <button onClick={() => setShowFilters(!showFilters)} className="bg-white/70 backdrop-blur-sm text-gray-700 p-2.5 rounded-lg shadow-sm border border-gray-200/60 hover:bg-white/90 cursor-pointer flex items-center gap-2">
             <Filter className="w-4 h-4" /><span className="text-sm font-medium">Filters</span>
           </button>
         </div>
 
         {/* Sidebar Filters */}
-        <div className={`fixed lg:sticky lg:top-16 inset-y-0 left-0 z-40 w-[300px] bg-white border-r border-gray-100 transform ${showFilters ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 transition-transform duration-300 ease-in-out lg:h-[calc(100vh-4rem)]`}>
-          <div className="h-full overflow-y-auto overscroll-contain px-5 py-4" style={{scrollbarWidth:'thin',scrollbarColor:'#e5e7eb transparent'}}>
+        <div className={`fixed lg:sticky lg:top-16 inset-y-0 left-0 z-40 w-[300px] bg-white border-r border-gray-100 transform ${showFilters ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 transition-transform duration-300 ease-in-out lg:h-[calc(100vh-4rem)] pt-16 lg:pt-0`}>
+          <div className="h-full overflow-y-auto overscroll-contain px-4 py-4 text-left" style={{scrollbarWidth:'thin',scrollbarColor:'#e5e7eb transparent'}}>
             {/* Mobile Close */}
             <div className="lg:hidden flex justify-between items-center pb-3 mb-3 border-b border-gray-100">
               <span className="text-xs font-semibold text-gray-900 tracking-wider uppercase">Filters</span>

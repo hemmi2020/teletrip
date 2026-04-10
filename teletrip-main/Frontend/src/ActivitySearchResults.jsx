@@ -25,11 +25,11 @@ const ActivitySearchResults = () => {
   const [expandedSections, setExpandedSections] = useState({
     name: true,
     categories: true,
-    daytime: false,
-    recommended: false,
-    supplier: false,
-    voucherValidity: false,
-    services: false,
+    daytime: true,
+    recommended: true,
+    supplier: true,
+    voucherValidity: true,
+    services: true,
     price: true,
   });
 
@@ -225,14 +225,14 @@ const ActivitySearchResults = () => {
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Mobile Filter Toggle */}
           <div className="lg:hidden">
-            <button onClick={() => setShowFilters(!showFilters)} className="bg-white text-gray-700 px-3 py-2 rounded-lg shadow-md border border-gray-200 hover:bg-gray-50 cursor-pointer flex items-center gap-2">
+            <button onClick={() => setShowFilters(!showFilters)} className="bg-white/70 backdrop-blur-sm text-gray-700 px-3 py-2 rounded-lg shadow-sm border border-gray-200/60 hover:bg-white/90 cursor-pointer flex items-center gap-2">
               <Filter className="w-4 h-4" /><span className="text-sm font-medium">Filters</span>
             </button>
           </div>
 
           {/* Sidebar Filters */}
-          <div className={`fixed lg:sticky lg:top-16 inset-y-0 left-0 z-40 w-[300px] bg-white border-r border-gray-100 transform ${showFilters ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 transition-transform duration-300 ease-in-out lg:h-[calc(100vh-4rem)] lg:flex-shrink-0`}>
-            <div className="h-full overflow-y-auto overscroll-contain px-5 py-4" style={{scrollbarWidth:'thin',scrollbarColor:'#e5e7eb transparent'}}>
+          <div className={`fixed lg:sticky lg:top-16 inset-y-0 left-0 z-40 w-[300px] bg-white border-r border-gray-100 transform ${showFilters ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 transition-transform duration-300 ease-in-out lg:h-[calc(100vh-4rem)] lg:flex-shrink-0 pt-16 lg:pt-0`}>
+            <div className="h-full overflow-y-auto overscroll-contain px-4 py-4 text-left" style={{scrollbarWidth:'thin',scrollbarColor:'#e5e7eb transparent'}}>
               {/* Mobile Close */}
               <div className="lg:hidden flex justify-between items-center pb-3 mb-3 border-b border-gray-100">
                 <span className="text-xs font-semibold text-gray-900 tracking-wider uppercase">Filters</span>
