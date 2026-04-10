@@ -119,13 +119,20 @@ const ActivitySearchResults = () => {
   const dynamicServices = [...new Set(activities.flatMap(a => {
     const svcs = [];
     if (a.services && Array.isArray(a.services)) svcs.push(...a.services);
-    // Derive from name/description
     const text = ((a.name || '') + ' ' + (a.summary || '') + ' ' + (a.description || '')).toLowerCase();
     if (text.includes('private')) svcs.push('Private');
     if (text.includes('small group')) svcs.push('Small group');
     if (text.includes('wheelchair') || text.includes('accessible')) svcs.push('Wheelchair accessible');
     return svcs;
   }))].filter(Boolean).sort();
+
+  // Count helpers
+  const countCat = (c) => activities.filter(a => a.activityFactsheetType === c).length;
+  const countDaytime = (d) => activities.filter(a => getActivityDaytimes(a).has(d)).length;
+  const countRec = (r) => activities.filter(a => getActivityRecommended(a).has(r)).length;
+  const countSupplier = (s) => activities.filter(a => a.supplier === s).length;
+  const countVoucher = (v) => activities.filter(a => a.voucherType === v).length;
+  const countService = (s) => activities.filter(a => getActivityServices(a).has(s)).length;
 
   // Derive daytime tag for a single activity
   const getActivityDaytimes = (activity) => {
@@ -274,7 +281,7 @@ const ActivitySearchResults = () => {
                             onChange={() => setSelectedCategories(prev => prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat])}
                             className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
                           />
-                          <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors">{cat}</span>
+                          <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1">{cat}</span>`n                          <span className="text-[11px] text-gray-400">{countCat(cat)}</span>
                         </label>
                       ))}
                     </div>
@@ -298,7 +305,7 @@ const ActivitySearchResults = () => {
                           onChange={() => setSelectedDaytimes(prev => prev.includes(time) ? prev.filter(t => t !== time) : [...prev, time])}
                           className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
                         />
-                        <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors">{time}</span>
+                        <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1">{time}</span>`n                          <span className="text-[11px] text-gray-400">{countDaytime(time)}</span>
                       </label>
                     ))}
                   </div>
@@ -322,7 +329,7 @@ const ActivitySearchResults = () => {
                             onChange={() => setSelectedRecommended(prev => prev.includes(rec) ? prev.filter(r => r !== rec) : [...prev, rec])}
                             className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
                           />
-                          <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors">{rec}</span>
+                          <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1">{rec}</span>`n                          <span className="text-[11px] text-gray-400">{countRec(rec)}</span>
                         </label>
                       ))}
                     </div>
@@ -347,7 +354,7 @@ const ActivitySearchResults = () => {
                             onChange={() => setSelectedSuppliers(prev => prev.includes(sup) ? prev.filter(s => s !== sup) : [...prev, sup])}
                             className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
                           />
-                          <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors">{sup}</span>
+                          <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1">{sup}</span>`n                          <span className="text-[11px] text-gray-400">{countSupplier(sup)}</span>
                         </label>
                       ))}
                     </div>
@@ -372,7 +379,7 @@ const ActivitySearchResults = () => {
                             onChange={() => setSelectedVoucherTypes(prev => prev.includes(vt) ? prev.filter(v => v !== vt) : [...prev, vt])}
                             className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
                           />
-                          <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors">{vt}</span>
+                          <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1">{vt}</span>`n                          <span className="text-[11px] text-gray-400">{countVoucher(vt)}</span>
                         </label>
                       ))}
                     </div>
@@ -397,7 +404,7 @@ const ActivitySearchResults = () => {
                             onChange={() => setSelectedServices(prev => prev.includes(svc) ? prev.filter(s => s !== svc) : [...prev, svc])}
                             className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
                           />
-                          <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors">{svc}</span>
+                          <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1">{svc}</span>`n                          <span className="text-[11px] text-gray-400">{countService(svc)}</span>
                         </label>
                       ))}
                     </div>
