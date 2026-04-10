@@ -1509,75 +1509,176 @@ if (children > 0 && childAges.length > 0) {
 />
 
       {/* Hotel Detail Modal */}
-      {selectedHotel && (
+      {selectedHotel && (() => {
+        const checkIn = searchParams.get("checkIn");
+        const checkOut = searchParams.get("checkOut");
+        const nights = checkIn && checkOut ? Math.ceil((new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60 * 24)) : 1;
+        const modalImages = (selectedHotel.images || []).slice(0, 5).map(img => img.path ? `https://photos.hotelbeds.com/giata/original/${img.path}` : null).filter(Boolean);
+        if (modalImages.length === 0 && selectedHotel.thumbnail) modalImages.push(selectedHotel.thumbnail);
+        const uniqueRoomTypes = [...new Set((selectedHotel.rooms || []).map(r => r.name))];
+
+        return (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" onClick={() => setSelectedHotel(null)}>
-          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
-          <div className="relative bg-white w-full sm:max-w-2xl sm:rounded-xl max-h-[90vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
-            {/* Modal Header */}
-            <div className="flex items-start justify-between p-4 border-b border-gray-100 flex-shrink-0">
-              <div className="min-w-0 flex-1 mr-3">
-                <h2 className="text-base font-semibold text-gray-900 truncate">{selectedHotel.name}</h2>
-                <div className="flex items-center gap-2 mt-0.5">
-                  <div className="flex">{[...Array(selectedHotel.stars)].map((_, i) => <Star key={i} className="w-3 h-3 text-amber-400 fill-current" />)}</div>
-                  <span className="text-[12px] text-gray-500">{selectedHotel.address}</span>
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+          <div className="relative bg-white w-full sm:max-w-4xl sm:rounded-2xl max-h-[92vh] overflow-hidden flex flex-col shadow-2xl" onClick={(e) => e.stopPropagation()}>
+
+            {/* Image Collage Header */}
+            <div className="relative flex-shrink-0">
+              {modalImages.length >= 3 ? (
+                <div className="grid grid-cols-4 grid-rows-2 gap-0.5 h-48 sm:h-56">
+                  <div className="col-span-2 row-span-2">
+                    <img src={modalImages[0]} alt="" className="w-full h-full object-cover" onError={(e) => e.target.src = 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg'} />
+                  </div>
+                  <div className="col-span-1 row-span-1">
+                    <img src={modalImages[1]} alt="" className="w-full h-full object-cover" onError={(e) => e.target.src = 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg'} />
+                  </div>
+                  <div className="col-span-1 row-span-1">
+                    <img src={modalImages[2]} alt="" className="w-full h-full object-cover" onError={(e) => e.target.src = 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg'} />
+                  </div>
+                  <div className="col-span-1 row-span-1">
+                    <img src={modalImages[3] || modalImages[0]} alt="" className="w-full h-full object-cover" onError={(e) => e.target.src = 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg'} />
+                  </div>
+                  <div className="col-span-1 row-span-1 relative">
+                    <img src={modalImages[4] || modalImages[1]} alt="" className="w-full h-full object-cover" onError={(e) => e.target.src = 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg'} />
+                    {selectedHotel.images.length > 5 && (
+                      <div className="absolute inset-0 bg-black/50 flex items-center justify-center"><span className="text-white text-sm font-medium">+{selectedHotel.images.length - 5} photos</span></div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="h-48 sm:h-56">
+                  <img src={modalImages[0] || 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg'} alt="" className="w-full h-full object-cover" />
+                </div>
+              )}
+              <button onClick={() => setSelectedHotel(null)} className="absolute top-3 right-3 p-1.5 bg-black/40 hover:bg-black/60 rounded-full transition-colors"><X className="w-4 h-4 text-white" /></button>
+            </div>
+
+            {/* Hotel Info */}
+            <div className="px-5 py-4 border-b border-gray-100 flex-shrink-0">
+              <div className="flex justify-between items-start gap-4">
+                <div className="min-w-0 flex-1">
+                  <h2 className="text-lg font-semibold text-gray-900">{selectedHotel.name}</h2>
+                  <div className="flex items-center gap-2 mt-1">
+                    <div className="flex">{[...Array(selectedHotel.stars)].map((_, i) => <Star key={i} className="w-3.5 h-3.5 text-amber-400 fill-current" />)}</div>
+                    <span className="text-[12px] text-gray-400">·</span>
+                    <span className="text-[12px] text-gray-500 flex items-center gap-1"><MapPin className="w-3 h-3" />{selectedHotel.address}</span>
+                  </div>
+                  {/* Amenities */}
+                  <div className="flex gap-2 mt-2.5 flex-wrap">
+                    {[...new Set(selectedHotel.amenities)].map((amenity, i) => {
+                      const ad = availableAmenities.find(a => a.id === amenity);
+                      if (!ad) return null;
+                      const Ic = ad.icon;
+                      return <span key={i} className="inline-flex items-center gap-1 text-[11px] text-gray-500 bg-gray-50 px-2 py-0.5 rounded-full"><Ic className="w-3 h-3" />{ad.name}</span>;
+                    })}
+                  </div>
+                  {/* Room type tags */}
+                  {uniqueRoomTypes.length > 0 && (
+                    <div className="flex gap-1.5 mt-2 flex-wrap">
+                      {uniqueRoomTypes.slice(0, 6).map((rt, i) => (
+                        <span key={i} className="text-[10px] px-2 py-0.5 bg-blue-50 text-blue-700 rounded-full font-medium">{rt}</span>
+                      ))}
+                      {uniqueRoomTypes.length > 6 && <span className="text-[10px] text-gray-400 self-center">+{uniqueRoomTypes.length - 6} more</span>}
+                    </div>
+                  )}
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <div className="text-[11px] text-gray-400">from</div>
+                  <div className="text-xl font-bold text-blue-600">{selectedHotel.currency} {parseFloat(selectedHotel.price).toFixed(2)}</div>
+                  <div className="text-[11px] text-gray-400">{nights} {nights === 1 ? 'night' : 'nights'}</div>
+                  {/* Reviews */}
+                  {hotelReviews[selectedHotel.id] && hotelReviews[selectedHotel.id].numReviews > 0 && (
+                    <div className="flex items-center gap-1.5 mt-1.5 justify-end">
+                      <RatingCircles rating={hotelReviews[selectedHotel.id].rating} size="w-2.5 h-2.5" />
+                      <span className="text-[11px] text-gray-500">{hotelReviews[selectedHotel.id].numReviews.toLocaleString()}</span>
+                    </div>
+                  )}
                 </div>
               </div>
-              <button onClick={() => setSelectedHotel(null)} className="p-1.5 rounded-lg hover:bg-gray-100 flex-shrink-0"><X className="w-4 h-4 text-gray-400" /></button>
+              {/* Search summary */}
+              <div className="flex items-center gap-3 mt-3 text-[11px] text-gray-400">
+                <span>{searchParams.get("checkIn")} → {searchParams.get("checkOut")}</span>
+                <span>·</span>
+                <span>{searchParams.get("adults")} adults{searchParams.get("children") && searchParams.get("children") !== "0" ? `, ${searchParams.get("children")} children` : ''}</span>
+                <span>·</span>
+                <span>{searchParams.get("rooms")} room(s)</span>
+              </div>
             </div>
 
             {/* Rooms List */}
-            <div className="overflow-y-auto flex-1 p-4 space-y-3" style={{scrollbarWidth:'thin'}}>
+            <div className="overflow-y-auto flex-1 px-5 py-3 space-y-3" style={{scrollbarWidth:'thin'}}>
+              <div className="text-[12px] font-semibold text-gray-500 uppercase tracking-wider mb-1">{selectedHotel.rooms?.length || 0} Room types available</div>
               {selectedHotel.rooms && selectedHotel.rooms.length > 0 ? (
-                selectedHotel.rooms.map((room) => (
-                  <div key={room.code} className="border border-gray-100 rounded-lg overflow-hidden">
-                    <div className="px-3 py-2 bg-gray-50 border-b border-gray-100">
+                selectedHotel.rooms.map((room) => {
+                  const filteredRates = (room.rates || []).filter(rate => {
+                    if (selectedBoards.length > 0 && !selectedBoards.includes(rate.boardName)) return false;
+                    if (selectedCancellation === "free" && !(rate.cancellationPolicies?.length > 0 && parseFloat(rate.cancellationPolicies[0]?.amount || 0) === 0)) return false;
+                    if (selectedCancellation === "nonrefundable" && rate.rateClass !== 'NRF') return false;
+                    return true;
+                  });
+                  if (filteredRates.length === 0) return null;
+
+                  return (
+                  <div key={room.code} className="border border-gray-100 rounded-xl overflow-hidden">
+                    <div className="px-4 py-2.5 bg-gray-50/80 border-b border-gray-100 flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <Bed className="w-3.5 h-3.5 text-gray-400" />
-                        <span className="text-[13px] font-medium text-gray-800">{room.name}</span>
+                        <Bed className="w-4 h-4 text-gray-400" />
+                        <span className="text-[13px] font-semibold text-gray-800">{room.name}</span>
                       </div>
+                      <span className="text-[11px] text-gray-400">{filteredRates.length} rate{filteredRates.length !== 1 ? 's' : ''}</span>
                     </div>
                     <div className="divide-y divide-gray-50">
-                      {room.rates?.map((rate, idx) => {
-                        const checkIn = searchParams.get("checkIn");
-                        const checkOut = searchParams.get("checkOut");
-                        const nights = Math.ceil((new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60 * 24));
+                      {filteredRates.map((rate, idx) => {
                         const total = parseFloat(rate.net);
                         const perNight = nights > 0 ? total / nights : total;
-
-                        // Apply active filters to rates
-                        if (selectedBoards.length > 0 && !selectedBoards.includes(rate.boardName)) return null;
+                        const hasFreeCancellation = rate.cancellationPolicies?.length > 0 && parseFloat(rate.cancellationPolicies[0]?.amount || 0) === 0;
 
                         return (
-                          <div key={idx} className="p-3 hover:bg-gray-50/50 transition-colors">
-                            <div className="flex justify-between items-start gap-3">
-                              <div className="min-w-0 flex-1 space-y-1">
+                          <div key={idx} className="px-4 py-3 hover:bg-blue-50/30 transition-colors">
+                            <div className="flex justify-between items-start gap-4">
+                              <div className="min-w-0 flex-1 space-y-1.5">
+                                {/* Tags row */}
                                 <div className="flex items-center gap-1.5 flex-wrap">
+                                  <span className="text-[11px] px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full font-medium">{rate.boardName}</span>
                                   {rate.rateClass === 'NRF' ? (
-                                    <span className="text-[11px] px-1.5 py-0.5 bg-red-50 text-red-600 rounded font-medium">Non-Refundable</span>
-                                  ) : rate.rateClass === 'NOR' ? (
-                                    <span className="text-[11px] px-1.5 py-0.5 bg-green-50 text-green-600 rounded font-medium">Refundable</span>
+                                    <span className="text-[11px] px-2 py-0.5 bg-red-50 text-red-600 rounded-full font-medium flex items-center gap-0.5"><XCircle className="w-2.5 h-2.5" />Non-Refundable</span>
+                                  ) : hasFreeCancellation ? (
+                                    <span className="text-[11px] px-2 py-0.5 bg-green-50 text-green-600 rounded-full font-medium flex items-center gap-0.5"><CheckCircle className="w-2.5 h-2.5" />Free Cancellation</span>
                                   ) : null}
-                                  {rate.packaging && <span className="text-[11px] px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded font-medium">Package</span>}
+                                  {rate.packaging && <span className="text-[11px] px-2 py-0.5 bg-purple-50 text-purple-600 rounded-full font-medium">Package</span>}
                                 </div>
-                                <div className="text-[12px] text-gray-600">{rate.boardName}</div>
-                                <div className="text-[11px] text-gray-400">{rate.paymentType === 'AT_WEB' ? 'Pay Online' : rate.paymentType} · {rate.allotment} left</div>
+                                {/* Details row */}
+                                <div className="flex items-center gap-2 text-[11px] text-gray-400">
+                                  <span>{rate.paymentType === 'AT_WEB' ? 'Pay Online' : rate.paymentType === 'AT_HOTEL' ? 'Pay at Hotel' : rate.paymentType}</span>
+                                  <span>·</span>
+                                  <span>{rate.allotment} room{rate.allotment !== 1 ? 's' : ''} left</span>
+                                  {rate.rooms && <><span>·</span><span>{rate.rooms} room(s)</span></>}
+                                </div>
+                                {/* Offers */}
                                 {rate.offers && rate.offers.length > 0 && (
                                   <div className="flex gap-1 flex-wrap">
                                     {rate.offers.map((offer, oi) => (
-                                      <span key={oi} className="text-[10px] px-1.5 py-0.5 bg-green-50 text-green-700 rounded">{offer.name}</span>
+                                      <span key={oi} className="text-[10px] px-2 py-0.5 bg-green-50 text-green-700 rounded-full flex items-center gap-0.5"><Tag className="w-2.5 h-2.5" />{offer.name}{offer.amount ? `: €${Math.abs(parseFloat(offer.amount)).toFixed(0)} off` : ''}</span>
                                     ))}
                                   </div>
                                 )}
+                                {/* Cancellation detail */}
+                                {rate.cancellationPolicies && rate.cancellationPolicies.length > 0 && (
+                                  <div className="text-[11px] text-gray-400">
+                                    {formatCancellationPolicy(rate.cancellationPolicies)}
+                                  </div>
+                                )}
                               </div>
-                              <div className="text-right flex-shrink-0">
-                                <div className="text-[11px] text-gray-400">{selectedHotel.currency} {perNight.toFixed(0)}/night</div>
-                                <div className="text-base font-bold text-blue-600">{selectedHotel.currency} {total.toFixed(2)}</div>
-                                <div className="text-[11px] text-gray-400 mb-2">{nights}n total</div>
+                              {/* Price + CTA */}
+                              <div className="text-right flex-shrink-0 min-w-[120px]">
+                                <div className="text-[11px] text-gray-400">{selectedHotel.currency} {perNight.toFixed(0)} / night</div>
+                                <div className="text-lg font-bold text-blue-600">{selectedHotel.currency} {total.toFixed(2)}</div>
+                                <div className="text-[11px] text-gray-400 mb-2">total for {nights}n</div>
                                 <button
                                   onClick={(e) => { e.stopPropagation(); handleAddToCart(selectedHotel, room, rate); }}
-                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-[12px] font-medium"
+                                  className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-[12px] font-semibold"
                                 >
-                                  <ShoppingCart className="w-3 h-3" />Add to Cart
+                                  <ShoppingCart className="w-3.5 h-3.5" />Add to Cart
                                 </button>
                               </div>
                             </div>
@@ -1586,14 +1687,16 @@ if (children > 0 && childAges.length > 0) {
                       })}
                     </div>
                   </div>
-                ))
+                );
+                })
               ) : (
                 <div className="text-center py-8 text-gray-500 text-sm">No rooms available</div>
               )}
             </div>
           </div>
         </div>
-      )}
+        );
+      })()}
 
       {/* Notification */}
       {notification.show && (
