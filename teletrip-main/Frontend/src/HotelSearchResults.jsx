@@ -1615,7 +1615,7 @@ if (children > 0 && childAges.length > 0) {
             {/* Rooms List */}
             <div className="overflow-y-auto flex-1 px-5 py-3 space-y-3" style={{scrollbarWidth:'thin'}}>
               <div className="flex items-center gap-2 flex-wrap mb-2">
-                <span className="text-[12px] font-semibold text-gray-500 uppercase tracking-wider flex-shrink-0">{selectedHotel.rooms?.length || 0} Rooms</span>
+                <span className="text-[12px] font-semibold text-gray-500 uppercase tracking-wider flex-shrink-0">{selectedHotel.rooms?.length || 0} Room Types</span>
                 <span className="text-gray-200">|</span>
                 {uniqueRoomTypes.slice(0, 8).map((rt, i) => (
                   <button key={i} onClick={() => { const el = document.getElementById(`room-${selectedHotel.rooms.find(r => r.name === rt)?.code}`); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }} className="text-[11px] px-2.5 py-1 bg-blue-50 text-blue-600 rounded-full font-medium hover:bg-blue-100 transition-colors flex-shrink-0">{rt}</button>
