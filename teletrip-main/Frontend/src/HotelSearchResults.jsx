@@ -866,10 +866,10 @@ if (children > 0 && childAges.length > 0) {
       <Header />
       <div className="pt-16 flex">
         {/* Mobile Filter Toggle */}
-        <div className="lg:hidden fixed top-20 left-4 z-50">
+        <div className="lg:hidden fixed top-24 left-4 z-50">
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className="bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700"
+            className="bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 cursor-pointer"
           >
             <Filter className="w-5 h-5" />
           </button>

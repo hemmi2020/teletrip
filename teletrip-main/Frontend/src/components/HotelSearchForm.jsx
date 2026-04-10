@@ -536,17 +536,26 @@ const ExperiencesTab = () => {
             </span>
           </div>
           {showCalendar && (
-            <div className="fixed sm:absolute z-50 left-1/2 top-1/2 sm:top-auto transform -translate-x-1/2 -translate-y-1/2 sm:translate-y-0 sm:mt-2 bg-white border border-gray-300 rounded-lg shadow-xl">
-              <div style={{ transform: 'scale(0.85)', transformOrigin: 'top center' }}>
+            <div className="fixed sm:absolute z-50 left-1/2 top-1/2 sm:top-auto transform -translate-x-1/2 -translate-y-1/2 sm:translate-y-0 sm:mt-2 bg-white border border-gray-300 rounded-lg shadow-xl overflow-auto max-w-[95vw]">
                 <DateRange
                   ranges={dateRange}
                   onChange={(item) => setDateRange([item.selection])}
                   minDate={new Date()}
                   moveRangeOnFirstSelection={false}
+                  preventSnapRefocus={true}
                   months={window.innerWidth < 640 ? 1 : 2}
                   direction="horizontal"
                   rangeColors={['#2563eb']}
+                  showDateDisplay={false}
                 />
+              <div className="px-4 pb-3 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setShowCalendar(false)}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm cursor-pointer"
+                >
+                  OK
+                </button>
               </div>
             </div>
           )}
@@ -947,9 +956,11 @@ const HotelSearchForm = () => {
                           onChange={(item) => setDateRange([item.selection])}
                           minDate={new Date()}
                           moveRangeOnFirstSelection={false}
+                          preventSnapRefocus={true}
                           months={window.innerWidth < 640 ? 1 : 2}
                           direction="horizontal"
                           rangeColors={['#2563eb']}
+                          showDateDisplay={false}
                         />
                       <div className="px-4 pb-3 flex justify-end">
                         <button
