@@ -19,10 +19,17 @@ import {
   X,
   MessageSquare, 
   ThumbsUp,
+  ShoppingCart,
+  Bed,
+  Tag,
+  Info,
+  CheckCircle,
+  XCircle,
 } from "lucide-react";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import ReviewsModal from "./components/ReviewsModal";
+import { useCart } from "./components/CartSystem";
 
 
 const RatingCircles = ({ rating, size = 'w-5 h-5' }) => {
@@ -92,6 +99,9 @@ const [reviewsModal, setReviewsModal] = useState({
   hotelName: null
 });
   const navigate = useNavigate();
+  const { addToCart } = useCart();
+  const [selectedHotel, setSelectedHotel] = useState(null);
+  const [notification, setNotification] = useState({ show: false, message: '', type: 'success' });
 
   // Available amenities and accommodation types
   const availableAmenities = [
@@ -523,6 +533,38 @@ const [reviewsModal, setReviewsModal] = useState({
     setSelectedPackaging("");
   };
 
+  const handleAddToCart = (hotel, room, rate) => {
+    const checkIn = searchParams.get("checkIn");
+    const checkOut = searchParams.get("checkOut");
+    const adults = parseInt(searchParams.get("adults") || "2");
+    const children = parseInt(searchParams.get("children") || "0");
+    const rooms = parseInt(searchParams.get("rooms") || "1");
+    const nights = Math.ceil((new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60 * 24));
+    const totalFromAPI = parseFloat(rate.net);
+    const pricePerNight = nights > 0 ? (totalFromAPI / nights) : totalFromAPI;
+
+    addToCart({
+      id: `${hotel.id}-${room.code}-${rate.rateKey || rate.net}`,
+      hotelId: hotel.id, hotelName: hotel.name, hotelCode: hotel.code,
+      roomCode: room.code, roomName: room.name, rateKey: rate.rateKey,
+      price: pricePerNight, pricePerNight, currency: hotel.currency || 'EUR',
+      checkIn, checkOut, nights, guests: adults + children, adults, children, rooms,
+      location: `${hotel.zoneName}, ${hotel.destinationName}`,
+      boardName: rate.boardName, rateClass: rate.rateClass, paymentType: rate.paymentType,
+      cancellationPolicies: rate.cancellationPolicies || [],
+      cancellationPolicy: rate.cancellationPolicies ? formatCancellationPolicy(rate.cancellationPolicies) : "No cancellation policy",
+      promotions: rate.promotions || [], offers: rate.offers || [],
+      thumbnail: hotel.thumbnail, allotment: rate.allotment,
+      packaging: rate.packaging, taxes: rate.taxes,
+      city: hotel.destinationName, zone: hotel.zoneName,
+      category: hotel.categoryName, totalPrice: totalFromAPI, net: totalFromAPI,
+      addedAt: new Date().toISOString(),
+    });
+    setNotification({ show: true, message: `${room.name} added to cart!`, type: 'success' });
+    setTimeout(() => setNotification({ show: false, message: '', type: 'success' }), 3000);
+    window.dispatchEvent(new CustomEvent('openCart'));
+  };
+
 
   // ADD THIS FUNCTION
   const fetchTripAdvisorReviews = async (hotel) => {
@@ -758,6 +800,15 @@ if (children > 0 && childAges.length > 0) {
             luxury: hotel.luxury || false,
             preferred: hotel.preferred || false,
             establishmentProfiles: hotel.segmentCodes || [],
+            rooms: hotel.rooms || [],
+            code: hotel.code,
+            latitude: hotel.latitude,
+            longitude: hotel.longitude,
+            destinationName: hotel.destinationName,
+            zoneName: hotel.zoneName || "Unknown",
+            destinationCode: hotel.destinationCode,
+            zoneCode: hotel.zoneCode,
+            categoryName: hotel.categoryName,
           };
         });
 
@@ -1348,199 +1399,92 @@ if (children > 0 && childAges.length > 0) {
             </div>
 
             {/* Hotel Cards */}
-            <div className="space-y-6">
-              {sortedHotels.map((hotel) => (
+            <div className="space-y-4">
+              {sortedHotels.map((hotel) => {
+                const checkIn = searchParams.get("checkIn");
+                const checkOut = searchParams.get("checkOut");
+                const nights = checkIn && checkOut ? Math.ceil((new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60 * 24)) : 1;
+                const totalPrice = parseFloat(hotel.price);
+                const pricePerNight = nights > 0 ? (totalPrice / nights) : totalPrice;
+
+                return (
                 <div
                   key={hotel.id}
-                  className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300 flex flex-col lg:flex-row"
+                  onClick={() => setSelectedHotel(hotel)}
+                  className="bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-lg hover:border-gray-200 transition-all duration-200 flex flex-col lg:flex-row group"
                 >
-                  {/* Hotel Image */}
-                  <div className="lg:w-1/3 relative">
+                  {/* Image */}
+                  <div className="lg:w-72 relative overflow-hidden flex-shrink-0">
                     <img
-                      src={
-                        hotel.thumbnail ||
-                        "https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg"
-                      }
+                      src={hotel.thumbnail || "https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg"}
                       alt={hotel.name}
-                      className="w-full h-48 lg:h-full object-cover"
-                      onError={(e) =>
-                        (e.target.src =
-                          "https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg")
-                      }
+                      className="w-full h-48 lg:h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      onError={(e) => (e.target.src = "https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg")}
                     />
                     {hotel.images.length > 1 && (
-                      <div className="absolute top-2 right-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-sm flex items-center">
-                        <ImageIcon className="w-4 h-4 mr-1" />
-                        {hotel.images.length}
+                      <div className="absolute top-2 right-2 bg-black/60 text-white px-2 py-0.5 rounded text-xs flex items-center gap-1">
+                        <ImageIcon className="w-3 h-3" />{hotel.images.length}
                       </div>
                     )}
-
+                    {hotel.hasFreeCancellation && (
+                      <div className="absolute bottom-2 left-2 bg-green-600/90 text-white px-2 py-0.5 rounded text-[11px] font-medium">Free cancellation</div>
+                    )}
                   </div>
 
-                  {/* Hotel Details */}
-                  <div className="lg:w-2/3 p-6 flex flex-col justify-between">
+                  {/* Content */}
+                  <div className="flex-1 p-4 lg:p-5 flex flex-col justify-between min-w-0">
                     <div>
-                      <div className="flex justify-between items-start mb-2">
-                        <div>
-                          <h2 className="text-xl font-semibold mb-1">{hotel.name}</h2>
-                          <div className="flex items-center mb-2">
-                            {[...Array(5)].map((_, i) => (
-                              <Star
-                                key={i}
-                                className={`w-4 h-4 ${
-                                  i < hotel.stars
-                                    ? "text-yellow-400 fill-current"
-                                    : "text-gray-300"
-                                }`}
-                              />
+                      <div className="flex justify-between items-start gap-3 mb-1.5">
+                        <div className="min-w-0">
+                          <h2 className="text-base font-semibold text-gray-900 truncate">{hotel.name}</h2>
+                          <div className="flex items-center gap-1 mt-0.5">
+                            {[...Array(hotel.stars)].map((_, i) => (
+                              <Star key={i} className="w-3 h-3 text-amber-400 fill-current" />
                             ))}
                           </div>
                         </div>
-                        <div className="text-right">
-  {(() => {
-    // Get search parameters
-    const checkIn = searchParams.get("checkIn");
-    const checkOut = searchParams.get("checkOut");
-    
-    if (checkIn && checkOut) {
-      // Calculate nights
-      const checkInDate = new Date(checkIn);
-      const checkOutDate = new Date(checkOut);
-      const nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
-      
-      // hotel.price is the total price from API
-      const totalPrice = parseFloat(hotel.price);
-      const pricePerNight = nights > 0 ? (totalPrice / nights) : totalPrice;
-      
-      return (
-        <>
-          {/* Small per night price */}
-          <div className="text-xs text-gray-500">
-            {hotel.currency} {pricePerNight.toFixed(2)}/night
-          </div>
-          
-          {/* Large total price */}
-          <div className="text-2xl font-bold text-blue-600">
-            {hotel.currency} {totalPrice.toFixed(2)}
-          </div>
-          
-          {/* Total label */}
-          <div className="text-sm font-medium text-gray-700">
-            Total ({nights} {nights === 1 ? 'night' : 'nights'})
-          </div>
-        </>
-      );
-    } else {
-      // Fallback if no dates
-      return (
-        <>
-          <div className="text-2xl font-bold text-blue-600">
-            {hotel.currency} {parseFloat(hotel.price).toFixed(2)}
-          </div>
-          <div className="text-sm text-gray-600">Total</div>
-        </>
-      );
-    }
-  })()}
-</div>
+                        <div className="text-right flex-shrink-0">
+                          <div className="text-[11px] text-gray-500">{hotel.currency} {pricePerNight.toFixed(0)}/night</div>
+                          <div className="text-lg font-bold text-blue-600">{hotel.currency} {totalPrice.toFixed(2)}</div>
+                          <div className="text-[11px] text-gray-500">{nights} {nights === 1 ? 'night' : 'nights'} total</div>
+                        </div>
                       </div>
 
-                      <div className="flex items-center text-gray-600 mb-4">
-                        <MapPin className="w-4 h-4 mr-1" />
-                        <span className="text-sm">{hotel.address}</span>
+                      <div className="flex items-center text-gray-500 text-[13px] mb-2.5">
+                        <MapPin className="w-3.5 h-3.5 mr-1 flex-shrink-0" /><span className="truncate">{hotel.address}</span>
                       </div>
 
-                      <div className="flex gap-3 mb-4 flex-wrap">
-                        {[...new Set(hotel.amenities)].slice(0, 6).map((amenity, index) => {
+                      {/* Compact amenities */}
+                      <div className="flex gap-1.5 mb-2.5 flex-wrap">
+                        {[...new Set(hotel.amenities)].slice(0, 5).map((amenity, index) => {
                           const amenityData = availableAmenities.find(a => a.id === amenity);
                           if (!amenityData) return null;
                           const IconComponent = amenityData.icon;
-                          return (
-                            <div key={index} className="flex items-center bg-gray-50 px-3 py-1 rounded-full">
-                              <IconComponent className="w-4 h-4 text-blue-600" />
-                              <span className="ml-2 text-sm text-gray-700">{amenityData.name}</span>
-                            </div>
-                          );
+                          return <div key={index} className="p-1.5 bg-gray-50 rounded" title={amenityData.name}><IconComponent className="w-3.5 h-3.5 text-gray-500" /></div>;
                         })}
-                        {[...new Set(hotel.amenities)].length > 6 && (
-                          <span className="text-sm text-gray-500 self-center">
-                            +{[...new Set(hotel.amenities)].length - 6} more
-                          </span>
-                        )}
                       </div>
-                      {/* Reviews Section - Add right after amenities */}
-{/* Reviews Section - Simplified with Modal */}
-{loadingReviews[hotel.id] ? (
-  <div className="flex items-center gap-2 text-sm text-gray-600 mt-4 pt-4 border-t">
-    <Loader2 className="w-4 h-4 animate-spin" />
-    <span>Loading reviews...</span>
-  </div>
-) : hotelReviews[hotel.id] && hotelReviews[hotel.id].numReviews > 0 ? (
-  <div className="mt-4 pt-4 border-t border-gray-200">
-    <div className="flex items-center justify-between flex-wrap gap-2">
-      <div className="flex items-center gap-3 tet-xs">
-        {/* TripAdvisor Logo */}
-        {/* <img 
-          src="https://static.tacdn.com/img2/brand_refresh/Tripadvisor_lockup_horizontal_secondary_registered.svg"
-          alt="TripAdvisor"
-          className="h-5"
-        /> */}
-        
-        {/* Rating Circles */}
-        <RatingCircles rating={hotelReviews[hotel.id].rating} />
-        
-        {/* Review Count Button - Opens Modal */}
-        <button
-          onClick={() => openReviewsModal(hotel)}
-          className="text-blue-600 hover:underline text-sm font-medium flex items-center gap-1"
-        >
-          <MessageSquare className="w-4 h-4" />
-          {hotelReviews[hotel.id].numReviews.toLocaleString()} Reviews
-        </button>
-      </div>
-      
-      {/* Ranking
-      {hotelReviews[hotel.id].rankingData && (
-        <span className="text-xs text-gray-600">
-          #{hotelReviews[hotel.id].rankingData.ranking_string}
-        </span>
-      )} */}
-    </div>
-  </div>
-) : null}
-{/* END REVIEWS SECTION */}
+
+                      {/* Board info */}
+                      {hotel.boards.length > 0 && (
+                        <div className="flex gap-1.5 flex-wrap mb-2">
+                          {hotel.boards.slice(0, 2).map((b, i) => (
+                            <span key={i} className="text-[11px] px-2 py-0.5 bg-blue-50 text-blue-700 rounded">{b}</span>
+                          ))}
+                        </div>
+                      )}
                     </div>
 
-                    <div className="flex justify-between items-center">
-                      <div className="text-sm text-gray-600">
-                        <div className={`font-medium ${
-                          hotel.cancellationPolicy && hotel.cancellationPolicy.length > 0 && 
-                          parseFloat(hotel.cancellationPolicy[0]?.amount || 0) === 0 
-                            ? 'text-green-600' 
-                            : 'text-orange-600'
-                        }`}>
-                          {formatCancellationPolicy(hotel.cancellationPolicy)}
-                        </div>
+                    {/* Reviews inline */}
+                    {hotelReviews[hotel.id] && hotelReviews[hotel.id].numReviews > 0 && (
+                      <div className="flex items-center gap-2 mt-1">
+                        <RatingCircles rating={hotelReviews[hotel.id].rating} size="w-2.5 h-2.5" />
+                        <span className="text-[11px] text-gray-500">{hotelReviews[hotel.id].numReviews.toLocaleString()} reviews</span>
                       </div>
-                      <div className="flex gap-2">
-                        <button className="px-4 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition duration-300">
-                          View Details
-                        </button>
-                        <button
-                          onClick={() =>
-                            navigate(
-                              `/hotel-details/${hotel.id}?${searchParams.toString()}`
-                            )
-                          }
-                          className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition duration-300"
-                        >
-                          View Rooms
-                        </button>
-                      </div>
-                    </div>
+                    )}
                   </div>
                 </div>
-              ))}
+              );
+              })}
             </div>
 
             {sortedHotels.length === 0 && (
@@ -1563,6 +1507,100 @@ if (children > 0 && childAges.length > 0) {
   hotelName={reviewsModal.hotelName}
   reviewData={reviewsModal.hotelId ? hotelReviews[reviewsModal.hotelId] : null}
 />
+
+      {/* Hotel Detail Modal */}
+      {selectedHotel && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" onClick={() => setSelectedHotel(null)}>
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+          <div className="relative bg-white w-full sm:max-w-2xl sm:rounded-xl max-h-[90vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
+            {/* Modal Header */}
+            <div className="flex items-start justify-between p-4 border-b border-gray-100 flex-shrink-0">
+              <div className="min-w-0 flex-1 mr-3">
+                <h2 className="text-base font-semibold text-gray-900 truncate">{selectedHotel.name}</h2>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <div className="flex">{[...Array(selectedHotel.stars)].map((_, i) => <Star key={i} className="w-3 h-3 text-amber-400 fill-current" />)}</div>
+                  <span className="text-[12px] text-gray-500">{selectedHotel.address}</span>
+                </div>
+              </div>
+              <button onClick={() => setSelectedHotel(null)} className="p-1.5 rounded-lg hover:bg-gray-100 flex-shrink-0"><X className="w-4 h-4 text-gray-400" /></button>
+            </div>
+
+            {/* Rooms List */}
+            <div className="overflow-y-auto flex-1 p-4 space-y-3" style={{scrollbarWidth:'thin'}}>
+              {selectedHotel.rooms && selectedHotel.rooms.length > 0 ? (
+                selectedHotel.rooms.map((room) => (
+                  <div key={room.code} className="border border-gray-100 rounded-lg overflow-hidden">
+                    <div className="px-3 py-2 bg-gray-50 border-b border-gray-100">
+                      <div className="flex items-center gap-2">
+                        <Bed className="w-3.5 h-3.5 text-gray-400" />
+                        <span className="text-[13px] font-medium text-gray-800">{room.name}</span>
+                      </div>
+                    </div>
+                    <div className="divide-y divide-gray-50">
+                      {room.rates?.map((rate, idx) => {
+                        const checkIn = searchParams.get("checkIn");
+                        const checkOut = searchParams.get("checkOut");
+                        const nights = Math.ceil((new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60 * 24));
+                        const total = parseFloat(rate.net);
+                        const perNight = nights > 0 ? total / nights : total;
+
+                        // Apply active filters to rates
+                        if (selectedBoards.length > 0 && !selectedBoards.includes(rate.boardName)) return null;
+
+                        return (
+                          <div key={idx} className="p-3 hover:bg-gray-50/50 transition-colors">
+                            <div className="flex justify-between items-start gap-3">
+                              <div className="min-w-0 flex-1 space-y-1">
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  {rate.rateClass === 'NRF' ? (
+                                    <span className="text-[11px] px-1.5 py-0.5 bg-red-50 text-red-600 rounded font-medium">Non-Refundable</span>
+                                  ) : rate.rateClass === 'NOR' ? (
+                                    <span className="text-[11px] px-1.5 py-0.5 bg-green-50 text-green-600 rounded font-medium">Refundable</span>
+                                  ) : null}
+                                  {rate.packaging && <span className="text-[11px] px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded font-medium">Package</span>}
+                                </div>
+                                <div className="text-[12px] text-gray-600">{rate.boardName}</div>
+                                <div className="text-[11px] text-gray-400">{rate.paymentType === 'AT_WEB' ? 'Pay Online' : rate.paymentType} · {rate.allotment} left</div>
+                                {rate.offers && rate.offers.length > 0 && (
+                                  <div className="flex gap-1 flex-wrap">
+                                    {rate.offers.map((offer, oi) => (
+                                      <span key={oi} className="text-[10px] px-1.5 py-0.5 bg-green-50 text-green-700 rounded">{offer.name}</span>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                              <div className="text-right flex-shrink-0">
+                                <div className="text-[11px] text-gray-400">{selectedHotel.currency} {perNight.toFixed(0)}/night</div>
+                                <div className="text-base font-bold text-blue-600">{selectedHotel.currency} {total.toFixed(2)}</div>
+                                <div className="text-[11px] text-gray-400 mb-2">{nights}n total</div>
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); handleAddToCart(selectedHotel, room, rate); }}
+                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-[12px] font-medium"
+                                >
+                                  <ShoppingCart className="w-3 h-3" />Add to Cart
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-8 text-gray-500 text-sm">No rooms available</div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Notification */}
+      {notification.show && (
+        <div className="fixed bottom-4 right-4 z-50 bg-green-600 text-white px-4 py-2.5 rounded-lg shadow-lg text-sm font-medium flex items-center gap-2 animate-in slide-in-from-bottom">
+          <CheckCircle className="w-4 h-4" />{notification.message}
+        </div>
+      )}
       </div>
       
       {/* Overlay for mobile */}
