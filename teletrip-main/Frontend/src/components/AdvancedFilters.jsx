@@ -14,7 +14,7 @@ export const DateRangePicker = ({ startDate, endDate, onChange }) => {
           type="date"
           value={startDate}
           onChange={(e) => onChange({ startDate: e.target.value, endDate })}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
+          className="w-full px-2.5 py-1.5 border border-gray-200 rounded-md text-[13px] focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none bg-gray-50/50 focus:bg-white"
         />
       </div>
       <div className="flex-1">
@@ -23,7 +23,7 @@ export const DateRangePicker = ({ startDate, endDate, onChange }) => {
           type="date"
           value={endDate}
           onChange={(e) => onChange({ startDate, endDate: e.target.value })}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
+          className="w-full px-2.5 py-1.5 border border-gray-200 rounded-md text-[13px] focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none bg-gray-50/50 focus:bg-white"
         />
       </div>
     </div>
@@ -57,7 +57,7 @@ export const MultiSelect = ({ label, options, selected, onChange, icon: Icon }) 
       <label className="block text-xs text-gray-600 mb-1">{label}</label>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white hover:bg-gray-50 flex items-center justify-between text-sm cursor-pointer"
+        className="w-full px-3 py-1.5 border border-gray-200 rounded-md bg-gray-50/50 hover:bg-white flex items-center justify-between text-[13px] cursor-pointer transition-all"
       >
         <div className="flex items-center gap-2">
           {Icon && <Icon className="w-4 h-4 text-gray-400" />}

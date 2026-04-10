@@ -15,7 +15,6 @@ import {
   ImageIcon,
   Heart,
   ChevronDown,
-  ChevronUp,
   Filter,
   X,
   MessageSquare, 
@@ -878,47 +877,32 @@ if (children > 0 && childAges.length > 0) {
       <div className="pt-16 flex">
         {/* Mobile Filter Toggle */}
         <div className="lg:hidden fixed top-24 left-4 z-50">
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className="bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 cursor-pointer"
-          >
-            <Filter className="w-5 h-5" />
+          <button onClick={() => setShowFilters(!showFilters)} className="bg-white text-gray-700 p-2.5 rounded-lg shadow-md border border-gray-200 hover:bg-gray-50 cursor-pointer flex items-center gap-2">
+            <Filter className="w-4 h-4" /><span className="text-sm font-medium">Filters</span>
           </button>
         </div>
 
         {/* Sidebar Filters */}
-        <div className={`fixed lg:relative inset-y-0 left-0 z-40 w-80 bg-white shadow-lg transform ${showFilters ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 transition-transform duration-300 ease-in-out pt-16 lg:pt-0`}>
-          <div className="p-6 h-full overflow-y-auto">
-            {/* Mobile Close Button */}
-            <div className="lg:hidden flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold">Filters</h2>
-              <button
-                onClick={() => setShowFilters(false)}
-                className="text-gray-500 hover:text-gray-700 cursor-pointer"
-              >
-                <X className="w-6 h-6" />
-              </button>
+        <div className={`fixed lg:sticky lg:top-16 inset-y-0 left-0 z-40 w-[300px] bg-white border-r border-gray-100 transform ${showFilters ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 transition-transform duration-300 ease-in-out lg:h-[calc(100vh-4rem)]`}>
+          <div className="h-full overflow-y-auto overscroll-contain px-5 py-4" style={{scrollbarWidth:'thin',scrollbarColor:'#e5e7eb transparent'}}>
+            {/* Mobile Close */}
+            <div className="lg:hidden flex justify-between items-center pb-3 mb-3 border-b border-gray-100">
+              <span className="text-xs font-semibold text-gray-900 tracking-wider uppercase">Filters</span>
+              <button onClick={() => setShowFilters(false)} className="p-1 rounded hover:bg-gray-100 cursor-pointer"><X className="w-4 h-4 text-gray-400" /></button>
             </div>
-
-            {/* Clear Filters */}
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold hidden lg:block">Filters</h2>
-              <button
-                onClick={clearFilters}
-                className="text-blue-600 hover:text-blue-800 text-sm cursor-pointer"
-              >
-                Clear all
-              </button>
+            <div className="hidden lg:flex justify-between items-center pb-3 mb-1 border-b border-gray-100">
+              <span className="text-xs font-semibold text-gray-900 tracking-wider uppercase">Filters</span>
+              <button onClick={clearFilters} className="text-xs text-blue-600 hover:text-blue-700 font-medium cursor-pointer">Reset all</button>
             </div>
 
             {/* 1. Hotel Name Search */}
-            <div className="mb-6">
+            <div className="py-3 border-b border-gray-50">
               <button
                 onClick={() => toggleSection('hotelName')}
-                className="flex items-center justify-between w-full text-left font-semibold text-gray-800 mb-3 cursor-pointer"
+                className="flex items-center justify-between w-full cursor-pointer"
               >
-                <span className="font-bold text-lg">Hotel Name</span>
-                {expandedSections.hotelName ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                <span className="text-[13px] font-semibold text-gray-800">Hotel Name</span>
+                {expandedSections.hotelName ? <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 rotate-180" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200" />}
               </button>
               {expandedSections.hotelName && (
                 <input
@@ -926,32 +910,32 @@ if (children > 0 && childAges.length > 0) {
                   value={hotelNameSearch}
                   onChange={(e) => setHotelNameSearch(e.target.value)}
                   placeholder="Search hotel name..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-1.5 text-[13px] border border-gray-200 rounded-md bg-gray-50/50 focus:bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
                 />
               )}
             </div>
 
             {/* 2. Board */}
             {dynamicBoards.length > 0 && (
-              <div className="mb-6">
+              <div className="py-3 border-b border-gray-50">
                 <button
                   onClick={() => toggleSection('board')}
-                  className="flex items-center justify-between w-full text-left font-semibold text-gray-800 mb-3 cursor-pointer"
+                  className="flex items-center justify-between w-full cursor-pointer"
                 >
-                  <span className="font-bold text-lg">Board</span>
-                  {expandedSections.board ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                  <span className="text-[13px] font-semibold text-gray-800">Board</span>
+                  {expandedSections.board ? <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 rotate-180" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200" />}
                 </button>
                 {expandedSections.board && (
-                  <div className="space-y-2">
+                  <div className="space-y-1.5">
                     {dynamicBoards.map(board => (
-                      <label key={board} className="flex items-center cursor-pointer">
+                      <label key={board} className="flex items-center gap-2.5 py-0.5 cursor-pointer group">
                         <input
                           type="checkbox"
                           checked={selectedBoards.includes(board)}
                           onChange={() => setSelectedBoards(prev => prev.includes(board) ? prev.filter(b => b !== board) : [...prev, board])}
-                          className="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                          className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
                         />
-                        <span className="text-sm text-gray-700">{board}</span>
+                        <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors">{board}</span>
                       </label>
                     ))}
                   </div>
@@ -961,25 +945,25 @@ if (children > 0 && childAges.length > 0) {
 
             {/* 3. Category (Star Rating) */}
             {dynamicCategories.length > 0 && (
-              <div className="mb-6">
+              <div className="py-3 border-b border-gray-50">
                 <button
                   onClick={() => toggleSection('category')}
-                  className="flex items-center justify-between w-full text-left font-semibold text-gray-800 mb-3 cursor-pointer"
+                  className="flex items-center justify-between w-full cursor-pointer"
                 >
-                  <span className="font-bold text-lg">Category</span>
-                  {expandedSections.category ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                  <span className="text-[13px] font-semibold text-gray-800">Category</span>
+                  {expandedSections.category ? <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 rotate-180" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200" />}
                 </button>
                 {expandedSections.category && (
-                  <div className="space-y-2">
+                  <div className="space-y-1.5">
                     {dynamicCategories.map(cat => (
-                      <label key={cat} className="flex items-center cursor-pointer">
+                      <label key={cat} className="flex items-center gap-2.5 py-0.5 cursor-pointer group">
                         <input
                           type="checkbox"
                           checked={selectedCategories.includes(cat)}
                           onChange={() => setSelectedCategories(prev => prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat])}
-                          className="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                          className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
                         />
-                        <span className="text-sm text-gray-700">{cat}</span>
+                        <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors">{cat}</span>
                       </label>
                     ))}
                   </div>
@@ -988,32 +972,32 @@ if (children > 0 && childAges.length > 0) {
             )}
 
             {/* 4. Customer Reviews */}
-            <div className="mb-6">
+            <div className="py-3 border-b border-gray-50">
               <button
                 onClick={() => toggleSection('reviews')}
-                className="flex items-center justify-between w-full text-left font-semibold text-gray-800 mb-3 cursor-pointer"
+                className="flex items-center justify-between w-full cursor-pointer"
               >
-                <span className="font-bold text-lg">Customer Reviews</span>
-                {expandedSections.reviews ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                <span className="text-[13px] font-semibold text-gray-800">Customer Reviews</span>
+                {expandedSections.reviews ? <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 rotate-180" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200" />}
               </button>
               {expandedSections.reviews && (
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   {[
                     { value: 4.5, label: "Wonderful 4.5+" },
                     { value: 4, label: "Very good 4+" },
                     { value: 3.5, label: "Good 3.5+" },
                     { value: 3, label: "Nice 3+" },
                   ].map(opt => (
-                    <label key={opt.value} className="flex items-center cursor-pointer">
+                    <label key={opt.value} className="flex items-center gap-2.5 py-0.5 cursor-pointer group">
                       <input
                         type="radio"
                         name="reviewRating"
                         value={opt.value}
                         checked={selectedReviewRatings.includes(opt.value)}
                         onChange={() => setSelectedReviewRatings([opt.value])}
-                        className="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                        className="h-3.5 w-3.5 border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
                       />
-                      <span className="text-sm text-gray-700">{opt.label}</span>
+                      <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors">{opt.label}</span>
                     </label>
                   ))}
                   {selectedReviewRatings.length > 0 && (
@@ -1027,13 +1011,13 @@ if (children > 0 && childAges.length > 0) {
             </div>
 
             {/* Price Range */}
-            <div className="mb-6">
+            <div className="py-3 border-b border-gray-50">
               <button
                 onClick={() => toggleSection('price')}
-                className="flex items-center justify-between w-full text-left font-semibold text-gray-800 mb-3 cursor-pointer"
+                className="flex items-center justify-between w-full cursor-pointer"
               >
-                <span className="font-bold text-lg">Price Range</span>
-                {expandedSections.price ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                <span className="text-[13px] font-semibold text-gray-800">Price Range</span>
+                {expandedSections.price ? <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 rotate-180" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200" />}
               </button>
               {expandedSections.price && (
                 <div className="flex items-center gap-2">
@@ -1042,15 +1026,15 @@ if (children > 0 && childAges.length > 0) {
                     value={priceMin}
                     onChange={(e) => setPriceMin(e.target.value)}
                     placeholder="Min"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 rounded-md bg-gray-50/50 focus:bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none"
                   />
-                  <span className="text-gray-400">-</span>
+                  <span className="text-gray-300 text-xs">�</span>
                   <input
                     type="number"
                     value={priceMax}
                     onChange={(e) => setPriceMax(e.target.value)}
                     placeholder="Max"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 rounded-md bg-gray-50/50 focus:bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none"
                   />
                 </div>
               )}
@@ -1058,25 +1042,25 @@ if (children > 0 && childAges.length > 0) {
 
             {/* 7. Zone */}
             {dynamicZones.length > 0 && (
-              <div className="mb-6">
+              <div className="py-3 border-b border-gray-50">
                 <button
                   onClick={() => toggleSection('zone')}
-                  className="flex items-center justify-between w-full text-left font-semibold text-gray-800 mb-3 cursor-pointer"
+                  className="flex items-center justify-between w-full cursor-pointer"
                 >
-                  <span className="font-bold text-lg">Zone</span>
-                  {expandedSections.zone ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                  <span className="text-[13px] font-semibold text-gray-800">Zone</span>
+                  {expandedSections.zone ? <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 rotate-180" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200" />}
                 </button>
                 {expandedSections.zone && (
-                  <div className="space-y-2 max-h-48 overflow-y-auto">
+                  <div className="space-y-1.5 max-h-44 overflow-y-auto">
                     {dynamicZones.map(zone => (
-                      <label key={zone} className="flex items-center cursor-pointer">
+                      <label key={zone} className="flex items-center gap-2.5 py-0.5 cursor-pointer group">
                         <input
                           type="checkbox"
                           checked={selectedZones.includes(zone)}
                           onChange={() => setSelectedZones(prev => prev.includes(zone) ? prev.filter(z => z !== zone) : [...prev, zone])}
-                          className="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                          className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
                         />
-                        <span className="text-sm text-gray-700">{zone}</span>
+                        <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors">{zone}</span>
                       </label>
                     ))}
                   </div>
@@ -1085,16 +1069,16 @@ if (children > 0 && childAges.length > 0) {
             )}
 
             {/* Sort By */}
-            <div className="mb-6">
+            <div className="py-3 border-b border-gray-50">
               <button
                 onClick={() => toggleSection('sortBy')}
-                className="flex items-center justify-between w-full text-left font-semibold text-gray-800 mb-3 cursor-pointer"
+                className="flex items-center justify-between w-full cursor-pointer"
               >
-                <span className="font-bold text-lg">Sort by</span>
-                {expandedSections.sortBy ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                <span className="text-[13px] font-semibold text-gray-800">Sort by</span>
+                {expandedSections.sortBy ? <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 rotate-180" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200" />}
               </button>
               {expandedSections.sortBy && (
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   {[
                     { value: "default", label: "Default" },
                     { value: "priceLowHigh", label: "Price: Low to High" },
@@ -1102,16 +1086,16 @@ if (children > 0 && childAges.length > 0) {
                     { value: "ratingHighLow", label: "Rating: High to Low" },
                     { value: "ratingLowHigh", label: "Rating: Low to High" },
                   ].map(opt => (
-                    <label key={opt.value} className="flex items-center cursor-pointer">
+                    <label key={opt.value} className="flex items-center gap-2.5 py-0.5 cursor-pointer group">
                       <input
                         type="radio"
                         name="sortBy"
                         value={opt.value}
                         checked={sortOption === opt.value}
                         onChange={(e) => setSortOption(e.target.value)}
-                        className="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                        className="h-3.5 w-3.5 border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
                       />
-                      <span className="text-sm text-gray-700">{opt.label}</span>
+                      <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors">{opt.label}</span>
                     </label>
                   ))}
                 </div>
@@ -1119,16 +1103,16 @@ if (children > 0 && childAges.length > 0) {
             </div>
 
             {/* Accommodation Type */}
-            <div className="mb-6">
+            <div className="py-3 border-b border-gray-50">
               <button
                 onClick={() => toggleSection('accommodationType')}
-                className="flex items-center justify-between w-full text-left font-semibold text-gray-800 mb-3 cursor-pointer"
+                className="flex items-center justify-between w-full cursor-pointer"
               >
-                <span className="font-bold text-lg">Accommodation Type</span>
-                {expandedSections.accommodationType ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                <span className="text-[13px] font-semibold text-gray-800">Accommodation Type</span>
+                {expandedSections.accommodationType ? <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 rotate-180" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200" />}
               </button>
               {expandedSections.accommodationType && (
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   {accommodationTypes.map(type => (
                     <label key={type.id} className="flex items-center justify-between cursor-pointer">
                       <div className="flex items-center">
@@ -1136,9 +1120,9 @@ if (children > 0 && childAges.length > 0) {
                           type="checkbox"
                           checked={selectedAccommodationTypes.includes(type.id)}
                           onChange={() => handleAccommodationTypeChange(type.id)}
-                          className="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                          className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
                         />
-                        <span className="text-sm text-gray-700">{type.name}</span>
+                        <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors">{type.name}</span>
                       </div>
                     </label>
                   ))}
@@ -1147,26 +1131,26 @@ if (children > 0 && childAges.length > 0) {
             </div>
 
             {/* Amenities */}
-            <div className="mb-6">
+            <div className="py-3 border-b border-gray-50">
               <button
                 onClick={() => toggleSection('amenities')}
-                className="flex items-center justify-between w-full text-left font-semibold text-gray-800 mb-3 cursor-pointer"
+                className="flex items-center justify-between w-full cursor-pointer"
               >
-                <span className="font-bold text-lg">Amenities</span>
-                {expandedSections.amenities ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                <span className="text-[13px] font-semibold text-gray-800">Amenities</span>
+                {expandedSections.amenities ? <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 rotate-180" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200" />}
               </button>
               {expandedSections.amenities && (
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   {availableAmenities.map(amenity => (
-                    <label key={amenity.id} className="flex items-center cursor-pointer">
+                    <label key={amenity.id} className="flex items-center gap-2.5 py-0.5 cursor-pointer group">
                       <input
                         type="checkbox"
                         checked={selectedAmenities.includes(amenity.id)}
                         onChange={() => handleAmenityChange(amenity.id)}
-                        className="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
                       />
-                      <amenity.icon className="w-4 h-4 mr-2 text-gray-600" />
-                      <span className="text-sm text-gray-700">{amenity.name}</span>
+                      <amenity.icon className="w-3.5 h-3.5 text-gray-400 group-hover:text-gray-600" />
+                      <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors">{amenity.name}</span>
                     </label>
                   ))}
                 </div>
@@ -1175,25 +1159,25 @@ if (children > 0 && childAges.length > 0) {
 
             {/* Promos */}
             {dynamicPromos.length > 0 && (
-              <div className="mb-6">
+              <div className="py-3 border-b border-gray-50">
                 <button
                   onClick={() => toggleSection('promos')}
-                  className="flex items-center justify-between w-full text-left font-semibold text-gray-800 mb-3 cursor-pointer"
+                  className="flex items-center justify-between w-full cursor-pointer"
                 >
-                  <span className="font-bold text-lg">Promos</span>
-                  {expandedSections.promos ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                  <span className="text-[13px] font-semibold text-gray-800">Promos</span>
+                  {expandedSections.promos ? <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 rotate-180" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200" />}
                 </button>
                 {expandedSections.promos && (
-                  <div className="space-y-2">
+                  <div className="space-y-1.5">
                     {dynamicPromos.map(promo => (
-                      <label key={promo} className="flex items-center cursor-pointer">
+                      <label key={promo} className="flex items-center gap-2.5 py-0.5 cursor-pointer group">
                         <input
                           type="checkbox"
                           checked={selectedPromos.includes(promo)}
                           onChange={() => setSelectedPromos(prev => prev.includes(promo) ? prev.filter(p => p !== promo) : [...prev, promo])}
-                          className="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                          className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
                         />
-                        <span className="text-sm text-gray-700">{promo}</span>
+                        <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors">{promo}</span>
                       </label>
                     ))}
                   </div>
@@ -1202,16 +1186,16 @@ if (children > 0 && childAges.length > 0) {
             )}
 
             {/* Cancellation Fees (expanded) */}
-            <div className="mb-6">
+            <div className="py-3 border-b border-gray-50">
               <button
                 onClick={() => toggleSection('cancellation')}
-                className="flex items-center justify-between w-full text-left font-semibold text-gray-800 mb-3 cursor-pointer"
+                className="flex items-center justify-between w-full cursor-pointer"
               >
-                <span className="font-bold text-lg">Cancellation Fees</span>
-                {expandedSections.cancellation ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                <span className="text-[13px] font-semibold text-gray-800">Cancellation Fees</span>
+                {expandedSections.cancellation ? <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 rotate-180" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200" />}
               </button>
               {expandedSections.cancellation && (
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   {[
                     { value: "", label: "All" },
                     { value: "free", label: "Free cancellation" },
@@ -1219,16 +1203,16 @@ if (children > 0 && childAges.length > 0) {
                     { value: "nonrefundable", label: "Non refundable" },
                     { value: "notavailable", label: "Cancellation fees not available" },
                   ].map(opt => (
-                    <label key={opt.value} className="flex items-center cursor-pointer">
+                    <label key={opt.value} className="flex items-center gap-2.5 py-0.5 cursor-pointer group">
                       <input
                         type="radio"
                         name="cancellation"
                         value={opt.value}
                         checked={selectedCancellation === opt.value}
                         onChange={(e) => setSelectedCancellation(e.target.value)}
-                        className="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                        className="h-3.5 w-3.5 border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
                       />
-                      <span className="text-sm text-gray-700">{opt.label}</span>
+                      <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors">{opt.label}</span>
                     </label>
                   ))}
                 </div>
@@ -1237,25 +1221,25 @@ if (children > 0 && childAges.length > 0) {
 
             {/* Establishment Profile */}
             {dynamicEstablishment.length > 0 && (
-              <div className="mb-6">
+              <div className="py-3 border-b border-gray-50">
                 <button
                   onClick={() => toggleSection('establishment')}
-                  className="flex items-center justify-between w-full text-left font-semibold text-gray-800 mb-3 cursor-pointer"
+                  className="flex items-center justify-between w-full cursor-pointer"
                 >
-                  <span className="font-bold text-lg">Establishment Profile</span>
-                  {expandedSections.establishment ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                  <span className="text-[13px] font-semibold text-gray-800">Establishment Profile</span>
+                  {expandedSections.establishment ? <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 rotate-180" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200" />}
                 </button>
                 {expandedSections.establishment && (
-                  <div className="space-y-2 max-h-48 overflow-y-auto">
+                  <div className="space-y-1.5 max-h-44 overflow-y-auto">
                     {dynamicEstablishment.map(est => (
-                      <label key={est} className="flex items-center cursor-pointer">
+                      <label key={est} className="flex items-center gap-2.5 py-0.5 cursor-pointer group">
                         <input
                           type="checkbox"
                           checked={selectedEstablishment.includes(est)}
                           onChange={() => setSelectedEstablishment(prev => prev.includes(est) ? prev.filter(e => e !== est) : [...prev, est])}
-                          className="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                          className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
                         />
-                        <span className="text-sm text-gray-700">{establishmentLabels[est] || est}</span>
+                        <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors">{establishmentLabels[est] || est}</span>
                       </label>
                     ))}
                   </div>
@@ -1265,25 +1249,25 @@ if (children > 0 && childAges.length > 0) {
 
             {/* Discounts */}
             {dynamicDiscounts.length > 0 && (
-              <div className="mb-6">
+              <div className="py-3 border-b border-gray-50">
                 <button
                   onClick={() => toggleSection('discounts')}
-                  className="flex items-center justify-between w-full text-left font-semibold text-gray-800 mb-3 cursor-pointer"
+                  className="flex items-center justify-between w-full cursor-pointer"
                 >
-                  <span className="font-bold text-lg">Discounts</span>
-                  {expandedSections.discounts ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                  <span className="text-[13px] font-semibold text-gray-800">Discounts</span>
+                  {expandedSections.discounts ? <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 rotate-180" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200" />}
                 </button>
                 {expandedSections.discounts && (
-                  <div className="space-y-2">
+                  <div className="space-y-1.5">
                     {dynamicDiscounts.map(disc => (
-                      <label key={disc} className="flex items-center cursor-pointer">
+                      <label key={disc} className="flex items-center gap-2.5 py-0.5 cursor-pointer group">
                         <input
                           type="checkbox"
                           checked={selectedDiscounts.includes(disc)}
                           onChange={() => setSelectedDiscounts(prev => prev.includes(disc) ? prev.filter(d => d !== disc) : [...prev, disc])}
-                          className="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                          className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
                         />
-                        <span className="text-sm text-gray-700">{disc}</span>
+                        <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors">{disc}</span>
                       </label>
                     ))}
                   </div>
@@ -1293,25 +1277,25 @@ if (children > 0 && childAges.length > 0) {
 
             {/* Chain */}
             {dynamicChains.length > 0 && (
-              <div className="mb-6">
+              <div className="py-3 border-b border-gray-50">
                 <button
                   onClick={() => toggleSection('chain')}
-                  className="flex items-center justify-between w-full text-left font-semibold text-gray-800 mb-3 cursor-pointer"
+                  className="flex items-center justify-between w-full cursor-pointer"
                 >
-                  <span className="font-bold text-lg">Chain</span>
-                  {expandedSections.chain ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                  <span className="text-[13px] font-semibold text-gray-800">Chain</span>
+                  {expandedSections.chain ? <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 rotate-180" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200" />}
                 </button>
                 {expandedSections.chain && (
-                  <div className="space-y-2 max-h-48 overflow-y-auto">
+                  <div className="space-y-1.5 max-h-44 overflow-y-auto">
                     {dynamicChains.map(chain => (
-                      <label key={chain} className="flex items-center cursor-pointer">
+                      <label key={chain} className="flex items-center gap-2.5 py-0.5 cursor-pointer group">
                         <input
                           type="checkbox"
                           checked={selectedChains.includes(chain)}
                           onChange={() => setSelectedChains(prev => prev.includes(chain) ? prev.filter(c => c !== chain) : [...prev, chain])}
-                          className="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                          className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
                         />
-                        <span className="text-sm text-gray-700">{chain}</span>
+                        <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors">{chain}</span>
                       </label>
                     ))}
                   </div>
@@ -1320,31 +1304,31 @@ if (children > 0 && childAges.length > 0) {
             )}
 
             {/* Product for Packaging */}
-            <div className="mb-6">
+            <div className="py-3 border-b border-gray-50">
               <button
                 onClick={() => toggleSection('packaging')}
-                className="flex items-center justify-between w-full text-left font-semibold text-gray-800 mb-3 cursor-pointer"
+                className="flex items-center justify-between w-full cursor-pointer"
               >
-                <span className="font-bold text-lg">Product for Packaging</span>
-                {expandedSections.packaging ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                <span className="text-[13px] font-semibold text-gray-800">Product for Packaging</span>
+                {expandedSections.packaging ? <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 rotate-180" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200" />}
               </button>
               {expandedSections.packaging && (
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   {[
                     { value: "", label: "All" },
                     { value: "without", label: "Without package" },
                     { value: "with", label: "With package" },
                   ].map(opt => (
-                    <label key={opt.value} className="flex items-center cursor-pointer">
+                    <label key={opt.value} className="flex items-center gap-2.5 py-0.5 cursor-pointer group">
                       <input
                         type="radio"
                         name="packaging"
                         value={opt.value}
                         checked={selectedPackaging === opt.value}
                         onChange={(e) => setSelectedPackaging(e.target.value)}
-                        className="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                        className="h-3.5 w-3.5 border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
                       />
-                      <span className="text-sm text-gray-700">{opt.label}</span>
+                      <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors">{opt.label}</span>
                     </label>
                   ))}
                 </div>

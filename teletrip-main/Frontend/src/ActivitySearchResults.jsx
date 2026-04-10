@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Loader2, MapPin, Calendar, Users, Filter, Star, Clock, Search, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { Loader2, MapPin, Calendar, Users, Filter, Star, Clock, Search, X, ChevronDown } from 'lucide-react';
 import Header from './components/Header';
 import Footer from './components/Footer';
 
@@ -225,69 +225,56 @@ const ActivitySearchResults = () => {
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Mobile Filter Toggle */}
           <div className="lg:hidden">
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 cursor-pointer"
-            >
-              <Filter className="w-4 h-4" />
-              Filters
+            <button onClick={() => setShowFilters(!showFilters)} className="bg-white text-gray-700 px-3 py-2 rounded-lg shadow-md border border-gray-200 hover:bg-gray-50 cursor-pointer flex items-center gap-2">
+              <Filter className="w-4 h-4" /><span className="text-sm font-medium">Filters</span>
             </button>
           </div>
 
           {/* Sidebar Filters */}
-          <div className={`fixed lg:relative inset-y-0 left-0 z-40 w-80 bg-white shadow-lg transform ${showFilters ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 transition-transform duration-300 ease-in-out pt-16 lg:pt-0 lg:w-72 lg:flex-shrink-0`}>
-            <div className="p-4 h-full overflow-y-auto">
+          <div className={`fixed lg:sticky lg:top-16 inset-y-0 left-0 z-40 w-[300px] bg-white border-r border-gray-100 transform ${showFilters ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 transition-transform duration-300 ease-in-out lg:h-[calc(100vh-4rem)] lg:flex-shrink-0`}>
+            <div className="h-full overflow-y-auto overscroll-contain px-5 py-4" style={{scrollbarWidth:'thin',scrollbarColor:'#e5e7eb transparent'}}>
               {/* Mobile Close */}
-              <div className="lg:hidden flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold">Filters</h2>
-                <button onClick={() => setShowFilters(false)} className="text-gray-500 hover:text-gray-700 cursor-pointer">
-                  <X className="w-6 h-6" />
-                </button>
+              <div className="lg:hidden flex justify-between items-center pb-3 mb-3 border-b border-gray-100">
+                <span className="text-xs font-semibold text-gray-900 tracking-wider uppercase">Filters</span>
+                <button onClick={() => setShowFilters(false)} className="p-1 rounded hover:bg-gray-100 cursor-pointer"><X className="w-4 h-4 text-gray-400" /></button>
               </div>
-
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="font-semibold text-lg hidden lg:block">Filters</h3>
-                <button onClick={clearFilters} className="text-blue-600 hover:text-blue-800 text-sm cursor-pointer">Clear all</button>
+              <div className="hidden lg:flex justify-between items-center pb-3 mb-1 border-b border-gray-100">
+                <span className="text-xs font-semibold text-gray-900 tracking-wider uppercase">Filters</span>
+                <button onClick={clearFilters} className="text-xs text-blue-600 hover:text-blue-700 font-medium cursor-pointer">Reset all</button>
               </div>
 
               {/* 1. Search by Activity Name */}
-              <div className="mb-5">
-                <button onClick={() => toggleSection('name')} className="flex items-center justify-between w-full text-left font-semibold text-gray-800 mb-2 cursor-pointer">
-                  <span className="font-bold text-sm">Activity Name</span>
-                  {expandedSections.name ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              <div className="py-3 border-b border-gray-50">
+                <button onClick={() => toggleSection('name')} className="flex items-center justify-between w-full cursor-pointer">
+                  <span className="text-[13px] font-semibold text-gray-800">Activity Name</span>
+                  {expandedSections.name ? <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 rotate-180" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200" />}
                 </button>
                 {expandedSections.name && (
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <input
-                      type="text"
-                      value={nameSearch}
-                      onChange={(e) => setNameSearch(e.target.value)}
-                      placeholder="Search activity..."
-                      className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
+                  <div className="relative mt-2.5">
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+                    <input type="text" value={nameSearch} onChange={(e) => setNameSearch(e.target.value)} placeholder="Search activity..." className="w-full pl-8 pr-3 py-1.5 text-[13px] border border-gray-200 rounded-md bg-gray-50/50 focus:bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" />
                   </div>
                 )}
               </div>
 
               {/* 2. Categories */}
               {dynamicCategories.length > 0 && (
-                <div className="mb-5">
-                  <button onClick={() => toggleSection('categories')} className="flex items-center justify-between w-full text-left font-semibold text-gray-800 mb-2 cursor-pointer">
-                    <span className="font-bold text-sm">Categories</span>
-                    {expandedSections.categories ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                <div className="py-3 border-b border-gray-50">
+                  <button onClick={() => toggleSection('categories')} className="flex items-center justify-between w-full cursor-pointer">
+                    <span className="text-[13px] font-semibold text-gray-800">Categories</span>
+                    {expandedSections.categories ? <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 rotate-180" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200" />}
                   </button>
                   {expandedSections.categories && (
-                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                    <div className="space-y-1.5 max-h-44 overflow-y-auto">
                       {dynamicCategories.map(cat => (
-                        <label key={cat} className="flex items-center cursor-pointer">
+                        <label key={cat} className="flex items-center gap-2.5 py-0.5 cursor-pointer group">
                           <input
                             type="checkbox"
                             checked={selectedCategories.includes(cat)}
                             onChange={() => setSelectedCategories(prev => prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat])}
-                            className="mr-2 h-4 w-4 text-blue-600 border-gray-300 rounded"
+                            className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
                           />
-                          <span className="text-sm text-gray-700">{cat}</span>
+                          <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors">{cat}</span>
                         </label>
                       ))}
                     </div>
@@ -296,22 +283,22 @@ const ActivitySearchResults = () => {
               )}
 
               {/* 3. Daytime */}
-              <div className="mb-5">
-                <button onClick={() => toggleSection('daytime')} className="flex items-center justify-between w-full text-left font-semibold text-gray-800 mb-2 cursor-pointer">
-                  <span className="font-bold text-sm">Daytime</span>
-                  {expandedSections.daytime ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              <div className="py-3 border-b border-gray-50">
+                <button onClick={() => toggleSection('daytime')} className="flex items-center justify-between w-full cursor-pointer">
+                  <span className="text-[13px] font-semibold text-gray-800">Daytime</span>
+                  {expandedSections.daytime ? <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 rotate-180" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200" />}
                 </button>
                 {expandedSections.daytime && (
-                  <div className="space-y-2">
+                  <div className="space-y-1.5">
                     {daytimeOptions.map(time => (
-                      <label key={time} className="flex items-center cursor-pointer">
+                      <label key={time} className="flex items-center gap-2.5 py-0.5 cursor-pointer group">
                         <input
                           type="checkbox"
                           checked={selectedDaytimes.includes(time)}
                           onChange={() => setSelectedDaytimes(prev => prev.includes(time) ? prev.filter(t => t !== time) : [...prev, time])}
-                          className="mr-2 h-4 w-4 text-blue-600 border-gray-300 rounded"
+                          className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
                         />
-                        <span className="text-sm text-gray-700">{time}</span>
+                        <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors">{time}</span>
                       </label>
                     ))}
                   </div>
@@ -320,22 +307,22 @@ const ActivitySearchResults = () => {
 
               {/* 4. Recommended Activity For */}
               {dynamicRecommended.length > 0 && (
-                <div className="mb-5">
-                  <button onClick={() => toggleSection('recommended')} className="flex items-center justify-between w-full text-left font-semibold text-gray-800 mb-2 cursor-pointer">
-                    <span className="font-bold text-sm">Recommended For</span>
-                    {expandedSections.recommended ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                <div className="py-3 border-b border-gray-50">
+                  <button onClick={() => toggleSection('recommended')} className="flex items-center justify-between w-full cursor-pointer">
+                    <span className="text-[13px] font-semibold text-gray-800">Recommended For</span>
+                    {expandedSections.recommended ? <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 rotate-180" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200" />}
                   </button>
                   {expandedSections.recommended && (
-                    <div className="space-y-2">
+                    <div className="space-y-1.5">
                       {dynamicRecommended.map(rec => (
-                        <label key={rec} className="flex items-center cursor-pointer">
+                        <label key={rec} className="flex items-center gap-2.5 py-0.5 cursor-pointer group">
                           <input
                             type="checkbox"
                             checked={selectedRecommended.includes(rec)}
                             onChange={() => setSelectedRecommended(prev => prev.includes(rec) ? prev.filter(r => r !== rec) : [...prev, rec])}
-                            className="mr-2 h-4 w-4 text-blue-600 border-gray-300 rounded"
+                            className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
                           />
-                          <span className="text-sm text-gray-700">{rec}</span>
+                          <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors">{rec}</span>
                         </label>
                       ))}
                     </div>
@@ -345,22 +332,22 @@ const ActivitySearchResults = () => {
 
               {/* 5. Supplier */}
               {dynamicSuppliers.length > 0 && (
-                <div className="mb-5">
-                  <button onClick={() => toggleSection('supplier')} className="flex items-center justify-between w-full text-left font-semibold text-gray-800 mb-2 cursor-pointer">
-                    <span className="font-bold text-sm">Supplier</span>
-                    {expandedSections.supplier ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                <div className="py-3 border-b border-gray-50">
+                  <button onClick={() => toggleSection('supplier')} className="flex items-center justify-between w-full cursor-pointer">
+                    <span className="text-[13px] font-semibold text-gray-800">Supplier</span>
+                    {expandedSections.supplier ? <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 rotate-180" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200" />}
                   </button>
                   {expandedSections.supplier && (
-                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                    <div className="space-y-1.5 max-h-44 overflow-y-auto">
                       {dynamicSuppliers.map(sup => (
-                        <label key={sup} className="flex items-center cursor-pointer">
+                        <label key={sup} className="flex items-center gap-2.5 py-0.5 cursor-pointer group">
                           <input
                             type="checkbox"
                             checked={selectedSuppliers.includes(sup)}
                             onChange={() => setSelectedSuppliers(prev => prev.includes(sup) ? prev.filter(s => s !== sup) : [...prev, sup])}
-                            className="mr-2 h-4 w-4 text-blue-600 border-gray-300 rounded"
+                            className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
                           />
-                          <span className="text-sm text-gray-700">{sup}</span>
+                          <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors">{sup}</span>
                         </label>
                       ))}
                     </div>
@@ -370,22 +357,22 @@ const ActivitySearchResults = () => {
 
               {/* 6. Voucher Validity */}
               {dynamicVoucherTypes.length > 0 && (
-                <div className="mb-5">
-                  <button onClick={() => toggleSection('voucherValidity')} className="flex items-center justify-between w-full text-left font-semibold text-gray-800 mb-2 cursor-pointer">
-                    <span className="font-bold text-sm">Voucher Validity</span>
-                    {expandedSections.voucherValidity ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                <div className="py-3 border-b border-gray-50">
+                  <button onClick={() => toggleSection('voucherValidity')} className="flex items-center justify-between w-full cursor-pointer">
+                    <span className="text-[13px] font-semibold text-gray-800">Voucher Validity</span>
+                    {expandedSections.voucherValidity ? <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 rotate-180" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200" />}
                   </button>
                   {expandedSections.voucherValidity && (
-                    <div className="space-y-2">
+                    <div className="space-y-1.5">
                       {dynamicVoucherTypes.map(vt => (
-                        <label key={vt} className="flex items-center cursor-pointer">
+                        <label key={vt} className="flex items-center gap-2.5 py-0.5 cursor-pointer group">
                           <input
                             type="checkbox"
                             checked={selectedVoucherTypes.includes(vt)}
                             onChange={() => setSelectedVoucherTypes(prev => prev.includes(vt) ? prev.filter(v => v !== vt) : [...prev, vt])}
-                            className="mr-2 h-4 w-4 text-blue-600 border-gray-300 rounded"
+                            className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
                           />
-                          <span className="text-sm text-gray-700">{vt}</span>
+                          <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors">{vt}</span>
                         </label>
                       ))}
                     </div>
@@ -395,22 +382,22 @@ const ActivitySearchResults = () => {
 
               {/* 7. Services */}
               {dynamicServices.length > 0 && (
-                <div className="mb-5">
-                  <button onClick={() => toggleSection('services')} className="flex items-center justify-between w-full text-left font-semibold text-gray-800 mb-2 cursor-pointer">
-                    <span className="font-bold text-sm">Services</span>
-                    {expandedSections.services ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                <div className="py-3 border-b border-gray-50">
+                  <button onClick={() => toggleSection('services')} className="flex items-center justify-between w-full cursor-pointer">
+                    <span className="text-[13px] font-semibold text-gray-800">Services</span>
+                    {expandedSections.services ? <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 rotate-180" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200" />}
                   </button>
                   {expandedSections.services && (
-                    <div className="space-y-2">
+                    <div className="space-y-1.5">
                       {dynamicServices.map(svc => (
-                        <label key={svc} className="flex items-center cursor-pointer">
+                        <label key={svc} className="flex items-center gap-2.5 py-0.5 cursor-pointer group">
                           <input
                             type="checkbox"
                             checked={selectedServices.includes(svc)}
                             onChange={() => setSelectedServices(prev => prev.includes(svc) ? prev.filter(s => s !== svc) : [...prev, svc])}
-                            className="mr-2 h-4 w-4 text-blue-600 border-gray-300 rounded"
+                            className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
                           />
-                          <span className="text-sm text-gray-700">{svc}</span>
+                          <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors">{svc}</span>
                         </label>
                       ))}
                     </div>
@@ -419,10 +406,10 @@ const ActivitySearchResults = () => {
               )}
 
               {/* 8. Price Min & Max */}
-              <div className="mb-5">
-                <button onClick={() => toggleSection('price')} className="flex items-center justify-between w-full text-left font-semibold text-gray-800 mb-2 cursor-pointer">
-                  <span className="font-bold text-sm">Price Range</span>
-                  {expandedSections.price ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              <div className="py-3 border-b border-gray-50">
+                <button onClick={() => toggleSection('price')} className="flex items-center justify-between w-full cursor-pointer">
+                  <span className="text-[13px] font-semibold text-gray-800">Price Range</span>
+                  {expandedSections.price ? <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 rotate-180" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200" />}
                 </button>
                 {expandedSections.price && (
                   <div className="flex items-center gap-2">
@@ -431,15 +418,15 @@ const ActivitySearchResults = () => {
                       value={priceMin}
                       onChange={(e) => setPriceMin(e.target.value)}
                       placeholder="Min"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 rounded-md bg-gray-50/50 focus:bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none"
                     />
-                    <span className="text-gray-400">-</span>
+                    <span className="text-gray-300 text-xs">�</span>
                     <input
                       type="number"
                       value={priceMax}
                       onChange={(e) => setPriceMax(e.target.value)}
                       placeholder="Max"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 rounded-md bg-gray-50/50 focus:bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none"
                     />
                   </div>
                 )}
