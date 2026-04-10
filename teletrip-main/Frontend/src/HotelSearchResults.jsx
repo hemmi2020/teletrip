@@ -1349,8 +1349,8 @@ if (children > 0 && childAges.length > 0) {
               </div>
             )}
 
-            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-4">
-              <h1 className="text-2xl font-bold">
+            <div className="sticky top-16 z-20 bg-white/90 backdrop-blur-sm py-3 -mx-4 px-4 border-b border-gray-100">
+              <h1 className="text-lg font-semibold text-gray-900">
                 {sortedHotels.length} Hotels Found in {searchParams.get("city")}
               </h1>
             </div>
