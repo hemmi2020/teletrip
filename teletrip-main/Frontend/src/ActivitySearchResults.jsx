@@ -11,6 +11,7 @@ const ActivitySearchResults = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
+  const [selectedActivity, setSelectedActivity] = useState(null);
 
   // Filter states
   const [nameSearch, setNameSearch] = useState('');
@@ -281,7 +282,7 @@ const ActivitySearchResults = () => {
                             onChange={() => setSelectedCategories(prev => prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat])}
                             className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
                           />
-                          <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1">{cat}</span>`n                          <span className="text-[11px] text-gray-400">{countCat(cat)}</span>
+                          <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1">{cat}</span><span className="text-[11px] text-gray-400">{countCat(cat)}</span>
                         </label>
                       ))}
                     </div>
@@ -305,7 +306,7 @@ const ActivitySearchResults = () => {
                           onChange={() => setSelectedDaytimes(prev => prev.includes(time) ? prev.filter(t => t !== time) : [...prev, time])}
                           className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
                         />
-                        <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1">{time}</span>`n                          <span className="text-[11px] text-gray-400">{countDaytime(time)}</span>
+                        <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1">{time}</span><span className="text-[11px] text-gray-400">{countDaytime(time)}</span>
                       </label>
                     ))}
                   </div>
@@ -329,7 +330,7 @@ const ActivitySearchResults = () => {
                             onChange={() => setSelectedRecommended(prev => prev.includes(rec) ? prev.filter(r => r !== rec) : [...prev, rec])}
                             className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
                           />
-                          <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1">{rec}</span>`n                          <span className="text-[11px] text-gray-400">{countRec(rec)}</span>
+                          <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1">{rec}</span><span className="text-[11px] text-gray-400">{countRec(rec)}</span>
                         </label>
                       ))}
                     </div>
@@ -354,7 +355,7 @@ const ActivitySearchResults = () => {
                             onChange={() => setSelectedSuppliers(prev => prev.includes(sup) ? prev.filter(s => s !== sup) : [...prev, sup])}
                             className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
                           />
-                          <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1">{sup}</span>`n                          <span className="text-[11px] text-gray-400">{countSupplier(sup)}</span>
+                          <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1">{sup}</span><span className="text-[11px] text-gray-400">{countSupplier(sup)}</span>
                         </label>
                       ))}
                     </div>
@@ -379,7 +380,7 @@ const ActivitySearchResults = () => {
                             onChange={() => setSelectedVoucherTypes(prev => prev.includes(vt) ? prev.filter(v => v !== vt) : [...prev, vt])}
                             className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
                           />
-                          <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1">{vt}</span>`n                          <span className="text-[11px] text-gray-400">{countVoucher(vt)}</span>
+                          <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1">{vt}</span><span className="text-[11px] text-gray-400">{countVoucher(vt)}</span>
                         </label>
                       ))}
                     </div>
@@ -404,7 +405,7 @@ const ActivitySearchResults = () => {
                             onChange={() => setSelectedServices(prev => prev.includes(svc) ? prev.filter(s => s !== svc) : [...prev, svc])}
                             className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
                           />
-                          <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1">{svc}</span>`n                          <span className="text-[11px] text-gray-400">{countService(svc)}</span>
+                          <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1">{svc}</span><span className="text-[11px] text-gray-400">{countService(svc)}</span>
                         </label>
                       ))}
                     </div>
@@ -465,68 +466,32 @@ const ActivitySearchResults = () => {
               </div>
             ) : (
               <div className="space-y-4">
-                <p className="text-gray-600">{filteredActivities.length} activities found</p>
+                <div className="sticky top-16 z-20 bg-white/90 backdrop-blur-sm py-3 -mx-4 px-4 border-b border-gray-100">
+                  <span className="text-lg font-semibold text-gray-900">{filteredActivities.length} activities found</span>
+                </div>
                 {filteredActivities.map((activity) => (
-                  <div
-                    key={activity.code}
-                    className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow overflow-hidden cursor-pointer"
-                    onClick={() => navigate(`/activity/${activity.code}?from=${from}&to=${to}&price=${activity.pricing?.amount || 0}&currency=${activity.pricing?.currency || 'AED'}&adults=${adults}`)}
-                  >
-                    <div className="flex flex-col md:flex-row">
-                      <div className="relative w-full md:w-64 h-48">
-                        <img
-                          src={activity.images?.[0] || 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'}
-                          alt={activity.name}
-                          className="w-full h-full object-cover"
-                          onError={(e) => e.target.src = 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'}
-                        />
-                        {activity.images?.length > 1 && (
-                          <div className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
-                            +{activity.images.length - 1} photos
-                          </div>
-                        )}
+                  <div key={activity.code} className="bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-lg hover:border-gray-200 transition-all duration-200 flex flex-col md:flex-row group">
+                    <div className="relative w-full md:w-64 h-48 flex-shrink-0 overflow-hidden">
+                      <img src={activity.images?.[0] || 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} alt={activity.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" onError={(e) => e.target.src = 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} />
+                      {activity.activityFactsheetType && (
+                        <div className="absolute top-2 left-2 bg-blue-600/90 text-white px-2 py-0.5 rounded text-[11px] font-medium">{activity.activityFactsheetType}</div>
+                      )}
+                    </div>
+                    <div className="flex-1 p-4 flex flex-col justify-between min-w-0">
+                      <div>
+                        <h3 className="text-base font-semibold text-gray-900 mb-1 line-clamp-1">{activity.name}</h3>
+                        {activity.summary && <p className="text-[13px] text-gray-500 mb-2 line-clamp-1" dangerouslySetInnerHTML={{ __html: activity.summary }} />}
+                        <div className="flex items-center gap-2 text-[12px] text-gray-400 mb-2">
+                          {activity.destination && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{activity.destination}</span>}
+                        </div>
                       </div>
-                      <div className="flex-1 p-4">
-                        <h3 className="text-xl font-semibold mb-2">{activity.name}</h3>
-                        {activity.summary && (
-                          <p className="text-gray-700 text-sm mb-2 italic line-clamp-1" dangerouslySetInnerHTML={{ __html: activity.summary }} />
-                        )}
-                        {activity.description && (
-                          <p className="text-gray-600 text-sm mb-3 line-clamp-2" dangerouslySetInnerHTML={{ __html: activity.description }} />
-                        )}
-                        <div className="flex items-center gap-4 text-sm text-gray-500 mb-3">
-                          {activity.destination && (
-                            <span className="flex items-center"><MapPin className="w-4 h-4 mr-1" />{activity.destination}</span>
-                          )}
-                          {activity.activityFactsheetType && (
-                            <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">
-                              {activity.activityFactsheetType}
-                            </span>
-                          )}
+                      <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-50">
+                        <div>
+                          {activity.pricing?.amount ? (
+                            <><span className="text-lg font-bold text-blue-600">{activity.pricing.currency} {parseFloat(activity.pricing.amount).toFixed(2)}</span><span className="text-[11px] text-gray-400 ml-1">/ person</span></>
+                          ) : <span className="text-gray-400 text-sm">Price on request</span>}
                         </div>
-                        <div className="flex items-center justify-between">
-                          <div>
-                            {activity.pricing?.amount ? (
-                              <>
-                                <span className="text-2xl font-bold text-blue-600">
-                                  {activity.pricing.currency} {parseFloat(activity.pricing.amount).toFixed(2)}
-                                </span>
-                                <span className="text-sm text-gray-500 ml-2">per person</span>
-                              </>
-                            ) : (
-                              <span className="text-gray-500">Price on request</span>
-                            )}
-                          </div>
-                          <button 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              navigate(`/activity/${activity.code}?from=${from}&to=${to}&price=${activity.pricing?.amount || 0}&currency=${activity.pricing?.currency || 'AED'}&adults=${adults}`);
-                            }}
-                            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
-                          >
-                            View Details
-                          </button>
-                        </div>
+                        <button onClick={() => setSelectedActivity(activity)} className="px-4 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-[13px] font-medium">View Details</button>
                       </div>
                     </div>
                   </div>
@@ -536,6 +501,60 @@ const ActivitySearchResults = () => {
           </div>
         </div>
       </div>
+      {/* Activity Detail Modal */}
+      {selectedActivity && (
+        <div className="fixed inset-0 z-[150] flex items-end sm:items-center justify-center" onClick={() => setSelectedActivity(null)}>
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+          <div className="relative bg-white w-full sm:max-w-3xl sm:rounded-2xl max-h-[92vh] overflow-hidden flex flex-col shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            {/* Image */}
+            <div className="relative h-48 sm:h-56 flex-shrink-0">
+              <img src={selectedActivity.images?.[0] || 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} alt="" className="w-full h-full object-cover" />
+              <button onClick={() => setSelectedActivity(null)} className="absolute top-3 right-3 p-1.5 bg-black/40 hover:bg-black/60 rounded-full transition-colors"><X className="w-4 h-4 text-white" /></button>
+              {selectedActivity.activityFactsheetType && (
+                <div className="absolute bottom-3 left-3 bg-blue-600/90 text-white px-2.5 py-1 rounded-lg text-[12px] font-medium">{selectedActivity.activityFactsheetType}</div>
+              )}
+            </div>
+            {/* Info */}
+            <div className="px-5 py-4 border-b border-gray-100 flex-shrink-0">
+              <h2 className="text-lg font-semibold text-gray-900 mb-1">{selectedActivity.name}</h2>
+              <div className="flex items-center gap-2 text-[12px] text-gray-500 mb-3">
+                {selectedActivity.destination && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{selectedActivity.destination}</span>}
+                <span>·</span>
+                <span>{from} → {to}</span>
+                <span>·</span>
+                <span>{adults} adults</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  {selectedActivity.pricing?.amount ? (
+                    <><span className="text-xl font-bold text-blue-600">{selectedActivity.pricing.currency} {parseFloat(selectedActivity.pricing.amount).toFixed(2)}</span><span className="text-[12px] text-gray-400 ml-1">/ person</span></>
+                  ) : <span className="text-gray-400">Price on request</span>}
+                </div>
+                <button onClick={() => navigate(`/activity/${selectedActivity.code}?from=${from}&to=${to}&price=${selectedActivity.pricing?.amount || 0}&currency=${selectedActivity.pricing?.currency || 'AED'}&adults=${adults}`)} className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-[13px] font-semibold">Book Now</button>
+              </div>
+            </div>
+            {/* Description */}
+            <div className="overflow-y-auto flex-1 px-5 py-4 space-y-4" style={{scrollbarWidth:'thin'}}>
+              {selectedActivity.summary && (
+                <div><div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Summary</div><p className="text-[13px] text-gray-600 leading-relaxed" dangerouslySetInnerHTML={{ __html: selectedActivity.summary }} /></div>
+              )}
+              {selectedActivity.description && (
+                <div><div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Description</div><p className="text-[13px] text-gray-600 leading-relaxed" dangerouslySetInnerHTML={{ __html: selectedActivity.description }} /></div>
+              )}
+              {selectedActivity.images && selectedActivity.images.length > 1 && (
+                <div>
+                  <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Photos</div>
+                  <div className="flex gap-2 overflow-x-auto pb-2">
+                    {selectedActivity.images.map((img, i) => (
+                      <img key={i} src={img} alt="" className="w-24 h-20 rounded-lg object-cover flex-shrink-0" onError={(e) => e.target.style.display='none'} />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
       <Footer />
     </>
   );
