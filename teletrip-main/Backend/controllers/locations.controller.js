@@ -149,27 +149,70 @@ exports.searchLocations = async (req, res) => {
           const sig = crypto.createHash('sha256').update(apiKey + secret + timestamp).digest('hex');
           const fetch = (await import('node-fetch')).default;
 
+          // Use POST with keywords filter for hotel name search
           const hotelRes = await fetch(
-            `https://api.test.hotelbeds.com/hotel-content-api/1.0/hotels?fields=name,code,city,country,destinationCode&language=ENG&from=1&to=15&keywords=${encodeURIComponent(q)}`,
-            { headers: { 'Accept': 'application/json', 'Api-key': apiKey, 'X-Signature': sig } }
+            `https://api.test.hotelbeds.com/hotel-content-api/1.0/hotels`,
+            {
+              method: 'POST',
+              headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'Api-key': apiKey,
+                'X-Signature': sig
+              },
+              body: JSON.stringify({
+                fields: ['name', 'code', 'city', 'country', 'destinationCode'],
+                language: 'ENG',
+                from: 1,
+                to: 15,
+                keywords: [{ keyword: q }]
+              })
+            }
           );
 
           if (hotelRes.ok) {
             const hotelData = await hotelRes.json();
             (hotelData.hotels || []).forEach(h => {
+              const hotelName = h.name?.content || h.name || 'Hotel';
+              const hotelCity = h.city?.content || '';
+              const hotelCountry = h.country?.description?.content || h.countryCode || '';
               results.push({
                 type: 'hotel',
-                name: h.name?.content || h.name || 'Hotel',
+                name: hotelName,
                 hotelCode: String(h.code),
-                city: h.city?.content || '',
-                country: h.country?.description?.content || h.countryCode || '',
-                displayName: `${h.name?.content || h.name}, ${h.city?.content || ''}`
+                city: hotelCity,
+                country: hotelCountry,
+                displayName: `${hotelName}${hotelCity ? ', ' + hotelCity : ''}`
               });
             });
+          } else {
+            // Fallback: try GET with name filter
+            const fallbackRes = await fetch(
+              `https://api.test.hotelbeds.com/hotel-content-api/1.0/hotels?fields=name,code,city,country&language=ENG&from=1&to=15`,
+              { headers: { 'Accept': 'application/json', 'Api-key': apiKey, 'X-Signature': sig } }
+            );
+            if (fallbackRes.ok) {
+              const fallbackData = await fallbackRes.json();
+              (fallbackData.hotels || [])
+                .filter(h => (h.name?.content || '').toLowerCase().includes(query))
+                .slice(0, 10)
+                .forEach(h => {
+                  results.push({
+                    type: 'hotel',
+                    name: h.name?.content || 'Hotel',
+                    hotelCode: String(h.code),
+                    city: h.city?.content || '',
+                    country: h.country?.description?.content || '',
+                    displayName: `${h.name?.content || 'Hotel'}, ${h.city?.content || ''}`
+                  });
+                });
+            }
           }
         }
       } catch (hotelErr) {
         console.error('Hotel search failed:', hotelErr.message);
+        // Log full error for debugging
+        console.error('Hotel search details:', hotelErr);
       }
     }
 
