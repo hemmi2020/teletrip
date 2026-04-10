@@ -721,7 +721,7 @@ const HotelSearchForm = () => {
     fetchLocations();
   }, []);
 
-  // Filter locations based on search query
+  // Filter locations based on search query + search hotels from API
   useEffect(() => {
     if (searchQuery.trim() === '') {
       setFilteredLocations([]);
@@ -729,11 +729,40 @@ const HotelSearchForm = () => {
     }
 
     const query = searchQuery.toLowerCase().trim();
-    const filtered = allLocations
+    const cityResults = allLocations
       .filter(location => location.searchText.includes(query))
-      .slice(0, 50);
+      .slice(0, 30);
 
-    setFilteredLocations(filtered);
+    setFilteredLocations(cityResults);
+
+    // Also search hotels from API if 3+ chars
+    if (query.length >= 3) {
+      const timer = setTimeout(async () => {
+        try {
+          const API_BASE = import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
+          const res = await fetch(`${API_BASE}/api/locations/transfers?search=${encodeURIComponent(query)}`);
+          const data = await res.json();
+          if (data.success) {
+            const hotels = (data.data || [])
+              .filter(loc => loc.type === 'ATLAS')
+              .slice(0, 10)
+              .map(h => ({
+                type: 'hotel',
+                city: h.city,
+                country: h.country,
+                hotelName: h.name,
+                hotelCode: h.code,
+                displayName: `${h.name}, ${h.city}`,
+                searchText: `${h.name} ${h.city} ${h.country}`.toLowerCase()
+              }));
+            setFilteredLocations(prev => [...hotels, ...prev]);
+          }
+        } catch (err) {
+          // Silently fail — city results still show
+        }
+      }, 300);
+      return () => clearTimeout(timer);
+    }
   }, [searchQuery, allLocations]);
 
   // Handle clicks outside dropdowns
@@ -800,6 +829,9 @@ const HotelSearchForm = () => {
     let url = `/hotel-search-results?checkIn=${checkIn}&checkOut=${checkOut}&rooms=${rooms}&adults=${adults}&children=${children}`;
     url += `&country=${encodeURIComponent(selectedLocation.country)}`;
     url += `&city=${encodeURIComponent(selectedLocation.city)}`;
+    if (selectedLocation.type === 'hotel' && selectedLocation.hotelName) {
+      url += `&hotelName=${encodeURIComponent(selectedLocation.hotelName)}`;
+    }
 
     // Add child ages if present
     if (children > 0 && childAges.length > 0) {
@@ -905,15 +937,19 @@ const HotelSearchForm = () => {
                             className="px-3 sm:px-4 py-2.5 sm:py-3 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors"
                           >
                             <div className="flex items-center space-x-2 sm:space-x-3">
-                              <MapPin size={16} className="text-blue-600 flex-shrink-0" />
+                              {location.type === 'hotel' ? (
+                                <Building2 size={16} className="text-green-600 flex-shrink-0" />
+                              ) : (
+                                <MapPin size={16} className="text-blue-600 flex-shrink-0" />
+                              )}
                               <div className="min-w-0 flex-1">
                                 <div className="font-medium text-gray-800 text-sm sm:text-base truncate">
-                                  {location.type === 'city' ? location.city : location.country}
+                                  {location.type === 'hotel' ? location.hotelName : location.city}
                                 </div>
                                 <div className="text-xs sm:text-sm text-gray-500 truncate">
-                                  {location.type === 'city' 
-                                    ? `City in ${location.country}` 
-                                    : 'Country'}
+                                  {location.type === 'hotel' 
+                                    ? `Hotel in ${location.city}, ${location.country}` 
+                                    : `City in ${location.country}`}
                                 </div>
                               </div>
                             </div>
