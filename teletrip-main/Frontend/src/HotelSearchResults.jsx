@@ -63,6 +63,10 @@ const HotelSearchResults = () => {
   const [priceMin, setPriceMin] = useState("");
   const [priceMax, setPriceMax] = useState("");
   const [selectedPromos, setSelectedPromos] = useState([]);
+  const [selectedDiscounts, setSelectedDiscounts] = useState([]);
+  const [selectedChains, setSelectedChains] = useState([]);
+  const [selectedEstablishment, setSelectedEstablishment] = useState([]);
+  const [selectedPackaging, setSelectedPackaging] = useState("");
   const [expandedSections, setExpandedSections] = useState({
     hotelName: false,
     board: false,
@@ -74,6 +78,10 @@ const HotelSearchResults = () => {
     accommodationType: true,
     amenities: false,
     promos: false,
+    discounts: false,
+    chain: false,
+    establishment: false,
+    packaging: false,
     sortBy: true,
   });
   const [hotelReviews, setHotelReviews] = useState({});
@@ -98,10 +106,11 @@ const [reviewsModal, setReviewsModal] = useState({
   ];
 
   const accommodationTypes = [
-    { id: "hotel", name: "Hotel",  },
-    { id: "boutique", name: "Boutique",  },
-    { id: "aparthotel", name: "Aparthotel",  },
-    { id: "beach", name: "Beach hotels",  },
+    { id: "H", name: "Hotel" },
+    { id: "P", name: "Aparthotel" },
+    { id: "A", name: "Apartment" },
+    { id: "W", name: "Resort" },
+    { id: "Q", name: "Boutique" },
   ];
 
   const convertCountryCode = (code) => {
@@ -509,6 +518,10 @@ const [reviewsModal, setReviewsModal] = useState({
     setPriceMin("");
     setPriceMax("");
     setSelectedPromos([]);
+    setSelectedDiscounts([]);
+    setSelectedChains([]);
+    setSelectedEstablishment([]);
+    setSelectedPackaging("");
   };
 
 
@@ -728,11 +741,24 @@ if (children > 0 && childAges.length > 0) {
             currency: hotel.currency || "EUR",
             images: hotel.images || [],
             amenities: hotel.amenities || [],
-            type: hotel.type || "hotel",
+            facilities: hotel.facilities || [],
+            type: hotel.accommodationTypeCode || hotel.type || "H",
             cancellationPolicy: cancellationPolicy,
             boards: [...new Set(allRates.map(r => r.boardName).filter(Boolean))],
+            boardCodes: [...new Set(allRates.map(r => r.boardCode).filter(Boolean))],
             hasFreeCancellation: cancellationPolicy.length > 0 && parseFloat(cancellationPolicy[0]?.amount || 0) === 0,
+            hasPartialCancellation: cancellationPolicy.length > 0 && parseFloat(cancellationPolicy[0]?.amount || 0) > 0,
+            hasNoCancellationInfo: !cancellationPolicy || cancellationPolicy.length === 0,
             promos: [...new Set(allRates.flatMap(r => (r.promotions || r.offers || []).map(p => p.name || p.code)).filter(Boolean))],
+            discounts: [...new Set(allRates.flatMap(r => (r.rateCommentsId ? ['Discounted'] : []).concat(
+              (r.promotions || r.offers || []).filter(p => (p.name || '').toLowerCase().includes('discount')).map(p => p.name)
+            )).filter(Boolean))],
+            chain: hotel.chainCode || hotel.chain || null,
+            packaging: allRates.some(r => r.packaging === true),
+            exclusiveDeal: hotel.exclusiveDeal || allRates.some(r => r.exclusiveDeal === true),
+            luxury: hotel.luxury || false,
+            preferred: hotel.preferred || false,
+            establishmentProfiles: hotel.segmentCodes || [],
           };
         });
 
@@ -754,62 +780,47 @@ if (children > 0 && childAges.length > 0) {
   const dynamicCategories = [...new Set(hotels.map(h => h.category))].filter(Boolean).sort();
   const dynamicZones = [...new Set(hotels.map(h => h.zone))].filter(Boolean).sort();
   const dynamicPromos = [...new Set(hotels.flatMap(h => h.promos))].filter(Boolean).sort();
+  const dynamicDiscounts = [...new Set(hotels.flatMap(h => h.discounts))].filter(Boolean).sort();
+  const dynamicChains = [...new Set(hotels.map(h => h.chain).filter(Boolean))].sort();
+  const dynamicEstablishment = [...new Set(hotels.flatMap(h => h.establishmentProfiles))].filter(Boolean).sort();
+  const dynamicAccommodationTypes = [...new Set(hotels.map(h => h.type).filter(Boolean))];
+
+  // Establishment profile labels
+  const establishmentLabels = {
+    '119': 'Luxury Collection', '103': 'Adults Only', '37': 'Beach Hotels',
+    '34': 'Business Hotels', '31': 'Design', '36': 'Family Hotels',
+    '33': 'City Hotels', '35': 'Ski Hotels', '38': 'Spa Hotels',
+  };
 
   // Filter hotels based on selected filters
   const filteredHotels = hotels.filter(hotel => {
-    // Hotel name search
     if (hotelNameSearch && !hotel.name.toLowerCase().includes(hotelNameSearch.toLowerCase())) return false;
-
-    // Board filter
-    if (selectedBoards.length > 0) {
-      if (!hotel.boards.some(b => selectedBoards.includes(b))) return false;
-    }
-
-    // Category filter
-    if (selectedCategories.length > 0) {
-      if (!selectedCategories.includes(hotel.category)) return false;
-    }
-
-    // Zone filter
-    if (selectedZones.length > 0) {
-      if (!selectedZones.includes(hotel.zone)) return false;
-    }
-
-    // Review rating filter
+    if (selectedBoards.length > 0 && !hotel.boards.some(b => selectedBoards.includes(b))) return false;
+    if (selectedCategories.length > 0 && !selectedCategories.includes(hotel.category)) return false;
+    if (selectedZones.length > 0 && !selectedZones.includes(hotel.zone)) return false;
     if (selectedReviewRatings.length > 0) {
       const review = hotelReviews[hotel.id];
       if (!review || !review.rating) return false;
       const rating = Math.floor(review.rating);
       if (!selectedReviewRatings.some(r => rating >= r)) return false;
     }
-
-    // Cancellation filter
     if (selectedCancellation === "free" && !hotel.hasFreeCancellation) return false;
-    if (selectedCancellation === "paid" && hotel.hasFreeCancellation) return false;
-
-    // Price filter
+    if (selectedCancellation === "partial" && !hotel.hasPartialCancellation) return false;
+    if (selectedCancellation === "nonrefundable" && hotel.hasFreeCancellation) return false;
+    if (selectedCancellation === "notavailable" && !hotel.hasNoCancellationInfo) return false;
     const price = parseFloat(hotel.price);
     if (priceMin && price < parseFloat(priceMin)) return false;
     if (priceMax && price > parseFloat(priceMax)) return false;
-
-    // Promos filter
-    if (selectedPromos.length > 0) {
-      if (!hotel.promos.some(p => selectedPromos.includes(p))) return false;
-    }
-
-    // Amenities filter
+    if (selectedPromos.length > 0 && !hotel.promos.some(p => selectedPromos.includes(p))) return false;
+    if (selectedDiscounts.length > 0 && !hotel.discounts.some(d => selectedDiscounts.includes(d))) return false;
+    if (selectedChains.length > 0 && !selectedChains.includes(hotel.chain)) return false;
+    if (selectedEstablishment.length > 0 && !hotel.establishmentProfiles.some(e => selectedEstablishment.includes(e))) return false;
+    if (selectedPackaging === "with" && !hotel.packaging) return false;
+    if (selectedPackaging === "without" && hotel.packaging) return false;
     if (selectedAmenities.length > 0) {
-      const hasSelectedAmenities = selectedAmenities.every(amenity => 
-        hotel.amenities.includes(amenity)
-      );
-      if (!hasSelectedAmenities) return false;
+      if (!selectedAmenities.every(amenity => hotel.amenities.includes(amenity))) return false;
     }
-    
-    // Accommodation type filter
-    if (selectedAccommodationTypes.length > 0) {
-      if (!selectedAccommodationTypes.includes(hotel.type)) return false;
-    }
-    
+    if (selectedAccommodationTypes.length > 0 && !selectedAccommodationTypes.includes(hotel.type)) return false;
     return true;
   });
 
@@ -988,60 +999,34 @@ if (children > 0 && childAges.length > 0) {
               {expandedSections.reviews && (
                 <div className="space-y-2">
                   {[
-                    { value: 4, label: "4+ Excellent" },
-                    { value: 3, label: "3+ Very Good" },
-                    { value: 2, label: "2+ Good" },
-                  ].map(opt => (
-                    <label key={opt.value} className="flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={selectedReviewRatings.includes(opt.value)}
-                        onChange={() => setSelectedReviewRatings(prev => prev.includes(opt.value) ? prev.filter(r => r !== opt.value) : [...prev, opt.value])}
-                        className="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                      />
-                      <div className="flex items-center gap-1">
-                        <RatingCircles rating={opt.value} size="w-3 h-3" />
-                        <span className="text-sm text-gray-700 ml-1">{opt.label}</span>
-                      </div>
-                    </label>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* 5. Cancellation */}
-            <div className="mb-6">
-              <button
-                onClick={() => toggleSection('cancellation')}
-                className="flex items-center justify-between w-full text-left font-semibold text-gray-800 mb-3 cursor-pointer"
-              >
-                <span className="font-bold text-lg">Cancellation</span>
-                {expandedSections.cancellation ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-              </button>
-              {expandedSections.cancellation && (
-                <div className="space-y-2">
-                  {[
-                    { value: "", label: "All" },
-                    { value: "free", label: "Free Cancellation" },
-                    { value: "paid", label: "Non-refundable" },
+                    { value: 4.5, label: "Wonderful 4.5+" },
+                    { value: 4, label: "Very good 4+" },
+                    { value: 3.5, label: "Good 3.5+" },
+                    { value: 3, label: "Nice 3+" },
                   ].map(opt => (
                     <label key={opt.value} className="flex items-center cursor-pointer">
                       <input
                         type="radio"
-                        name="cancellation"
+                        name="reviewRating"
                         value={opt.value}
-                        checked={selectedCancellation === opt.value}
-                        onChange={(e) => setSelectedCancellation(e.target.value)}
+                        checked={selectedReviewRatings.includes(opt.value)}
+                        onChange={() => setSelectedReviewRatings([opt.value])}
                         className="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
                       />
                       <span className="text-sm text-gray-700">{opt.label}</span>
                     </label>
                   ))}
+                  {selectedReviewRatings.length > 0 && (
+                    <button
+                      onClick={() => setSelectedReviewRatings([])}
+                      className="text-xs text-blue-600 hover:text-blue-800 cursor-pointer"
+                    >Clear</button>
+                  )}
                 </div>
               )}
             </div>
 
-            {/* 6. Price Range */}
+            {/* Price Range */}
             <div className="mb-6">
               <button
                 onClick={() => toggleSection('price')}
@@ -1215,10 +1200,158 @@ if (children > 0 && childAges.length > 0) {
                 )}
               </div>
             )}
+
+            {/* Cancellation Fees (expanded) */}
+            <div className="mb-6">
+              <button
+                onClick={() => toggleSection('cancellation')}
+                className="flex items-center justify-between w-full text-left font-semibold text-gray-800 mb-3 cursor-pointer"
+              >
+                <span className="font-bold text-lg">Cancellation Fees</span>
+                {expandedSections.cancellation ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+              </button>
+              {expandedSections.cancellation && (
+                <div className="space-y-2">
+                  {[
+                    { value: "", label: "All" },
+                    { value: "free", label: "Free cancellation" },
+                    { value: "partial", label: "Partial cancellation fees" },
+                    { value: "nonrefundable", label: "Non refundable" },
+                    { value: "notavailable", label: "Cancellation fees not available" },
+                  ].map(opt => (
+                    <label key={opt.value} className="flex items-center cursor-pointer">
+                      <input
+                        type="radio"
+                        name="cancellation"
+                        value={opt.value}
+                        checked={selectedCancellation === opt.value}
+                        onChange={(e) => setSelectedCancellation(e.target.value)}
+                        className="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                      />
+                      <span className="text-sm text-gray-700">{opt.label}</span>
+                    </label>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Establishment Profile */}
+            {dynamicEstablishment.length > 0 && (
+              <div className="mb-6">
+                <button
+                  onClick={() => toggleSection('establishment')}
+                  className="flex items-center justify-between w-full text-left font-semibold text-gray-800 mb-3 cursor-pointer"
+                >
+                  <span className="font-bold text-lg">Establishment Profile</span>
+                  {expandedSections.establishment ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                </button>
+                {expandedSections.establishment && (
+                  <div className="space-y-2 max-h-48 overflow-y-auto">
+                    {dynamicEstablishment.map(est => (
+                      <label key={est} className="flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={selectedEstablishment.includes(est)}
+                          onChange={() => setSelectedEstablishment(prev => prev.includes(est) ? prev.filter(e => e !== est) : [...prev, est])}
+                          className="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        />
+                        <span className="text-sm text-gray-700">{establishmentLabels[est] || est}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Discounts */}
+            {dynamicDiscounts.length > 0 && (
+              <div className="mb-6">
+                <button
+                  onClick={() => toggleSection('discounts')}
+                  className="flex items-center justify-between w-full text-left font-semibold text-gray-800 mb-3 cursor-pointer"
+                >
+                  <span className="font-bold text-lg">Discounts</span>
+                  {expandedSections.discounts ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                </button>
+                {expandedSections.discounts && (
+                  <div className="space-y-2">
+                    {dynamicDiscounts.map(disc => (
+                      <label key={disc} className="flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={selectedDiscounts.includes(disc)}
+                          onChange={() => setSelectedDiscounts(prev => prev.includes(disc) ? prev.filter(d => d !== disc) : [...prev, disc])}
+                          className="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        />
+                        <span className="text-sm text-gray-700">{disc}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Chain */}
+            {dynamicChains.length > 0 && (
+              <div className="mb-6">
+                <button
+                  onClick={() => toggleSection('chain')}
+                  className="flex items-center justify-between w-full text-left font-semibold text-gray-800 mb-3 cursor-pointer"
+                >
+                  <span className="font-bold text-lg">Chain</span>
+                  {expandedSections.chain ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                </button>
+                {expandedSections.chain && (
+                  <div className="space-y-2 max-h-48 overflow-y-auto">
+                    {dynamicChains.map(chain => (
+                      <label key={chain} className="flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={selectedChains.includes(chain)}
+                          onChange={() => setSelectedChains(prev => prev.includes(chain) ? prev.filter(c => c !== chain) : [...prev, chain])}
+                          className="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        />
+                        <span className="text-sm text-gray-700">{chain}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Product for Packaging */}
+            <div className="mb-6">
+              <button
+                onClick={() => toggleSection('packaging')}
+                className="flex items-center justify-between w-full text-left font-semibold text-gray-800 mb-3 cursor-pointer"
+              >
+                <span className="font-bold text-lg">Product for Packaging</span>
+                {expandedSections.packaging ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+              </button>
+              {expandedSections.packaging && (
+                <div className="space-y-2">
+                  {[
+                    { value: "", label: "All" },
+                    { value: "without", label: "Without package" },
+                    { value: "with", label: "With package" },
+                  ].map(opt => (
+                    <label key={opt.value} className="flex items-center cursor-pointer">
+                      <input
+                        type="radio"
+                        name="packaging"
+                        value={opt.value}
+                        checked={selectedPackaging === opt.value}
+                        onChange={(e) => setSelectedPackaging(e.target.value)}
+                        className="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                      />
+                      <span className="text-sm text-gray-700">{opt.label}</span>
+                    </label>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
-
-        {/* Main Content */}
         <div className="flex-1 lg:ml-0 ">
           <div className="container mx-auto px-4 py-8">
             {user && (

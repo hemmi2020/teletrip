@@ -93,7 +93,7 @@ async function fetchHotelContent(hotelCodes) {
         const signature = generateHotelbedsSignature(HOTELBEDS_API_KEY, HOTELBEDS_SECRET, timestamp);
         
         const codesParam = Array.isArray(hotelCodes) ? hotelCodes.join(',') : hotelCodes;
-        const contentUrl = `${HOTELBEDS_CONTENT_URL}/hotels?fields=images,facilities,amenities&language=ENG&codes=${codesParam}`;
+        const contentUrl = `${HOTELBEDS_CONTENT_URL}/hotels?fields=images,facilities,amenities,accommodationTypeCode,chainCode,segmentCodes&language=ENG&codes=${codesParam}`;
 
         const response = await fetch(contentUrl, {
             method: 'GET',
@@ -118,7 +118,10 @@ async function fetchHotelContent(hotelCodes) {
                 contentMap[hotel.code] = {
                     images: hotel.images || [],
                     facilities: hotel.facilities || [],
-                    amenities: hotel.amenities || []
+                    amenities: hotel.amenities || [],
+                    accommodationTypeCode: hotel.accommodationTypeCode || null,
+                    chainCode: hotel.chain?.content || hotel.chainCode || null,
+                    segmentCodes: hotel.segmentCodes || [],
                 };
             });
         }
@@ -200,7 +203,10 @@ async function enhanceHotelsWithContent(hotels) {
                 thumbnail,
                 amenities,
                 images: content.images || [],
-                facilities: content.facilities || []
+                facilities: content.facilities || [],
+                accommodationTypeCode: content.accommodationTypeCode || hotel.accommodationTypeCode,
+                chainCode: content.chainCode || hotel.chainCode,
+                segmentCodes: (content.segmentCodes || []).map(s => String(s.segmentCode || s)),
             };
         });
     } catch (error) {
