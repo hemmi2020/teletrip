@@ -672,7 +672,6 @@ const HotelSearchForm = () => {
   // Location search states
   const [searchQuery, setSearchQuery] = useState('');
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
-  const [allLocations, setAllLocations] = useState([]);
   const [filteredLocations, setFilteredLocations] = useState([]);
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [isLoadingLocations, setIsLoadingLocations] = useState(false);
@@ -685,85 +684,29 @@ const HotelSearchForm = () => {
   const [childAges, setChildAges] = useState([]);
   const [activeTab, setActiveTab] = useState('stays');
 
-  // Fetch all cities from CountriesNow API
+  // Debounced location search via API (cities + countries + hotels)
   useEffect(() => {
-    const fetchLocations = async () => {
-      setIsLoadingLocations(true);
-      try {
-        const response = await fetch('https://countriesnow.space/api/v0.1/countries/');
-        const data = await response.json();
-        
-        if (!data.error) {
-          const locations = [];
-          data.data.forEach(country => {
-            if (country.cities && country.cities.length > 0) {
-              country.cities.forEach(city => {
-                locations.push({
-                  type: 'city',
-                  city: city,
-                  country: country.country,
-                  countryCode: country.iso3,
-                  displayName: `${city}, ${country.country}`,
-                  searchText: `${city} ${country.country}`.toLowerCase()
-                });
-              });
-            }
-          });
-          setAllLocations(locations);
-        }
-      } catch (error) {
-        console.error('Error fetching locations:', error);
-      } finally {
-        setIsLoadingLocations(false);
-      }
-    };
-
-    fetchLocations();
-  }, []);
-
-  // Filter locations based on search query + search hotels from API
-  useEffect(() => {
-    if (searchQuery.trim() === '') {
+    if (searchQuery.trim().length < 2) {
       setFilteredLocations([]);
       return;
     }
-
-    const query = searchQuery.toLowerCase().trim();
-    const cityResults = allLocations
-      .filter(location => location.searchText.includes(query))
-      .slice(0, 30);
-
-    setFilteredLocations(cityResults);
-
-    // Also search hotels from API if 3+ chars
-    if (query.length >= 3) {
-      const timer = setTimeout(async () => {
-        try {
-          const API_BASE = import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
-          const res = await fetch(`${API_BASE}/api/locations/transfers?search=${encodeURIComponent(query)}`);
-          const data = await res.json();
-          if (data.success) {
-            const hotels = (data.data || [])
-              .filter(loc => loc.type === 'ATLAS')
-              .slice(0, 10)
-              .map(h => ({
-                type: 'hotel',
-                city: h.city,
-                country: h.country,
-                hotelName: h.name,
-                hotelCode: h.code,
-                displayName: `${h.name}, ${h.city}`,
-                searchText: `${h.name} ${h.city} ${h.country}`.toLowerCase()
-              }));
-            setFilteredLocations(prev => [...hotels, ...prev]);
-          }
-        } catch (err) {
-          // Silently fail — city results still show
+    setIsLoadingLocations(true);
+    const timer = setTimeout(async () => {
+      try {
+        const API_BASE = import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
+        const res = await fetch(`${API_BASE}/api/locations/search?q=${encodeURIComponent(searchQuery.trim())}`);
+        const data = await res.json();
+        if (data.success) {
+          setFilteredLocations(data.data || []);
         }
-      }, 300);
-      return () => clearTimeout(timer);
-    }
-  }, [searchQuery, allLocations]);
+      } catch (err) {
+        console.error('Location search error:', err);
+      } finally {
+        setIsLoadingLocations(false);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   // Handle clicks outside dropdowns
   useEffect(() => {
@@ -785,7 +728,7 @@ const HotelSearchForm = () => {
 
   const handleLocationSelect = (location) => {
     setSelectedLocation(location);
-    setSearchQuery(location.displayName);
+    setSearchQuery(location.displayName || location.name);
     setShowLocationDropdown(false);
   };
 
@@ -825,12 +768,14 @@ const HotelSearchForm = () => {
     const checkIn = format(dateRange[0].startDate, 'yyyy-MM-dd');
     const checkOut = format(dateRange[0].endDate, 'yyyy-MM-dd');
 
-    // Build URL - now we always have both city and country since we only show cities
+    // Build URL
+    const city = selectedLocation.city || selectedLocation.name;
+    const country = selectedLocation.country;
     let url = `/hotel-search-results?checkIn=${checkIn}&checkOut=${checkOut}&rooms=${rooms}&adults=${adults}&children=${children}`;
-    url += `&country=${encodeURIComponent(selectedLocation.country)}`;
-    url += `&city=${encodeURIComponent(selectedLocation.city)}`;
-    if (selectedLocation.type === 'hotel' && selectedLocation.hotelName) {
-      url += `&hotelName=${encodeURIComponent(selectedLocation.hotelName)}`;
+    url += `&country=${encodeURIComponent(country)}`;
+    url += `&city=${encodeURIComponent(city)}`;
+    if (selectedLocation.type === 'hotel' && selectedLocation.name) {
+      url += `&hotelName=${encodeURIComponent(selectedLocation.name)}`;
     }
 
     // Add child ages if present
@@ -927,7 +872,7 @@ const HotelSearchForm = () => {
                 {showLocationDropdown && searchQuery.trim() !== '' && (
                   <div className="absolute z-50 w-full mt-2 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 sm:max-h-80 overflow-y-auto">
                     {isLoadingLocations ? (
-                      <div className="p-3 sm:p-4 text-center text-gray-500 text-sm sm:text-base">Loading locations...</div>
+                      <div className="p-3 sm:p-4 text-center text-gray-500 text-sm sm:text-base">Searching...</div>
                     ) : filteredLocations.length > 0 ? (
                       <ul>
                         {filteredLocations.map((location, index) => (
@@ -944,11 +889,13 @@ const HotelSearchForm = () => {
                               )}
                               <div className="min-w-0 flex-1">
                                 <div className="font-medium text-gray-800 text-sm sm:text-base truncate">
-                                  {location.type === 'hotel' ? location.hotelName : location.city}
+                                  {location.type === 'hotel' ? location.name : location.type === 'country' ? location.country : location.city}
                                 </div>
                                 <div className="text-xs sm:text-sm text-gray-500 truncate">
                                   {location.type === 'hotel' 
-                                    ? `Hotel in ${location.city}, ${location.country}` 
+                                    ? `Hotel in ${location.city}${location.country ? ', ' + location.country : ''}` 
+                                    : location.type === 'country'
+                                    ? 'Country'
                                     : `City in ${location.country}`}
                                 </div>
                               </div>
