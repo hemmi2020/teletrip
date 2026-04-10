@@ -25,8 +25,10 @@ const TransfersTab = () => {
   const [infants, setInfants] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [showTravellerDropdown, setShowTravellerDropdown] = useState(false);
   const pickupRef = useRef(null);
   const dropoffRef = useRef(null);
+  const travellerRef = useRef(null);
 
   // Debounced search for pickup locations via API (airports + hotels)
   useEffect(() => {
@@ -79,6 +81,9 @@ const TransfersTab = () => {
       }
       if (dropoffRef.current && !dropoffRef.current.contains(event.target)) {
         setShowDropoffDropdown(false);
+      }
+      if (travellerRef.current && !travellerRef.current.contains(event.target)) {
+        setShowTravellerDropdown(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -300,37 +305,49 @@ const TransfersTab = () => {
           />
         </div>
 
-        <div className="grid grid-cols-3 gap-2">
-          <div>
-            <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2 px-1">Adults</label>
-            <input
-              type="number"
-              min="1"
-              value={adults}
-              onChange={(e) => setAdults(parseInt(e.target.value) || 1)}
-              className="w-full px-2 py-2.5 sm:py-3 border border-gray-300 bg-white rounded-lg focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
-            />
+        <div className="relative" ref={travellerRef}>
+          <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2 px-1">
+            Travellers <span className="text-red-500">*</span>
+          </label>
+          <div
+            onClick={() => setShowTravellerDropdown(!showTravellerDropdown)}
+            className="flex items-center w-full px-3 py-2.5 sm:py-3 border border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 transition-all bg-white"
+          >
+            <Users className="text-gray-400 mr-2 flex-shrink-0" size={18} />
+            <span className="text-gray-700 flex-1 text-sm sm:text-base truncate">
+              {adults} Adult{adults > 1 ? 's' : ''}{children > 0 ? `, ${children} Child${children > 1 ? 'ren' : ''}` : ''}{infants > 0 ? `, ${infants} Infant${infants > 1 ? 's' : ''}` : ''}
+            </span>
+            <ChevronDown className="text-gray-400 flex-shrink-0" size={18} />
           </div>
-          <div>
-            <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2 px-1">Children</label>
-            <input
-              type="number"
-              min="0"
-              value={children}
-              onChange={(e) => setChildren(parseInt(e.target.value) || 0)}
-              className="w-full px-2 py-2.5 sm:py-3 border border-gray-300 bg-white rounded-lg focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
-            />
-          </div>
-          <div>
-            <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2 px-1">Infants</label>
-            <input
-              type="number"
-              min="0"
-              value={infants}
-              onChange={(e) => setInfants(parseInt(e.target.value) || 0)}
-              className="w-full px-2 py-2.5 sm:py-3 border border-gray-300 bg-white rounded-lg focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
-            />
-          </div>
+          {showTravellerDropdown && (
+            <div className="absolute z-50 w-full mt-2 bg-white border border-gray-300 rounded-lg shadow-xl p-3 sm:p-4 space-y-3 sm:space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-gray-700 font-medium text-sm sm:text-base">Adults</span>
+                <div className="flex items-center space-x-2 sm:space-x-3">
+                  <button type="button" onClick={() => setAdults(Math.max(1, adults - 1))} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Minus size={14} /></button>
+                  <span className="w-6 sm:w-8 text-center font-medium text-sm sm:text-base">{adults}</span>
+                  <button type="button" onClick={() => setAdults(Math.min(20, adults + 1))} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Plus size={14} /></button>
+                </div>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-gray-700 font-medium text-sm sm:text-base">Children</span>
+                <div className="flex items-center space-x-2 sm:space-x-3">
+                  <button type="button" onClick={() => setChildren(Math.max(0, children - 1))} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Minus size={14} /></button>
+                  <span className="w-6 sm:w-8 text-center font-medium text-sm sm:text-base">{children}</span>
+                  <button type="button" onClick={() => setChildren(Math.min(10, children + 1))} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Plus size={14} /></button>
+                </div>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-gray-700 font-medium text-sm sm:text-base">Infants</span>
+                <div className="flex items-center space-x-2 sm:space-x-3">
+                  <button type="button" onClick={() => setInfants(Math.max(0, infants - 1))} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Minus size={14} /></button>
+                  <span className="w-6 sm:w-8 text-center font-medium text-sm sm:text-base">{infants}</span>
+                  <button type="button" onClick={() => setInfants(Math.min(5, infants + 1))} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Plus size={14} /></button>
+                </div>
+              </div>
+              <button type="button" onClick={() => setShowTravellerDropdown(false)} className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm sm:text-base">Done</button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -363,8 +380,10 @@ const ExperiencesTab = () => {
   }]);
   const [showCalendar, setShowCalendar] = useState(false);
   const [adults, setAdults] = useState(2);
+  const [showTravellerDropdown, setShowTravellerDropdown] = useState(false);
   const locationRef = useRef(null);
   const calendarRef = useRef(null);
+  const travellerRef = useRef(null);
 
   useEffect(() => {
     const fetchLocations = async () => {
@@ -412,12 +431,9 @@ const ExperiencesTab = () => {
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (calendarRef.current && !calendarRef.current.contains(event.target)) {
-        setShowCalendar(false);
-      }
-      if (locationRef.current && !locationRef.current.contains(event.target)) {
-        setShowLocationDropdown(false);
-      }
+      if (calendarRef.current && !calendarRef.current.contains(event.target)) setShowCalendar(false);
+      if (locationRef.current && !locationRef.current.contains(event.target)) setShowLocationDropdown(false);
+      if (travellerRef.current && !travellerRef.current.contains(event.target)) setShowTravellerDropdown(false);
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -561,21 +577,33 @@ const ExperiencesTab = () => {
           )}
         </div>
 
-        <div>
+        <div className="relative" ref={travellerRef}>
           <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2 px-1">
-            Adults <span className="text-red-500">*</span>
+            Travellers <span className="text-red-500">*</span>
           </label>
-          <div className="relative">
-            <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-            <input
-              type="number"
-              min="1"
-              max="20"
-              value={adults}
-              onChange={(e) => setAdults(parseInt(e.target.value) || 1)}
-              className="w-full pl-10 pr-4 py-2.5 sm:py-3 border border-gray-300 bg-white rounded-lg focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
-            />
+          <div
+            onClick={() => setShowTravellerDropdown(!showTravellerDropdown)}
+            className="flex items-center w-full px-3 py-2.5 sm:py-3 border border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 transition-all bg-white"
+          >
+            <Users className="text-gray-400 mr-2 flex-shrink-0" size={18} />
+            <span className="text-gray-700 flex-1 text-sm sm:text-base truncate">
+              {adults} Adult{adults > 1 ? 's' : ''}
+            </span>
+            <ChevronDown className="text-gray-400 flex-shrink-0" size={18} />
           </div>
+          {showTravellerDropdown && (
+            <div className="absolute z-50 w-full mt-2 bg-white border border-gray-300 rounded-lg shadow-xl p-3 sm:p-4 space-y-3 sm:space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-gray-700 font-medium text-sm sm:text-base">Adults</span>
+                <div className="flex items-center space-x-2 sm:space-x-3">
+                  <button type="button" onClick={() => setAdults(Math.max(1, adults - 1))} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Minus size={14} /></button>
+                  <span className="w-6 sm:w-8 text-center font-medium text-sm sm:text-base">{adults}</span>
+                  <button type="button" onClick={() => setAdults(Math.min(20, adults + 1))} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Plus size={14} /></button>
+                </div>
+              </div>
+              <button type="button" onClick={() => setShowTravellerDropdown(false)} className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm sm:text-base">Done</button>
+            </div>
+          )}
         </div>
       </div>
 
