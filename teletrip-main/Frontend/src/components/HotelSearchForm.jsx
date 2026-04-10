@@ -695,12 +695,34 @@ const HotelSearchForm = () => {
       try {
         const API_BASE = import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
         const res = await fetch(`${API_BASE}/api/locations/search?q=${encodeURIComponent(searchQuery.trim())}`);
+        if (!res.ok) throw new Error('API unavailable');
         const data = await res.json();
         if (data.success) {
           setFilteredLocations(data.data || []);
         }
       } catch (err) {
-        console.error('Location search error:', err);
+        // Fallback: search CountriesNow directly
+        try {
+          const res = await fetch('https://countriesnow.space/api/v0.1/countries/');
+          const data = await res.json();
+          if (!data.error) {
+            const query = searchQuery.toLowerCase().trim();
+            const results = [];
+            data.data.forEach(country => {
+              if (country.country.toLowerCase().includes(query)) {
+                results.push({ type: 'country', name: country.country, city: '', country: country.country, countryCode: country.iso3, displayName: country.country });
+              }
+              (country.cities || []).forEach(city => {
+                if (city.toLowerCase().includes(query) && results.length < 30) {
+                  results.push({ type: 'city', name: city, city, country: country.country, countryCode: country.iso3, displayName: `${city}, ${country.country}` });
+                }
+              });
+            });
+            setFilteredLocations(results.slice(0, 30));
+          }
+        } catch (fallbackErr) {
+          console.error('Fallback search failed:', fallbackErr);
+        }
       } finally {
         setIsLoadingLocations(false);
       }
