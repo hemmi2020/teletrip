@@ -57,7 +57,7 @@ export const MultiSelect = ({ label, options, selected, onChange, icon: Icon }) 
       <label className="block text-xs text-gray-600 mb-1">{label}</label>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white hover:bg-gray-50 flex items-center justify-between text-sm"
+        className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white hover:bg-gray-50 flex items-center justify-between text-sm cursor-pointer"
       >
         <div className="flex items-center gap-2">
           {Icon && <Icon className="w-4 h-4 text-gray-400" />}
@@ -139,7 +139,7 @@ export const AdvancedSearch = ({ value, onChange, onSearch, suggestions = [], pl
         {value && (
           <button
             onClick={() => onChange('')}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -177,7 +177,7 @@ export const FilterChips = ({ filters, onRemove, onClear }) => {
   if (activeFilters.length === 0) return null;
 
   return (
-    <div className="flex flex-wrap items-center gap-2 p-4 bg-gray-50 rounded-lg">
+    <div className="flex flex-wrap items-center gap-2 p-3 sm:p-4 bg-gray-50 rounded-lg">
       <span className="text-sm text-gray-600 font-medium">Active Filters:</span>
       {activeFilters.map((filter) => (
         <span
@@ -187,7 +187,7 @@ export const FilterChips = ({ filters, onRemove, onClear }) => {
           {filter.label}
           <button
             onClick={() => onRemove(filter.key)}
-            className="hover:bg-blue-200 rounded-full p-0.5"
+            className="hover:bg-blue-200 rounded-full p-0.5 cursor-pointer"
           >
             <X className="w-3 h-3" />
           </button>
@@ -195,7 +195,7 @@ export const FilterChips = ({ filters, onRemove, onClear }) => {
       ))}
       <button
         onClick={onClear}
-        className="text-sm text-red-600 hover:text-red-800 font-medium ml-2"
+        className="text-sm text-red-600 hover:text-red-800 font-medium ml-2 cursor-pointer"
       >
         Clear All
       </button>
@@ -233,7 +233,7 @@ export const FilterPresets = ({ presets, onLoad, onSave, onDelete, currentFilter
         </select>
         <button
           onClick={() => setShowSaveModal(true)}
-          className="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2 text-sm"
+          className="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2 text-sm cursor-pointer"
         >
           <Save className="w-4 h-4" />
           Save
@@ -241,8 +241,8 @@ export const FilterPresets = ({ presets, onLoad, onSave, onDelete, currentFilter
       </div>
 
       {showSaveModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-96">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-4 sm:p-6 w-full max-w-sm sm:max-w-md">
             <h3 className="text-lg font-semibold mb-4">Save Filter Preset</h3>
             <input
               type="text"
@@ -255,13 +255,13 @@ export const FilterPresets = ({ presets, onLoad, onSave, onDelete, currentFilter
             <div className="flex gap-2 justify-end">
               <button
                 onClick={() => setShowSaveModal(false)}
-                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSave}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 cursor-pointer"
               >
                 Save Preset
               </button>
@@ -279,13 +279,13 @@ export const FilterPresets = ({ presets, onLoad, onSave, onDelete, currentFilter
             >
               <button
                 onClick={() => onLoad(preset.id)}
-                className="text-gray-700 hover:text-blue-600"
+                className="text-gray-700 hover:text-blue-600 cursor-pointer"
               >
                 {preset.name}
               </button>
               <button
                 onClick={() => onDelete(preset.id)}
-                className="text-gray-400 hover:text-red-600"
+                className="text-gray-400 hover:text-red-600 cursor-pointer"
               >
                 <Trash2 className="w-3 h-3" />
               </button>
@@ -332,11 +332,11 @@ export const AdvancedFilterPanel = ({
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-      <div className="p-4 border-b border-gray-200">
-        <div className="flex items-center justify-between mb-4">
+      <div className="p-3 sm:p-4 border-b border-gray-200">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="flex items-center gap-2 text-gray-700 hover:text-gray-900 font-medium"
+            className="flex items-center gap-2 text-gray-700 hover:text-gray-900 font-medium cursor-pointer"
           >
             <Filter className="w-5 h-5" />
             Advanced Filters
@@ -345,7 +345,7 @@ export const AdvancedFilterPanel = ({
           <div className="flex items-center gap-2">
             <button
               onClick={onExport}
-              className="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2 text-sm"
+              className="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2 text-sm cursor-pointer"
             >
               <Download className="w-4 h-4" />
               Export
@@ -362,8 +362,8 @@ export const AdvancedFilterPanel = ({
       </div>
 
       {isExpanded && (
-        <div className="p-4 space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="p-3 sm:p-4 space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             <DateRangePicker
               startDate={filters.startDate}
               endDate={filters.endDate}
@@ -395,17 +395,17 @@ export const AdvancedFilterPanel = ({
             />
           </div>
 
-          <div className="flex items-center gap-2 pt-4 border-t border-gray-200">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-4 border-t border-gray-200">
             <button
               onClick={onApply}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2 cursor-pointer"
             >
               <Filter className="w-4 h-4" />
               Apply Filters
             </button>
             <button
               onClick={onReset}
-              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2"
+              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center justify-center gap-2 cursor-pointer"
             >
               <X className="w-4 h-4" />
               Reset

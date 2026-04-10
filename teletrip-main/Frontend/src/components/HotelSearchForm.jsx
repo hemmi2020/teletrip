@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MapPin, Calendar, Users, Search, ChevronDown, X, Plus, Minus, Loader2, Star, Clock, Tag } from 'lucide-react';
+import { MapPin, Calendar, Users, Search, ChevronDown, X, Plus, Minus, Loader2, Star, Clock, Tag, Plane, Building2 } from 'lucide-react';
 import { DateRange } from 'react-date-range';
 import { addDays, format } from 'date-fns';
 import { searchTransfers } from '../services/transfersApi';
@@ -13,7 +13,7 @@ const TransfersTab = () => {
   const [dropoffQuery, setDropoffQuery] = useState('');
   const [showPickupDropdown, setShowPickupDropdown] = useState(false);
   const [showDropoffDropdown, setShowDropoffDropdown] = useState(false);
-  const [transferLocations, setTransferLocations] = useState([]);
+  const [transferLocations, setTransferLocations] = useState([]); // kept for compatibility
   const [isLoadingLocations, setIsLoadingLocations] = useState(false);
   const [filteredPickupLocations, setFilteredPickupLocations] = useState([]);
   const [filteredDropoffLocations, setFilteredDropoffLocations] = useState([]);
@@ -28,50 +28,49 @@ const TransfersTab = () => {
   const pickupRef = useRef(null);
   const dropoffRef = useRef(null);
 
+  // Debounced search for pickup locations via API (airports + hotels)
   useEffect(() => {
-    const fetchLocations = async () => {
-      setIsLoadingLocations(true);
-      try {
-        const response = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/locations/transfers`);
-        if (response.data.success) {
-          setTransferLocations(response.data.data);
-        }
-      } catch (error) {
-        console.error('Error fetching transfer locations:', error);
-      } finally {
-        setIsLoadingLocations(false);
-      }
-    };
-    fetchLocations();
-  }, []);
-
-  useEffect(() => {
-    if (pickupQuery.trim() === '') {
+    if (pickupQuery.trim().length < 2) {
       setFilteredPickupLocations([]);
       return;
     }
-    const query = pickupQuery.toLowerCase().trim();
-    const filtered = transferLocations.filter(loc => 
-      loc.name.toLowerCase().includes(query) || 
-      loc.city.toLowerCase().includes(query) ||
-      loc.code.toLowerCase().includes(query)
-    );
-    setFilteredPickupLocations(filtered);
-  }, [pickupQuery, transferLocations]);
+    setIsLoadingLocations(true);
+    const timer = setTimeout(async () => {
+      try {
+        const response = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/locations/transfers?search=${encodeURIComponent(pickupQuery.trim())}`);
+        if (response.data.success) {
+          setFilteredPickupLocations(response.data.data);
+        }
+      } catch (error) {
+        console.error('Error searching pickup locations:', error);
+      } finally {
+        setIsLoadingLocations(false);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [pickupQuery]);
 
+  // Debounced search for dropoff locations via API (airports + hotels)
   useEffect(() => {
-    if (dropoffQuery.trim() === '') {
+    if (dropoffQuery.trim().length < 2) {
       setFilteredDropoffLocations([]);
       return;
     }
-    const query = dropoffQuery.toLowerCase().trim();
-    const filtered = transferLocations.filter(loc => 
-      loc.name.toLowerCase().includes(query) || 
-      loc.city.toLowerCase().includes(query) ||
-      loc.code.toLowerCase().includes(query)
-    );
-    setFilteredDropoffLocations(filtered);
-  }, [dropoffQuery, transferLocations]);
+    setIsLoadingLocations(true);
+    const timer = setTimeout(async () => {
+      try {
+        const response = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/locations/transfers?search=${encodeURIComponent(dropoffQuery.trim())}`);
+        if (response.data.success) {
+          setFilteredDropoffLocations(response.data.data);
+        }
+      } catch (error) {
+        console.error('Error searching dropoff locations:', error);
+      } finally {
+        setIsLoadingLocations(false);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [dropoffQuery]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -179,11 +178,13 @@ const TransfersTab = () => {
           </div>
           {showPickupDropdown && pickupQuery.trim() !== '' && (
             <div className="absolute z-50 w-full mt-2 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-              {filteredPickupLocations.length > 0 ? (
+              {isLoadingLocations ? (
+                <div className="p-3 text-center text-gray-500 text-sm">Searching locations...</div>
+              ) : filteredPickupLocations.length > 0 ? (
                 <ul>
                   {filteredPickupLocations.map((location, index) => (
                     <li
-                      key={index}
+                      key={`${location.type}-${location.code}-${index}`}
                       onClick={() => {
                         setSelectedPickup(location);
                         setPickupQuery(location.name);
@@ -192,10 +193,14 @@ const TransfersTab = () => {
                       className="px-4 py-2.5 hover:bg-blue-50 cursor-pointer border-b last:border-b-0"
                     >
                       <div className="flex items-center space-x-2">
-                        <MapPin size={16} className="text-blue-600" />
-                        <div>
-                          <div className="font-medium text-sm">{location.name}</div>
-                          <div className="text-xs text-gray-500">{location.type} - {location.code}</div>
+                        {location.type === 'IATA' ? (
+                          <Plane size={16} className="text-blue-600 flex-shrink-0" />
+                        ) : (
+                          <Building2 size={16} className="text-green-600 flex-shrink-0" />
+                        )}
+                        <div className="min-w-0 flex-1">
+                          <div className="font-medium text-sm truncate">{location.name}</div>
+                          <div className="text-xs text-gray-500">{location.type === 'IATA' ? 'Airport' : 'Hotel'} · {location.city}{location.country ? `, ${location.country}` : ''}</div>
                         </div>
                       </div>
                     </li>
@@ -243,11 +248,13 @@ const TransfersTab = () => {
           </div>
           {showDropoffDropdown && dropoffQuery.trim() !== '' && (
             <div className="absolute z-50 w-full mt-2 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-              {filteredDropoffLocations.length > 0 ? (
+              {isLoadingLocations ? (
+                <div className="p-3 text-center text-gray-500 text-sm">Searching locations...</div>
+              ) : filteredDropoffLocations.length > 0 ? (
                 <ul>
                   {filteredDropoffLocations.map((location, index) => (
                     <li
-                      key={index}
+                      key={`${location.type}-${location.code}-${index}`}
                       onClick={() => {
                         setSelectedDropoff(location);
                         setDropoffQuery(location.name);
@@ -256,10 +263,14 @@ const TransfersTab = () => {
                       className="px-4 py-2.5 hover:bg-blue-50 cursor-pointer border-b last:border-b-0"
                     >
                       <div className="flex items-center space-x-2">
-                        <MapPin size={16} className="text-blue-600" />
-                        <div>
-                          <div className="font-medium text-sm">{location.name}</div>
-                          <div className="text-xs text-gray-500">{location.type} - {location.code}</div>
+                        {location.type === 'IATA' ? (
+                          <Plane size={16} className="text-blue-600 flex-shrink-0" />
+                        ) : (
+                          <Building2 size={16} className="text-green-600 flex-shrink-0" />
+                        )}
+                        <div className="min-w-0 flex-1">
+                          <div className="font-medium text-sm truncate">{location.name}</div>
+                          <div className="text-xs text-gray-500">{location.type === 'IATA' ? 'Airport' : 'Hotel'} · {location.city}{location.country ? `, ${location.country}` : ''}</div>
                         </div>
                       </div>
                     </li>
@@ -930,8 +941,7 @@ const HotelSearchForm = () => {
                   </div>
 
                   {showCalendar && (
-                    <div className="fixed sm:absolute z-50 left-1/2 top-1/2 sm:top-auto transform -translate-x-1/2 -translate-y-1/2 sm:translate-y-0 sm:mt-2 bg-white border border-gray-300 rounded-lg shadow-xl">
-                      <div style={{ transform: 'scale(0.85)', transformOrigin: 'top center' }}>
+                    <div className="fixed sm:absolute z-50 left-1/2 top-1/2 sm:top-auto transform -translate-x-1/2 -translate-y-1/2 sm:translate-y-0 sm:mt-2 bg-white border border-gray-300 rounded-lg shadow-xl overflow-auto max-w-[95vw]">
                         <DateRange
                           ranges={dateRange}
                           onChange={(item) => setDateRange([item.selection])}
@@ -941,6 +951,14 @@ const HotelSearchForm = () => {
                           direction="horizontal"
                           rangeColors={['#2563eb']}
                         />
+                      <div className="px-4 pb-3 flex justify-end">
+                        <button
+                          type="button"
+                          onClick={() => setShowCalendar(false)}
+                          className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm"
+                        >
+                          OK
+                        </button>
                       </div>
                     </div>
                   )}

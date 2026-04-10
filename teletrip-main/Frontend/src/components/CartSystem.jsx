@@ -989,7 +989,7 @@ export const SlideOutCart = ({ isOpen, onClose, onProceedToCheckout }) => {
                             </span>
                           )}
                           <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded font-medium">
-                            {nights} {nights === 1 ? 'Day' : 'Days'}
+                            {nights} {nights === 1 ? 'Night' : 'Nights'}
                           </span>
                           {item.type !== 'activity' && (
                             <span className="bg-gray-100 px-2 py-1 rounded">

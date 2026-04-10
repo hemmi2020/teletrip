@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Loader2, MapPin, Calendar, Users, Filter, Star, Clock } from 'lucide-react';
+import { Loader2, MapPin, Calendar, Users, Filter, Star, Clock, Search, X, ChevronDown, ChevronUp } from 'lucide-react';
 import Header from './components/Header';
 import Footer from './components/Footer';
 
@@ -10,7 +10,22 @@ const ActivitySearchResults = () => {
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [filters, setFilters] = useState({ priceRange: 'all', category: 'all' });
+  const [showFilters, setShowFilters] = useState(false);
+
+  // Filter states
+  const [nameSearch, setNameSearch] = useState('');
+  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [selectedDaytimes, setSelectedDaytimes] = useState([]);
+  const [selectedRecommended, setSelectedRecommended] = useState([]);
+  const [priceMin, setPriceMin] = useState('');
+  const [priceMax, setPriceMax] = useState('');
+  const [expandedSections, setExpandedSections] = useState({
+    name: true,
+    categories: true,
+    daytime: false,
+    recommended: false,
+    price: true,
+  });
 
   const destination = searchParams.get('destination');
   const country = searchParams.get('country');
@@ -53,13 +68,102 @@ const ActivitySearchResults = () => {
     if (destination && from && to) fetchActivities();
   }, [destination, country, from, to, adults]);
 
-  const filteredActivities = activities.filter(a => {
-    if (filters.priceRange !== 'all') {
-      const price = parseFloat(a.pricing?.amount || 0);
-      if (filters.priceRange === 'low' && price > 50) return false;
-      if (filters.priceRange === 'mid' && (price <= 50 || price > 150)) return false;
-      if (filters.priceRange === 'high' && price <= 150) return false;
+  const toggleSection = (section) => {
+    setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
+  };
+
+  const clearFilters = () => {
+    setNameSearch('');
+    setSelectedCategories([]);
+    setSelectedDaytimes([]);
+    setSelectedRecommended([]);
+    setPriceMin('');
+    setPriceMax('');
+  };
+
+  // Dynamic filter options from data
+  const dynamicCategories = [...new Set(activities.map(a => a.activityFactsheetType).filter(Boolean))].sort();
+  const dynamicDaytimes = [...new Set(activities.flatMap(a => {
+    const times = [];
+    const sched = a.scheduling;
+    if (sched?.opened) times.push('Daytime');
+    if (sched?.duration?.hours >= 4) times.push('Full Day');
+    if (sched?.duration?.hours && sched.duration.hours < 4) times.push('Half Day');
+    const name = (a.name || '').toLowerCase();
+    if (name.includes('night') || name.includes('evening') || name.includes('sunset')) times.push('Night / Evening');
+    if (name.includes('morning') || name.includes('sunrise')) times.push('Morning');
+    return times.length > 0 ? times : ['Daytime'];
+  }))].sort();
+  const dynamicRecommended = [...new Set(activities.flatMap(a => {
+    const groups = [];
+    if (a.segmentationGroups && Array.isArray(a.segmentationGroups)) {
+      a.segmentationGroups.forEach(g => {
+        if (g.segments) g.segments.forEach(s => { if (s.name) groups.push(s.name); });
+        if (g.name) groups.push(g.name);
+      });
     }
+    // Fallback: derive from name/description
+    if (groups.length === 0) {
+      const text = ((a.name || '') + ' ' + (a.summary || '')).toLowerCase();
+      if (text.includes('family') || text.includes('kid')) groups.push('Families');
+      if (text.includes('couple') || text.includes('romantic')) groups.push('Couples');
+      if (text.includes('adventure') || text.includes('thrill')) groups.push('Adventure Seekers');
+      if (text.includes('group') || text.includes('team')) groups.push('Groups');
+    }
+    return groups;
+  }))].filter(Boolean).sort();
+
+  // Derive daytime tag for a single activity (for filtering)
+  const getActivityDaytimes = (activity) => {
+    const times = new Set();
+    const sched = activity.scheduling;
+    if (sched?.opened) times.add('Daytime');
+    if (sched?.duration?.hours >= 4) times.add('Full Day');
+    if (sched?.duration?.hours && sched.duration.hours < 4) times.add('Half Day');
+    const name = (activity.name || '').toLowerCase();
+    if (name.includes('night') || name.includes('evening') || name.includes('sunset')) times.add('Night / Evening');
+    if (name.includes('morning') || name.includes('sunrise')) times.add('Morning');
+    if (times.size === 0) times.add('Daytime');
+    return times;
+  };
+
+  const getActivityRecommended = (activity) => {
+    const groups = new Set();
+    if (activity.segmentationGroups && Array.isArray(activity.segmentationGroups)) {
+      activity.segmentationGroups.forEach(g => {
+        if (g.segments) g.segments.forEach(s => { if (s.name) groups.add(s.name); });
+        if (g.name) groups.add(g.name);
+      });
+    }
+    if (groups.size === 0) {
+      const text = ((activity.name || '') + ' ' + (activity.summary || '')).toLowerCase();
+      if (text.includes('family') || text.includes('kid')) groups.add('Families');
+      if (text.includes('couple') || text.includes('romantic')) groups.add('Couples');
+      if (text.includes('adventure') || text.includes('thrill')) groups.add('Adventure Seekers');
+      if (text.includes('group') || text.includes('team')) groups.add('Groups');
+    }
+    return groups;
+  };
+
+  const filteredActivities = activities.filter(a => {
+    // Name search
+    if (nameSearch && !a.name.toLowerCase().includes(nameSearch.toLowerCase())) return false;
+    // Category
+    if (selectedCategories.length > 0 && !selectedCategories.includes(a.activityFactsheetType)) return false;
+    // Daytime
+    if (selectedDaytimes.length > 0) {
+      const times = getActivityDaytimes(a);
+      if (!selectedDaytimes.some(d => times.has(d))) return false;
+    }
+    // Recommended
+    if (selectedRecommended.length > 0) {
+      const recs = getActivityRecommended(a);
+      if (!selectedRecommended.some(r => recs.has(r))) return false;
+    }
+    // Price
+    const price = parseFloat(a.pricing?.amount || 0);
+    if (priceMin && price < parseFloat(priceMin)) return false;
+    if (priceMax && price > parseFloat(priceMax)) return false;
     return true;
   });
 
@@ -88,26 +192,161 @@ const ActivitySearchResults = () => {
         </div>
 
         <div className="flex flex-col lg:flex-row gap-6">
-          <div className="w-64 hidden lg:block">
-            <div className="bg-white rounded-lg shadow p-4 sticky top-24">
-              <h3 className="font-semibold mb-4 flex items-center"><Filter className="w-4 h-4 mr-2" />Filters</h3>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">Price Range</label>
-                  <select
-                    value={filters.priceRange}
-                    onChange={(e) => setFilters({ ...filters, priceRange: e.target.value })}
-                    className="w-full border rounded-lg px-3 py-2"
-                  >
-                    <option value="all">All Prices</option>
-                    <option value="low">Under $50</option>
-                    <option value="mid">$50 - $150</option>
-                    <option value="high">Over $150</option>
-                  </select>
+          {/* Mobile Filter Toggle */}
+          <div className="lg:hidden">
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 cursor-pointer"
+            >
+              <Filter className="w-4 h-4" />
+              Filters
+            </button>
+          </div>
+
+          {/* Sidebar Filters */}
+          <div className={`fixed lg:relative inset-y-0 left-0 z-40 w-80 bg-white shadow-lg transform ${showFilters ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 transition-transform duration-300 ease-in-out pt-16 lg:pt-0 lg:w-72 lg:flex-shrink-0`}>
+            <div className="p-4 h-full overflow-y-auto">
+              {/* Mobile Close */}
+              <div className="lg:hidden flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold">Filters</h2>
+                <button onClick={() => setShowFilters(false)} className="text-gray-500 hover:text-gray-700 cursor-pointer">
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="font-semibold text-lg hidden lg:block">Filters</h3>
+                <button onClick={clearFilters} className="text-blue-600 hover:text-blue-800 text-sm cursor-pointer">Clear all</button>
+              </div>
+
+              {/* 1. Search by Activity Name */}
+              <div className="mb-5">
+                <button onClick={() => toggleSection('name')} className="flex items-center justify-between w-full text-left font-semibold text-gray-800 mb-2 cursor-pointer">
+                  <span className="font-bold text-sm">Activity Name</span>
+                  {expandedSections.name ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                </button>
+                {expandedSections.name && (
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <input
+                      type="text"
+                      value={nameSearch}
+                      onChange={(e) => setNameSearch(e.target.value)}
+                      placeholder="Search activity..."
+                      className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* 2. Categories */}
+              {dynamicCategories.length > 0 && (
+                <div className="mb-5">
+                  <button onClick={() => toggleSection('categories')} className="flex items-center justify-between w-full text-left font-semibold text-gray-800 mb-2 cursor-pointer">
+                    <span className="font-bold text-sm">Categories</span>
+                    {expandedSections.categories ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                  </button>
+                  {expandedSections.categories && (
+                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                      {dynamicCategories.map(cat => (
+                        <label key={cat} className="flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={selectedCategories.includes(cat)}
+                            onChange={() => setSelectedCategories(prev => prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat])}
+                            className="mr-2 h-4 w-4 text-blue-600 border-gray-300 rounded"
+                          />
+                          <span className="text-sm text-gray-700">{cat}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
                 </div>
+              )}
+
+              {/* 3. Daytime */}
+              {dynamicDaytimes.length > 0 && (
+                <div className="mb-5">
+                  <button onClick={() => toggleSection('daytime')} className="flex items-center justify-between w-full text-left font-semibold text-gray-800 mb-2 cursor-pointer">
+                    <span className="font-bold text-sm">Daytime</span>
+                    {expandedSections.daytime ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                  </button>
+                  {expandedSections.daytime && (
+                    <div className="space-y-2">
+                      {dynamicDaytimes.map(time => (
+                        <label key={time} className="flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={selectedDaytimes.includes(time)}
+                            onChange={() => setSelectedDaytimes(prev => prev.includes(time) ? prev.filter(t => t !== time) : [...prev, time])}
+                            className="mr-2 h-4 w-4 text-blue-600 border-gray-300 rounded"
+                          />
+                          <span className="text-sm text-gray-700">{time}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* 4. Recommended Activity For */}
+              {dynamicRecommended.length > 0 && (
+                <div className="mb-5">
+                  <button onClick={() => toggleSection('recommended')} className="flex items-center justify-between w-full text-left font-semibold text-gray-800 mb-2 cursor-pointer">
+                    <span className="font-bold text-sm">Recommended For</span>
+                    {expandedSections.recommended ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                  </button>
+                  {expandedSections.recommended && (
+                    <div className="space-y-2">
+                      {dynamicRecommended.map(rec => (
+                        <label key={rec} className="flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={selectedRecommended.includes(rec)}
+                            onChange={() => setSelectedRecommended(prev => prev.includes(rec) ? prev.filter(r => r !== rec) : [...prev, rec])}
+                            className="mr-2 h-4 w-4 text-blue-600 border-gray-300 rounded"
+                          />
+                          <span className="text-sm text-gray-700">{rec}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* 5. Price Min & Max */}
+              <div className="mb-5">
+                <button onClick={() => toggleSection('price')} className="flex items-center justify-between w-full text-left font-semibold text-gray-800 mb-2 cursor-pointer">
+                  <span className="font-bold text-sm">Price Range</span>
+                  {expandedSections.price ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                </button>
+                {expandedSections.price && (
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      value={priceMin}
+                      onChange={(e) => setPriceMin(e.target.value)}
+                      placeholder="Min"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
+                    />
+                    <span className="text-gray-400">-</span>
+                    <input
+                      type="number"
+                      value={priceMax}
+                      onChange={(e) => setPriceMax(e.target.value)}
+                      placeholder="Max"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                )}
               </div>
             </div>
           </div>
+
+          {/* Mobile overlay */}
+          {showFilters && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden" onClick={() => setShowFilters(false)} />
+          )}
 
           <div className="flex-1">
             {error && (

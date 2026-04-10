@@ -70,6 +70,8 @@ router.post('/search', async (req, res) => {
       let contentDescription = activity.content?.description || '';
       let summary = null;
       let activityType = activity.content?.activityFactsheetType;
+      let contentSegmentationGroups = [];
+      let contentScheduling = null;
 
       try {
         const contentData = await activityContentService.getActivityContentSimple(language, activity.code);
@@ -85,6 +87,8 @@ router.post('/search', async (req, res) => {
         if (content?.description) contentDescription = content.description;
         if (content?.summary) summary = content.summary;
         if (content?.activityFactsheetType) activityType = content.activityFactsheetType;
+        if (content?.segmentationGroups) contentSegmentationGroups = content.segmentationGroups;
+        if (content?.scheduling) contentScheduling = content.scheduling;
       } catch (err) {
         // Content API not available for this activity - use search data
       }
@@ -126,7 +130,9 @@ router.post('/search', async (req, res) => {
         pricing,
         country: activity.country?.name || country,
         destination: activity.destination?.name || destination,
-        activityFactsheetType: activityType
+        activityFactsheetType: activityType,
+        segmentationGroups: contentSegmentationGroups,
+        scheduling: contentScheduling
       };
     }));
     

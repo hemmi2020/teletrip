@@ -54,9 +54,26 @@ const HotelSearchResults = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [selectedAmenities, setSelectedAmenities] = useState([]);
   const [selectedAccommodationTypes, setSelectedAccommodationTypes] = useState([]);
+  const [hotelNameSearch, setHotelNameSearch] = useState("");
+  const [selectedBoards, setSelectedBoards] = useState([]);
+  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [selectedZones, setSelectedZones] = useState([]);
+  const [selectedReviewRatings, setSelectedReviewRatings] = useState([]);
+  const [selectedCancellation, setSelectedCancellation] = useState("");
+  const [priceMin, setPriceMin] = useState("");
+  const [priceMax, setPriceMax] = useState("");
+  const [selectedPromos, setSelectedPromos] = useState([]);
   const [expandedSections, setExpandedSections] = useState({
+    hotelName: false,
+    board: false,
+    category: false,
+    reviews: false,
+    cancellation: false,
+    price: false,
+    zone: false,
     accommodationType: true,
-    amenities: true,
+    amenities: false,
+    promos: false,
     sortBy: true,
   });
   const [hotelReviews, setHotelReviews] = useState({});
@@ -483,6 +500,15 @@ const [reviewsModal, setReviewsModal] = useState({
     setSelectedAmenities([]);
     setSelectedAccommodationTypes([]);
     setSortOption("default");
+    setHotelNameSearch("");
+    setSelectedBoards([]);
+    setSelectedCategories([]);
+    setSelectedZones([]);
+    setSelectedReviewRatings([]);
+    setSelectedCancellation("");
+    setPriceMin("");
+    setPriceMax("");
+    setSelectedPromos([]);
   };
 
 
@@ -696,6 +722,7 @@ if (children > 0 && childAges.length > 0) {
             category: hotel.categoryName || hotel.categoryCode || "N/A",
             stars: parseStars(hotel.categoryName || hotel.categoryCode),
             address: `${hotel.destinationName}, ${hotel.zoneName}`,
+            zone: hotel.zoneName || "Unknown",
             thumbnail: hotel.thumbnail,
             price: hotel.minRate || cheapestRate?.net || "N/A",
             currency: hotel.currency || "EUR",
@@ -703,6 +730,9 @@ if (children > 0 && childAges.length > 0) {
             amenities: hotel.amenities || [],
             type: hotel.type || "hotel",
             cancellationPolicy: cancellationPolicy,
+            boards: [...new Set(allRates.map(r => r.boardName).filter(Boolean))],
+            hasFreeCancellation: cancellationPolicy.length > 0 && parseFloat(cancellationPolicy[0]?.amount || 0) === 0,
+            promos: [...new Set(allRates.flatMap(r => (r.promotions || r.offers || []).map(p => p.name || p.code)).filter(Boolean))],
           };
         });
 
@@ -719,8 +749,54 @@ if (children > 0 && childAges.length > 0) {
 
  
 
+  // Dynamic filter options derived from hotel data
+  const dynamicBoards = [...new Set(hotels.flatMap(h => h.boards))].filter(Boolean).sort();
+  const dynamicCategories = [...new Set(hotels.map(h => h.category))].filter(Boolean).sort();
+  const dynamicZones = [...new Set(hotels.map(h => h.zone))].filter(Boolean).sort();
+  const dynamicPromos = [...new Set(hotels.flatMap(h => h.promos))].filter(Boolean).sort();
+
   // Filter hotels based on selected filters
   const filteredHotels = hotels.filter(hotel => {
+    // Hotel name search
+    if (hotelNameSearch && !hotel.name.toLowerCase().includes(hotelNameSearch.toLowerCase())) return false;
+
+    // Board filter
+    if (selectedBoards.length > 0) {
+      if (!hotel.boards.some(b => selectedBoards.includes(b))) return false;
+    }
+
+    // Category filter
+    if (selectedCategories.length > 0) {
+      if (!selectedCategories.includes(hotel.category)) return false;
+    }
+
+    // Zone filter
+    if (selectedZones.length > 0) {
+      if (!selectedZones.includes(hotel.zone)) return false;
+    }
+
+    // Review rating filter
+    if (selectedReviewRatings.length > 0) {
+      const review = hotelReviews[hotel.id];
+      if (!review || !review.rating) return false;
+      const rating = Math.floor(review.rating);
+      if (!selectedReviewRatings.some(r => rating >= r)) return false;
+    }
+
+    // Cancellation filter
+    if (selectedCancellation === "free" && !hotel.hasFreeCancellation) return false;
+    if (selectedCancellation === "paid" && hotel.hasFreeCancellation) return false;
+
+    // Price filter
+    const price = parseFloat(hotel.price);
+    if (priceMin && price < parseFloat(priceMin)) return false;
+    if (priceMax && price > parseFloat(priceMax)) return false;
+
+    // Promos filter
+    if (selectedPromos.length > 0) {
+      if (!hotel.promos.some(p => selectedPromos.includes(p))) return false;
+    }
+
     // Amenities filter
     if (selectedAmenities.length > 0) {
       const hasSelectedAmenities = selectedAmenities.every(amenity => 
@@ -807,7 +883,7 @@ if (children > 0 && childAges.length > 0) {
               <h2 className="text-xl font-bold">Filters</h2>
               <button
                 onClick={() => setShowFilters(false)}
-                className="text-gray-500 hover:text-gray-700"
+                className="text-gray-500 hover:text-gray-700 cursor-pointer"
               >
                 <X className="w-6 h-6" />
               </button>
@@ -818,103 +894,258 @@ if (children > 0 && childAges.length > 0) {
               <h2 className="text-xl font-bold hidden lg:block">Filters</h2>
               <button
                 onClick={clearFilters}
-                className="text-blue-600 hover:text-blue-800 text-sm"
+                className="text-blue-600 hover:text-blue-800 text-sm cursor-pointer"
               >
                 Clear all
               </button>
             </div>
 
-            {/* Sort By Filter */}
+            {/* 1. Hotel Name Search */}
             <div className="mb-6">
               <button
-                onClick={() => toggleSection('sortBy')}
-                className="flex items-center justify-between w-full text-left font-semibold text-gray-800 mb-3"
+                onClick={() => toggleSection('hotelName')}
+                className="flex items-center justify-between w-full text-left font-semibold text-gray-800 mb-3 cursor-pointer"
               >
-                <span className="font-bold text-lg">Sort by</span>
-                {expandedSections.sortBy ? (
-                  <ChevronUp className="w-5 h-5" />
-                ) : (
-                  <ChevronDown className="w-5 h-5" />
-                )}
+                <span className="font-bold text-lg">Hotel Name</span>
+                {expandedSections.hotelName ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
               </button>
-              {expandedSections.sortBy && (
+              {expandedSections.hotelName && (
+                <input
+                  type="text"
+                  value={hotelNameSearch}
+                  onChange={(e) => setHotelNameSearch(e.target.value)}
+                  placeholder="Search hotel name..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              )}
+            </div>
+
+            {/* 2. Board */}
+            {dynamicBoards.length > 0 && (
+              <div className="mb-6">
+                <button
+                  onClick={() => toggleSection('board')}
+                  className="flex items-center justify-between w-full text-left font-semibold text-gray-800 mb-3 cursor-pointer"
+                >
+                  <span className="font-bold text-lg">Board</span>
+                  {expandedSections.board ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                </button>
+                {expandedSections.board && (
+                  <div className="space-y-2">
+                    {dynamicBoards.map(board => (
+                      <label key={board} className="flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={selectedBoards.includes(board)}
+                          onChange={() => setSelectedBoards(prev => prev.includes(board) ? prev.filter(b => b !== board) : [...prev, board])}
+                          className="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        />
+                        <span className="text-sm text-gray-700">{board}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* 3. Category (Star Rating) */}
+            {dynamicCategories.length > 0 && (
+              <div className="mb-6">
+                <button
+                  onClick={() => toggleSection('category')}
+                  className="flex items-center justify-between w-full text-left font-semibold text-gray-800 mb-3 cursor-pointer"
+                >
+                  <span className="font-bold text-lg">Category</span>
+                  {expandedSections.category ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                </button>
+                {expandedSections.category && (
+                  <div className="space-y-2">
+                    {dynamicCategories.map(cat => (
+                      <label key={cat} className="flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={selectedCategories.includes(cat)}
+                          onChange={() => setSelectedCategories(prev => prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat])}
+                          className="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        />
+                        <span className="text-sm text-gray-700">{cat}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* 4. Customer Reviews */}
+            <div className="mb-6">
+              <button
+                onClick={() => toggleSection('reviews')}
+                className="flex items-center justify-between w-full text-left font-semibold text-gray-800 mb-3 cursor-pointer"
+              >
+                <span className="font-bold text-lg">Customer Reviews</span>
+                {expandedSections.reviews ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+              </button>
+              {expandedSections.reviews && (
                 <div className="space-y-2">
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name="sortBy"
-                      value="default"
-                      checked={sortOption === "default"}
-                      onChange={(e) => setSortOption(e.target.value)}
-                      className="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-                    />
-                    <span className="text-sm text-gray-700">Default</span>
-                  </label>
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name="sortBy"
-                      value="priceLowHigh"
-                      checked={sortOption === "priceLowHigh"}
-                      onChange={(e) => setSortOption(e.target.value)}
-                      className="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-                    />
-                    <span className="text-sm text-gray-700">Price: Low to High</span>
-                  </label>
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name="sortBy"
-                      value="priceHighLow"
-                      checked={sortOption === "priceHighLow"}
-                      onChange={(e) => setSortOption(e.target.value)}
-                      className="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-                    />
-                    <span className="text-sm text-gray-700">Price: High to Low</span>
-                  </label>
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name="sortBy"
-                      value="ratingHighLow"
-                      checked={sortOption === "ratingHighLow"}
-                      onChange={(e) => setSortOption(e.target.value)}
-                      className="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-                    />
-                    <span className="text-sm text-gray-700">Rating: High to Low</span>
-                  </label>
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name="sortBy"
-                      value="ratingLowHigh"
-                      checked={sortOption === "ratingLowHigh"}
-                      onChange={(e) => setSortOption(e.target.value)}
-                      className="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-                    />
-                    <span className="text-sm text-gray-700">Rating: Low to High</span>
-                  </label>
+                  {[
+                    { value: 4, label: "4+ Excellent" },
+                    { value: 3, label: "3+ Very Good" },
+                    { value: 2, label: "2+ Good" },
+                  ].map(opt => (
+                    <label key={opt.value} className="flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={selectedReviewRatings.includes(opt.value)}
+                        onChange={() => setSelectedReviewRatings(prev => prev.includes(opt.value) ? prev.filter(r => r !== opt.value) : [...prev, opt.value])}
+                        className="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      />
+                      <div className="flex items-center gap-1">
+                        <RatingCircles rating={opt.value} size="w-3 h-3" />
+                        <span className="text-sm text-gray-700 ml-1">{opt.label}</span>
+                      </div>
+                    </label>
+                  ))}
                 </div>
               )}
             </div>
 
-            {/* Accommodation Type Filter */}
+            {/* 5. Cancellation */}
+            <div className="mb-6">
+              <button
+                onClick={() => toggleSection('cancellation')}
+                className="flex items-center justify-between w-full text-left font-semibold text-gray-800 mb-3 cursor-pointer"
+              >
+                <span className="font-bold text-lg">Cancellation</span>
+                {expandedSections.cancellation ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+              </button>
+              {expandedSections.cancellation && (
+                <div className="space-y-2">
+                  {[
+                    { value: "", label: "All" },
+                    { value: "free", label: "Free Cancellation" },
+                    { value: "paid", label: "Non-refundable" },
+                  ].map(opt => (
+                    <label key={opt.value} className="flex items-center cursor-pointer">
+                      <input
+                        type="radio"
+                        name="cancellation"
+                        value={opt.value}
+                        checked={selectedCancellation === opt.value}
+                        onChange={(e) => setSelectedCancellation(e.target.value)}
+                        className="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                      />
+                      <span className="text-sm text-gray-700">{opt.label}</span>
+                    </label>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* 6. Price Range */}
+            <div className="mb-6">
+              <button
+                onClick={() => toggleSection('price')}
+                className="flex items-center justify-between w-full text-left font-semibold text-gray-800 mb-3 cursor-pointer"
+              >
+                <span className="font-bold text-lg">Price Range</span>
+                {expandedSections.price ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+              </button>
+              {expandedSections.price && (
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    value={priceMin}
+                    onChange={(e) => setPriceMin(e.target.value)}
+                    placeholder="Min"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
+                  />
+                  <span className="text-gray-400">-</span>
+                  <input
+                    type="number"
+                    value={priceMax}
+                    onChange={(e) => setPriceMax(e.target.value)}
+                    placeholder="Max"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* 7. Zone */}
+            {dynamicZones.length > 0 && (
+              <div className="mb-6">
+                <button
+                  onClick={() => toggleSection('zone')}
+                  className="flex items-center justify-between w-full text-left font-semibold text-gray-800 mb-3 cursor-pointer"
+                >
+                  <span className="font-bold text-lg">Zone</span>
+                  {expandedSections.zone ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                </button>
+                {expandedSections.zone && (
+                  <div className="space-y-2 max-h-48 overflow-y-auto">
+                    {dynamicZones.map(zone => (
+                      <label key={zone} className="flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={selectedZones.includes(zone)}
+                          onChange={() => setSelectedZones(prev => prev.includes(zone) ? prev.filter(z => z !== zone) : [...prev, zone])}
+                          className="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        />
+                        <span className="text-sm text-gray-700">{zone}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Sort By */}
+            <div className="mb-6">
+              <button
+                onClick={() => toggleSection('sortBy')}
+                className="flex items-center justify-between w-full text-left font-semibold text-gray-800 mb-3 cursor-pointer"
+              >
+                <span className="font-bold text-lg">Sort by</span>
+                {expandedSections.sortBy ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+              </button>
+              {expandedSections.sortBy && (
+                <div className="space-y-2">
+                  {[
+                    { value: "default", label: "Default" },
+                    { value: "priceLowHigh", label: "Price: Low to High" },
+                    { value: "priceHighLow", label: "Price: High to Low" },
+                    { value: "ratingHighLow", label: "Rating: High to Low" },
+                    { value: "ratingLowHigh", label: "Rating: Low to High" },
+                  ].map(opt => (
+                    <label key={opt.value} className="flex items-center cursor-pointer">
+                      <input
+                        type="radio"
+                        name="sortBy"
+                        value={opt.value}
+                        checked={sortOption === opt.value}
+                        onChange={(e) => setSortOption(e.target.value)}
+                        className="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                      />
+                      <span className="text-sm text-gray-700">{opt.label}</span>
+                    </label>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Accommodation Type */}
             <div className="mb-6">
               <button
                 onClick={() => toggleSection('accommodationType')}
-                className="flex items-center justify-between w-full text-left font-semibold text-gray-800 mb-3"
+                className="flex items-center justify-between w-full text-left font-semibold text-gray-800 mb-3 cursor-pointer"
               >
                 <span className="font-bold text-lg">Accommodation Type</span>
-                {expandedSections.accommodationType ? (
-                  <ChevronUp className="w-5 h-5" />
-                ) : (
-                  <ChevronDown className="w-5 h-5" />
-                )}
+                {expandedSections.accommodationType ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
               </button>
               {expandedSections.accommodationType && (
                 <div className="space-y-2">
                   {accommodationTypes.map(type => (
-                    <label key={type.id} className="flex items-center justify-between">
+                    <label key={type.id} className="flex items-center justify-between cursor-pointer">
                       <div className="flex items-center">
                         <input
                           type="checkbox"
@@ -924,30 +1155,25 @@ if (children > 0 && childAges.length > 0) {
                         />
                         <span className="text-sm text-gray-700">{type.name}</span>
                       </div>
-                      <span className="text-sm text-gray-500">{type.count}</span>
                     </label>
                   ))}
                 </div>
               )}
             </div>
 
-            {/* Amenities Filter */}
+            {/* Amenities */}
             <div className="mb-6">
               <button
                 onClick={() => toggleSection('amenities')}
-                className="flex items-center justify-between w-full text-left font-semibold text-gray-800 mb-3"
+                className="flex items-center justify-between w-full text-left font-semibold text-gray-800 mb-3 cursor-pointer"
               >
                 <span className="font-bold text-lg">Amenities</span>
-                {expandedSections.amenities ? (
-                  <ChevronUp className="w-5 h-5" />
-                ) : (
-                  <ChevronDown className="w-5 h-5" />
-                )}
+                {expandedSections.amenities ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
               </button>
               {expandedSections.amenities && (
                 <div className="space-y-2">
                   {availableAmenities.map(amenity => (
-                    <label key={amenity.id} className="flex items-center">
+                    <label key={amenity.id} className="flex items-center cursor-pointer">
                       <input
                         type="checkbox"
                         checked={selectedAmenities.includes(amenity.id)}
@@ -961,6 +1187,34 @@ if (children > 0 && childAges.length > 0) {
                 </div>
               )}
             </div>
+
+            {/* Promos */}
+            {dynamicPromos.length > 0 && (
+              <div className="mb-6">
+                <button
+                  onClick={() => toggleSection('promos')}
+                  className="flex items-center justify-between w-full text-left font-semibold text-gray-800 mb-3 cursor-pointer"
+                >
+                  <span className="font-bold text-lg">Promos</span>
+                  {expandedSections.promos ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                </button>
+                {expandedSections.promos && (
+                  <div className="space-y-2">
+                    {dynamicPromos.map(promo => (
+                      <label key={promo} className="flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={selectedPromos.includes(promo)}
+                          onChange={() => setSelectedPromos(prev => prev.includes(promo) ? prev.filter(p => p !== promo) : [...prev, promo])}
+                          className="mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        />
+                        <span className="text-sm text-gray-700">{promo}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
