@@ -1485,10 +1485,10 @@ if (children > 0 && childAges.length > 0) {
                     )}
 
                     {/* View Rooms button */}
-                    <div className="mt-3 pt-2 border-t border-gray-50">
+                    <div className="mt-3 pt-2 border-t border-gray-50 flex justify-end">
                       <button
                         onClick={(e) => { e.stopPropagation(); setSelectedHotel(hotel); }}
-                        className="w-full sm:w-auto px-4 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-[13px] font-medium inline-flex items-center justify-center gap-1.5"
+                        className="px-4 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-[13px] font-medium inline-flex items-center gap-1.5"
                       >
                         <Bed className="w-3.5 h-3.5" />View Rooms
                       </button>
@@ -1534,7 +1534,7 @@ if (children > 0 && childAges.length > 0) {
         const openGallery = (idx) => { setGalleryImages(allImages); setGalleryIndex(idx); setGalleryOpen(true); };
 
         return (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center" onClick={() => setSelectedHotel(null)}>
+        <div className="fixed inset-0 z-[150] flex items-end sm:items-center justify-center" onClick={() => setSelectedHotel(null)}>
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
           <div className="relative bg-white w-full sm:max-w-4xl sm:rounded-2xl max-h-[92vh] overflow-hidden flex flex-col shadow-2xl" onClick={(e) => e.stopPropagation()}>
 
@@ -1588,15 +1588,6 @@ if (children > 0 && childAges.length > 0) {
                       return <span key={i} className="inline-flex items-center gap-1 text-[11px] text-gray-500 bg-gray-50 px-2 py-0.5 rounded-full"><Ic className="w-3 h-3" />{ad.name}</span>;
                     })}
                   </div>
-                  {/* Room type tags */}
-                  {uniqueRoomTypes.length > 0 && (
-                    <div className="flex gap-1.5 mt-2 flex-wrap">
-                      {uniqueRoomTypes.slice(0, 6).map((rt, i) => (
-                        <span key={i} className="text-[10px] px-2 py-0.5 bg-blue-50 text-blue-700 rounded-full font-medium">{rt}</span>
-                      ))}
-                      {uniqueRoomTypes.length > 6 && <span className="text-[10px] text-gray-400 self-center">+{uniqueRoomTypes.length - 6} more</span>}
-                    </div>
-                  )}
                 </div>
                 <div className="text-right flex-shrink-0">
                   <div className="text-[11px] text-gray-400">from</div>
@@ -1627,7 +1618,7 @@ if (children > 0 && childAges.length > 0) {
                 <span className="text-[12px] font-semibold text-gray-500 uppercase tracking-wider flex-shrink-0">{selectedHotel.rooms?.length || 0} Rooms</span>
                 <span className="text-gray-200">|</span>
                 {uniqueRoomTypes.slice(0, 8).map((rt, i) => (
-                  <button key={i} onClick={() => { const el = document.getElementById(`room-${selectedHotel.rooms.find(r => r.name === rt)?.code}`); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }} className="text-[11px] px-2.5 py-1 bg-blue-50 text-blue-600 rounded-full font-medium hover:bg-blue-100 transition-colors flex-shrink-0">{rt}</button>
+                  <button key={i} onClick={() => { const el = document.getElementById(`room-${selectedHotel.rooms.find(r => r.name === rt)?.code}`); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }} className="text-[11px] px-2.5 py-1 bg-blue-50 text-blue-600 rounded-full font-medium hover:bg-blue-100 transition-colors flex-shrink-0">{rt}</button>
                 ))}
                 {uniqueRoomTypes.length > 8 && <span className="text-[11px] text-gray-400">+{uniqueRoomTypes.length - 8}</span>}
               </div>
@@ -1723,20 +1714,20 @@ if (children > 0 && childAges.length > 0) {
 
       {/* Image Gallery Lightbox */}
       {galleryOpen && galleryImages.length > 0 && (
-        <div className="fixed inset-0 z-[60] bg-black/95 flex flex-col" onClick={() => setGalleryOpen(false)}>
+        <div className="fixed inset-0 z-[200] bg-black/95 flex flex-col">
           {/* Top bar */}
           <div className="flex items-center justify-between px-4 py-3 flex-shrink-0">
             <span className="text-white/70 text-sm">{galleryIndex + 1} / {galleryImages.length}</span>
-            <button onClick={() => setGalleryOpen(false)} className="p-2 rounded-full hover:bg-white/10 transition-colors"><X className="w-5 h-5 text-white" /></button>
+            <button onClick={() => setGalleryOpen(false)} className="p-2.5 rounded-full bg-white/15 hover:bg-white/25 transition-colors"><X className="w-5 h-5 text-white" /></button>
           </div>
           {/* Main image */}
-          <div className="flex-1 flex items-center justify-center px-4 relative min-h-0" onClick={(e) => e.stopPropagation()}>
-            <button onClick={(e) => { e.stopPropagation(); setGalleryIndex(prev => prev > 0 ? prev - 1 : galleryImages.length - 1); }} className="absolute left-2 sm:left-6 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors z-10"><ChevronDown className="w-5 h-5 text-white rotate-90" /></button>
+          <div className="flex-1 flex items-center justify-center px-4 relative min-h-0">
+            <button onClick={() => setGalleryIndex(prev => prev > 0 ? prev - 1 : galleryImages.length - 1)} className="absolute left-2 sm:left-6 p-2.5 rounded-full bg-white/10 hover:bg-white/20 transition-colors z-10"><ChevronDown className="w-5 h-5 text-white rotate-90" /></button>
             <img src={galleryImages[galleryIndex]} alt="" className="max-h-full max-w-full object-contain rounded-lg" onError={(e) => e.target.src = 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg'} />
-            <button onClick={(e) => { e.stopPropagation(); setGalleryIndex(prev => prev < galleryImages.length - 1 ? prev + 1 : 0); }} className="absolute right-2 sm:right-6 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors z-10"><ChevronDown className="w-5 h-5 text-white -rotate-90" /></button>
+            <button onClick={() => setGalleryIndex(prev => prev < galleryImages.length - 1 ? prev + 1 : 0)} className="absolute right-2 sm:right-6 p-2.5 rounded-full bg-white/10 hover:bg-white/20 transition-colors z-10"><ChevronDown className="w-5 h-5 text-white -rotate-90" /></button>
           </div>
           {/* Thumbnail strip */}
-          <div className="flex-shrink-0 px-4 py-3 overflow-x-auto" onClick={(e) => e.stopPropagation()}>
+          <div className="flex-shrink-0 px-4 py-3 overflow-x-auto">
             <div className="flex gap-1.5 justify-center">
               {galleryImages.map((img, i) => (
                 <button key={i} onClick={() => setGalleryIndex(i)} className={`flex-shrink-0 w-16 h-12 rounded-md overflow-hidden border-2 transition-all ${i === galleryIndex ? 'border-white opacity-100' : 'border-transparent opacity-50 hover:opacity-80'}`}>
