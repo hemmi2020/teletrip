@@ -1,5 +1,18 @@
 @import "tailwindcss";
 
+/* Global boxed layout */
+body {
+  background-color: #f3f4f6;
+}
+
+#root {
+  max-width: 1440px;
+  margin: 0 auto;
+  background-color: #ffffff;
+  min-height: 100vh;
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.04);
+}
+
 /* Global cursor pointer for all interactive elements */
 button,
 [role="button"],
