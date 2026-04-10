@@ -212,12 +212,6 @@ exports.searchLocations = async (req, res) => {
         console.log(`Hotel search: found ${hotelResults.length} hotels for "${q}"`);
       } catch (hotelErr) {
         console.error('Hotel search failed:', hotelErr.message);
-        console.error('Hotel search details:', hotelErr);
-      }
-      } catch (hotelErr) {
-        console.error('Hotel search failed:', hotelErr.message);
-        // Log full error for debugging
-        console.error('Hotel search details:', hotelErr);
       }
     }
 
