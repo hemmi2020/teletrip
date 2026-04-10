@@ -892,43 +892,46 @@ const HotelSearchForm = () => {
 
                 {/* Dropdown Results */}
                 {showLocationDropdown && searchQuery.trim() !== '' && (
-                  <div className="absolute z-50 w-full mt-2 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 sm:max-h-80 overflow-y-auto">
+                  <div className="absolute z-50 w-full mt-2 bg-white border border-gray-200 rounded-xl shadow-xl max-h-72 sm:max-h-96 overflow-y-auto" style={{scrollbarWidth:'thin'}}>
                     {isLoadingLocations ? (
-                      <div className="p-3 sm:p-4 text-center text-gray-500 text-sm sm:text-base">Searching...</div>
-                    ) : filteredLocations.length > 0 ? (
-                      <ul>
-                        {filteredLocations.map((location, index) => (
-                          <li
-                            key={`${location.type}-${index}`}
-                            onClick={() => handleLocationSelect(location)}
-                            className="px-3 sm:px-4 py-2.5 sm:py-3 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors"
-                          >
-                            <div className="flex items-center space-x-2 sm:space-x-3">
-                              {location.type === 'hotel' ? (
-                                <Building2 size={16} className="text-green-600 flex-shrink-0" />
-                              ) : (
-                                <MapPin size={16} className="text-blue-600 flex-shrink-0" />
-                              )}
-                              <div className="min-w-0 flex-1">
-                                <div className="font-medium text-gray-800 text-sm sm:text-base truncate">
-                                  {location.type === 'hotel' ? location.name : location.type === 'country' ? location.country : location.city}
+                      <div className="p-4 text-center text-gray-400 text-sm">Searching...</div>
+                    ) : filteredLocations.length > 0 ? (() => {
+                      const hotels = filteredLocations.filter(l => l.type === 'hotel');
+                      const locations = filteredLocations.filter(l => l.type !== 'hotel');
+                      return (
+                        <div>
+                          {hotels.length > 0 && (
+                            <>
+                              <div className="px-3 pt-2.5 pb-1.5 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Hotels</div>
+                              {hotels.map((location, index) => (
+                                <div key={`hotel-${index}`} onClick={() => handleLocationSelect(location)} className="px-3 py-2 hover:bg-blue-50 cursor-pointer transition-colors flex items-center gap-2.5">
+                                  <Building2 size={15} className="text-green-600 flex-shrink-0" />
+                                  <div className="min-w-0 flex-1">
+                                    <div className="text-[13px] font-medium text-gray-800 truncate">{location.name}</div>
+                                    <div className="text-[11px] text-gray-400 truncate">{location.city}{location.country ? ', ' + location.country : ''}</div>
+                                  </div>
                                 </div>
-                                <div className="text-xs sm:text-sm text-gray-500 truncate">
-                                  {location.type === 'hotel' 
-                                    ? `Hotel in ${location.city}${location.country ? ', ' + location.country : ''}` 
-                                    : location.type === 'country'
-                                    ? 'Country'
-                                    : `City in ${location.country}`}
+                              ))}
+                            </>
+                          )}
+                          {locations.length > 0 && (
+                            <>
+                              <div className={`px-3 pt-2.5 pb-1.5 text-[11px] font-semibold text-gray-400 uppercase tracking-wider ${hotels.length > 0 ? 'border-t border-gray-100' : ''}`}>Destinations</div>
+                              {locations.map((location, index) => (
+                                <div key={`loc-${index}`} onClick={() => handleLocationSelect(location)} className="px-3 py-2 hover:bg-blue-50 cursor-pointer transition-colors flex items-center gap-2.5">
+                                  <MapPin size={15} className="text-blue-600 flex-shrink-0" />
+                                  <div className="min-w-0 flex-1">
+                                    <div className="text-[13px] font-medium text-gray-800 truncate">{location.type === 'country' ? location.country : location.city}</div>
+                                    <div className="text-[11px] text-gray-400 truncate">{location.type === 'country' ? 'Country' : `City in ${location.country}`}</div>
+                                  </div>
                                 </div>
-                              </div>
-                            </div>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <div className="p-3 sm:p-4 text-center text-gray-500 text-sm sm:text-base">
-                        No locations found. Try a different search term.
-                      </div>
+                              ))}
+                            </>
+                          )}
+                        </div>
+                      );
+                    })() : (
+                      <div className="p-4 text-center text-gray-400 text-sm">No results found</div>
                     )}
                   </div>
                 )}
