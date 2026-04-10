@@ -1612,16 +1612,18 @@ if (children > 0 && childAges.length > 0) {
               </div>
             </div>
 
+            {/* Room Types Tags - Sticky */}
+            <div className="flex items-center gap-2 flex-wrap px-5 py-2.5 border-b border-gray-100 bg-white flex-shrink-0 overflow-x-auto" style={{scrollbarWidth:'none'}}>
+              <span className="text-[12px] font-semibold text-gray-500 uppercase tracking-wider flex-shrink-0">{selectedHotel.rooms?.length || 0} Room Types</span>
+              <span className="text-gray-200">|</span>
+              {uniqueRoomTypes.slice(0, 8).map((rt, i) => (
+                <button key={i} onClick={() => { const el = document.getElementById(`room-${selectedHotel.rooms.find(r => r.name === rt)?.code}`); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }} className="text-[11px] px-2.5 py-1 bg-blue-50 text-blue-600 rounded-full font-medium hover:bg-blue-100 transition-colors flex-shrink-0">{rt}</button>
+              ))}
+              {uniqueRoomTypes.length > 8 && <span className="text-[11px] text-gray-400">+{uniqueRoomTypes.length - 8}</span>}
+            </div>
+
             {/* Rooms List */}
             <div className="overflow-y-auto flex-1 px-5 py-3 space-y-3" style={{scrollbarWidth:'thin'}}>
-              <div className="flex items-center gap-2 flex-wrap mb-2">
-                <span className="text-[12px] font-semibold text-gray-500 uppercase tracking-wider flex-shrink-0">{selectedHotel.rooms?.length || 0} Room Types</span>
-                <span className="text-gray-200">|</span>
-                {uniqueRoomTypes.slice(0, 8).map((rt, i) => (
-                  <button key={i} onClick={() => { const el = document.getElementById(`room-${selectedHotel.rooms.find(r => r.name === rt)?.code}`); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }} className="text-[11px] px-2.5 py-1 bg-blue-50 text-blue-600 rounded-full font-medium hover:bg-blue-100 transition-colors flex-shrink-0">{rt}</button>
-                ))}
-                {uniqueRoomTypes.length > 8 && <span className="text-[11px] text-gray-400">+{uniqueRoomTypes.length - 8}</span>}
-              </div>
               {selectedHotel.rooms && selectedHotel.rooms.length > 0 ? (
                 selectedHotel.rooms.map((room) => {
                   const filteredRates = (room.rates || []).filter(rate => {
