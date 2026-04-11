@@ -566,6 +566,7 @@ const [reviewsModal, setReviewsModal] = useState({
       addedAt: new Date().toISOString(),
     });
     setNotification({ show: true, message: `${room.name} added to cart!`, type: 'success' });
+    setSelectedHotel(null);
     setTimeout(() => setNotification({ show: false, message: '', type: 'success' }), 3000);
     window.dispatchEvent(new CustomEvent('openCart'));
   };
@@ -1623,12 +1624,23 @@ if (children > 0 && childAges.length > 0) {
                 </div>
               </div>
               {/* Search summary */}
-              <div className="flex items-center gap-3 mt-3 text-[11px] text-gray-400">
+              <div className="flex items-center gap-3 mt-3 text-[11px] text-gray-400 flex-wrap">
                 <span>{searchParams.get("checkIn")} → {searchParams.get("checkOut")}</span>
                 <span>·</span>
                 <span>{searchParams.get("adults")} adults{searchParams.get("children") && searchParams.get("children") !== "0" ? `, ${searchParams.get("children")} children` : ''}</span>
                 <span>·</span>
                 <span>{searchParams.get("rooms")} room(s)</span>
+              </div>
+              {/* Hotel details */}
+              <div className="mt-3 pt-3 border-t border-gray-50 space-y-1.5">
+                <div className="text-[12px] text-gray-600 leading-relaxed">
+                  {selectedHotel.category} hotel in {selectedHotel.zone}, {selectedHotel.address}.
+                  {selectedHotel.boards.length > 0 && <> Available board options: {selectedHotel.boards.join(', ')}.</>}
+                  {selectedHotel.hasFreeCancellation && <span className="text-green-600"> Free cancellation available on select rates.</span>}
+                </div>
+                {selectedHotel.amenities.length > 0 && (
+                  <div className="text-[11px] text-gray-400">Amenities: {[...new Set(selectedHotel.amenities)].map(a => { const ad = availableAmenities.find(x => x.id === a); return ad ? ad.name : null; }).filter(Boolean).join(', ')}</div>
+                )}
               </div>
             </div>
 
