@@ -77,74 +77,7 @@ exports.getTransferLocations = async (req, res) => {
 let countriesCache = null;
 let countriesCacheTime = 0;
 
-// Cached hotel names for search
-let hotelCache = [];
-let hotelCacheTime = 0;
-let hotelCacheLoading = false;
-
-async function loadHotelCache() {
-  if (hotelCache.length > 0 && Date.now() - hotelCacheTime < 86400000) return; // 24h cache
-  if (hotelCacheLoading) return;
-  hotelCacheLoading = true;
-  try {
-    const crypto = require('crypto');
-    const apiKey = process.env.HOTELBEDS_API_KEY;
-    const secret = process.env.HOTELBEDS_SECRET;
-    if (!apiKey || !secret) { hotelCacheLoading = false; return; }
-
-    const fetch = (await import('node-fetch')).default;
-    const allHotels = [];
-
-    // Load hotels in batches (1000 per page, up to 5000 total)
-    for (let from = 1; from <= 5000; from += 1000) {
-      const timestamp = Math.floor(Date.now() / 1000);
-      const sig = crypto.createHash('sha256').update(apiKey + secret + timestamp).digest('hex');
-      const res = await fetch(
-        `https://api.test.hotelbeds.com/hotel-content-api/1.0/hotels?fields=name,code,city,country&language=ENG&from=${from}&to=${from + 999}`,
-        { headers: { 'Accept': 'application/json', 'Accept-Encoding': 'gzip', 'Api-key': apiKey, 'X-Signature': sig } }
-      );
-      if (!res.ok) break;
-      const data = await res.json();
-      if (!data.hotels || data.hotels.length === 0) break;
-      data.hotels.forEach(h => {
-        allHotels.push({
-          code: String(h.code),
-          name: h.name?.content || '',
-          city: h.city?.content || '',
-          country: h.country?.description?.content || h.countryCode || '',
-          searchText: `${h.name?.content || ''} ${h.city?.content || ''}`.toLowerCase()
-        });
-      });
-      if (data.hotels.length < 1000) break;
-    }
-
-    hotelCache = allHotels;
-    hotelCacheTime = Date.now();
-    console.log(`Hotel cache loaded: ${hotelCache.length} hotels`);
-  } catch (err) {
-    console.error('Failed to load hotel cache:', err.message);
-  } finally {
-    hotelCacheLoading = false;
-  }
-}
-
-async function searchHotelsByName(query) {
-  await loadHotelCache();
-  return hotelCache
-    .filter(h => h.searchText.includes(query))
-    .slice(0, 10)
-    .map(h => ({
-      type: 'hotel',
-      name: h.name,
-      hotelCode: h.code,
-      city: h.city,
-      country: h.country,
-      displayName: `${h.name}${h.city ? ', ' + h.city : ''}`
-    }));
-}
-
 async function getCountriesData() {
-  // Cache for 1 hour
   if (countriesCache && Date.now() - countriesCacheTime < 3600000) return countriesCache;
   try {
     const fetch = (await import('node-fetch')).default;
@@ -171,7 +104,7 @@ exports.searchLocations = async (req, res) => {
     const query = q.toLowerCase().trim();
     const results = [];
 
-    // 1. Search cities & countries
+    // Search cities & countries
     const countries = await getCountriesData();
     for (const country of countries) {
       // Match country
@@ -204,21 +137,10 @@ exports.searchLocations = async (req, res) => {
       if (results.length >= 30) break;
     }
 
-    // 2. Search hotels from cached Hotelbeds data (3+ chars)
-    if (query.length >= 3) {
-      try {
-        const hotelResults = await searchHotelsByName(query);
-        results.push(...hotelResults);
-        console.log(`Hotel search: found ${hotelResults.length} hotels for "${q}"`);
-      } catch (hotelErr) {
-        console.error('Hotel search failed:', hotelErr.message);
-      }
-    }
-
-    // Sort: hotels first, then cities, then countries
+    // Sort: cities first, then countries
     results.sort((a, b) => {
-      const order = { hotel: 0, city: 1, country: 2 };
-      return (order[a.type] || 3) - (order[b.type] || 3);
+      const order = { city: 0, country: 1 };
+      return (order[a.type] || 2) - (order[b.type] || 2);
     });
 
     res.json({ success: true, data: results.slice(0, 40) });

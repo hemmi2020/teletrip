@@ -381,6 +381,7 @@ const ExperiencesTab = () => {
   const [showCalendar, setShowCalendar] = useState(false);
   const [adults, setAdults] = useState(2);
   const [children, setChildren] = useState(0);
+  const [infants, setInfants] = useState(0);
   const [showTravellerDropdown, setShowTravellerDropdown] = useState(false);
   const locationRef = useRef(null);
   const calendarRef = useRef(null);
@@ -588,7 +589,7 @@ const ExperiencesTab = () => {
           >
             <Users className="text-gray-400 mr-2 flex-shrink-0" size={18} />
             <span className="text-gray-700 flex-1 text-sm sm:text-base truncate">
-              {adults} Adult{adults > 1 ? 's' : ''}{children > 0 ? `, ${children} Child${children > 1 ? 'ren' : ''}` : ''}
+              {adults} Adult{adults > 1 ? 's' : ''}{children > 0 ? `, ${children} Child${children > 1 ? 'ren' : ''}` : ''}{infants > 0 ? `, ${infants} Infant${infants > 1 ? 's' : ''}` : ''}
             </span>
             <ChevronDown className="text-gray-400 flex-shrink-0" size={18} />
           </div>
@@ -608,6 +609,14 @@ const ExperiencesTab = () => {
                   <button type="button" onClick={() => setChildren(Math.max(0, children - 1))} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Minus size={14} /></button>
                   <span className="w-6 sm:w-8 text-center font-medium text-sm sm:text-base">{children}</span>
                   <button type="button" onClick={() => setChildren(Math.min(10, children + 1))} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Plus size={14} /></button>
+                </div>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-gray-700 font-medium text-sm sm:text-base">Infants</span>
+                <div className="flex items-center space-x-2 sm:space-x-3">
+                  <button type="button" onClick={() => setInfants(Math.max(0, infants - 1))} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Minus size={14} /></button>
+                  <span className="w-6 sm:w-8 text-center font-medium text-sm sm:text-base">{infants}</span>
+                  <button type="button" onClick={() => setInfants(Math.min(5, infants + 1))} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Plus size={14} /></button>
                 </div>
               </div>
               <button type="button" onClick={() => setShowTravellerDropdown(false)} className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm sm:text-base">Done</button>
@@ -712,6 +721,7 @@ const HotelSearchForm = () => {
   const [filteredLocations, setFilteredLocations] = useState([]);
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [isLoadingLocations, setIsLoadingLocations] = useState(false);
+  const [hotelNameQuery, setHotelNameQuery] = useState('');
   const locationRef = useRef(null);
 
   // Other states
@@ -833,8 +843,8 @@ const HotelSearchForm = () => {
     let url = `/hotel-search-results?checkIn=${checkIn}&checkOut=${checkOut}&rooms=${rooms}&adults=${adults}&children=${children}`;
     url += `&country=${encodeURIComponent(country)}`;
     url += `&city=${encodeURIComponent(city)}`;
-    if (selectedLocation.type === 'hotel' && selectedLocation.name) {
-      url += `&hotelName=${encodeURIComponent(selectedLocation.name)}`;
+    if (hotelNameQuery.trim()) {
+      url += `&hotelName=${encodeURIComponent(hotelNameQuery.trim())}`;
     }
 
     // Add child ages if present
@@ -896,82 +906,71 @@ const HotelSearchForm = () => {
 
           {activeTab === 'stays' && (
             <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
-              {/* Dynamic Location Search */}
-              <div className="relative" ref={locationRef}>
-                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2 px-1">
-                  Destination, zone or hotel name <span className="text-red-500">*</span>
-                </label>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={handleSearchInputChange}
-                    onFocus={() => setShowLocationDropdown(true)}
-                    placeholder="Where are you going? e.g: london"
-                    className="w-full pl-10 pr-10 py-2.5 sm:py-3 border border-gray-300 bg-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-700 text-sm sm:text-base"
-                    required
-                  />
-                  {searchQuery && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSearchQuery('');
-                        setSelectedLocation(null);
-                        setFilteredLocations([]);
-                      }}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                    >
-                      <X size={18} />
-                    </button>
+              {/* Location + Hotel Name - Two separate fields */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+                {/* Location Search (City/Country) */}
+                <div className="relative" ref={locationRef}>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2 px-1">
+                    Destination <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={handleSearchInputChange}
+                      onFocus={() => setShowLocationDropdown(true)}
+                      placeholder="City or country, e.g: London"
+                      className="w-full pl-10 pr-10 py-2.5 sm:py-3 border border-gray-300 bg-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-700 text-sm sm:text-base"
+                      required
+                    />
+                    {searchQuery && (
+                      <button type="button" onClick={() => { setSearchQuery(''); setSelectedLocation(null); setFilteredLocations([]); }} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"><X size={18} /></button>
+                    )}
+                  </div>
+                  {showLocationDropdown && searchQuery.trim() !== '' && (
+                    <div className="absolute z-50 w-full mt-2 bg-white border border-gray-200 rounded-xl shadow-xl max-h-72 sm:max-h-96 overflow-y-auto" style={{scrollbarWidth:'thin'}}>
+                      {isLoadingLocations ? (
+                        <div className="p-4 text-center text-gray-400 text-sm">Searching...</div>
+                      ) : filteredLocations.length > 0 ? (
+                        <div>
+                          <div className="px-3 pt-2.5 pb-1.5 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Destinations</div>
+                          {filteredLocations.filter(l => l.type !== 'hotel').map((location, index) => (
+                            <div key={`loc-${index}`} onClick={() => handleLocationSelect(location)} className="px-3 py-2 hover:bg-blue-50 cursor-pointer transition-colors flex items-center gap-2.5">
+                              <MapPin size={15} className="text-blue-600 flex-shrink-0" />
+                              <div className="min-w-0 flex-1">
+                                <div className="text-[13px] font-medium text-gray-800 truncate">{location.type === 'country' ? location.country : location.city}</div>
+                                <div className="text-[11px] text-gray-400 truncate">{location.type === 'country' ? 'Country' : `City in ${location.country}`}</div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="p-4 text-center text-gray-400 text-sm">No destinations found</div>
+                      )}
+                    </div>
                   )}
                 </div>
 
-                {/* Dropdown Results */}
-                {showLocationDropdown && searchQuery.trim() !== '' && (
-                  <div className="absolute z-50 w-full mt-2 bg-white border border-gray-200 rounded-xl shadow-xl max-h-72 sm:max-h-96 overflow-y-auto" style={{scrollbarWidth:'thin'}}>
-                    {isLoadingLocations ? (
-                      <div className="p-4 text-center text-gray-400 text-sm">Searching...</div>
-                    ) : filteredLocations.length > 0 ? (() => {
-                      const hotels = filteredLocations.filter(l => l.type === 'hotel');
-                      const locations = filteredLocations.filter(l => l.type !== 'hotel');
-                      return (
-                        <div>
-                          {hotels.length > 0 && (
-                            <>
-                              <div className="px-3 pt-2.5 pb-1.5 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Hotels</div>
-                              {hotels.map((location, index) => (
-                                <div key={`hotel-${index}`} onClick={() => handleLocationSelect(location)} className="px-3 py-2 hover:bg-blue-50 cursor-pointer transition-colors flex items-center gap-2.5">
-                                  <Building2 size={15} className="text-green-600 flex-shrink-0" />
-                                  <div className="min-w-0 flex-1">
-                                    <div className="text-[13px] font-medium text-gray-800 truncate">{location.name}</div>
-                                    <div className="text-[11px] text-gray-400 truncate">{location.city}{location.country ? ', ' + location.country : ''}</div>
-                                  </div>
-                                </div>
-                              ))}
-                            </>
-                          )}
-                          {locations.length > 0 && (
-                            <>
-                              <div className={`px-3 pt-2.5 pb-1.5 text-[11px] font-semibold text-gray-400 uppercase tracking-wider ${hotels.length > 0 ? 'border-t border-gray-100' : ''}`}>Destinations</div>
-                              {locations.map((location, index) => (
-                                <div key={`loc-${index}`} onClick={() => handleLocationSelect(location)} className="px-3 py-2 hover:bg-blue-50 cursor-pointer transition-colors flex items-center gap-2.5">
-                                  <MapPin size={15} className="text-blue-600 flex-shrink-0" />
-                                  <div className="min-w-0 flex-1">
-                                    <div className="text-[13px] font-medium text-gray-800 truncate">{location.type === 'country' ? location.country : location.city}</div>
-                                    <div className="text-[11px] text-gray-400 truncate">{location.type === 'country' ? 'Country' : `City in ${location.country}`}</div>
-                                  </div>
-                                </div>
-                              ))}
-                            </>
-                          )}
-                        </div>
-                      );
-                    })() : (
-                      <div className="p-4 text-center text-gray-400 text-sm">No results found</div>
+                {/* Hotel Name (Optional) */}
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2 px-1">
+                    Hotel Name <span className="text-gray-400 font-normal">(optional)</span>
+                  </label>
+                  <div className="relative">
+                    <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                    <input
+                      type="text"
+                      value={hotelNameQuery}
+                      onChange={(e) => setHotelNameQuery(e.target.value)}
+                      placeholder="e.g: Hilton, Marriott..."
+                      className="w-full pl-10 pr-10 py-2.5 sm:py-3 border border-gray-300 bg-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-700 text-sm sm:text-base"
+                    />
+                    {hotelNameQuery && (
+                      <button type="button" onClick={() => setHotelNameQuery('')} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"><X size={18} /></button>
                     )}
                   </div>
-                )}
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">

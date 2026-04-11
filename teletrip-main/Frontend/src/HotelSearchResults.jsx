@@ -73,6 +73,8 @@ const HotelSearchResults = () => {
   const [selectedChains, setSelectedChains] = useState([]);
   const [selectedEstablishment, setSelectedEstablishment] = useState([]);
   const [selectedPackaging, setSelectedPackaging] = useState("");
+  const [selectedSight, setSelectedSight] = useState("");
+  const [addressSearch, setAddressSearch] = useState("");
   const [expandedSections, setExpandedSections] = useState({
     hotelName: true,
     board: true,
@@ -987,7 +989,25 @@ if (children > 0 && childAges.length > 0) {
               )}
             </div>
 
-            {/* 2. Board */}
+            {/* Distance From */}
+            <div className="py-3 border-b border-gray-50">
+              <span className="text-[13px] font-semibold text-gray-800">Distance from</span>
+              <div className="mt-2.5 space-y-2.5">
+                <div>
+                  <label className="text-[11px] text-gray-500 mb-1 block">Popular sight</label>
+                  <select value={selectedSight} onChange={(e) => setSelectedSight(e.target.value)} className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 rounded-md bg-gray-50/50 focus:bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none">
+                    <option value="">Select</option>
+                    {dynamicZones.map(zone => <option key={zone} value={zone}>{zone}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-[11px] text-gray-500 mb-1 block">Specific address</label>
+                  <input type="text" value={addressSearch} onChange={(e) => setAddressSearch(e.target.value)} placeholder="Street, point of interest..." className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 rounded-md bg-gray-50/50 focus:bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none" />
+                </div>
+              </div>
+            </div>
+
+            {/* Board */}
             {dynamicBoards.length > 0 && (
               <div className="py-3 border-b border-gray-50">
                 <button
