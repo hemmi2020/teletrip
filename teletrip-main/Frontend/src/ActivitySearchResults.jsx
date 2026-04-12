@@ -476,7 +476,7 @@ const ActivitySearchResults = () => {
           <div className="max-w-[1280px] mx-auto px-4 sm:px-6 py-6">
             {error && (<div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6"><p className="text-red-800">{error}</p></div>)}
 
-            <div className="sticky top-16 z-20 bg-white/95 backdrop-blur-sm py-2.5 -mx-4 px-4 border-b border-gray-100 flex items-center justify-between gap-3 mb-2">
+            <div className="sticky top-16 z-20 bg-white py-2.5 -mx-4 px-4 border-b border-gray-100 flex items-center justify-between gap-3">
               <h1 className="text-[14px] sm:text-base font-semibold text-gray-900 truncate">{sortedActivities.length} Activities in {destination}</h1>
               <select value={sortOption} onChange={(e) => setSortOption(e.target.value)} className="text-[12px] sm:text-[13px] px-2.5 py-1.5 border border-gray-200 rounded-lg bg-white text-gray-600 focus:ring-1 focus:ring-blue-500 outline-none flex-shrink-0">
                 <option value="default">Sort: Recommended</option>
