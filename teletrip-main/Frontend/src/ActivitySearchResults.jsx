@@ -50,14 +50,16 @@ const ActivitySearchResults = () => {
   const country = searchParams.get('country');
   const from = searchParams.get('from');
   const to = searchParams.get('to');
-  const adults = searchParams.get('adults') || 2;
+  const adults = searchParams.get('adults') || '2';
 
   const API_BASE_URL = (import.meta.env.VITE_BASE_URL || 'http://localhost:3000') + '/api';
 
   useEffect(() => {
+    let cancelled = false;
     const fetchActivities = async () => {
       try {
         setLoading(true);
+        setActivities([]);
         const response = await fetch(`${API_BASE_URL}/activities/search`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -72,19 +74,22 @@ const ActivitySearchResults = () => {
         });
 
         const data = await response.json();
-        if (data.success) {
-          setActivities(data.data.activities || []);
-        } else {
-          setError(data.error);
+        if (!cancelled) {
+          if (data.success) {
+            setActivities(data.data.activities || []);
+          } else {
+            setError(data.error);
+          }
         }
       } catch (err) {
-        setError(err.message);
+        if (!cancelled) setError(err.message);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
 
     if (destination && from && to) fetchActivities();
+    return () => { cancelled = true; };
   }, [destination, country, from, to, adults]);
 
   const toggleSection = (section) => {
