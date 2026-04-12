@@ -1,11 +1,15 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { MapPin, Calendar, Users, Search, ChevronDown, X, Plus, Minus, Loader2, Star, Clock, Tag, Plane, Building2, Hotel, Car, Compass } from 'lucide-react';
-import { DateRange } from 'react-date-range';
 import { addDays, format } from 'date-fns';
 import { searchTransfers } from '../services/transfersApi';
 import axios from 'axios';
 import 'react-date-range/dist/styles.css';
 import 'react-date-range/dist/theme/default.css';
+
+// Lazy-load DateRange to avoid TDZ error with React 19
+const LazyDateRange = lazy(() =>
+  import('react-date-range').then(mod => ({ default: mod.DateRange }))
+);
 
 // Transfers Tab Component
 const TransfersTab = () => {
@@ -555,17 +559,19 @@ const ExperiencesTab = () => {
           </div>
           {showCalendar && (
             <div className="fixed sm:absolute z-50 left-1/2 top-1/2 sm:top-auto transform -translate-x-1/2 -translate-y-1/2 sm:translate-y-0 sm:mt-2 bg-white border border-gray-300 rounded-lg shadow-xl overflow-auto max-w-[95vw]">
-                <DateRange
-                  ranges={dateRange}
-                  onChange={(item) => setDateRange([item.selection])}
-                  minDate={new Date()}
-                  moveRangeOnFirstSelection={false}
-                  preventSnapRefocus={true}
-                  months={window.innerWidth < 640 ? 1 : 2}
-                  direction="horizontal"
-                  rangeColors={['#2563eb']}
-                  showDateDisplay={false}
-                />
+                <Suspense fallback={<div className="p-8 text-center text-gray-400">Loading calendar...</div>}>
+                  <LazyDateRange
+                    ranges={dateRange}
+                    onChange={(item) => setDateRange([item.selection])}
+                    minDate={new Date()}
+                    moveRangeOnFirstSelection={false}
+                    preventSnapRefocus={true}
+                    months={window.innerWidth < 640 ? 1 : 2}
+                    direction="horizontal"
+                    rangeColors={['#2563eb']}
+                    showDateDisplay={false}
+                  />
+                </Suspense>
               <div className="px-4 pb-3 flex justify-end">
                 <button
                   type="button"
@@ -991,17 +997,19 @@ const HotelSearchForm = () => {
 
                   {showCalendar && (
                     <div className="fixed sm:absolute z-50 left-1/2 top-1/2 sm:top-auto transform -translate-x-1/2 -translate-y-1/2 sm:translate-y-0 sm:mt-2 bg-white border border-gray-300 rounded-lg shadow-xl overflow-auto max-w-[95vw]">
-                        <DateRange
-                          ranges={dateRange}
-                          onChange={(item) => setDateRange([item.selection])}
-                          minDate={new Date()}
-                          moveRangeOnFirstSelection={false}
-                          preventSnapRefocus={true}
-                          months={window.innerWidth < 640 ? 1 : 2}
-                          direction="horizontal"
-                          rangeColors={['#2563eb']}
-                          showDateDisplay={false}
-                        />
+                        <Suspense fallback={<div className="p-8 text-center text-gray-400">Loading calendar...</div>}>
+                          <LazyDateRange
+                            ranges={dateRange}
+                            onChange={(item) => setDateRange([item.selection])}
+                            minDate={new Date()}
+                            moveRangeOnFirstSelection={false}
+                            preventSnapRefocus={true}
+                            months={window.innerWidth < 640 ? 1 : 2}
+                            direction="horizontal"
+                            rangeColors={['#2563eb']}
+                            showDateDisplay={false}
+                          />
+                        </Suspense>
                       <div className="px-4 pb-3 flex justify-end">
                         <button
                           type="button"
