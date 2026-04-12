@@ -4,13 +4,14 @@ import { Loader2, MapPin, Calendar, Users, Filter, Star, Clock, Search, X, Chevr
 import Header from './components/Header';
 import Footer from './components/Footer';
 import { useCart } from './components/CartSystem';
-import { useCurrency } from './hooks/useCurrency';
+// import { useCurrency } from './hooks/useCurrency';
 
 const ActivitySearchResults = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { addToCart } = useCart();
-  const { formatPKR, convert } = useCurrency();
+  const formatPKR = () => null;
+  const convert = () => null;
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);

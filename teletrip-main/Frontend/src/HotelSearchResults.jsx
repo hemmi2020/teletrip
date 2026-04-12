@@ -32,7 +32,7 @@ import Header from "./components/Header";
 import Footer from "./components/Footer";
 import ReviewsModal from "./components/ReviewsModal";
 import { useCart } from "./components/CartSystem";
-import { useCurrency } from "./hooks/useCurrency";
+// import { useCurrency } from "./hooks/useCurrency";
 
 
 const RatingCircles = ({ rating, size = 'w-5 h-5' }) => {
@@ -110,7 +110,8 @@ const [reviewsModal, setReviewsModal] = useState({
 });
   const navigate = useNavigate();
   const { addToCart } = useCart();
-  const { formatPKR, convert } = useCurrency();
+  const formatPKR = () => null;
+  const convert = () => null;
   const [selectedHotel, setSelectedHotel] = useState(null);
   const [notification, setNotification] = useState({ show: false, message: '', type: 'success' });
   const [galleryOpen, setGalleryOpen] = useState(false);
