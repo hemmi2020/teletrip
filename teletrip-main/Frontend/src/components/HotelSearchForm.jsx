@@ -722,6 +722,9 @@ const HotelSearchForm = () => {
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [isLoadingLocations, setIsLoadingLocations] = useState(false);
   const [hotelNameQuery, setHotelNameQuery] = useState('');
+  const [hotelSuggestions, setHotelSuggestions] = useState([]);
+  const [showHotelDropdown, setShowHotelDropdown] = useState(false);
+  const hotelNameRef = useRef(null);
   const locationRef = useRef(null);
 
   // Other states
@@ -777,6 +780,25 @@ const HotelSearchForm = () => {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
+  // Debounced hotel name search
+  useEffect(() => {
+    if (hotelNameQuery.trim().length < 3) { setHotelSuggestions([]); setShowHotelDropdown(false); return; }
+    const timer = setTimeout(async () => {
+      try {
+        const API_BASE = import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
+        const res = await fetch(`${API_BASE}/api/locations/search?q=${encodeURIComponent(hotelNameQuery.trim())}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.success) {
+          const hotels = (data.data || []).filter(l => l.type === 'hotel').slice(0, 10);
+          setHotelSuggestions(hotels);
+          if (hotels.length > 0) setShowHotelDropdown(true);
+        }
+      } catch (err) { /* silent */ }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [hotelNameQuery]);
+
   // Handle clicks outside dropdowns
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -788,6 +810,9 @@ const HotelSearchForm = () => {
       }
       if (locationRef.current && !locationRef.current.contains(event.target)) {
         setShowLocationDropdown(false);
+      }
+      if (hotelNameRef.current && !hotelNameRef.current.contains(event.target)) {
+        setShowHotelDropdown(false);
       }
     };
 
@@ -930,42 +955,20 @@ const HotelSearchForm = () => {
                     <div className="absolute z-50 w-full mt-2 bg-white border border-gray-200 rounded-xl shadow-xl max-h-72 sm:max-h-96 overflow-y-auto" style={{scrollbarWidth:'thin'}}>
                       {isLoadingLocations ? (
                         <div className="p-4 text-center text-gray-400 text-sm">Searching...</div>
-                      ) : filteredLocations.length > 0 ? (() => {
-                        const hotels = filteredLocations.filter(l => l.type === 'hotel');
-                        const destinations = filteredLocations.filter(l => l.type !== 'hotel');
-                        return (
-                          <div>
-                            {destinations.length > 0 && (
-                              <>
-                                <div className="px-3 pt-2.5 pb-1.5 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Destinations</div>
-                                {destinations.map((location, index) => (
-                                  <div key={`loc-${index}`} onClick={() => handleLocationSelect(location)} className="px-3 py-2 hover:bg-blue-50 cursor-pointer transition-colors flex items-center gap-2.5">
-                                    <MapPin size={15} className="text-blue-600 flex-shrink-0" />
-                                    <div className="min-w-0 flex-1">
-                                      <div className="text-[13px] font-medium text-gray-800 truncate">{location.city || location.country || location.name}</div>
-                                      <div className="text-[11px] text-gray-400 truncate">{location.type === 'country' ? 'Country' : `City in ${location.country}`}</div>
-                                    </div>
-                                  </div>
-                                ))}
-                              </>
-                            )}
-                            {hotels.length > 0 && (
-                              <>
-                                <div className={`px-3 pt-2.5 pb-1.5 text-[11px] font-semibold text-gray-400 uppercase tracking-wider ${destinations.length > 0 ? 'border-t border-gray-100 mt-1' : ''}`}>Hotels</div>
-                                {hotels.map((location, index) => (
-                                  <div key={`htl-${index}`} onClick={() => { setHotelNameQuery(location.name); handleLocationSelect({ ...location, city: location.city, country: location.country || '', displayName: location.city || location.name }); }} className="px-3 py-2 hover:bg-blue-50 cursor-pointer transition-colors flex items-center gap-2.5">
-                                    <Building2 size={15} className="text-green-600 flex-shrink-0" />
-                                    <div className="min-w-0 flex-1">
-                                      <div className="text-[13px] font-medium text-gray-800 truncate">{location.name}</div>
-                                      <div className="text-[11px] text-gray-400 truncate">{location.city}{location.country ? `, ${location.country}` : ''}</div>
-                                    </div>
-                                  </div>
-                                ))}
-                              </>
-                            )}
-                          </div>
-                        );
-                      })() : (
+                      ) : filteredLocations.length > 0 ? (
+                        <div>
+                          <div className="px-3 pt-2.5 pb-1.5 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Destinations</div>
+                          {filteredLocations.filter(l => l.type !== 'hotel').map((location, index) => (
+                            <div key={`loc-${index}`} onClick={() => handleLocationSelect(location)} className="px-3 py-2 hover:bg-blue-50 cursor-pointer transition-colors flex items-center gap-2.5">
+                              <MapPin size={15} className="text-blue-600 flex-shrink-0" />
+                              <div className="min-w-0 flex-1">
+                                <div className="text-[13px] font-medium text-gray-800 truncate">{location.city || location.country || location.name}</div>
+                                <div className="text-[11px] text-gray-400 truncate">{location.type === 'country' ? 'Country' : `City in ${location.country}`}</div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
                         <div className="p-4 text-center text-gray-400 text-sm">No destinations found</div>
                       )}
                     </div>
@@ -973,7 +976,7 @@ const HotelSearchForm = () => {
                 </div>
 
                 {/* Hotel Name */}
-                <div>
+                <div className="relative" ref={hotelNameRef}>
                   <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2 px-1">
                     Hotel Name <span className="text-gray-400 text-xs font-normal">(filter)</span>
                   </label>
@@ -982,14 +985,29 @@ const HotelSearchForm = () => {
                     <input
                       type="text"
                       value={hotelNameQuery}
-                      onChange={(e) => setHotelNameQuery(e.target.value)}
+                      onChange={(e) => { setHotelNameQuery(e.target.value); if (e.target.value.length >= 3) setShowHotelDropdown(true); }}
+                      onFocus={() => hotelSuggestions.length > 0 && setShowHotelDropdown(true)}
                       placeholder="Filter by hotel name..."
                       className="w-full pl-10 pr-10 py-2.5 sm:py-3 border border-gray-300 bg-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-700 text-sm sm:text-base"
                     />
                     {hotelNameQuery && (
-                      <button type="button" onClick={() => setHotelNameQuery('')} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"><X size={18} /></button>
+                      <button type="button" onClick={() => { setHotelNameQuery(''); setHotelSuggestions([]); setShowHotelDropdown(false); }} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"><X size={18} /></button>
                     )}
                   </div>
+                  {showHotelDropdown && hotelSuggestions.length > 0 && (
+                    <div className="absolute z-50 w-full mt-2 bg-white border border-gray-200 rounded-xl shadow-xl max-h-64 overflow-y-auto" style={{scrollbarWidth:'thin'}}>
+                      <div className="px-3 pt-2.5 pb-1.5 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Hotels</div>
+                      {hotelSuggestions.map((h, i) => (
+                        <div key={i} onClick={() => { setHotelNameQuery(h.name); setShowHotelDropdown(false); if (!selectedLocation && h.city) { setSearchQuery(h.city); setSelectedLocation({ type: 'city', city: h.city, country: h.country || '', displayName: h.city }); } }} className="px-3 py-2 hover:bg-blue-50 cursor-pointer transition-colors flex items-center gap-2.5">
+                          <Building2 size={15} className="text-green-600 flex-shrink-0" />
+                          <div className="min-w-0 flex-1">
+                            <div className="text-[13px] font-medium text-gray-800 truncate">{h.name}</div>
+                            <div className="text-[11px] text-gray-400 truncate">{h.city}{h.country ? `, ${h.country}` : ''}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
 
