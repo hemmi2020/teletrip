@@ -554,18 +554,18 @@ const ActivitySearchResults = () => {
             {/* Image */}
             <div className="relative h-48 sm:h-56 flex-shrink-0 bg-gray-200 overflow-hidden">
               {selectedActivity.images && selectedActivity.images.length >= 3 ? (
-                <div className="grid grid-cols-3 gap-0.5 h-48 sm:h-56">
-                  <div className="col-span-2 cursor-pointer" onClick={() => { setGalleryImages(selectedActivity.images); setGalleryIndex(0); setGalleryOpen(true); }}><img src={selectedActivity.images[0]} alt="" className="w-full h-full object-cover hover:brightness-90 transition-all" onError={(e) => e.target.src = 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} /></div>
-                  <div className="flex flex-col gap-0.5">
-                    <div className="h-1/2 cursor-pointer" onClick={() => { setGalleryImages(selectedActivity.images); setGalleryIndex(1); setGalleryOpen(true); }}><img src={selectedActivity.images[1]} alt="" className="w-full h-full object-cover hover:brightness-90 transition-all" onError={(e) => e.target.src = 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} /></div>
-                    <div className="relative h-1/2 cursor-pointer" onClick={() => { setGalleryImages(selectedActivity.images); setGalleryIndex(2); setGalleryOpen(true); }}>
+                <div className="grid grid-cols-3 gap-0.5 h-full">
+                  <div className="col-span-2 cursor-pointer overflow-hidden" onClick={() => { setGalleryImages(selectedActivity.images); setGalleryIndex(0); setGalleryOpen(true); }}><img src={selectedActivity.images[0]} alt="" className="w-full h-full object-cover hover:brightness-90 transition-all" onError={(e) => e.target.src = 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} /></div>
+                  <div className="flex flex-col gap-0.5 overflow-hidden">
+                    <div className="flex-1 cursor-pointer overflow-hidden" onClick={() => { setGalleryImages(selectedActivity.images); setGalleryIndex(1); setGalleryOpen(true); }}><img src={selectedActivity.images[1]} alt="" className="w-full h-full object-cover hover:brightness-90 transition-all" onError={(e) => e.target.src = 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} /></div>
+                    <div className="relative flex-1 cursor-pointer overflow-hidden" onClick={() => { setGalleryImages(selectedActivity.images); setGalleryIndex(2); setGalleryOpen(true); }}>
                       <img src={selectedActivity.images[2]} alt="" className="w-full h-full object-cover hover:brightness-90 transition-all" onError={(e) => e.target.src = 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} />
                       {selectedActivity.images.length > 3 && <div className="absolute inset-0 bg-black/50 hover:bg-black/40 flex items-center justify-center text-white text-sm font-medium transition-colors">+{selectedActivity.images.length - 3}</div>}
                     </div>
                   </div>
                 </div>
               ) : (
-                <div className="h-48 sm:h-56 cursor-pointer" onClick={() => { setGalleryImages(selectedActivity.images || []); setGalleryIndex(0); setGalleryOpen(true); }}>
+                <div className="h-full cursor-pointer overflow-hidden" onClick={() => { setGalleryImages(selectedActivity.images || []); setGalleryIndex(0); setGalleryOpen(true); }}>
                   <img src={selectedActivity.images?.[0] || 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} alt="" className="w-full h-full object-cover hover:brightness-90 transition-all" />
                 </div>
               )}
