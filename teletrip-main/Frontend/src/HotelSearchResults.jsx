@@ -1151,40 +1151,6 @@ if (children > 0 && childAges.length > 0) {
               </div>
             )}
 
-            {/* Sort By */}
-            <div className="py-3 border-b border-gray-50">
-              <button
-                onClick={() => toggleSection('sortBy')}
-                className="flex items-center justify-between w-full cursor-pointer"
-              >
-                <span className="text-[13px] font-semibold text-gray-800">Sort by</span>
-                {expandedSections.sortBy ? <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 rotate-180" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200" />}
-              </button>
-              {expandedSections.sortBy && (
-                <div className="space-y-1.5">
-                  {[
-                    { value: "default", label: "Default" },
-                    { value: "priceLowHigh", label: "Price: Low to High" },
-                    { value: "priceHighLow", label: "Price: High to Low" },
-                    { value: "ratingHighLow", label: "Rating: High to Low" },
-                    { value: "ratingLowHigh", label: "Rating: Low to High" },
-                  ].map(opt => (
-                    <label key={opt.value} className="flex items-center gap-2.5 py-0.5 cursor-pointer group">
-                      <input
-                        type="radio"
-                        name="sortBy"
-                        value={opt.value}
-                        checked={sortOption === opt.value}
-                        onChange={(e) => setSortOption(e.target.value)}
-                        className="h-3.5 w-3.5 border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
-                      />
-                      <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors">{opt.label}</span>
-                    </label>
-                  ))}
-                </div>
-              )}
-            </div>
-
             {/* Accommodation Type */}
             <div className="py-3 border-b border-gray-50">
               <button
@@ -1425,10 +1391,27 @@ if (children > 0 && childAges.length > 0) {
               </div>
             )}
 
-            <div className="sticky top-16 z-20 bg-white/90 backdrop-blur-sm py-3 -mx-4 px-4 border-b border-gray-100">
-              <h1 className="text-lg font-semibold text-gray-900">
-                {sortedHotels.length} Hotels Found in {searchParams.get("city")}
+            <div className="sticky top-16 z-20 bg-white/95 backdrop-blur-sm py-2.5 -mx-4 px-4 border-b border-gray-100 flex items-center justify-between gap-3">
+              <h1 className="text-[14px] sm:text-base font-semibold text-gray-900 truncate">
+                {sortedHotels.length} Hotels in {searchParams.get("city")}
               </h1>
+              <select value={sortOption} onChange={(e) => setSortOption(e.target.value)} className="text-[12px] sm:text-[13px] px-2.5 py-1.5 border border-gray-200 rounded-lg bg-white text-gray-600 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none flex-shrink-0">
+                <option value="default">Sort: Recommended</option>
+                <option value="priceLowHigh">Price: Low → High</option>
+                <option value="priceHighLow">Price: High → Low</option>
+                <option value="ratingHighLow">Rating: High → Low</option>
+                <option value="ratingLowHigh">Rating: Low → High</option>
+              </select>
+            </div>
+
+            {/* Search summary */}
+            <div className="flex items-center gap-2 text-[11px] text-gray-400 py-2 flex-wrap">
+              <span>{searchParams.get("checkIn")} → {searchParams.get("checkOut")}</span>
+              <span>·</span>
+              <span>{searchParams.get("adults")} adult{searchParams.get("adults") !== "1" ? 's' : ''}{searchParams.get("children") && searchParams.get("children") !== "0" ? `, ${searchParams.get("children")} children` : ''}</span>
+              <span>·</span>
+              <span>{searchParams.get("rooms")} room{searchParams.get("rooms") !== "1" ? 's' : ''}</span>
+              {searchParams.get("hotelName") && <><span>·</span><span className="text-blue-600">Hotel: {searchParams.get("hotelName")}</span></>}
             </div>
 
             {/* Hotel Cards */}
@@ -1514,14 +1497,11 @@ if (children > 0 && childAges.length > 0) {
             </div>
 
             {sortedHotels.length === 0 && (
-              <div className="text-center py-12">
-                <p className="text-gray-600 text-lg">No hotels found matching your criteria.</p>
-                <button
-                  onClick={clearFilters}
-                  className="mt-4 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
-                >
-                  Clear Filters
-                </button>
+              <div className="text-center py-16">
+                <div className="text-4xl mb-3">🏨</div>
+                <p className="text-gray-800 text-lg font-medium mb-1">No hotels match your filters</p>
+                <p className="text-gray-400 text-sm mb-4">Try adjusting your filters or search criteria</p>
+                <button onClick={clearFilters} className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium transition-colors">Clear All Filters</button>
               </div>
             )}
           </div>
