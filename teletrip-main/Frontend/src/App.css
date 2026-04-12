@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* Full-width site, boxed content */
+/* Global */
 body {
   background-color: #ffffff;
 }
@@ -10,22 +10,7 @@ body {
   min-height: 100vh;
 }
 
-/* Boxed content container — applies to main page content, not header/footer */
-.container {
-  max-width: 1280px;
-  margin-left: auto;
-  margin-right: auto;
-  padding-left: 1rem;
-  padding-right: 1rem;
-}
-
-@media (min-width: 1536px) {
-  .container {
-    max-width: 1400px;
-  }
-}
-
-/* Global cursor pointer for all interactive elements */
+/* Cursor pointer for interactive elements */
 button,
 [role="button"],
 a,
@@ -40,143 +25,14 @@ summary {
   cursor: pointer;
 }
 
-
-
-
-
-
-
-/* 
- * Z-Index Layering System Fix
- * Add this to your main CSS file or index.css
- * This ensures proper stacking order throughout the application
- */
-
-/* Base z-index hierarchy for the application */
-
-/* Layer 1: Background elements (0-9) */
-.slider-background,
-.page-background {
-  z-index: 1;
-}
-
-/* Layer 2: Content elements (10-39) */
-.slider-content,
-.page-content {
-  z-index: 10;
-}
-
-.slider-indicators,
-.navigation-arrows {
-  z-index: 20;
-}
-
-/* Layer 3: Form elements (40-49) */
-.hotel-search-form,
-.search-form-container {
-  z-index: 40 !important;
-}
-
-/* Layer 4: Dropdowns and tooltips (50-79) */
-.dropdown-menu,
-.calendar-dropdown,
-.autocomplete-dropdown {
-  z-index: 50 !important;
-}
-
-.tooltip {
-  z-index: 60;
-}
-
-/* Layer 5: Modals and overlays (80-99) */
-.modal-overlay {
-  z-index: 80;
-}
-
-.modal-content {
-  z-index: 85;
-}
-
-/* Layer 6: Header/Navigation (100-109) */
-header,
+/* Header z-index — only target the site header, not all <header> elements */
 .site-header,
 .main-navigation {
-  z-index: 100 !important;
+  z-index: 100;
 }
 
-/* Layer 7: Notifications and alerts (110-119) */
-.notification,
-.alert,
-.toast {
-  z-index: 110;
-}
-
-/* Layer 8: Cart and side panels (120-129) */
-.cart-sidebar,
-.slide-out-cart {
-  z-index: 120 !important;
-}
-
-/* Layer 9: Top-level modals (130-149) */
-.auth-modal,
-.confirmation-modal {
-  z-index: 130;
-}
-
-/* Layer 10: Critical UI (150+) */
-.loading-overlay {
-  z-index: 150;
-}
-
-.critical-notification {
-  z-index: 200;
-}
-
-/* 
- * Important: Prevent z-index conflicts in calendar components
- */
-.react-date-range-picker,
-.rdrCalendarWrapper {
-  z-index: 50 !important;
-}
-
+/* Calendar components */
+.rdrCalendarWrapper,
 .rdrDateRangePickerWrapper {
-  z-index: 50 !important;
-}
-
-/* 
- * Fix for form elements that should appear above slider but below header
- */
-.form-overlay {
-  position: relative;
-  z-index: 40;
-}
-
-/* Ensure dropdown panels in forms are visible */
-.form-overlay .dropdown-panel,
-.form-overlay .calendar-panel {
-  z-index: 55 !important;
-}
-
-/* Animations */
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes slideUp {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.animate-in {
-  animation: slideUp 0.3s ease-out;
-}
-
-.fade-in {
-  animation: fadeIn 0.3s ease-out;
-}
-
-.slide-in-from-bottom-2 {
-  animation: slideUp 0.4s ease-out;
+  z-index: 50;
 }
