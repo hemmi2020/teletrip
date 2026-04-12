@@ -652,7 +652,7 @@ const closeReviewsModal = () => {
   // HELPER FUNCTION
   const getRatingColor = (rating) => {
 
-  // Debounced address search via Nominatim (OpenStreetMap)
+  // Debounced address search via backend proxy
   useEffect(() => {
     if (addressSearch.trim().length < 3) { setAddressSuggestions([]); setShowAddressSuggestions(false); return; }
     setLoadingAddress(true);
@@ -660,11 +660,15 @@ const closeReviewsModal = () => {
     const timer = setTimeout(async () => {
       try {
         const q = `${addressSearch}, ${city}`;
-        const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&addressdetails=1&limit=8`, { headers: { 'Accept-Language': 'en' } });
+        const res = await fetch(`${API_BASE_URL.replace('/api', '')}/api/locations/address?q=${encodeURIComponent(q)}`);
         if (res.ok) {
           const data = await res.json();
-          setAddressSuggestions(data.map(d => ({ display: d.display_name, short: d.name || d.display_name.split(',')[0], type: d.type, lat: d.lat, lon: d.lon })));
-          setShowAddressSuggestions(true);
+          if (data.success && data.data.length > 0) {
+            setAddressSuggestions(data.data);
+            setShowAddressSuggestions(true);
+          } else {
+            setShowAddressSuggestions(false);
+          }
         }
       } catch (err) { /* silent */ }
       finally { setLoadingAddress(false); }

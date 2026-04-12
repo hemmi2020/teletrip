@@ -149,3 +149,32 @@ exports.searchLocations = async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 };
+
+exports.searchAddress = async (req, res) => {
+  try {
+    const { q } = req.query;
+    if (!q || q.length < 3) return res.json({ success: true, data: [] });
+
+    const fetch = (await import('node-fetch')).default;
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&addressdetails=1&limit=8`,
+      { headers: { 'User-Agent': 'Telitrip/1.0 (travel booking)', 'Accept-Language': 'en' } }
+    );
+
+    if (!response.ok) return res.json({ success: true, data: [] });
+
+    const data = await response.json();
+    const results = data.map(d => ({
+      display: d.display_name,
+      short: d.name || d.display_name.split(',')[0],
+      type: d.type,
+      lat: d.lat,
+      lon: d.lon
+    }));
+
+    res.json({ success: true, data: results });
+  } catch (error) {
+    console.error('Address search error:', error.message);
+    res.json({ success: true, data: [] });
+  }
+};
