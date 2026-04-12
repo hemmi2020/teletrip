@@ -1653,7 +1653,7 @@ if (children > 0 && childAges.length > 0) {
                 </div>
                 <div className="text-right flex-shrink-0">
                   <div className="text-[11px] text-gray-400">from</div>
-                  <div className="text-xl font-bold text-blue-600">{selectedHotel.currency} {parseFloat(selectedHotel.price).toFixed(2)}</div>
+                  <div className="text-xl font-bold text-blue-600">{formatPKR(parseFloat(selectedHotel.price)) || `${selectedHotel.currency} ${parseFloat(selectedHotel.price).toFixed(2)}`}</div>
                   <div className="text-[11px] text-gray-400">{nights} {nights === 1 ? 'night' : 'nights'}</div>
                   {/* Reviews */}
                   {hotelReviews[selectedHotel.id] && hotelReviews[selectedHotel.id].numReviews > 0 && (
