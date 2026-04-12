@@ -722,9 +722,6 @@ const HotelSearchForm = () => {
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [isLoadingLocations, setIsLoadingLocations] = useState(false);
   const [hotelNameQuery, setHotelNameQuery] = useState('');
-  const [hotelSuggestions, setHotelSuggestions] = useState([]);
-  const [showHotelDropdown, setShowHotelDropdown] = useState(false);
-  const hotelRef = useRef(null);
   const locationRef = useRef(null);
 
   // Other states
@@ -780,35 +777,11 @@ const HotelSearchForm = () => {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // Debounced hotel name search via transfers API
-  useEffect(() => {
-    if (hotelNameQuery.trim().length < 3) {
-      setHotelSuggestions([]);
-      return;
-    }
-    const timer = setTimeout(async () => {
-      try {
-        const API_BASE = import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
-        const res = await fetch(`${API_BASE}/api/locations/transfers?search=${encodeURIComponent(hotelNameQuery.trim())}`);
-        const data = await res.json();
-        if (data.success) {
-          const hotels = (data.data || []).filter(l => l.type === 'ATLAS').slice(0, 8);
-          setHotelSuggestions(hotels);
-          setShowHotelDropdown(hotels.length > 0);
-        }
-      } catch (err) { /* silent */ }
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [hotelNameQuery]);
-
   // Handle clicks outside dropdowns
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (calendarRef.current && !calendarRef.current.contains(event.target)) {
         setShowCalendar(false);
-      }
-      if (hotelRef.current && !hotelRef.current.contains(event.target)) {
-        setShowHotelDropdown(false);
       }
       if (travellerRef.current && !travellerRef.current.contains(event.target)) {
         setShowTravellerDropdown(false);
@@ -980,7 +953,7 @@ const HotelSearchForm = () => {
                 </div>
 
                 {/* Hotel Name */}
-                <div className="relative" ref={hotelRef}>
+                <div>
                   <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2 px-1">
                     Hotel Name
                   </label>
@@ -989,29 +962,14 @@ const HotelSearchForm = () => {
                     <input
                       type="text"
                       value={hotelNameQuery}
-                      onChange={(e) => { setHotelNameQuery(e.target.value); setShowHotelDropdown(true); }}
-                      onFocus={() => hotelSuggestions.length > 0 && setShowHotelDropdown(true)}
-                      placeholder="e.g: Hilton, Marriott..."
+                      onChange={(e) => setHotelNameQuery(e.target.value)}
+                      placeholder="Filter by hotel name..."
                       className="w-full pl-10 pr-10 py-2.5 sm:py-3 border border-gray-300 bg-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-700 text-sm sm:text-base"
                     />
                     {hotelNameQuery && (
-                      <button type="button" onClick={() => { setHotelNameQuery(''); setHotelSuggestions([]); }} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"><X size={18} /></button>
+                      <button type="button" onClick={() => setHotelNameQuery('')} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"><X size={18} /></button>
                     )}
                   </div>
-                  {showHotelDropdown && hotelSuggestions.length > 0 && (
-                    <div className="absolute z-50 w-full mt-2 bg-white border border-gray-200 rounded-xl shadow-xl max-h-64 overflow-y-auto" style={{scrollbarWidth:'thin'}}>
-                      <div className="px-3 pt-2.5 pb-1.5 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Hotels</div>
-                      {hotelSuggestions.map((h, i) => (
-                        <div key={i} onClick={() => { setHotelNameQuery(h.name); setShowHotelDropdown(false); }} className="px-3 py-2 hover:bg-blue-50 cursor-pointer transition-colors flex items-center gap-2.5">
-                          <Building2 size={15} className="text-green-600 flex-shrink-0" />
-                          <div className="min-w-0 flex-1">
-                            <div className="text-[13px] font-medium text-gray-800 truncate">{h.name}</div>
-                            <div className="text-[11px] text-gray-400 truncate">{h.city}{h.country ? ', ' + h.country : ''}</div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
                 </div>
               </div>
 
