@@ -32,6 +32,7 @@ import Header from "./components/Header";
 import Footer from "./components/Footer";
 import ReviewsModal from "./components/ReviewsModal";
 import { useCart } from "./components/CartSystem";
+import { useCurrency } from "./context/CurrencyContext";
 
 
 const RatingCircles = ({ rating, size = 'w-5 h-5' }) => {
@@ -109,6 +110,7 @@ const [reviewsModal, setReviewsModal] = useState({
 });
   const navigate = useNavigate();
   const { addToCart } = useCart();
+  const { formatPKR, convert } = useCurrency();
   const [selectedHotel, setSelectedHotel] = useState(null);
   const [notification, setNotification] = useState({ show: false, message: '', type: 'success' });
   const [galleryOpen, setGalleryOpen] = useState(false);
@@ -561,7 +563,9 @@ const [reviewsModal, setReviewsModal] = useState({
       id: `${hotel.id}-${room.code}-${rate.rateKey || rate.net}`,
       hotelId: hotel.id, hotelName: hotel.name, hotelCode: hotel.code,
       roomCode: room.code, roomName: room.name, rateKey: rate.rateKey,
-      price: pricePerNight, pricePerNight, currency: hotel.currency || 'EUR',
+      price: pricePerNight, pricePerNight, currency: 'PKR',
+      priceEUR: pricePerNight, currencyEUR: hotel.currency || 'EUR',
+      pricePKR: convert(pricePerNight), totalPricePKR: convert(totalFromAPI),
       checkIn, checkOut, nights, guests: adults + children, adults, children, rooms,
       location: `${hotel.zoneName}, ${hotel.destinationName}`,
       boardName: rate.boardName, rateClass: rate.rateClass, paymentType: rate.paymentType,
@@ -571,7 +575,7 @@ const [reviewsModal, setReviewsModal] = useState({
       thumbnail: hotel.thumbnail, allotment: rate.allotment,
       packaging: rate.packaging, taxes: rate.taxes,
       city: hotel.destinationName, zone: hotel.zoneName,
-      category: hotel.categoryName, totalPrice: totalFromAPI, net: totalFromAPI,
+      category: hotel.categoryName, totalPrice: convert(totalFromAPI) || totalFromAPI, net: totalFromAPI,
       addedAt: new Date().toISOString(),
     });
     setNotification({ show: true, message: `${room.name} added to cart!`, type: 'success' });
@@ -1513,8 +1517,8 @@ if (children > 0 && childAges.length > 0) {
                           </div>
                         </div>
                         <div className="text-right flex-shrink-0">
-                          <div className="text-lg font-bold text-blue-600 leading-tight">{hotel.currency} {totalPrice.toFixed(0)}</div>
-                          <div className="text-[10px] text-gray-400">{pricePerNight.toFixed(0)}/night · {nights}n</div>
+                          <div className="text-lg font-bold text-blue-600 leading-tight">{formatPKR(totalPrice) || `${hotel.currency} ${totalPrice.toFixed(0)}`}</div>
+                          <div className="text-[10px] text-gray-400">{formatPKR(pricePerNight) || `${pricePerNight.toFixed(0)}`}/night · {nights}n</div>
                         </div>
                       </div>
 
@@ -1766,8 +1770,8 @@ if (children > 0 && childAges.length > 0) {
                               </div>
                               {/* Price + CTA */}
                               <div className="text-right flex-shrink-0 min-w-[120px]">
-                                <div className="text-[11px] text-gray-400">{selectedHotel.currency} {perNight.toFixed(0)} / night</div>
-                                <div className="text-lg font-bold text-blue-600">{selectedHotel.currency} {total.toFixed(2)}</div>
+                                <div className="text-[11px] text-gray-400">{formatPKR(perNight) || `${selectedHotel.currency} ${perNight.toFixed(0)}`} / night</div>
+                                <div className="text-lg font-bold text-blue-600">{formatPKR(total) || `${selectedHotel.currency} ${total.toFixed(2)}`}</div>
                                 <div className="text-[11px] text-gray-400 mb-2">total for {nights}n</div>
                                 <button
                                   onClick={(e) => { e.stopPropagation(); handleAddToCart(selectedHotel, room, rate); }}

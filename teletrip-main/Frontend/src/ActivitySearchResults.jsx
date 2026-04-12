@@ -4,11 +4,13 @@ import { Loader2, MapPin, Calendar, Users, Filter, Star, Clock, Search, X, Chevr
 import Header from './components/Header';
 import Footer from './components/Footer';
 import { useCart } from './components/CartSystem';
+import { useCurrency } from './context/CurrencyContext';
 
 const ActivitySearchResults = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { addToCart } = useCart();
+  const { formatPKR, convert } = useCurrency();
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -126,15 +128,17 @@ const ActivitySearchResults = () => {
   };
 
   const handleAddActivityToCart = (activity, modality = null, pricing = null, time = null) => {
-    const price = pricing ? parseFloat(pricing.amount || 0) : parseFloat(activity.pricing?.amount || 0);
-    const currency = pricing ? pricing.currency : (activity.pricing?.currency || 'EUR');
+    const priceEUR = pricing ? parseFloat(pricing.amount || 0) : parseFloat(activity.pricing?.amount || 0);
+    const pricePKR = convert(priceEUR) || priceEUR;
     addToCart({
       id: `activity-${activity.code}-${modality?.code || 'default'}-${time || ''}`,
       type: 'activity',
       name: activity.name,
       code: activity.code,
-      price,
-      currency,
+      price: pricePKR,
+      priceEUR,
+      currency: 'PKR',
+      currencyEUR: pricing?.currency || activity.pricing?.currency || 'EUR',
       checkIn: from,
       checkOut: to,
       guests: parseInt(adults),
@@ -540,7 +544,7 @@ const ActivitySearchResults = () => {
                       <div className="flex justify-between items-start gap-2 mb-1.5">
                         <h3 className="text-[14px] font-semibold text-gray-900 leading-tight line-clamp-2">{activity.name}</h3>
                         <div className="text-right flex-shrink-0">
-                          {activity.pricing?.amount ? (<div className="text-lg font-bold text-blue-600 leading-tight">{activity.pricing.currency} {parseFloat(activity.pricing.amount).toFixed(0)}</div>) : <span className="text-[11px] text-gray-400">On request</span>}
+                          {activity.pricing?.amount ? (<div className="text-lg font-bold text-blue-600 leading-tight">{formatPKR(activity.pricing.amount) || `${activity.pricing.currency} ${parseFloat(activity.pricing.amount).toFixed(0)}`}</div>) : <span className="text-[11px] text-gray-400">On request</span>}
                           <div className="text-[10px] text-gray-400">per person</div>
                         </div>
                       </div>
@@ -647,7 +651,7 @@ const ActivitySearchResults = () => {
               <div className="flex items-center gap-3 flex-wrap">
                 <div className="flex-1 min-w-0">
                   {selectedActivity.pricing?.amount ? (
-                    <><span className="text-xl font-bold text-blue-600">{selectedActivity.pricing.currency} {parseFloat(selectedActivity.pricing.amount).toFixed(2)}</span><span className="text-[12px] text-gray-400 ml-1">from / person</span></>
+                    <><span className="text-xl font-bold text-blue-600">{formatPKR(selectedActivity.pricing.amount) || `${selectedActivity.pricing.currency} ${parseFloat(selectedActivity.pricing.amount).toFixed(2)}`}</span><span className="text-[12px] text-gray-400 ml-1">from / person</span></>
                   ) : <span className="text-gray-400">Price on request</span>}
                 </div>
               </div>
@@ -685,14 +689,14 @@ const ActivitySearchResults = () => {
                                 {mod.duration && <span className="text-[11px] text-gray-400 ml-2">{mod.duration}</span>}
                               </div>
                             </div>
-                            {bestPrice?.amount && <span className="text-[14px] font-bold text-blue-600">{bestPrice.currency} {parseFloat(bestPrice.amount).toFixed(2)}</span>}
+                            {bestPrice?.amount && <span className="text-[14px] font-bold text-blue-600">{formatPKR(bestPrice.amount) || `${bestPrice.currency} ${parseFloat(bestPrice.amount).toFixed(2)}`}</span>}
                           </div>
                           {isSelected && mod.pricing && mod.pricing.length > 1 && (
                             <div className="mt-2 pt-2 border-t border-blue-100 space-y-1">
                               {mod.pricing.map((p, pi) => (
                                 <div key={pi} className="flex items-center justify-between text-[12px]">
                                   <span className="text-gray-500">{p.paxType === 'ADULT' ? 'Adult' : p.paxType === 'CHILD' ? 'Child' : p.paxType || 'Per person'}</span>
-                                  <span className="font-medium text-gray-700">{p.currency} {parseFloat(p.amount || 0).toFixed(2)}</span>
+                                  <span className="font-medium text-gray-700">{formatPKR(p.amount) || `${p.currency} ${parseFloat(p.amount || 0).toFixed(2)}`}</span>
                                 </div>
                               ))}
                             </div>
@@ -754,7 +758,10 @@ const ActivitySearchResults = () => {
                   <div className="flex items-center justify-between pt-2 border-t border-blue-100">
                     <span className="text-[13px] font-medium text-gray-700">Total</span>
                     <span className="text-lg font-bold text-blue-600">
-                      {selectedModality?.pricing?.[0]?.amount ? `${selectedModality.pricing[0].currency} ${parseFloat(selectedModality.pricing[0].amount).toFixed(2)}` : `${selectedActivity.pricing?.currency || 'EUR'} ${parseFloat(selectedActivity.pricing?.amount || 0).toFixed(2)}`}
+                      {(() => {
+                        const amt = selectedModality?.pricing?.[0]?.amount || selectedActivity.pricing?.amount || 0;
+                        return formatPKR(amt) || `${selectedModality?.pricing?.[0]?.currency || selectedActivity.pricing?.currency || 'EUR'} ${parseFloat(amt).toFixed(2)}`;
+                      })()}
                     </span>
                   </div>
                 </div>
