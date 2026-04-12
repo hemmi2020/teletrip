@@ -516,7 +516,7 @@ const ActivitySearchResults = () => {
                       <div className="flex items-center gap-2 text-[11px] text-gray-400 mb-1.5 flex-wrap">
                         {activity.destination && <span className="flex items-center gap-0.5"><MapPin className="w-3 h-3" />{activity.destination}</span>}
                         {activity.supplier && <><span>·</span><span>{activity.supplier}</span></>}
-                        {activity.scheduling?.duration?.hours && <><span>·</span><span><Clock className="w-3 h-3 inline" /> {activity.scheduling.duration.hours}h</span></>}
+                        {activity.scheduling?.duration?.value && <><span>·</span><span><Clock className="w-3 h-3 inline" /> {activity.scheduling.duration.value}h</span></>}
                       </div>
                       <div className="flex gap-1 flex-wrap mb-2">
                         {activity.activityFactsheetType && <span className="text-[10px] px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded">{activity.activityFactsheetType}</span>}
@@ -584,7 +584,7 @@ const ActivitySearchResults = () => {
               {(() => {
                 const tags = [];
                 if (selectedActivity.supplier) tags.push({ label: selectedActivity.supplier, color: 'bg-gray-100 text-gray-600' });
-                if (selectedActivity.scheduling?.duration?.hours) tags.push({ label: `${selectedActivity.scheduling.duration.hours}h duration`, color: 'bg-gray-100 text-gray-600' });
+                if (selectedactivity.scheduling?.duration?.value) tags.push({ label: `${selectedActivity.scheduling.duration.value}h duration`, color: 'bg-gray-100 text-gray-600' });
                 if (selectedActivity.voucherType) tags.push({ label: `Voucher: ${selectedActivity.voucherType}`, color: 'bg-amber-50 text-amber-600' });
                 if (selectedActivity.activityFactsheetType) tags.push({ label: selectedActivity.activityFactsheetType, color: 'bg-blue-50 text-blue-600' });
                 if (selectedActivity.segmentationGroups) {
@@ -622,13 +622,40 @@ const ActivitySearchResults = () => {
               {selectedActivity.description && (
                 <div><div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Description</div><p className="text-[13px] text-gray-600 leading-relaxed" dangerouslySetInnerHTML={{ __html: selectedActivity.description }} /></div>
               )}
-              {/* Scheduling details */}
+              {/* Schedule */}
               {selectedActivity.scheduling && (
                 <div>
                   <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Schedule</div>
-                  <div className="text-[13px] text-gray-600 space-y-1">
-                    {selectedActivity.scheduling.duration?.hours && <p>Duration: {selectedActivity.scheduling.duration.hours} hours</p>}
-                    {selectedActivity.scheduling.opened && <p>Available: Open schedule</p>}
+                  <div className="text-[13px] text-gray-600 space-y-2">
+                    {selectedActivity.scheduling.duration?.value && <p>Duration: {selectedActivity.scheduling.duration.value} {(selectedActivity.scheduling.duration.metric || 'HOURS').toLowerCase()}</p>}
+                    {selectedActivity.scheduling.opened && selectedActivity.scheduling.opened.length > 0 && (
+                      <div>
+                        <p className="mb-1">Available times:</p>
+                        <div className="flex gap-2 flex-wrap">
+                          {selectedActivity.scheduling.opened.map((slot, i) => (
+                            <span key={i} className="text-[11px] px-2 py-1 bg-gray-50 rounded text-gray-600">{slot.openingTime} – {slot.closeTime}</span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+              {/* Voucher */}
+              {selectedActivity.voucherType && (
+                <div>
+                  <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Voucher</div>
+                  <p className="text-[13px] text-gray-600">{selectedActivity.voucherType === 'PRINTED' ? 'Printed voucher required' : selectedActivity.voucherType === 'MOBILE' ? 'Mobile voucher accepted' : selectedActivity.voucherType}</p>
+                </div>
+              )}
+              {/* Services */}
+              {selectedActivity.services && selectedActivity.services.filter(Boolean).length > 0 && (
+                <div>
+                  <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Included Services</div>
+                  <div className="flex gap-1.5 flex-wrap">
+                    {selectedActivity.services.filter(Boolean).map((s, i) => (
+                      <span key={i} className="text-[12px] px-2.5 py-1 bg-green-50 text-green-700 rounded-lg">{s}</span>
+                    ))}
                   </div>
                 </div>
               )}
