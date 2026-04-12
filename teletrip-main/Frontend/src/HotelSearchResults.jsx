@@ -668,17 +668,22 @@ const closeReviewsModal = () => {
         const childAges = childAgesParam ? childAgesParam.split(',').map(age => parseInt(age)) : [];
         const country = searchParams.get("country");
         const city = searchParams.get("city");
+        const hotelName = searchParams.get("hotelName");
 
-        if (!checkIn || !checkOut || !city || !country) {
+        if (!checkIn || !checkOut) {
           throw new Error("Missing required search parameters");
+        }
+
+        if (!city && !country && !hotelName) {
+          throw new Error("Please provide a destination or hotel name");
         }
 
         let lat, lon;
         
+        // Geocode using city/country if available, otherwise use hotel name
+        const geocodeQuery = city ? `${city}, ${convertCountryCode(country || '')}` : hotelName;
         const geoResponse = await fetch(
-          `${API_BASE_URL}/geocode?q=${encodeURIComponent(
-            city + ", " + convertCountryCode(country)
-          )}`
+          `${API_BASE_URL}/geocode?q=${encodeURIComponent(geocodeQuery)}`
         );
 
         if (geoResponse.ok) {
@@ -688,7 +693,7 @@ const closeReviewsModal = () => {
         }
         
         if (!lat || !lon) {
-          throw new Error(`Unable to find coordinates for ${city}`);
+          throw new Error(`Unable to find coordinates for ${city || hotelName}`);
         }
 
 
@@ -821,7 +826,12 @@ if (children > 0 && childAges.length > 0) {
           };
         });
 
-        setHotels(transformedHotels);
+        // Filter by hotel name if provided
+        const finalHotels = hotelName 
+          ? transformedHotels.filter(h => h.name.toLowerCase().includes(hotelName.toLowerCase()))
+          : transformedHotels;
+
+        setHotels(finalHotels);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -1393,7 +1403,7 @@ if (children > 0 && childAges.length > 0) {
 
             <div className="sticky top-16 z-20 bg-white/95 backdrop-blur-sm py-2.5 -mx-4 px-4 border-b border-gray-100 flex items-center justify-between gap-3">
               <h1 className="text-[14px] sm:text-base font-semibold text-gray-900 truncate">
-                {sortedHotels.length} Hotels in {searchParams.get("city")}
+                {sortedHotels.length} Hotels{searchParams.get("city") ? ` in ${searchParams.get("city")}` : searchParams.get("hotelName") ? ` matching "${searchParams.get("hotelName")}"` : ''}
               </h1>
               <select value={sortOption} onChange={(e) => setSortOption(e.target.value)} className="text-[12px] sm:text-[13px] px-2.5 py-1.5 border border-gray-200 rounded-lg bg-white text-gray-600 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none flex-shrink-0">
                 <option value="default">Sort: Recommended</option>
