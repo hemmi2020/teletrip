@@ -50,9 +50,9 @@ const Slider = () => {
           </div>
 
           {/* Dots */}
-          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 z-20">
+          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1 z-20">
             {images.map((_, i) => (
-              <button key={i} onClick={() => setActive(i)} className={`rounded-full transition-all duration-500 ${i === active ? 'w-5 h-1 bg-white' : 'w-1 h-1 bg-white/40'}`} />
+              <button key={i} onClick={() => setActive(i)} className={`rounded-full transition-all duration-500 ${i === active ? 'w-4 h-[3px] bg-white' : 'w-[3px] h-[3px] bg-white/30'}`} />
             ))}
           </div>
         </div>

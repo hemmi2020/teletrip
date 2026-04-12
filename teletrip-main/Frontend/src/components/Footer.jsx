@@ -108,8 +108,7 @@ const Footer = () => {
         {/* Copyright */}
         <div className="bg-gradient-to-r from-[#100d44]/50 to-[#0a0825]/50 backdrop-blur-sm py-6 px-8 rounded-2xl border border-[#3f8cff]/20 text-center">
           <p className="text-gray-300 text-sm">
-            &copy; 2025 <span className="text-[#3f8cff] font-semibold">TELITRIP</span>  | All rights reserved  
-            {/* <span className="text-[#009dff]"> Developed By Team Rhino</span> */}
+            &copy; 2026 <span className="text-[#3f8cff] font-semibold">TELITRIP</span>  | All rights reserved | Developed by <a href="https://www.tmrhino.com" target="_blank" rel="noopener noreferrer" className="text-[#009dff] hover:text-[#3f8cff] transition-colors">Team Rhino</a>
           </p>
         </div>
       </div>

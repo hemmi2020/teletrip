@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MapPin, Calendar, Users, Search, ChevronDown, X, Plus, Minus, Loader2, Star, Clock, Tag, Plane, Building2 } from 'lucide-react';
+import { MapPin, Calendar, Users, Search, ChevronDown, X, Plus, Minus, Loader2, Star, Clock, Tag, Plane, Building2, Hotel, Car, Compass } from 'lucide-react';
 import { DateRange } from 'react-date-range';
 import { addDays, format } from 'date-fns';
 import { searchTransfers } from '../services/transfersApi';
@@ -872,27 +872,27 @@ const HotelSearchForm = () => {
   };
 
   const tabs = [
-    { id: 'stays', label: 'Stays', icon: '🏨 ' },
-    { id: 'transfers', label: 'Transfers', icon: '🚐 ' },
-    { id: 'experiences', label: 'Experiences', icon: '🎭 ' }
+    { id: 'stays', label: 'Stays', Icon: Hotel },
+    { id: 'transfers', label: 'Transfers', Icon: Car },
+    { id: 'experiences', label: 'Experiences', Icon: Compass }
   ];
 
   return (
     <div className="w-full">
       <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 p-4 sm:p-5 md:p-6 shadow-2xl">
         {/* Tabs */}
-        <div className="flex gap-1 mb-4 sm:mb-5 bg-white/10 rounded-xl p-1 overflow-x-auto" style={{scrollbarWidth:'none'}}>
+        <div className="grid grid-cols-3 gap-1 mb-4 sm:mb-5 bg-white/10 rounded-xl p-1">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg font-medium transition-all whitespace-nowrap text-sm flex-shrink-0 ${
+              className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg font-medium transition-all text-sm ${
                 activeTab === tab.id
                   ? 'bg-white text-gray-900 shadow-md'
-                  : 'text-white/80 hover:text-white hover:bg-white/10'
+                  : 'text-white/70 hover:text-white hover:bg-white/10'
               }`}
             >
-              <span className="text-base">{tab.icon}</span>
+              <tab.Icon className="w-4 h-4" />
               <span>{tab.label}</span>
               </button>
             ))}
