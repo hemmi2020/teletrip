@@ -2,6 +2,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { CartProvider, UserProvider } from './components/CartSystem';
+import { HelmetProvider } from 'react-helmet-async';
 
 // Import your page components
 import Home from './Home';
@@ -65,6 +66,7 @@ class ErrorBoundary extends React.Component {
 const App = () => {
   return (
     <ErrorBoundary>
+      <HelmetProvider>
       <BrowserRouter>
         <UserProvider>
           <CartProvider>
@@ -131,6 +133,7 @@ const App = () => {
           </CartProvider>
         </UserProvider>
       </BrowserRouter>
+      </HelmetProvider>
     </ErrorBoundary>
   );
 };

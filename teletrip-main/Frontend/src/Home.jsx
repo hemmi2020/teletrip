@@ -4,7 +4,7 @@ import HotelSearchForm from "./components/HotelSearchForm";
 import DestinationCard from "./components/DestinationCard";
 import OfferCard from "./components/OfferCard";
 import TestimonialCard from "./components/TestimonialCard";
-import { Helmet } from "react-helmet";
+import { Helmet } from "react-helmet-async";
 import Header from "./components/Header";
 import Slider from "./components/Slider";
 import Row01 from "./components/Row01";
