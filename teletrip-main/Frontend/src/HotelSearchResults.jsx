@@ -1260,10 +1260,10 @@ if (children > 0 && childAges.length > 0) {
                 <div className="space-y-1.5">
                   {[
                     { value: "", label: "All", count: hotels.length },
-                    { value: "free", label: "Free cancellation", count: countFreeCancellation },
-                    { value: "partial", label: "Partial cancellation fees", count: countPartialCancellation },
-                    { value: "nonrefundable", label: "Non refundable", count: countNonRefundable },
-                    { value: "notavailable", label: "Fees not available", count: countNoCancellationInfo },
+                    { value: "free", label: "Free cancellation", count: filterCounts.freeCancellation },
+                    { value: "partial", label: "Partial cancellation fees", count: filterCounts.partialCancellation },
+                    { value: "nonrefundable", label: "Non refundable", count: filterCounts.nonRefundable },
+                    { value: "notavailable", label: "Fees not available", count: filterCounts.noCancellationInfo },
                   ].map(opt => (
                     <label key={opt.value} className="flex items-center gap-2.5 py-0.5 cursor-pointer group">
                       <input type="radio" name="cancellation" value={opt.value} checked={selectedCancellation === opt.value} onChange={(e) => setSelectedCancellation(e.target.value)} className="h-3.5 w-3.5 border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer" />
@@ -1375,8 +1375,8 @@ if (children > 0 && childAges.length > 0) {
                 <div className="space-y-1.5">
                   {[
                     { value: "", label: "All", count: hotels.length },
-                    { value: "without", label: "Without package", count: countPackagingWithout },
-                    { value: "with", label: "With package", count: countPackagingWith },
+                    { value: "without", label: "Without package", count: filterCounts.packagingWithout },
+                    { value: "with", label: "With package", count: filterCounts.packagingWith },
                   ].map(opt => (
                     <label key={opt.value} className="flex items-center gap-2.5 py-0.5 cursor-pointer group">
                       <input type="radio" name="packaging" value={opt.value} checked={selectedPackaging === opt.value} onChange={(e) => setSelectedPackaging(e.target.value)} className="h-3.5 w-3.5 border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer" />
