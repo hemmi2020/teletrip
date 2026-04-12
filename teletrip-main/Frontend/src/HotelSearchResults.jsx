@@ -79,6 +79,8 @@ const HotelSearchResults = () => {
   const [selectedSight, setSelectedSight] = useState("");
   const [addressSearch, setAddressSearch] = useState("");
   const [showAddressSuggestions, setShowAddressSuggestions] = useState(false);
+  const [addressSuggestions, setAddressSuggestions] = useState([]);
+  const [loadingAddress, setLoadingAddress] = useState(false);
   const addressRef = useRef(null);
   const [expandedSections, setExpandedSections] = useState({
     hotelName: true,
@@ -649,6 +651,26 @@ const closeReviewsModal = () => {
 
   // HELPER FUNCTION
   const getRatingColor = (rating) => {
+
+  // Debounced address search via Nominatim (OpenStreetMap)
+  useEffect(() => {
+    if (addressSearch.trim().length < 3) { setAddressSuggestions([]); setShowAddressSuggestions(false); return; }
+    setLoadingAddress(true);
+    const city = searchParams.get("city") || '';
+    const timer = setTimeout(async () => {
+      try {
+        const q = `${addressSearch}, ${city}`;
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&addressdetails=1&limit=8`, { headers: { 'Accept-Language': 'en' } });
+        if (res.ok) {
+          const data = await res.json();
+          setAddressSuggestions(data.map(d => ({ display: d.display_name, short: d.name || d.display_name.split(',')[0], type: d.type, lat: d.lat, lon: d.lon })));
+          setShowAddressSuggestions(true);
+        }
+      } catch (err) { /* silent */ }
+      finally { setLoadingAddress(false); }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [addressSearch, searchParams]);
     if (rating >= 4.5) return "bg-green-600";
     if (rating >= 3.5) return "bg-green-500";
     if (rating >= 2.5) return "bg-yellow-500";
@@ -1027,19 +1049,23 @@ if (children > 0 && childAges.length > 0) {
                 </div>
                 <div className="relative" ref={addressRef}>
                   <label className="text-[11px] text-gray-500 mb-1 block">Specific address</label>
-                  <input type="text" value={addressSearch} onChange={(e) => { setAddressSearch(e.target.value); setShowAddressSuggestions(e.target.value.length >= 2); }} onFocus={() => addressSearch.length >= 2 && setShowAddressSuggestions(true)} placeholder="Street, point of interest..." className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 rounded-md bg-gray-50/50 focus:bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none" />
-                  {showAddressSuggestions && addressSearch.length >= 2 && (() => {
-                    const q = addressSearch.toLowerCase();
-                    const matches = [...new Set(hotels.map(h => h.address).filter(a => a.toLowerCase().includes(q)))].slice(0, 8);
-                    if (matches.length === 0) return null;
-                    return (
-                      <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto" style={{scrollbarWidth:'thin'}}>
-                        {matches.map((addr, i) => (
-                          <div key={i} onClick={() => { setAddressSearch(addr); setShowAddressSuggestions(false); }} className="px-2.5 py-1.5 text-[12px] text-gray-700 hover:bg-blue-50 cursor-pointer truncate">{addr}</div>
-                        ))}
-                      </div>
-                    );
-                  })()}
+                  <input type="text" value={addressSearch} onChange={(e) => setAddressSearch(e.target.value)} onFocus={() => addressSuggestions.length > 0 && setShowAddressSuggestions(true)} placeholder="Street, point of interest..." className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 rounded-md bg-gray-50/50 focus:bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none" />
+                  {showAddressSuggestions && (
+                    <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-52 overflow-y-auto" style={{scrollbarWidth:'thin'}}>
+                      {loadingAddress ? (
+                        <div className="px-2.5 py-2 text-[12px] text-gray-400 text-center">Searching...</div>
+                      ) : addressSuggestions.length > 0 ? (
+                        addressSuggestions.map((s, i) => (
+                          <div key={i} onClick={() => { setAddressSearch(s.short); setShowAddressSuggestions(false); }} className="px-2.5 py-1.5 hover:bg-blue-50 cursor-pointer transition-colors">
+                            <div className="text-[12px] text-gray-700 truncate">{s.short}</div>
+                            <div className="text-[10px] text-gray-400 truncate">{s.display}</div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="px-2.5 py-2 text-[12px] text-gray-400 text-center">No results</div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
