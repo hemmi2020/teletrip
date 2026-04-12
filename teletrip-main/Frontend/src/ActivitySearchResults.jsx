@@ -22,6 +22,8 @@ const ActivitySearchResults = () => {
   const [galleryImages, setGalleryImages] = useState([]);
   const [activityDetail, setActivityDetail] = useState(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
+  const [selectedModality, setSelectedModality] = useState(null);
+  const [selectedTime, setSelectedTime] = useState(null);
 
   // Filter states
   const [nameSearch, setNameSearch] = useState('');
@@ -91,7 +93,7 @@ const ActivitySearchResults = () => {
 
   // Fetch activity detail when modal opens
   useEffect(() => {
-    if (!selectedActivity) { setActivityDetail(null); return; }
+    if (!selectedActivity) { setActivityDetail(null); setSelectedModality(null); setSelectedTime(null); return; }
     const fetchDetail = async () => {
       setLoadingDetail(true);
       try {
@@ -118,14 +120,16 @@ const ActivitySearchResults = () => {
     setPriceMax('');
   };
 
-  const handleAddActivityToCart = (activity) => {
+  const handleAddActivityToCart = (activity, modality = null, pricing = null, time = null) => {
+    const price = pricing ? parseFloat(pricing.amount || 0) : parseFloat(activity.pricing?.amount || 0);
+    const currency = pricing ? pricing.currency : (activity.pricing?.currency || 'EUR');
     addToCart({
-      id: `activity-${activity.code}`,
+      id: `activity-${activity.code}-${modality?.code || 'default'}-${time || ''}`,
       type: 'activity',
       name: activity.name,
       code: activity.code,
-      price: parseFloat(activity.pricing?.amount || 0),
-      currency: activity.pricing?.currency || 'EUR',
+      price,
+      currency,
       checkIn: from,
       checkOut: to,
       guests: parseInt(adults),
@@ -134,6 +138,10 @@ const ActivitySearchResults = () => {
       category: activity.activityFactsheetType,
       supplier: activity.supplier,
       thumbnail: activity.images?.[0],
+      modalityName: modality?.name || 'Standard',
+      modalityCode: modality?.code,
+      selectedTime: time,
+      duration: modality?.duration || (activity.scheduling?.duration?.value ? `${activity.scheduling.duration.value}h` : null),
       addedAt: new Date().toISOString(),
     });
     setSelectedActivity(null);
@@ -645,63 +653,90 @@ const ActivitySearchResults = () => {
             </div>
             {/* Scrollable details */}
             <div className="overflow-y-auto flex-1 px-5 py-4 space-y-4" style={{scrollbarWidth:'thin'}}>
-              {/* Modalities / Options */}
+              {/* Step 1: Select Package */}
               {loadingDetail ? (
                 <div className="flex items-center justify-center py-6"><Loader2 className="w-5 h-5 animate-spin text-blue-600 mr-2" /><span className="text-[13px] text-gray-400">Loading options...</span></div>
               ) : activityDetail?.modalities && activityDetail.modalities.length > 0 ? (
                 <div>
-                  <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Available Options</div>
+                  <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">1. Select Package</div>
                   <div className="space-y-2">
-                    {activityDetail.modalities.map((mod, mi) => (
-                      <div key={mi} className="border border-gray-100 rounded-xl overflow-hidden">
-                        <div className="px-3 py-2 bg-gray-50 flex items-center justify-between">
-                          <div>
-                            <span className="text-[13px] font-medium text-gray-800">{mod.name}</span>
-                            {mod.duration && <span className="text-[11px] text-gray-400 ml-2">{mod.duration}</span>}
-                          </div>
-                        </div>
-                        <div className="divide-y divide-gray-50">
-                          {mod.pricing && mod.pricing.length > 0 ? mod.pricing.map((p, pi) => (
-                            <div key={pi} className="px-3 py-2 flex items-center justify-between">
-                              <div className="text-[12px] text-gray-600">
-                                {p.paxType && <span className="text-gray-500">{p.paxType === 'ADULT' ? 'Adult' : p.paxType === 'CHILD' ? 'Child' : p.paxType} · </span>}
-                                {p.rateKey && <span className="text-gray-400 text-[10px]">Rate</span>}
+                    {activityDetail.modalities.map((mod, mi) => {
+                      const isSelected = selectedModality?.code === mod.code;
+                      const bestPrice = mod.pricing?.[0];
+                      return (
+                        <div key={mi} onClick={() => setSelectedModality(mod)} className={`border rounded-xl p-3 transition-all ${isSelected ? 'border-blue-500 bg-blue-50/50 ring-1 ring-blue-200' : 'border-gray-100 hover:border-gray-200'}`}>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${isSelected ? 'border-blue-500' : 'border-gray-300'}`}>
+                                {isSelected && <div className="w-2 h-2 rounded-full bg-blue-500" />}
                               </div>
-                              <div className="flex items-center gap-2">
-                                <span className="text-[14px] font-bold text-blue-600">{p.currency} {parseFloat(p.amount || 0).toFixed(2)}</span>
-                                <button onClick={() => { handleAddActivityToCart({...selectedActivity, pricing: { amount: p.amount, currency: p.currency }, selectedModality: mod.name}); }} className="px-2.5 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-[11px] font-medium inline-flex items-center gap-1"><ShoppingCart className="w-3 h-3" />Add</button>
+                              <div>
+                                <span className="text-[13px] font-medium text-gray-800">{mod.name}</span>
+                                {mod.duration && <span className="text-[11px] text-gray-400 ml-2">{mod.duration}</span>}
                               </div>
                             </div>
-                          )) : (
-                            <div className="px-3 py-2 text-[12px] text-gray-400">Price on request</div>
+                            {bestPrice?.amount && <span className="text-[14px] font-bold text-blue-600">{bestPrice.currency} {parseFloat(bestPrice.amount).toFixed(2)}</span>}
+                          </div>
+                          {isSelected && mod.pricing && mod.pricing.length > 1 && (
+                            <div className="mt-2 pt-2 border-t border-blue-100 space-y-1">
+                              {mod.pricing.map((p, pi) => (
+                                <div key={pi} className="flex items-center justify-between text-[12px]">
+                                  <span className="text-gray-500">{p.paxType === 'ADULT' ? 'Adult' : p.paxType === 'CHILD' ? 'Child' : p.paxType || 'Per person'}</span>
+                                  <span className="font-medium text-gray-700">{p.currency} {parseFloat(p.amount || 0).toFixed(2)}</span>
+                                </div>
+                              ))}
+                            </div>
                           )}
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               ) : null}
 
-              {/* Schedule with time slots */}
-              {selectedActivity.scheduling && (
+              {/* Step 2: Select Time */}
+              {selectedActivity.scheduling?.opened && selectedActivity.scheduling.opened.length > 0 && (
                 <div>
-                  <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Schedule</div>
-                  <div className="space-y-2">
-                    {selectedActivity.scheduling.duration?.value && (
-                      <p className="text-[13px] text-gray-600">Duration: {selectedActivity.scheduling.duration.value} {(selectedActivity.scheduling.duration.metric || 'HOURS').toLowerCase()}</p>
-                    )}
-                    {selectedActivity.scheduling.opened && selectedActivity.scheduling.opened.length > 0 && (
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                        {selectedActivity.scheduling.opened.map((slot, i) => (
-                          <div key={i} className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg">
-                            <Clock className="w-3.5 h-3.5 text-blue-500" />
-                            <span className="text-[12px] text-gray-700 font-medium">{slot.openingTime} – {slot.closeTime}</span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                  <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">2. Select Time</div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {selectedActivity.scheduling.opened.map((slot, i) => {
+                      const isSelected = selectedTime === slot.openingTime;
+                      return (
+                        <div key={i} onClick={() => setSelectedTime(slot.openingTime)} className={`flex items-center gap-2 px-3 py-2.5 rounded-lg transition-all ${isSelected ? 'bg-blue-600 text-white' : 'bg-gray-50 text-gray-700 hover:bg-gray-100'}`}>
+                          <Clock className={`w-3.5 h-3.5 ${isSelected ? 'text-white' : 'text-blue-500'}`} />
+                          <span className="text-[12px] font-medium">{slot.openingTime} – {slot.closeTime}</span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
+              )}
+
+              {/* Add to Cart with selections */}
+              {(activityDetail?.modalities?.length > 0 || selectedActivity.scheduling?.opened?.length > 0) && (
+                <div className="bg-gray-50 rounded-xl p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="text-[12px] text-gray-500">
+                      {selectedModality ? <span className="text-gray-800 font-medium">{selectedModality.name}</span> : <span className="text-amber-600">Select a package</span>}
+                      {selectedTime && <span className="text-gray-400"> · {selectedTime}</span>}
+                    </div>
+                    <div className="text-[14px] font-bold text-blue-600">
+                      {selectedModality?.pricing?.[0]?.amount ? `${selectedModality.pricing[0].currency} ${parseFloat(selectedModality.pricing[0].amount).toFixed(2)}` : `${selectedActivity.pricing?.currency || 'EUR'} ${parseFloat(selectedActivity.pricing?.amount || 0).toFixed(2)}`}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => handleAddActivityToCart(selectedActivity, selectedModality, selectedModality?.pricing?.[0], selectedTime)}
+                    disabled={activityDetail?.modalities?.length > 0 && !selectedModality}
+                    className={`w-full py-2.5 rounded-lg font-semibold text-[13px] inline-flex items-center justify-center gap-1.5 transition-colors ${activityDetail?.modalities?.length > 0 && !selectedModality ? 'bg-gray-300 text-gray-500' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
+                  >
+                    <ShoppingCart className="w-4 h-4" />Add to Cart
+                  </button>
+                </div>
+              )}
+
+              {/* Duration info */}
+              {selectedActivity.scheduling?.duration?.value && !selectedActivity.scheduling?.opened?.length && (
+                <div className="text-[13px] text-gray-600">Duration: {selectedActivity.scheduling.duration.value} {(selectedActivity.scheduling.duration.metric || 'HOURS').toLowerCase()}</div>
               )}
 
               {selectedActivity.summary && (
