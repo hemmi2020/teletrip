@@ -1,140 +1,90 @@
-// Slider.js - FINAL CORRECT VERSION
 import React, { useEffect, useState, useRef } from "react";
 import HotelSearchForm from "./HotelSearchForm";
 
 const Slider = () => {
-  const items = [
-    {
-      id: 1,
-      url: "/images/slider1.jpg",
-      title: "Welcome to Telitrip Holidays",
-      description:
-        "Discover the Wonders of Sri Lanka with Ayla Holidays. At Ayla Holidays, we specialize in creating unforgettable travel experiences in the breathtaking island of Sri Lanka.",
-    },
-    {
-      id: 2,
-      url: "/images/slider2.webp",
-      title: "Discover the Wonders of Sri Lanka",
-      description:
-        "From pristine beaches and lush tea plantations to ancient temples and vibrant wildlife. we offer tailor-made tours that showcase the best of our beautiful country.",
-    },
-    {
-      id: 3,
-      url: "/images/slider3.jpg",
-      title: "Get unforgettable travel experiences",
-      description:
-        "Book Your Adventure Today! Experience the magic of Sri Lanka with Ayla Holidays. We look forward to welcoming you and making your travel dreams come true.",
-    },
+  const images = [
+    "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=1920&h=1080&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=1920&h=1080&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=1920&h=1080&fit=crop&q=80",
   ];
 
   const [active, setActive] = useState(0);
   const timeoutRef = useRef(null);
 
-  const resetTimeout = () => {
-    if (timeoutRef.current) clearTimeout(timeoutRef.current);
-  };
-
   useEffect(() => {
-    resetTimeout();
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
     timeoutRef.current = setTimeout(() => {
-      setActive((prevIndex) =>
-        prevIndex === items.length - 1 ? 0 : prevIndex + 1
-      );
-    }, 5000);
-
-    return () => resetTimeout();
-  }, [active, items.length]);
+      setActive((prev) => (prev === images.length - 1 ? 0 : prev + 1));
+    }, 6000);
+    return () => clearTimeout(timeoutRef.current);
+  }, [active, images.length]);
 
   return (
-    <main className="pt-16 w-full mb-0">
-      <section className="relative w-full h-screen bg-black">
-        <div className="relative w-full h-full">
-          {items.map((item, index) => (
-            <div
-              key={item.id}
-              className={`absolute inset-0 flex justify-center items-center transition-opacity duration-1000 ease-in-out ${
-                index === active
-                  ? "opacity-100 pointer-events-auto"
-                  : "opacity-0 pointer-events-none"
-              }`}
-            >
-              {/* Background Image with Overlay */}
-              <img
-                src={item.url}
-                alt={item.title}
-                className="absolute inset-0 w-full h-full object-cover object-center transition-all duration-1000"
-              />
-              {/* Dark overlay for better text readability */}
-              <div className="absolute inset-0 bg-black/40"></div>
-              
-              {/* Text Content - Positioned ABOVE the form */}
-              <div className="absolute top-24 sm:top-28 md:top-32 left-1/2 transform -translate-x-1/2 w-full max-w-6xl px-4 sm:px-6 lg:px-8 z-10">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-10 text-white text-center lg:text-left">
-                  {/* Title */}
-                  <div>
-                    <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-oswald uppercase leading-tight lg:leading-none font-bold">
-                      {item.title}
-                    </h2>
+    <main className="pt-16 w-full">
+      <section className="relative w-full min-h-screen bg-gray-900 overflow-hidden">
+        {/* Background Images */}
+        {images.map((img, i) => (
+          <div
+            key={i}
+            className={`absolute inset-0 transition-all duration-[1500ms] ease-in-out ${i === active ? 'opacity-100 scale-100' : 'opacity-0 scale-105'}`}
+          >
+            <img src={img} alt="" className="w-full h-full object-cover" />
+          </div>
+        ))}
+
+        {/* Gradient Overlays */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-black/70" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/40 to-transparent" />
+
+        {/* Hero Content */}
+        <div className="relative z-10 flex flex-col justify-between min-h-screen">
+          {/* Top - Headline */}
+          <div className="flex-1 flex items-center">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full pt-8 sm:pt-12">
+              <div className="max-w-2xl">
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white/10 backdrop-blur-md rounded-full mb-6 border border-white/20">
+                  <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                  <span className="text-white/90 text-xs sm:text-sm font-medium tracking-wide">Trusted by 10,000+ travellers worldwide</span>
+                </div>
+                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-[1.1] mb-4 sm:mb-6">
+                  Find your perfect
+                  <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">stay anywhere</span>
+                </h1>
+                <p className="text-base sm:text-lg text-white/70 leading-relaxed max-w-lg mb-6">
+                  Compare prices across 250,000+ hotels worldwide. Best rates guaranteed with free cancellation on most bookings.
+                </p>
+                {/* Trust badges */}
+                <div className="flex items-center gap-4 sm:gap-6">
+                  <div className="flex items-center gap-1.5">
+                    <svg className="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                    <span className="text-white/80 text-sm font-medium">4.8/5 Rating</span>
                   </div>
-                  
-                  {/* Description */}
-                  <div className="space-y-3 sm:space-y-4">
-                    <p className="text-sm sm:text-base md:text-lg lg:text-xl leading-relaxed">
-                      {item.description.split(". ")[0]}.
-                    </p>
-                    {item.description.split(". ")[1] && (
-                      <p className="text-sm sm:text-base md:text-lg lg:text-xl leading-relaxed">
-                        {item.description.split(". ")[1]}.
-                      </p>
-                    )}
-                  </div>
+                  <div className="w-px h-4 bg-white/20" />
+                  <div className="text-white/80 text-sm font-medium">Best Price Guarantee</div>
+                  <div className="w-px h-4 bg-white/20 hidden sm:block" />
+                  <div className="text-white/80 text-sm font-medium hidden sm:block">24/7 Support</div>
                 </div>
               </div>
             </div>
-          ))}
+          </div>
 
-          {/* Hotel Search Form - CRITICAL FIX: Position at bottom, NOT overlapping header */}
-          <div className="absolute  bottom-8 sm:bottom-12 md:bottom-16 lg:bottom-20 left-1/2 transform -translate-x-1/2 w-full max-w-7xl px-4 sm:px-6 lg:px-8 z-40">
-            <HotelSearchForm />
+          {/* Bottom - Search Form */}
+          <div className="w-full pb-8 sm:pb-12 lg:pb-16">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <HotelSearchForm />
+            </div>
           </div>
 
           {/* Slide Indicators */}
-          <div className="absolute bottom-2 sm:bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2 z-20">
-            {items.map((_, index) => (
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2 z-20">
+            {images.map((_, i) => (
               <button
-                key={index}
-                onClick={() => setActive(index)}
-                className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full transition-all duration-300 ${
-                  index === active 
-                    ? 'bg-white shadow-lg' 
-                    : 'bg-white/50 hover:bg-white/70'
-                }`}
-                aria-label={`Go to slide ${index + 1}`}
+                key={i}
+                onClick={() => setActive(i)}
+                className={`h-1 rounded-full transition-all duration-500 ${i === active ? 'w-8 bg-white' : 'w-2 bg-white/40 hover:bg-white/60'}`}
+                aria-label={`Slide ${i + 1}`}
               />
             ))}
-          </div>
-
-          {/* Navigation Arrows - Hidden on mobile, visible on larger screens */}
-          <div className="hidden md:block">
-            <button
-              onClick={() => setActive(active === 0 ? items.length - 1 : active - 1)}
-              className="absolute left-4 lg:left-8 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white p-2 lg:p-3 rounded-full transition-all duration-300 z-20 group"
-              aria-label="Previous slide"
-            >
-              <svg className="w-4 h-4 lg:w-6 lg:h-6 transform group-hover:scale-110 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-            
-            <button
-              onClick={() => setActive(active === items.length - 1 ? 0 : active + 1)}
-              className="absolute right-4 lg:right-8 top-1/2 transform -translate-y-1/2 bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white p-2 lg:p-3 rounded-full transition-all duration-300 z-20 group"
-              aria-label="Next slide"
-            >
-              <svg className="w-4 h-4 lg:w-6 lg:h-6 transform group-hover:scale-110 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
           </div>
         </div>
       </section>

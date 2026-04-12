@@ -149,7 +149,7 @@ const TransfersTab = () => {
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
         <div className="relative" ref={pickupRef}>
-          <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2 px-1">
+          <label className="block text-xs sm:text-sm font-medium text-white/80 mb-1.5 sm:mb-2 px-1">
             Pickup Location <span className="text-red-500">*</span>
           </label>
           <div className="relative">
@@ -219,7 +219,7 @@ const TransfersTab = () => {
         </div>
 
         <div className="relative" ref={dropoffRef}>
-          <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2 px-1">
+          <label className="block text-xs sm:text-sm font-medium text-white/80 mb-1.5 sm:mb-2 px-1">
             Dropoff Location <span className="text-red-500">*</span>
           </label>
           <div className="relative">
@@ -292,7 +292,7 @@ const TransfersTab = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
         <div>
-          <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2 px-1">
+          <label className="block text-xs sm:text-sm font-medium text-white/80 mb-1.5 sm:mb-2 px-1">
             Date & Time <span className="text-red-500">*</span>
           </label>
           <input
@@ -306,23 +306,23 @@ const TransfersTab = () => {
         </div>
 
         <div className="relative" ref={travellerRef}>
-          <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2 px-1">
+          <label className="block text-xs sm:text-sm font-medium text-white/80 mb-1.5 sm:mb-2 px-1">
             Travellers <span className="text-red-500">*</span>
           </label>
           <div
             onClick={() => setShowTravellerDropdown(!showTravellerDropdown)}
             className="flex items-center w-full px-3 py-2.5 sm:py-3 border border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 transition-all bg-white"
           >
-            <Users className="text-gray-400 mr-2 flex-shrink-0" size={18} />
+            <Users className="text-white/50 mr-2 flex-shrink-0" size={18} />
             <span className="text-gray-700 flex-1 text-sm sm:text-base truncate">
               {adults} Adult{adults > 1 ? 's' : ''}{children > 0 ? `, ${children} Child${children > 1 ? 'ren' : ''}` : ''}{infants > 0 ? `, ${infants} Infant${infants > 1 ? 's' : ''}` : ''}
             </span>
-            <ChevronDown className="text-gray-400 flex-shrink-0" size={18} />
+            <ChevronDown className="text-white/50 flex-shrink-0" size={18} />
           </div>
           {showTravellerDropdown && (
             <div className="absolute z-50 w-full mt-2 bg-white border border-gray-300 rounded-lg shadow-xl p-3 sm:p-4 space-y-3 sm:space-y-4">
               <div className="flex items-center justify-between">
-                <span className="text-gray-700 font-medium text-sm sm:text-base">Adults</span>
+                <span className="text-white/90 font-medium text-sm sm:text-base">Adults</span>
                 <div className="flex items-center space-x-2 sm:space-x-3">
                   <button type="button" onClick={() => setAdults(Math.max(1, adults - 1))} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Minus size={14} /></button>
                   <span className="w-6 sm:w-8 text-center font-medium text-sm sm:text-base">{adults}</span>
@@ -330,7 +330,7 @@ const TransfersTab = () => {
                 </div>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-gray-700 font-medium text-sm sm:text-base">Children</span>
+                <span className="text-white/90 font-medium text-sm sm:text-base">Children</span>
                 <div className="flex items-center space-x-2 sm:space-x-3">
                   <button type="button" onClick={() => setChildren(Math.max(0, children - 1))} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Minus size={14} /></button>
                   <span className="w-6 sm:w-8 text-center font-medium text-sm sm:text-base">{children}</span>
@@ -338,7 +338,7 @@ const TransfersTab = () => {
                 </div>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-gray-700 font-medium text-sm sm:text-base">Infants</span>
+                <span className="text-white/90 font-medium text-sm sm:text-base">Infants</span>
                 <div className="flex items-center space-x-2 sm:space-x-3">
                   <button type="button" onClick={() => setInfants(Math.max(0, infants - 1))} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Minus size={14} /></button>
                   <span className="w-6 sm:w-8 text-center font-medium text-sm sm:text-base">{infants}</span>
@@ -471,7 +471,7 @@ const ExperiencesTab = () => {
   return (
     <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
       <div className="relative" ref={locationRef}>
-        <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2 px-1">
+        <label className="block text-xs sm:text-sm font-medium text-white/80 mb-1.5 sm:mb-2 px-1">
           Destination <span className="text-red-500">*</span>
         </label>
         <div className="relative">
@@ -537,14 +537,14 @@ const ExperiencesTab = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
         <div className="relative" ref={calendarRef}>
-          <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2 px-1">
+          <label className="block text-xs sm:text-sm font-medium text-white/80 mb-1.5 sm:mb-2 px-1">
             Dates <span className="text-red-500">*</span>
           </label>
           <div
             onClick={() => setShowCalendar(!showCalendar)}
             className="flex items-center w-full px-3 py-2.5 sm:py-3 border border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 bg-white"
           >
-            <Calendar className="text-gray-400 mr-2 flex-shrink-0" size={18} />
+            <Calendar className="text-white/50 mr-2 flex-shrink-0" size={18} />
             <span className="text-gray-700 flex-1 text-sm sm:text-base truncate">
               <span className="hidden sm:inline">{format(dateRange[0].startDate, 'MMM dd, yyyy')} - {format(dateRange[0].endDate, 'MMM dd, yyyy')}</span>
               <span className="sm:hidden">{format(dateRange[0].startDate, 'MMM dd')} - {format(dateRange[0].endDate, 'MMM dd')}</span>
@@ -580,23 +580,23 @@ const ExperiencesTab = () => {
         </div>
 
         <div className="relative" ref={travellerRef}>
-          <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2 px-1">
+          <label className="block text-xs sm:text-sm font-medium text-white/80 mb-1.5 sm:mb-2 px-1">
             Travellers <span className="text-red-500">*</span>
           </label>
           <div
             onClick={() => setShowTravellerDropdown(!showTravellerDropdown)}
             className="flex items-center w-full px-3 py-2.5 sm:py-3 border border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 transition-all bg-white"
           >
-            <Users className="text-gray-400 mr-2 flex-shrink-0" size={18} />
+            <Users className="text-white/50 mr-2 flex-shrink-0" size={18} />
             <span className="text-gray-700 flex-1 text-sm sm:text-base truncate">
               {adults} Adult{adults > 1 ? 's' : ''}{children > 0 ? `, ${children} Child${children > 1 ? 'ren' : ''}` : ''}{infants > 0 ? `, ${infants} Infant${infants > 1 ? 's' : ''}` : ''}
             </span>
-            <ChevronDown className="text-gray-400 flex-shrink-0" size={18} />
+            <ChevronDown className="text-white/50 flex-shrink-0" size={18} />
           </div>
           {showTravellerDropdown && (
             <div className="absolute z-50 w-full mt-2 bg-white border border-gray-300 rounded-lg shadow-xl p-3 sm:p-4 space-y-3 sm:space-y-4">
               <div className="flex items-center justify-between">
-                <span className="text-gray-700 font-medium text-sm sm:text-base">Adults</span>
+                <span className="text-white/90 font-medium text-sm sm:text-base">Adults</span>
                 <div className="flex items-center space-x-2 sm:space-x-3">
                   <button type="button" onClick={() => setAdults(Math.max(1, adults - 1))} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Minus size={14} /></button>
                   <span className="w-6 sm:w-8 text-center font-medium text-sm sm:text-base">{adults}</span>
@@ -604,7 +604,7 @@ const ExperiencesTab = () => {
                 </div>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-gray-700 font-medium text-sm sm:text-base">Children</span>
+                <span className="text-white/90 font-medium text-sm sm:text-base">Children</span>
                 <div className="flex items-center space-x-2 sm:space-x-3">
                   <button type="button" onClick={() => setChildren(Math.max(0, children - 1))} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Minus size={14} /></button>
                   <span className="w-6 sm:w-8 text-center font-medium text-sm sm:text-base">{children}</span>
@@ -612,7 +612,7 @@ const ExperiencesTab = () => {
                 </div>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-gray-700 font-medium text-sm sm:text-base">Infants</span>
+                <span className="text-white/90 font-medium text-sm sm:text-base">Infants</span>
                 <div className="flex items-center space-x-2 sm:space-x-3">
                   <button type="button" onClick={() => setInfants(Math.max(0, infants - 1))} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Minus size={14} /></button>
                   <span className="w-6 sm:w-8 text-center font-medium text-sm sm:text-base">{infants}</span>
@@ -878,27 +878,22 @@ const HotelSearchForm = () => {
   ];
 
   return (
-    <div className="sm:min-h-screen pt-20 sm:pt-24 md:pt-28 lg:pt-32 bg-transparent px-2 sm:px-4 mb-8">
-      <div className="max-w-7xl mx-auto">
-        <div className="bg-white/30 rounded-xl   sm:rounded-2xl shadow-2xl p-3 sm:p-2 md:p-6 lg:p-8 backdrop-blur-lg bg-opacity-95">
-          <h1 className="text-lg sm:text-xl  md:text-2xl lg:text-3xl font-bold text-gray-800 mb-3 sm:mb-4 md:mb-6 lg:mb-8 px-1">
-            Search for hotels, transfers, experiences and more
-          </h1>
-
-          {/* Tabs - Responsive scrolling on mobile */}
-          <div className="flex overflow-x-auto  space-x-2 mb-4 sm:mb-6 md:mb-8 pb-2 scrollbar-hide">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center space-x-1.5 sm:space-x-2 px-3 sm:px-4 py-2 sm:py-3 rounded-lg font-medium transition-all whitespace-nowrap text-sm sm:text-base flex-shrink-0 ${
-                  activeTab === tab.id
-                    ? 'bg-blue-600 text-white shadow-lg'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
-              >
-                <span className="text-base sm:text-lg">{tab.icon}</span>
-                <span className="hidden sm:inline">{tab.label}</span>
+    <div className="w-full">
+      <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 p-4 sm:p-5 md:p-6 shadow-2xl">
+        {/* Tabs */}
+        <div className="flex gap-1 mb-4 sm:mb-5 bg-white/10 rounded-xl p-1 overflow-x-auto" style={{scrollbarWidth:'none'}}>
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg font-medium transition-all whitespace-nowrap text-sm flex-shrink-0 ${
+                activeTab === tab.id
+                  ? 'bg-white text-gray-900 shadow-md'
+                  : 'text-white/80 hover:text-white hover:bg-white/10'
+              }`}
+            >
+              <span className="text-base">{tab.icon}</span>
+              <span>{tab.label}</span>
               </button>
             ))}
           </div>
@@ -909,7 +904,7 @@ const HotelSearchForm = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                 {/* Location Search (City/Country) */}
                 <div className="relative" ref={locationRef}>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2 px-1">
+                  <label className="block text-xs sm:text-sm font-medium text-white/80 mb-1.5 sm:mb-2 px-1">
                     Destination <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
@@ -920,7 +915,7 @@ const HotelSearchForm = () => {
                       onChange={handleSearchInputChange}
                       onFocus={() => setShowLocationDropdown(true)}
                       placeholder="City or country, e.g: London"
-                      className="w-full pl-10 pr-10 py-2.5 sm:py-3 border border-gray-300 bg-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-700 text-sm sm:text-base"
+                      className="w-full pl-10 pr-10 py-2.5 sm:py-3 border border-white/20 bg-white/10 backdrop-blur-sm rounded-xl focus:ring-2 focus:ring-blue-400 focus:border-transparent text-white placeholder:text-white/50 text-sm sm:text-base"
                     />
                     {searchQuery && (
                       <button type="button" onClick={() => { setSearchQuery(''); setSelectedLocation(null); setFilteredLocations([]); }} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"><X size={18} /></button>
@@ -952,8 +947,8 @@ const HotelSearchForm = () => {
 
                 {/* Hotel Name Filter */}
                 <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2 px-1">
-                    Hotel Name <span className="text-gray-400 text-xs font-normal">(filter)</span>
+                  <label className="block text-xs sm:text-sm font-medium text-white/80 mb-1.5 sm:mb-2 px-1">
+                    Hotel Name <span className="text-white/40 text-xs font-normal">(filter)</span>
                   </label>
                   <div className="relative">
                     <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
@@ -962,7 +957,7 @@ const HotelSearchForm = () => {
                       value={hotelNameQuery}
                       onChange={(e) => setHotelNameQuery(e.target.value)}
                       placeholder="e.g. Hilton, Marriott..."
-                      className="w-full pl-10 pr-10 py-2.5 sm:py-3 border border-gray-300 bg-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-700 text-sm sm:text-base"
+                      className="w-full pl-10 pr-10 py-2.5 sm:py-3 border border-white/20 bg-white/10 backdrop-blur-sm rounded-xl focus:ring-2 focus:ring-blue-400 focus:border-transparent text-white placeholder:text-white/50 text-sm sm:text-base"
                     />
                     {hotelNameQuery && (
                       <button type="button" onClick={() => setHotelNameQuery('')} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"><X size={18} /></button>
@@ -977,14 +972,14 @@ const HotelSearchForm = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                 {/* Date Range Picker */}
                 <div className="relative" ref={calendarRef}>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2 px-1">
+                  <label className="block text-xs sm:text-sm font-medium text-white/80 mb-1.5 sm:mb-2 px-1">
                     Dates <span className="text-red-500">*</span>
                   </label>
                   <div
                     onClick={() => setShowCalendar(!showCalendar)}
-                    className="flex items-center w-full px-3 py-2.5 sm:py-3 border border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 focus:ring-2 focus:ring-blue-500 transition-all bg-white"
+                    className="flex items-center w-full px-3 py-2.5 sm:py-3 border border-white/20 bg-white/10 backdrop-blur-sm rounded-xl cursor-pointer hover:border-white/40 transition-all"
                   >
-                    <Calendar className="text-gray-400 mr-2 flex-shrink-0" size={18} />
+                    <Calendar className="text-white/50 mr-2 flex-shrink-0" size={18} />
                     <span className="text-gray-700 flex-1 text-sm sm:text-base truncate">
                       <span className="hidden sm:inline">{format(dateRange[0].startDate, 'MMM dd, yyyy')} - {format(dateRange[0].endDate, 'MMM dd, yyyy')}</span>
                       <span className="sm:hidden">{format(dateRange[0].startDate, 'MMM dd')} - {format(dateRange[0].endDate, 'MMM dd')}</span>
@@ -1022,25 +1017,25 @@ const HotelSearchForm = () => {
 
                 {/* Travellers Dropdown */}
                 <div className="relative" ref={travellerRef}>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2 px-1">
+                  <label className="block text-xs sm:text-sm font-medium text-white/80 mb-1.5 sm:mb-2 px-1">
                     Travellers & Rooms <span className="text-red-500">*</span>
                   </label>
                   <div
                     onClick={() => setShowTravellerDropdown(!showTravellerDropdown)}
-                    className="flex items-center w-full px-3 py-2.5 sm:py-3 border border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 focus:ring-2 focus:ring-blue-500 transition-all bg-white"
+                    className="flex items-center w-full px-3 py-2.5 sm:py-3 border border-white/20 bg-white/10 backdrop-blur-sm rounded-xl cursor-pointer hover:border-white/40 transition-all"
                   >
-                    <Users className="text-gray-400 mr-2 flex-shrink-0" size={18} />
+                    <Users className="text-white/50 mr-2 flex-shrink-0" size={18} />
                     <span className="text-gray-700 flex-1 text-sm sm:text-base truncate">
                       {getTravellerSummary()}
                     </span>
-                    <ChevronDown className="text-gray-400 flex-shrink-0" size={18} />
+                    <ChevronDown className="text-white/50 flex-shrink-0" size={18} />
                   </div>
 
                   {showTravellerDropdown && (
                     <div className="absolute z-50 w-full mt-2 bg-white border border-gray-300 rounded-lg shadow-xl p-3 sm:p-4 space-y-3 sm:space-y-4 max-h-96 overflow-y-auto">
                       {/* Rooms */}
                       <div className="flex items-center justify-between">
-                        <span className="text-gray-700 font-medium text-sm sm:text-base">Rooms</span>
+                        <span className="text-white/90 font-medium text-sm sm:text-base">Rooms</span>
                         <div className="flex items-center space-x-2 sm:space-x-3">
                           <button
                             type="button"
@@ -1062,7 +1057,7 @@ const HotelSearchForm = () => {
 
                       {/* Adults */}
                       <div className="flex items-center justify-between">
-                        <span className="text-gray-700 font-medium text-sm sm:text-base">Adults</span>
+                        <span className="text-white/90 font-medium text-sm sm:text-base">Adults</span>
                         <div className="flex items-center space-x-2 sm:space-x-3">
                           <button
                             type="button"
@@ -1084,7 +1079,7 @@ const HotelSearchForm = () => {
 
                       {/* Children */}
                       <div className="flex items-center justify-between">
-                        <span className="text-gray-700 font-medium text-sm sm:text-base">Children</span>
+                        <span className="text-white/90 font-medium text-sm sm:text-base">Children</span>
                         <div className="flex items-center space-x-2 sm:space-x-3">
                           <button
                             type="button"
@@ -1156,22 +1151,12 @@ const HotelSearchForm = () => {
           {activeTab === 'experiences' && <ExperiencesTab />}
 
           {activeTab !== 'stays' && activeTab !== 'transfers' && activeTab !== 'experiences' && (
-            <div className="text-center py-8 sm:py-12 text-gray-500">
-              <p className="text-base sm:text-lg">{tabs.find(t => t.id === activeTab)?.label} feature coming soon!</p>
+            <div className="text-center py-8 text-white/50">
+              <p className="text-sm">{tabs.find(t => t.id === activeTab)?.label} feature coming soon!</p>
             </div>
           )}
         </div>
       </div>
-      
-      <style>{`
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
-        }
-        .scrollbar-hide {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-      `}</style>
     </div>
   );
 };
