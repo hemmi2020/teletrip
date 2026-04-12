@@ -901,6 +901,7 @@ export const SlideOutCart = ({ isOpen, onClose, onProceedToCheckout }) => {
                             <h3 className="text-[13px] font-semibold text-gray-900 line-clamp-1">{isActivity ? item.name : item.hotelName}</h3>
                             <button onClick={(e) => { e.stopPropagation(); handleRemoveItem(item); }} className="p-1 hover:bg-red-50 rounded transition-colors flex-shrink-0"><Trash2 className="w-3.5 h-3.5 text-gray-400 hover:text-red-500" /></button>
                           </div>
+                          {isActivity && item.modalityName && <p className="text-[11px] text-purple-600 font-medium">{item.modalityName}{item.selectedTime ? ` · ${item.selectedTime}` : ''}</p>}
                           {!isActivity && item.roomName && <p className="text-[11px] text-gray-500 truncate">{item.roomName}</p>}
                           {item.location && <p className="text-[11px] text-gray-400 truncate flex items-center gap-0.5"><MapPin className="w-3 h-3" />{item.location}</p>}
                         </div>
@@ -909,6 +910,9 @@ export const SlideOutCart = ({ isOpen, onClose, onProceedToCheckout }) => {
                       {/* Details row */}
                       <div className="px-3 pb-2 flex items-center gap-1.5 flex-wrap">
                         <span className="text-[10px] px-2 py-0.5 bg-blue-50 text-blue-600 rounded-full font-medium">{isActivity ? 'Experience' : 'Hotel'}</span>
+                        {isActivity && item.modalityName && <span className="text-[10px] px-2 py-0.5 bg-purple-50 text-purple-600 rounded-full">{item.modalityName}</span>}
+                        {isActivity && item.selectedTime && <span className="text-[10px] px-2 py-0.5 bg-amber-50 text-amber-600 rounded-full">{item.selectedTime}</span>}
+                        {isActivity && item.duration && <span className="text-[10px] px-2 py-0.5 bg-gray-50 text-gray-500 rounded-full">{item.duration}</span>}
                         {!isActivity && <span className="text-[10px] px-2 py-0.5 bg-gray-50 text-gray-500 rounded-full">{nights}N</span>}
                         {!isActivity && item.boardName && <span className="text-[10px] px-2 py-0.5 bg-gray-50 text-gray-500 rounded-full">{item.boardName}</span>}
                         {item.rateClass === 'NRF' && <span className="text-[10px] px-2 py-0.5 bg-red-50 text-red-500 rounded-full">Non-refundable</span>}

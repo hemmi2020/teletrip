@@ -231,11 +231,14 @@ const Checkout = () => {
             phone: billingInfo.phone
           },
           activities: checkoutItems.map(item => ({
-            code: item.activityCode,
+            code: item.activityCode || item.code,
             modality: item.modalityCode,
+            modalityName: item.modalityName,
             name: item.name,
             date: item.checkIn,
-            paxes: Array(item.adults || 1).fill({ age: 30 }),
+            selectedTime: item.selectedTime,
+            duration: item.duration,
+            paxes: Array(item.guests || item.adults || 1).fill({ age: 30 }),
             price: item.price,
             currency: item.currency
           })),
@@ -479,11 +482,14 @@ const handlePayOnSiteBooking = async () => {
           phone: billingInfo.phone
         },
         activities: checkoutItems.map(item => ({
-          code: item.activityCode,
+          code: item.activityCode || item.code,
           modality: item.modalityCode,
+          modalityName: item.modalityName,
           name: item.name,
           date: item.checkIn,
-          paxes: Array(item.adults || 1).fill({ age: 30 }),
+          selectedTime: item.selectedTime,
+          duration: item.duration,
+          paxes: Array(item.guests || item.adults || 1).fill({ age: 30 }),
           price: item.price,
           currency: item.currency
         })),
@@ -905,10 +911,13 @@ const handlePaymentSubmit = () => {
             <div className="flex-1">
               <h3 className="font-medium text-gray-900">{item.type === 'activity' ? item.name : item.hotelName}</h3>
               <p className="text-sm text-gray-600">{item.type === 'activity' ? item.modalityName : item.roomName}</p>
+              {item.type === 'activity' && item.selectedTime && (
+                <p className="text-xs text-blue-600 font-medium mt-0.5">Time: {item.selectedTime}{item.duration ? ` · ${item.duration}` : ''}</p>
+              )}
               <div className="flex items-center text-xs text-gray-500 mt-1">
                 <Calendar className="w-3 h-3 mr-1" />
                 {item.type === 'activity' 
-                  ? `${item.from} - ${item.to}`
+                  ? `${item.checkIn || item.from} - ${item.checkOut || item.to}`
                   : `${new Date(item.checkIn).toLocaleDateString()} - ${new Date(item.checkOut).toLocaleDateString()}`
                 }
               </div>

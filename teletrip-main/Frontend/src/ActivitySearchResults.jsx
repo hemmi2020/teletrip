@@ -569,8 +569,7 @@ const ActivitySearchResults = () => {
                         ))}
                       </div>
                       <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-100">
-                        <button onClick={() => setSelectedActivity(activity)} className="px-3 py-1.5 border border-gray-200 text-gray-600 rounded-md hover:bg-gray-50 transition-colors text-[12px] font-medium">Details</button>
-                        <button onClick={() => handleAddActivityToCart(activity)} className="px-3 py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-[12px] font-medium inline-flex items-center gap-1"><ShoppingCart className="w-3 h-3" />Add to Cart</button>
+                        <button onClick={() => setSelectedActivity(activity)} className="px-4 py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-[12px] font-medium inline-flex items-center gap-1.5">View Options</button>
                       </div>
                     </div>
                   </div>
@@ -639,16 +638,13 @@ const ActivitySearchResults = () => {
                   </div>
                 ) : null;
               })()}
-              {/* Price + Add to Cart */}
+              {/* Price display */}
               <div className="flex items-center gap-3 flex-wrap">
                 <div className="flex-1 min-w-0">
                   {selectedActivity.pricing?.amount ? (
-                    <><span className="text-xl font-bold text-blue-600">{selectedActivity.pricing.currency} {parseFloat(selectedActivity.pricing.amount).toFixed(2)}</span><span className="text-[12px] text-gray-400 ml-1">/ person</span></>
+                    <><span className="text-xl font-bold text-blue-600">{selectedActivity.pricing.currency} {parseFloat(selectedActivity.pricing.amount).toFixed(2)}</span><span className="text-[12px] text-gray-400 ml-1">from / person</span></>
                   ) : <span className="text-gray-400">Price on request</span>}
                 </div>
-                <button onClick={() => handleAddActivityToCart(selectedActivity)} className="flex-shrink-0 px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-[13px] font-semibold inline-flex items-center gap-1.5">
-                  <ShoppingCart className="w-4 h-4" />Add to Cart
-                </button>
               </div>
             </div>
             {/* Scrollable details */}
@@ -712,27 +708,52 @@ const ActivitySearchResults = () => {
                 </div>
               )}
 
-              {/* Add to Cart with selections */}
-              {(activityDetail?.modalities?.length > 0 || selectedActivity.scheduling?.opened?.length > 0) && (
-                <div className="bg-gray-50 rounded-xl p-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="text-[12px] text-gray-500">
-                      {selectedModality ? <span className="text-gray-800 font-medium">{selectedModality.name}</span> : <span className="text-amber-600">Select a package</span>}
-                      {selectedTime && <span className="text-gray-400"> · {selectedTime}</span>}
-                    </div>
-                    <div className="text-[14px] font-bold text-blue-600">
-                      {selectedModality?.pricing?.[0]?.amount ? `${selectedModality.pricing[0].currency} ${parseFloat(selectedModality.pricing[0].amount).toFixed(2)}` : `${selectedActivity.pricing?.currency || 'EUR'} ${parseFloat(selectedActivity.pricing?.amount || 0).toFixed(2)}`}
-                    </div>
+              {/* Booking Summary */}
+              <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
+                <div className="text-[11px] font-semibold text-blue-600 uppercase tracking-wider mb-2">Booking Summary</div>
+                <div className="space-y-1.5 mb-3">
+                  <div className="flex items-center justify-between text-[12px]">
+                    <span className="text-gray-500">Package</span>
+                    {selectedModality ? <span className="font-medium text-gray-800">{selectedModality.name}</span> : <span className="text-amber-500">Please select</span>}
                   </div>
-                  <button
-                    onClick={() => handleAddActivityToCart(selectedActivity, selectedModality, selectedModality?.pricing?.[0], selectedTime)}
-                    disabled={activityDetail?.modalities?.length > 0 && !selectedModality}
-                    className={`w-full py-2.5 rounded-lg font-semibold text-[13px] inline-flex items-center justify-center gap-1.5 transition-colors ${activityDetail?.modalities?.length > 0 && !selectedModality ? 'bg-gray-300 text-gray-500' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
-                  >
-                    <ShoppingCart className="w-4 h-4" />Add to Cart
-                  </button>
+                  {selectedActivity.scheduling?.opened?.length > 0 && (
+                    <div className="flex items-center justify-between text-[12px]">
+                      <span className="text-gray-500">Time</span>
+                      {selectedTime ? <span className="font-medium text-gray-800">{selectedTime}</span> : <span className="text-amber-500">Please select</span>}
+                    </div>
+                  )}
+                  {selectedModality?.duration && (
+                    <div className="flex items-center justify-between text-[12px]">
+                      <span className="text-gray-500">Duration</span>
+                      <span className="text-gray-700">{selectedModality.duration}</span>
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between text-[12px]">
+                    <span className="text-gray-500">Date</span>
+                    <span className="text-gray-700">{from} → {to}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-[12px]">
+                    <span className="text-gray-500">Guests</span>
+                    <span className="text-gray-700">{adults} adults</span>
+                  </div>
+                  <div className="flex items-center justify-between pt-2 border-t border-blue-100">
+                    <span className="text-[13px] font-medium text-gray-700">Total</span>
+                    <span className="text-lg font-bold text-blue-600">
+                      {selectedModality?.pricing?.[0]?.amount ? `${selectedModality.pricing[0].currency} ${parseFloat(selectedModality.pricing[0].amount).toFixed(2)}` : `${selectedActivity.pricing?.currency || 'EUR'} ${parseFloat(selectedActivity.pricing?.amount || 0).toFixed(2)}`}
+                    </span>
+                  </div>
                 </div>
-              )}
+                <button
+                  onClick={() => handleAddActivityToCart(selectedActivity, selectedModality, selectedModality?.pricing?.[0], selectedTime)}
+                  disabled={!selectedModality || (selectedActivity.scheduling?.opened?.length > 0 && !selectedTime)}
+                  className={`w-full py-2.5 rounded-lg font-semibold text-[13px] inline-flex items-center justify-center gap-1.5 transition-colors ${!selectedModality || (selectedActivity.scheduling?.opened?.length > 0 && !selectedTime) ? 'bg-gray-200 text-gray-400' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
+                >
+                  <ShoppingCart className="w-4 h-4" />Add to Cart
+                </button>
+                {(!selectedModality || (selectedActivity.scheduling?.opened?.length > 0 && !selectedTime)) && (
+                  <p className="text-[11px] text-amber-500 text-center mt-1.5">Select {!selectedModality ? 'a package' : 'a time'} to continue</p>
+                )}
+              </div>
 
               {/* Duration info */}
               {selectedActivity.scheduling?.duration?.value && !selectedActivity.scheduling?.opened?.length && (
