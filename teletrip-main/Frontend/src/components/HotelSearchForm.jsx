@@ -1157,7 +1157,6 @@ const HotelSearchForm = () => {
           )}
         </div>
       </div>
-    </div>
   );
 };
 
