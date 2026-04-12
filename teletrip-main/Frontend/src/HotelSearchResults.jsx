@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import {
   Loader2,
@@ -842,33 +842,39 @@ if (children > 0 && childAges.length > 0) {
 
  
 
-  // Dynamic filter options derived from hotel data
-  const dynamicBoards = [...new Set(hotels.flatMap(h => h.boards))].filter(Boolean).sort();
-  const dynamicCategories = [...new Set(hotels.map(h => h.category))].filter(Boolean).sort();
-  const dynamicZones = [...new Set(hotels.map(h => h.zone))].filter(Boolean).sort();
-  const dynamicPromos = [...new Set(hotels.flatMap(h => h.promos))].filter(Boolean).sort();
-  const dynamicDiscounts = [...new Set(hotels.flatMap(h => h.discounts))].filter(Boolean).sort();
-  const dynamicChains = [...new Set(hotels.map(h => h.chain).filter(Boolean))].sort();
-  const dynamicEstablishment = [...new Set(hotels.flatMap(h => h.establishmentProfiles))].filter(Boolean).sort();
-  const dynamicAccommodationTypes = [...new Set(hotels.map(h => h.type).filter(Boolean))];
+  // Dynamic filter options derived from hotel data (memoized)
+  const dynamicBoards = useMemo(() => [...new Set(hotels.flatMap(h => h.boards))].filter(Boolean).sort(), [hotels]);
+  const dynamicCategories = useMemo(() => [...new Set(hotels.map(h => h.category))].filter(Boolean).sort(), [hotels]);
+  const dynamicZones = useMemo(() => [...new Set(hotels.map(h => h.zone))].filter(Boolean).sort(), [hotels]);
+  const dynamicPromos = useMemo(() => [...new Set(hotels.flatMap(h => h.promos))].filter(Boolean).sort(), [hotels]);
+  const dynamicDiscounts = useMemo(() => [...new Set(hotels.flatMap(h => h.discounts))].filter(Boolean).sort(), [hotels]);
+  const dynamicChains = useMemo(() => [...new Set(hotels.map(h => h.chain).filter(Boolean))].sort(), [hotels]);
+  const dynamicEstablishment = useMemo(() => [...new Set(hotels.flatMap(h => h.establishmentProfiles))].filter(Boolean).sort(), [hotels]);
+  const dynamicAccommodationTypes = useMemo(() => [...new Set(hotels.map(h => h.type).filter(Boolean))], [hotels]);
 
-  // Count helpers for filter badges
-  const countBoard = (b) => hotels.filter(h => h.boards.includes(b)).length;
-  const countCategory = (c) => hotels.filter(h => h.category === c).length;
-  const countZone = (z) => hotels.filter(h => h.zone === z).length;
-  const countPromo = (p) => hotels.filter(h => h.promos.includes(p)).length;
-  const countDiscount = (d) => hotels.filter(h => h.discounts.includes(d)).length;
-  const countChain = (c) => hotels.filter(h => h.chain === c).length;
-  const countEstablishment = (e) => hotels.filter(h => h.establishmentProfiles.includes(e)).length;
-  const countAccommodationType = (t) => hotels.filter(h => h.type === t).length;
-  const countAmenity = (a) => hotels.filter(h => h.amenities.includes(a)).length;
-  const countFreeCancellation = hotels.filter(h => h.hasFreeCancellation).length;
-  const countPartialCancellation = hotels.filter(h => h.hasPartialCancellation).length;
-  const countNonRefundable = hotels.filter(h => !h.hasFreeCancellation && !h.hasNoCancellationInfo).length;
-  const countNoCancellationInfo = hotels.filter(h => h.hasNoCancellationInfo).length;
-  const countPackagingWith = hotels.filter(h => h.packaging).length;
-  const countPackagingWithout = hotels.filter(h => !h.packaging).length;
-  const countReview = (minRating) => hotels.filter(h => { const r = hotelReviews[h.id]; return r && r.rating >= minRating; }).length;
+  // Count helpers (memoized)
+  const filterCounts = useMemo(() => {
+    const counts = { boards: {}, categories: {}, zones: {}, promos: {}, discounts: {}, chains: {}, establishment: {}, accommodationTypes: {}, amenities: {} };
+    hotels.forEach(h => {
+      h.boards.forEach(b => { counts.boards[b] = (counts.boards[b] || 0) + 1; });
+      counts.categories[h.category] = (counts.categories[h.category] || 0) + 1;
+      counts.zones[h.zone] = (counts.zones[h.zone] || 0) + 1;
+      h.promos.forEach(p => { counts.promos[p] = (counts.promos[p] || 0) + 1; });
+      h.discounts.forEach(d => { counts.discounts[d] = (counts.discounts[d] || 0) + 1; });
+      if (h.chain) counts.chains[h.chain] = (counts.chains[h.chain] || 0) + 1;
+      h.establishmentProfiles.forEach(e => { counts.establishment[e] = (counts.establishment[e] || 0) + 1; });
+      counts.accommodationTypes[h.type] = (counts.accommodationTypes[h.type] || 0) + 1;
+      h.amenities.forEach(a => { counts.amenities[a] = (counts.amenities[a] || 0) + 1; });
+    });
+    counts.freeCancellation = hotels.filter(h => h.hasFreeCancellation).length;
+    counts.partialCancellation = hotels.filter(h => h.hasPartialCancellation).length;
+    counts.nonRefundable = hotels.filter(h => !h.hasFreeCancellation && !h.hasNoCancellationInfo).length;
+    counts.noCancellationInfo = hotels.filter(h => h.hasNoCancellationInfo).length;
+    counts.packagingWith = hotels.filter(h => h.packaging).length;
+    counts.packagingWithout = hotels.filter(h => !h.packaging).length;
+    return counts;
+  }, [hotels]);
+  const countReview = useCallback((minRating) => hotels.filter(h => { const r = hotelReviews[h.id]; return r && r.rating >= minRating; }).length, [hotels, hotelReviews]);
 
   // Establishment profile labels
   const establishmentLabels = {
@@ -877,8 +883,8 @@ if (children > 0 && childAges.length > 0) {
     '33': 'City Hotels', '35': 'Ski Hotels', '38': 'Spa Hotels',
   };
 
-  // Filter hotels based on selected filters
-  const filteredHotels = hotels.filter(hotel => {
+  // Filter hotels (memoized)
+  const filteredHotels = useMemo(() => hotels.filter(hotel => {
     if (hotelNameSearch && !hotel.name.toLowerCase().includes(hotelNameSearch.toLowerCase())) return false;
     if (selectedBoards.length > 0 && !hotel.boards.some(b => selectedBoards.includes(b))) return false;
     if (selectedCategories.length > 0 && !selectedCategories.includes(hotel.category)) return false;
@@ -907,9 +913,9 @@ if (children > 0 && childAges.length > 0) {
     }
     if (selectedAccommodationTypes.length > 0 && !selectedAccommodationTypes.includes(hotel.type)) return false;
     return true;
-  });
+  }), [hotels, hotelNameSearch, selectedBoards, selectedCategories, selectedZones, selectedReviewRatings, hotelReviews, selectedCancellation, priceMin, priceMax, selectedPromos, selectedDiscounts, selectedChains, selectedEstablishment, selectedPackaging, selectedAmenities, selectedAccommodationTypes]);
 
-  const sortedHotels = [...filteredHotels].sort((a, b) => {
+  const sortedHotels = useMemo(() => [...filteredHotels].sort((a, b) => {
     if (sortOption === "priceLowHigh") {
       return parseFloat(a.price || 0) - parseFloat(b.price || 0);
     } else if (sortOption === "priceHighLow") {
@@ -920,7 +926,7 @@ if (children > 0 && childAges.length > 0) {
       return a.stars - b.stars;
     }
     return 0;
-  });
+  }), [filteredHotels, sortOption]);
 
   if (loading) {
     return (
@@ -1038,7 +1044,7 @@ if (children > 0 && childAges.length > 0) {
                       <label key={board} className="flex items-center gap-2.5 py-0.5 cursor-pointer group">
                         <input type="checkbox" checked={selectedBoards.includes(board)} onChange={() => setSelectedBoards(prev => prev.includes(board) ? prev.filter(b => b !== board) : [...prev, board])} className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer" />
                         <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1">{board}</span>
-                        <span className="text-[11px] text-gray-400">{countBoard(board)}</span>
+                        <span className="text-[11px] text-gray-400">{filterCounts.boards[board] || 0}</span>
                       </label>
                     ))}
                   </div>
@@ -1062,7 +1068,7 @@ if (children > 0 && childAges.length > 0) {
                       <label key={cat} className="flex items-center gap-2.5 py-0.5 cursor-pointer group">
                         <input type="checkbox" checked={selectedCategories.includes(cat)} onChange={() => setSelectedCategories(prev => prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat])} className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer" />
                         <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1">{cat}</span>
-                        <span className="text-[11px] text-gray-400">{countCategory(cat)}</span>
+                        <span className="text-[11px] text-gray-400">{filterCounts.categories[cat] || 0}</span>
                       </label>
                     ))}
                   </div>
@@ -1154,7 +1160,7 @@ if (children > 0 && childAges.length > 0) {
                           className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
                         />
                         <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1">{zone}</span>
-                        <span className="text-[11px] text-gray-400">{countZone(zone)}</span>
+                        <span className="text-[11px] text-gray-400">{filterCounts.zones[zone] || 0}</span>
                       </label>
                     ))}
                   </div>
@@ -1177,7 +1183,7 @@ if (children > 0 && childAges.length > 0) {
                     <label key={type.id} className="flex items-center gap-2.5 py-0.5 cursor-pointer group">
                         <input type="checkbox" checked={selectedAccommodationTypes.includes(type.id)} onChange={() => handleAccommodationTypeChange(type.id)} className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer" />
                         <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1">{type.name}</span>
-                        <span className="text-[11px] text-gray-400">{countAccommodationType(type.id)}</span>
+                        <span className="text-[11px] text-gray-400">{filterCounts.accommodationTypes[type.id] || 0}</span>
                     </label>
                   ))}
                 </div>
@@ -1205,7 +1211,7 @@ if (children > 0 && childAges.length > 0) {
                       />
                       <amenity.icon className="w-3.5 h-3.5 text-gray-400 group-hover:text-gray-600" />
                       <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1">{amenity.name}</span>
-                      <span className="text-[11px] text-gray-400">{countAmenity(amenity.id)}</span>
+                      <span className="text-[11px] text-gray-400">{filterCounts.amenities[amenity.id] || 0}</span>
                     </label>
                   ))}
                 </div>
@@ -1233,7 +1239,7 @@ if (children > 0 && childAges.length > 0) {
                           className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
                         />
                         <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1">{promo}</span>
-                        <span className="text-[11px] text-gray-400">{countPromo(promo)}</span>
+                        <span className="text-[11px] text-gray-400">{filterCounts.promos[promo] || 0}</span>
                       </label>
                     ))}
                   </div>
@@ -1290,7 +1296,7 @@ if (children > 0 && childAges.length > 0) {
                           className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
                         />
                         <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1">{establishmentLabels[est] || est}</span>
-                        <span className="text-[11px] text-gray-400">{countEstablishment(est)}</span>
+                        <span className="text-[11px] text-gray-400">{filterCounts.establishment[est] || 0}</span>
                       </label>
                     ))}
                   </div>
@@ -1319,7 +1325,7 @@ if (children > 0 && childAges.length > 0) {
                           className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
                         />
                         <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1">{disc}</span>
-                        <span className="text-[11px] text-gray-400">{countDiscount(disc)}</span>
+                        <span className="text-[11px] text-gray-400">{filterCounts.discounts[disc] || 0}</span>
                       </label>
                     ))}
                   </div>
@@ -1348,7 +1354,7 @@ if (children > 0 && childAges.length > 0) {
                           className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
                         />
                         <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1">{chain}</span>
-                        <span className="text-[11px] text-gray-400">{countChain(chain)}</span>
+                        <span className="text-[11px] text-gray-400">{filterCounts.chains[chain] || 0}</span>
                       </label>
                     ))}
                   </div>
@@ -1627,7 +1633,7 @@ if (children > 0 && childAges.length > 0) {
               </div>
             </div>
 
-            {/* Room Types Tags - Sticky */}
+            {/* Room Types Tags + Active Filters - Sticky */}
             <div className="flex items-center gap-2 flex-wrap px-5 py-2.5 border-b border-gray-100 bg-white flex-shrink-0 overflow-x-auto" style={{scrollbarWidth:'none'}}>
               <span className="text-[12px] font-semibold text-gray-500 uppercase tracking-wider flex-shrink-0">{selectedHotel.rooms?.length || 0} Room Types</span>
               <span className="text-gray-200">|</span>
@@ -1635,6 +1641,9 @@ if (children > 0 && childAges.length > 0) {
                 <button key={i} onClick={() => { const el = document.getElementById(`room-${selectedHotel.rooms.find(r => r.name === rt)?.code}`); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }} className="text-[11px] px-2.5 py-1 bg-blue-50 text-blue-600 rounded-full font-medium hover:bg-blue-100 transition-colors flex-shrink-0">{rt}</button>
               ))}
               {uniqueRoomTypes.length > 8 && <span className="text-[11px] text-gray-400">+{uniqueRoomTypes.length - 8}</span>}
+              {(selectedBoards.length > 0 || selectedCancellation || selectedPackaging || selectedPromos.length > 0 || priceMin || priceMax) && (
+                <span className="text-[10px] px-2 py-0.5 bg-amber-50 text-amber-600 rounded-full font-medium flex-shrink-0">Filters active</span>
+              )}
             </div>
 
             {/* Rooms List */}
@@ -1645,6 +1654,16 @@ if (children > 0 && childAges.length > 0) {
                     if (selectedBoards.length > 0 && !selectedBoards.includes(rate.boardName)) return false;
                     if (selectedCancellation === "free" && !(rate.cancellationPolicies?.length > 0 && parseFloat(rate.cancellationPolicies[0]?.amount || 0) === 0)) return false;
                     if (selectedCancellation === "nonrefundable" && rate.rateClass !== 'NRF') return false;
+                    if (selectedCancellation === "partial" && !(rate.cancellationPolicies?.length > 0 && parseFloat(rate.cancellationPolicies[0]?.amount || 0) > 0)) return false;
+                    if (selectedPackaging === "with" && !rate.packaging) return false;
+                    if (selectedPackaging === "without" && rate.packaging) return false;
+                    if (selectedPromos.length > 0) {
+                      const ratePromos = (rate.promotions || rate.offers || []).map(p => p.name || p.code).filter(Boolean);
+                      if (!selectedPromos.some(p => ratePromos.includes(p))) return false;
+                    }
+                    const ratePrice = parseFloat(rate.net);
+                    if (priceMin && ratePrice < parseFloat(priceMin)) return false;
+                    if (priceMax && ratePrice > parseFloat(priceMax)) return false;
                     return true;
                   });
                   if (filteredRates.length === 0) return null;
