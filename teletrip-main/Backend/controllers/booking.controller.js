@@ -263,19 +263,49 @@ module.exports.createActivityBooking = asyncErrorHandler(async (req, res) => {
   const bookingReference = generateBookingReference('activity');
   const totalAmount = activities.reduce((sum, act) => sum + (act.price || 0), 0);
 
+  // STEP 1: Call Hotelbeds Activity Booking API
+  let hotelbedsResponse = null;
+  try {
+    const activitiesService = require('../services/activities.service');
+    
+    for (const activity of activities) {
+      if (activity.code && activity.modality) {
+        console.log(`📞 Booking activity ${activity.code} with modality ${activity.modality} on Hotelbeds...`);
+        const bookingResult = await activitiesService.createBooking({
+          activityCode: activity.code,
+          modalityCode: activity.modality,
+          from: activity.date || activity.selectedDate || activity.from,
+          to: activity.to || activity.date || activity.selectedDate,
+          paxes: activity.paxes || [{ age: 30 }],
+          holder: {
+            name: holder.name?.split(' ')[0] || holder.name,
+            surname: holder.name?.split(' ').slice(1).join(' ') || holder.surname || '',
+            email: holder.email,
+            phone: holder.phone
+          },
+          clientReference: clientReference || bookingReference
+        });
+        hotelbedsResponse = bookingResult;
+        console.log('✅ Hotelbeds activity booking confirmed:', bookingResult?.bookings?.[0]?.reference);
+      }
+    }
+  } catch (apiError) {
+    console.error('❌ Hotelbeds activity booking failed:', apiError.message);
+    // Continue to save locally even if API fails — mark as pending
+  }
+
+  // STEP 2: Save to local database
   const bookingData = {
     user: userId,
     bookingType: 'activity',
     bookingReference,
-    status: 'pending',
+    status: hotelbedsResponse ? 'confirmed' : 'pending',
     
     pricing: {
       basePrice: totalAmount,
       totalAmount,
-      currency: activities[0]?.currency || 'AED',
-      taxes: 0,
-      fees: 0,
-      discounts: 0
+      currency: activities[0]?.currency || 'PKR',
+      taxes: 0, fees: 0, discounts: 0
     },
     
     guestInfo: {
@@ -287,33 +317,23 @@ module.exports.createActivityBooking = asyncErrorHandler(async (req, res) => {
       },
       totalGuests: {
         adults: activities.reduce((sum, act) => sum + (act.paxes?.length || 1), 0),
-        children: 0,
-        infants: 0
+        children: 0, infants: 0
       }
     },
     
-    payment: {
-      status: 'pending',
-      method: null,
-      paidAmount: 0
-    },
+    payment: { status: 'pending', method: null, paidAmount: 0 },
     
     travelDates: {
-      departureDate: new Date(activities[0]?.date),
-      returnDate: new Date(activities[activities.length - 1]?.date),
+      departureDate: new Date(activities[0]?.date || activities[0]?.selectedDate || activities[0]?.from),
+      returnDate: new Date(activities[activities.length - 1]?.to || activities[activities.length - 1]?.date),
       duration: 1
     },
     
-    source: {
-      platform: 'web'
-    },
+    source: { platform: 'web' },
     
     backup: {
-      originalBookingData: {
-        holder,
-        activities,
-        clientReference
-      }
+      originalBookingData: { holder, activities, clientReference },
+      hotelbedsResponse: hotelbedsResponse || null
     }
   };
 
@@ -321,11 +341,7 @@ module.exports.createActivityBooking = asyncErrorHandler(async (req, res) => {
     const booking = await bookingModel.create(bookingData);
     
     try {
-      await notificationService.sendBookingNotification(
-        userId,
-        'bookingCreated',
-        { ...booking.toObject(), userDetails: req.user }
-      );
+      await notificationService.sendBookingNotification(userId, 'bookingCreated', { ...booking.toObject(), userDetails: req.user });
     } catch (notificationError) {
       console.log('Notification failed:', notificationError.message);
     }
@@ -333,30 +349,29 @@ module.exports.createActivityBooking = asyncErrorHandler(async (req, res) => {
     return ApiResponse.created(res, {
       booking,
       bookingReference: booking.bookingReference,
-      status: 'pending',
+      hotelbedsReference: hotelbedsResponse?.bookings?.[0]?.reference || null,
+      status: booking.status,
       voucher: {
         reference: booking.bookingReference,
+        hotelbedsReference: hotelbedsResponse?.bookings?.[0]?.reference || null,
         activities: activities.map(a => ({
           code: a.code,
           name: a.name,
-          date: a.date,
+          modality: a.modality,
+          modalityName: a.modalityName,
+          date: a.date || a.selectedDate,
+          selectedTime: a.selectedTime,
           paxes: a.paxes
         }))
       }
-    }, 'Activity booking created successfully');
+    }, hotelbedsResponse ? 'Activity booking confirmed with Bedsonline' : 'Activity booking created (pending confirmation)');
     
   } catch (error) {
     console.error('Activity booking creation error:', error);
-    
     if (error.name === 'ValidationError') {
-      const validationErrors = Object.keys(error.errors).map(key => ({
-        field: key,
-        message: error.errors[key].message
-      }));
-      
+      const validationErrors = Object.keys(error.errors).map(key => ({ field: key, message: error.errors[key].message }));
       return ApiResponse.badRequest(res, 'Validation failed', validationErrors);
     }
-    
     throw error;
   }
 });
