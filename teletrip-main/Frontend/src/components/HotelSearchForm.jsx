@@ -829,20 +829,21 @@ const HotelSearchForm = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    if (!selectedLocation) {
-      alert('Please select a destination');
+    if (!selectedLocation && !hotelNameQuery.trim()) {
+      alert('Please select a destination or enter a hotel name');
       return;
     }
 
     const checkIn = format(dateRange[0].startDate, 'yyyy-MM-dd');
     const checkOut = format(dateRange[0].endDate, 'yyyy-MM-dd');
 
-    // Build URL
-    const city = selectedLocation.city || selectedLocation.name;
-    const country = selectedLocation.country;
     let url = `/hotel-search-results?checkIn=${checkIn}&checkOut=${checkOut}&rooms=${rooms}&adults=${adults}&children=${children}`;
-    url += `&country=${encodeURIComponent(country)}`;
-    url += `&city=${encodeURIComponent(city)}`;
+    if (selectedLocation) {
+      const city = selectedLocation.city || selectedLocation.name;
+      const country = selectedLocation.country;
+      url += `&country=${encodeURIComponent(country)}`;
+      url += `&city=${encodeURIComponent(city)}`;
+    }
     if (hotelNameQuery.trim()) {
       url += `&hotelName=${encodeURIComponent(hotelNameQuery.trim())}`;
     }
@@ -911,7 +912,7 @@ const HotelSearchForm = () => {
                 {/* Location Search (City/Country) */}
                 <div className="relative" ref={locationRef}>
                   <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2 px-1">
-                    Destination <span className="text-red-500">*</span>
+                    Destination
                   </label>
                   <div className="relative">
                     <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
@@ -922,7 +923,6 @@ const HotelSearchForm = () => {
                       onFocus={() => setShowLocationDropdown(true)}
                       placeholder="City or country, e.g: London"
                       className="w-full pl-10 pr-10 py-2.5 sm:py-3 border border-gray-300 bg-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-700 text-sm sm:text-base"
-                      required
                     />
                     {searchQuery && (
                       <button type="button" onClick={() => { setSearchQuery(''); setSelectedLocation(null); setFilteredLocations([]); }} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"><X size={18} /></button>
@@ -955,7 +955,7 @@ const HotelSearchForm = () => {
                 {/* Hotel Name (Optional) */}
                 <div>
                   <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2 px-1">
-                    Hotel Name <span className="text-gray-400 font-normal">(optional)</span>
+                    Hotel Name
                   </label>
                   <div className="relative">
                     <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />

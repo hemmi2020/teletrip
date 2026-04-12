@@ -25,6 +25,8 @@ import {
   Info,
   CheckCircle,
   XCircle,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
@@ -58,6 +60,7 @@ const HotelSearchResults = () => {
   const [user, setUser] = useState(null);
   const [sortOption, setSortOption] = useState("default");
   const [showFilters, setShowFilters] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [selectedAmenities, setSelectedAmenities] = useState([]);
   const [selectedAccommodationTypes, setSelectedAccommodationTypes] = useState([]);
   const [hotelNameSearch, setHotelNameSearch] = useState("");
@@ -958,7 +961,7 @@ if (children > 0 && childAges.length > 0) {
         </div>
 
         {/* Sidebar Filters */}
-        <div className={`fixed lg:sticky lg:top-16 inset-y-0 left-0 z-40 w-[300px] bg-white border-r border-gray-100 transform ${showFilters ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 transition-transform duration-300 ease-in-out lg:h-[calc(100vh-4rem)] pt-16 lg:pt-0`}>
+        <div className={`fixed lg:sticky lg:top-16 inset-y-0 left-0 z-40 bg-white border-r border-gray-100 transform transition-all duration-300 ease-in-out lg:h-[calc(100vh-4rem)] pt-16 lg:pt-0 ${showFilters ? 'translate-x-0 w-[300px]' : '-translate-x-full w-[300px]'} ${sidebarCollapsed ? 'lg:w-0 lg:overflow-hidden lg:border-0' : 'lg:w-[300px] lg:translate-x-0'}`}>
           <div className="h-full overflow-y-auto overscroll-contain px-4 py-4 text-left" style={{scrollbarWidth:'thin',scrollbarColor:'#e5e7eb transparent'}}>
             {/* Mobile Close */}
             <div className="lg:hidden flex justify-between items-center pb-3 mb-3 border-b border-gray-100">
@@ -1403,8 +1406,14 @@ if (children > 0 && childAges.length > 0) {
             </div>
           </div>
         </div>
-        <div className="flex-1 lg:ml-0 ">
-          <div className="container mx-auto px-4 py-8">
+
+        {/* Sidebar Toggle Arrow */}
+        <button onClick={() => setSidebarCollapsed(!sidebarCollapsed)} className="hidden lg:flex fixed z-50 items-center justify-center w-6 h-12 bg-white border border-gray-200 rounded-r-lg shadow-sm hover:bg-gray-50 transition-all" style={{ left: sidebarCollapsed ? 0 : 300, top: '50%', transform: 'translateY(-50%)' }}>
+          {sidebarCollapsed ? <ChevronRight className="w-3.5 h-3.5 text-gray-500" /> : <ChevronLeft className="w-3.5 h-3.5 text-gray-500" />}
+        </button>
+
+        <div className="flex-1 min-w-0">
+          <div className="max-w-[1280px] mx-auto px-4 py-6">
             {user && (
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
                 <div className="flex items-center">
@@ -1423,97 +1432,85 @@ if (children > 0 && childAges.length > 0) {
             </div>
 
             {/* Hotel Cards */}
-            <div className="space-y-4">
-              {sortedHotels.map((hotel) => {
+            <div className="space-y-3">
+              {sortedHotels.map((hotel, cardIndex) => {
                 const checkIn = searchParams.get("checkIn");
                 const checkOut = searchParams.get("checkOut");
                 const nights = checkIn && checkOut ? Math.ceil((new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60 * 24)) : 1;
                 const totalPrice = parseFloat(hotel.price);
                 const pricePerNight = nights > 0 ? (totalPrice / nights) : totalPrice;
+                const roomTypes = [...new Set((hotel.rooms || []).map(r => r.name))];
 
                 return (
                 <div
                   key={hotel.id}
-                  className="bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-lg hover:border-gray-200 transition-all duration-200 flex flex-col lg:flex-row group"
+                  className="bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-lg hover:border-gray-200 transition-all duration-200 flex flex-col sm:flex-row group animate-in fade-in slide-in-from-bottom-2"
+                  style={{ animationDelay: `${cardIndex * 50}ms`, animationFillMode: 'both' }}
                 >
                   {/* Image */}
-                  <div className="lg:w-72 relative overflow-hidden flex-shrink-0">
-                    <img
-                      src={hotel.thumbnail || "https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg"}
-                      alt={hotel.name}
-                      className="w-full h-48 lg:h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      onError={(e) => (e.target.src = "https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg")}
-                    />
-                    {hotel.images.length > 1 && (
-                      <div className="absolute top-2 right-2 bg-black/60 text-white px-2 py-0.5 rounded text-xs flex items-center gap-1">
-                        <ImageIcon className="w-3 h-3" />{hotel.images.length}
-                      </div>
-                    )}
+                  <div className="sm:w-56 lg:w-64 relative overflow-hidden flex-shrink-0">
+                    <img src={hotel.thumbnail || "https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg"} alt={hotel.name} className="w-full h-40 sm:h-full object-cover group-hover:scale-105 transition-transform duration-500" onError={(e) => (e.target.src = "https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg")} />
                     {hotel.hasFreeCancellation && (
-                      <div className="absolute bottom-2 left-2 bg-green-600/90 text-white px-2 py-0.5 rounded text-[11px] font-medium">Free cancellation</div>
+                      <div className="absolute top-2 left-2 bg-green-600/90 text-white px-2 py-0.5 rounded text-[10px] font-medium">Free cancellation</div>
                     )}
                   </div>
 
                   {/* Content */}
-                  <div className="flex-1 p-4 lg:p-5 flex flex-col justify-between min-w-0">
+                  <div className="flex-1 p-3 sm:p-4 flex flex-col justify-between min-w-0">
                     <div>
-                      <div className="flex justify-between items-start gap-3 mb-1.5">
+                      <div className="flex justify-between items-start gap-2 mb-1">
                         <div className="min-w-0">
-                          <h2 className="text-base font-semibold text-gray-900 truncate">{hotel.name}</h2>
-                          <div className="flex items-center gap-1 mt-0.5">
-                            {[...Array(hotel.stars)].map((_, i) => (
-                              <Star key={i} className="w-3 h-3 text-amber-400 fill-current" />
-                            ))}
+                          <h2 className="text-[14px] font-semibold text-gray-900 truncate leading-tight">{hotel.name}</h2>
+                          <div className="flex items-center gap-0.5 mt-0.5">
+                            {[...Array(hotel.stars)].map((_, i) => <Star key={i} className="w-2.5 h-2.5 text-amber-400 fill-current" />)}
                           </div>
                         </div>
                         <div className="text-right flex-shrink-0">
-                          <div className="text-[11px] text-gray-500">{hotel.currency} {pricePerNight.toFixed(0)}/night</div>
-                          <div className="text-lg font-bold text-blue-600">{hotel.currency} {totalPrice.toFixed(2)}</div>
-                          <div className="text-[11px] text-gray-500">{nights} {nights === 1 ? 'night' : 'nights'} total</div>
+                          <div className="text-lg font-bold text-blue-600 leading-tight">{hotel.currency} {totalPrice.toFixed(0)}</div>
+                          <div className="text-[10px] text-gray-400">{pricePerNight.toFixed(0)}/night · {nights}n</div>
                         </div>
                       </div>
 
-                      <div className="flex items-center text-gray-500 text-[13px] mb-2.5">
-                        <MapPin className="w-3.5 h-3.5 mr-1 flex-shrink-0" /><span className="truncate">{hotel.address}</span>
+                      <div className="flex items-center text-gray-400 text-[12px] mb-2">
+                        <MapPin className="w-3 h-3 mr-0.5 flex-shrink-0" /><span className="truncate">{hotel.address}</span>
                       </div>
 
-                      {/* Compact amenities */}
-                      <div className="flex gap-1.5 mb-2.5 flex-wrap">
-                        {[...new Set(hotel.amenities)].slice(0, 5).map((amenity, index) => {
-                          const amenityData = availableAmenities.find(a => a.id === amenity);
-                          if (!amenityData) return null;
-                          const IconComponent = amenityData.icon;
-                          return <div key={index} className="p-1.5 bg-gray-50 rounded" title={amenityData.name}><IconComponent className="w-3.5 h-3.5 text-gray-500" /></div>;
-                        })}
-                      </div>
+                      {/* Room types */}
+                      {roomTypes.length > 0 && (
+                        <div className="flex gap-1 flex-wrap mb-2">
+                          {roomTypes.slice(0, 3).map((rt, i) => (
+                            <span key={i} className="text-[10px] px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded font-medium truncate max-w-[140px]">{rt}</span>
+                          ))}
+                          {roomTypes.length > 3 && <span className="text-[10px] text-gray-400 self-center">+{roomTypes.length - 3}</span>}
+                        </div>
+                      )}
 
-                      {/* Board info */}
+                      {/* Board tags */}
                       {hotel.boards.length > 0 && (
-                        <div className="flex gap-1.5 flex-wrap mb-2">
+                        <div className="flex gap-1 flex-wrap mb-1.5">
                           {hotel.boards.slice(0, 2).map((b, i) => (
-                            <span key={i} className="text-[11px] px-2 py-0.5 bg-blue-50 text-blue-700 rounded">{b}</span>
+                            <span key={i} className="text-[10px] px-1.5 py-0.5 bg-gray-50 text-gray-500 rounded">{b}</span>
                           ))}
                         </div>
                       )}
                     </div>
 
-                    {/* Reviews inline */}
-                    {hotelReviews[hotel.id] && hotelReviews[hotel.id].numReviews > 0 && (
-                      <div className="flex items-center gap-2 mt-1">
-                        <RatingCircles rating={hotelReviews[hotel.id].rating} size="w-2.5 h-2.5" />
-                        <span className="text-[11px] text-gray-500">{hotelReviews[hotel.id].numReviews.toLocaleString()} reviews</span>
-                      </div>
-                    )}
-
-                    {/* View Rooms button */}
-                    <div className="mt-3 pt-2 border-t border-gray-50 flex justify-end">
-                      <button
-                        onClick={(e) => { e.stopPropagation(); setSelectedHotel(hotel); }}
-                        className="px-4 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-[13px] font-medium inline-flex items-center gap-1.5"
-                      >
-                        <Bed className="w-3.5 h-3.5" />View Rooms
+                    {/* Bottom row */}
+                    <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-50">
+                      {hotelReviews[hotel.id] && hotelReviews[hotel.id].numReviews > 0 ? (
+                        <div className="flex items-center gap-1.5">
+                          <RatingCircles rating={hotelReviews[hotel.id].rating} size="w-2 h-2" />
+                          <span className="text-[10px] text-gray-400">{hotelReviews[hotel.id].numReviews.toLocaleString()}</span>
+                        </div>
+                      ) : <div />}
+                      <button onClick={(e) => { e.stopPropagation(); setSelectedHotel(hotel); }} className="px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-[12px] font-medium inline-flex items-center gap-1">
+                        <Bed className="w-3 h-3" />View Rooms
                       </button>
                     </div>
+                  </div>
+                </div>
+              );
+              })}
                   </div>
                 </div>
               );
@@ -1638,9 +1635,6 @@ if (children > 0 && childAges.length > 0) {
                   {selectedHotel.boards.length > 0 && <> Available board options: {selectedHotel.boards.join(', ')}.</>}
                   {selectedHotel.hasFreeCancellation && <span className="text-green-600"> Free cancellation available on select rates.</span>}
                 </div>
-                {selectedHotel.amenities.length > 0 && (
-                  <div className="text-[11px] text-gray-400">Amenities: {[...new Set(selectedHotel.amenities)].map(a => { const ad = availableAmenities.find(x => x.id === a); return ad ? ad.name : null; }).filter(Boolean).join(', ')}</div>
-                )}
               </div>
             </div>
 
