@@ -4,7 +4,7 @@ import { Loader2, MapPin, Calendar, Users, Filter, Star, Clock, Search, X, Chevr
 import Header from './components/Header';
 import Footer from './components/Footer';
 import { useCart } from './components/CartSystem';
-import { useCurrency } from './context/CurrencyContext';
+import { useCurrency } from './hooks/useCurrency';
 
 const ActivitySearchResults = () => {
   const [searchParams] = useSearchParams();

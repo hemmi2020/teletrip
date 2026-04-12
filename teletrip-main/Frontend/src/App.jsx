@@ -3,7 +3,6 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { CartProvider, UserProvider } from './components/CartSystem';
 import { HelmetProvider } from 'react-helmet-async';
-import { CurrencyProvider } from './context/CurrencyContext';
 
 // Import your page components
 import Home from './Home';
@@ -70,7 +69,6 @@ const App = () => {
       <HelmetProvider>
       <BrowserRouter>
         <UserProvider>
-          <CurrencyProvider>
           <CartProvider>
             <Routes>
               {/* Default route redirects to home */}
@@ -133,7 +131,6 @@ const App = () => {
               } />
             </Routes>
           </CartProvider>
-          </CurrencyProvider>
         </UserProvider>
       </BrowserRouter>
       </HelmetProvider>

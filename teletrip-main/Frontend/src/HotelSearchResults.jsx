@@ -32,7 +32,7 @@ import Header from "./components/Header";
 import Footer from "./components/Footer";
 import ReviewsModal from "./components/ReviewsModal";
 import { useCart } from "./components/CartSystem";
-import { useCurrency } from "./context/CurrencyContext";
+import { useCurrency } from "./hooks/useCurrency";
 
 
 const RatingCircles = ({ rating, size = 'w-5 h-5' }) => {
