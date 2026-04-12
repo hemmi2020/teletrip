@@ -17,6 +17,9 @@ const ActivitySearchResults = () => {
   const [selectedActivity, setSelectedActivity] = useState(null);
   const [sortOption, setSortOption] = useState('default');
   const [notification, setNotification] = useState({ show: false, message: '' });
+  const [galleryOpen, setGalleryOpen] = useState(false);
+  const [galleryIndex, setGalleryIndex] = useState(0);
+  const [galleryImages, setGalleryImages] = useState([]);
 
   // Filter states
   const [nameSearch, setNameSearch] = useState('');
@@ -545,18 +548,23 @@ const ActivitySearchResults = () => {
         <div className="fixed inset-0 z-[150] flex items-end sm:items-center justify-center" onClick={() => setSelectedActivity(null)}>
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
           <div className="relative bg-white w-full sm:max-w-3xl sm:rounded-2xl max-h-[92vh] overflow-hidden flex flex-col shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            {/* Image collage */}
+            {/* Image collage - clickable */}
             <div className="relative h-48 sm:h-56 flex-shrink-0">
               {selectedActivity.images && selectedActivity.images.length >= 3 ? (
                 <div className="grid grid-cols-3 gap-0.5 h-full">
-                  <div className="col-span-2"><img src={selectedActivity.images[0]} alt="" className="w-full h-full object-cover" onError={(e) => e.target.src = 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} /></div>
+                  <div className="col-span-2 cursor-pointer" onClick={() => { setGalleryImages(selectedActivity.images); setGalleryIndex(0); setGalleryOpen(true); }}><img src={selectedActivity.images[0]} alt="" className="w-full h-full object-cover hover:brightness-90 transition-all" onError={(e) => e.target.src = 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} /></div>
                   <div className="flex flex-col gap-0.5">
-                    <img src={selectedActivity.images[1]} alt="" className="w-full h-1/2 object-cover" onError={(e) => e.target.src = 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} />
-                    <div className="relative h-1/2"><img src={selectedActivity.images[2]} alt="" className="w-full h-full object-cover" onError={(e) => e.target.src = 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} />{selectedActivity.images.length > 3 && <div className="absolute inset-0 bg-black/50 flex items-center justify-center text-white text-sm font-medium">+{selectedActivity.images.length - 3}</div>}</div>
+                    <div className="h-1/2 cursor-pointer" onClick={() => { setGalleryImages(selectedActivity.images); setGalleryIndex(1); setGalleryOpen(true); }}><img src={selectedActivity.images[1]} alt="" className="w-full h-full object-cover hover:brightness-90 transition-all" onError={(e) => e.target.src = 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} /></div>
+                    <div className="relative h-1/2 cursor-pointer" onClick={() => { setGalleryImages(selectedActivity.images); setGalleryIndex(2); setGalleryOpen(true); }}>
+                      <img src={selectedActivity.images[2]} alt="" className="w-full h-full object-cover hover:brightness-90 transition-all" onError={(e) => e.target.src = 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} />
+                      {selectedActivity.images.length > 3 && <div className="absolute inset-0 bg-black/50 hover:bg-black/40 flex items-center justify-center text-white text-sm font-medium transition-colors">+{selectedActivity.images.length - 3}</div>}
+                    </div>
                   </div>
                 </div>
               ) : (
-                <img src={selectedActivity.images?.[0] || 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} alt="" className="w-full h-full object-cover" />
+                <div className="h-full cursor-pointer" onClick={() => { setGalleryImages(selectedActivity.images || []); setGalleryIndex(0); setGalleryOpen(true); }}>
+                  <img src={selectedActivity.images?.[0] || 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} alt="" className="w-full h-full object-cover hover:brightness-90 transition-all" />
+                </div>
               )}
               <button onClick={() => setSelectedActivity(null)} className="absolute top-3 right-3 p-1.5 bg-black/40 hover:bg-black/60 rounded-full transition-colors"><X className="w-4 h-4 text-white" /></button>
               {selectedActivity.activityFactsheetType && (
@@ -612,6 +620,30 @@ const ActivitySearchResults = () => {
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Image Gallery Lightbox */}
+      {galleryOpen && galleryImages.length > 0 && (
+        <div className="fixed inset-0 z-[200] bg-black/95 flex flex-col">
+          <div className="flex items-center justify-between px-4 py-3 flex-shrink-0">
+            <span className="text-white/70 text-sm">{galleryIndex + 1} / {galleryImages.length}</span>
+            <button onClick={() => setGalleryOpen(false)} className="p-2.5 rounded-full bg-white/15 hover:bg-white/25 transition-colors"><X className="w-5 h-5 text-white" /></button>
+          </div>
+          <div className="flex-1 flex items-center justify-center px-4 relative min-h-0">
+            <button onClick={() => setGalleryIndex(prev => prev > 0 ? prev - 1 : galleryImages.length - 1)} className="absolute left-2 sm:left-6 p-2.5 rounded-full bg-white/10 hover:bg-white/20 transition-colors z-10"><ChevronLeft className="w-5 h-5 text-white" /></button>
+            <img src={galleryImages[galleryIndex]} alt="" className="max-h-full max-w-full object-contain rounded-lg" onError={(e) => e.target.src = 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} />
+            <button onClick={() => setGalleryIndex(prev => prev < galleryImages.length - 1 ? prev + 1 : 0)} className="absolute right-2 sm:right-6 p-2.5 rounded-full bg-white/10 hover:bg-white/20 transition-colors z-10"><ChevronRight className="w-5 h-5 text-white" /></button>
+          </div>
+          <div className="flex-shrink-0 px-4 py-3 overflow-x-auto">
+            <div className="flex gap-1.5 justify-center">
+              {galleryImages.map((img, i) => (
+                <button key={i} onClick={() => setGalleryIndex(i)} className={`flex-shrink-0 w-16 h-12 rounded-md overflow-hidden border-2 transition-all ${i === galleryIndex ? 'border-white opacity-100' : 'border-transparent opacity-50 hover:opacity-80'}`}>
+                  <img src={img} alt="" className="w-full h-full object-cover" onError={(e) => e.target.src = 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} />
+                </button>
+              ))}
             </div>
           </div>
         </div>
