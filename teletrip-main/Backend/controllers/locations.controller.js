@@ -143,60 +143,6 @@ exports.searchLocations = async (req, res) => {
       return (order[a.type] || 2) - (order[b.type] || 2);
     });
 
-    // Also search hotels from transfer locations (ATLAS entries) + Hotelbeds Content API
-    if (query.length >= 3) {
-      // 1. Search static transfer locations for hotels
-      const hotelMatches = transferLocations
-        .filter(loc => loc.type === 'ATLAS' && (
-          loc.name.toLowerCase().includes(query) ||
-          loc.city.toLowerCase().includes(query)
-        ))
-        .slice(0, 5)
-        .map(h => ({
-          type: 'hotel',
-          name: h.name,
-          hotelCode: h.code,
-          city: h.city,
-          country: h.country,
-          displayName: `${h.name}, ${h.city}`
-        }));
-      
-      // 2. Search Hotelbeds Content API
-      try {
-        const crypto = require('crypto');
-        const apiKey = process.env.HOTELBEDS_API_KEY;
-        const secret = process.env.HOTELBEDS_SECRET;
-        if (apiKey && secret) {
-          const timestamp = Math.floor(Date.now() / 1000);
-          const sig = crypto.createHash('sha256').update(apiKey + secret + timestamp).digest('hex');
-          const fetch = (await import('node-fetch')).default;
-          const hotelRes = await fetch(
-            `https://api.test.hotelbeds.com/hotel-content-api/1.0/hotels?fields=name,code,city,country&language=ENG&from=1&to=50`,
-            { headers: { 'Accept': 'application/json', 'Api-key': apiKey, 'X-Signature': sig } }
-          );
-          if (hotelRes.ok) {
-            const hotelData = await hotelRes.json();
-            (hotelData.hotels || [])
-              .filter(h => (h.name?.content || '').toLowerCase().includes(query) || (h.city?.content || '').toLowerCase().includes(query))
-              .slice(0, 10)
-              .forEach(h => {
-                const name = h.name?.content || '';
-                const city = h.city?.content || '';
-                const country = h.country?.description?.content || '';
-                // Avoid duplicates
-                if (!hotelMatches.some(m => m.name === name && m.city === city)) {
-                  hotelMatches.push({ type: 'hotel', name, hotelCode: String(h.code), city, country, displayName: `${name}${city ? ', ' + city : ''}` });
-                }
-              });
-          }
-        }
-      } catch (err) {
-        console.error('Hotel content search failed:', err.message);
-      }
-
-      results.push(...hotelMatches.slice(0, 10));
-    }
-
     res.json({ success: true, data: results.slice(0, 40) });
   } catch (error) {
     console.error('Location search error:', error);
