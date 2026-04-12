@@ -501,6 +501,7 @@ const ActivitySearchResults = () => {
           </div>
         </div>
       </div>
+      </div>
 
       {showFilters && (<div className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden" onClick={() => setShowFilters(false)} />)}
       {/* Activity Detail Modal */}
