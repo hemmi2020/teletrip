@@ -1,6 +1,10 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-const CurrencyContext = createContext();
+const CurrencyContext = createContext({
+  rate: null, markup: 0, txFee: 0, loading: true,
+  convert: () => null,
+  formatPKR: () => null,
+});
 
 export const CurrencyProvider = ({ children }) => {
   const [rate, setRate] = useState(null);
@@ -56,4 +60,7 @@ export const CurrencyProvider = ({ children }) => {
   );
 };
 
-export const useCurrency = () => useContext(CurrencyContext);
+export const useCurrency = () => {
+  const ctx = useContext(CurrencyContext);
+  return ctx || { rate: null, markup: 0, txFee: 0, loading: true, convert: () => null, formatPKR: () => null };
+};
