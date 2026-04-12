@@ -1511,10 +1511,6 @@ if (children > 0 && childAges.length > 0) {
                 </div>
               );
               })}
-                  </div>
-                </div>
-              );
-              })}
             </div>
 
             {sortedHotels.length === 0 && (
