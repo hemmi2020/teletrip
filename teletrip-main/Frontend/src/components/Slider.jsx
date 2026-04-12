@@ -50,9 +50,9 @@ const Slider = () => {
         </div>
 
         {/* Dots */}
-        <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 flex items-center gap-[3px] z-20">
+        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-20">
           {images.map((_, i) => (
-            <span key={i} onClick={() => setActive(i)} className={`block rounded-full transition-all duration-500 cursor-pointer ${i === active ? 'w-3 h-[2px] bg-white/80' : 'w-[2px] h-[2px] bg-white/25'}`} style={{minWidth: i === active ? '12px' : '2px', minHeight: '2px', padding: 0, lineHeight: 0}} />
+            <span key={i} onClick={() => setActive(i)} className={`block rounded-full transition-all duration-500 cursor-pointer ${i === active ? 'w-6 h-1.5 bg-white' : 'w-1.5 h-1.5 bg-white/40 hover:bg-white/60'}`} />
           ))}
         </div>
       </section>
