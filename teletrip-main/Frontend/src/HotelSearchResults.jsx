@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, useCallback } from "react";
+import React, { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import {
   Loader2,
@@ -78,6 +78,8 @@ const HotelSearchResults = () => {
   const [selectedPackaging, setSelectedPackaging] = useState("");
   const [selectedSight, setSelectedSight] = useState("");
   const [addressSearch, setAddressSearch] = useState("");
+  const [showAddressSuggestions, setShowAddressSuggestions] = useState(false);
+  const addressRef = useRef(null);
   const [expandedSections, setExpandedSections] = useState({
     hotelName: true,
     board: true,
@@ -899,7 +901,7 @@ if (children > 0 && childAges.length > 0) {
     }
     if (selectedCancellation === "free" && !hotel.hasFreeCancellation) return false;
     if (selectedCancellation === "partial" && !hotel.hasPartialCancellation) return false;
-    if (selectedCancellation === "nonrefundable" && hotel.hasFreeCancellation) return false;
+    if (selectedCancellation === "nonrefundable" && (hotel.hasFreeCancellation || hotel.hasNoCancellationInfo)) return false;
     if (selectedCancellation === "notavailable" && !hotel.hasNoCancellationInfo) return false;
     const price = parseFloat(hotel.price);
     if (priceMin && price < parseFloat(priceMin)) return false;
@@ -1023,9 +1025,21 @@ if (children > 0 && childAges.length > 0) {
                     {dynamicZones.map(zone => <option key={zone} value={zone}>{zone}</option>)}
                   </select>
                 </div>
-                <div>
+                <div className="relative" ref={addressRef}>
                   <label className="text-[11px] text-gray-500 mb-1 block">Specific address</label>
-                  <input type="text" value={addressSearch} onChange={(e) => setAddressSearch(e.target.value)} placeholder="Street, point of interest..." className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 rounded-md bg-gray-50/50 focus:bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none" />
+                  <input type="text" value={addressSearch} onChange={(e) => { setAddressSearch(e.target.value); setShowAddressSuggestions(e.target.value.length >= 2); }} onFocus={() => addressSearch.length >= 2 && setShowAddressSuggestions(true)} placeholder="Street, point of interest..." className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 rounded-md bg-gray-50/50 focus:bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none" />
+                  {showAddressSuggestions && addressSearch.length >= 2 && (() => {
+                    const q = addressSearch.toLowerCase();
+                    const matches = [...new Set(hotels.map(h => h.address).filter(a => a.toLowerCase().includes(q)))].slice(0, 8);
+                    if (matches.length === 0) return null;
+                    return (
+                      <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto" style={{scrollbarWidth:'thin'}}>
+                        {matches.map((addr, i) => (
+                          <div key={i} onClick={() => { setAddressSearch(addr); setShowAddressSuggestions(false); }} className="px-2.5 py-1.5 text-[12px] text-gray-700 hover:bg-blue-50 cursor-pointer truncate">{addr}</div>
+                        ))}
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
             </div>
