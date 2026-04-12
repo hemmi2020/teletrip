@@ -1492,8 +1492,7 @@ if (children > 0 && childAges.length > 0) {
                 return (
                 <div
                   key={hotel.id}
-                  className="bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-lg hover:border-gray-200 transition-all duration-200 flex flex-col sm:flex-row group animate-in fade-in slide-in-from-bottom-2"
-                  style={{ animationDelay: `${cardIndex * 50}ms`, animationFillMode: 'both' }}
+                  className="bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-lg hover:border-gray-200 transition-all duration-200 flex flex-col sm:flex-row group"
                 >
                   {/* Image */}
                   <div className="sm:w-56 lg:w-64 relative overflow-hidden flex-shrink-0">

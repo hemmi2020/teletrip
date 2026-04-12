@@ -499,7 +499,7 @@ const ActivitySearchResults = () => {
             ) : (
               <div className="space-y-3">
                 {sortedActivities.map((activity, idx) => (
-                  <div key={activity.code} className="bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-lg hover:border-gray-200 transition-all duration-200 flex flex-col sm:flex-row group animate-in fade-in slide-in-from-bottom-2" style={{ animationDelay: `${idx * 50}ms`, animationFillMode: 'both' }}>
+                  <div key={activity.code} className="bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-lg hover:border-gray-200 transition-all duration-200 flex flex-col sm:flex-row group">
                     <div className="sm:w-56 lg:w-64 relative overflow-hidden flex-shrink-0">
                       <img src={activity.images?.[0] || 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} alt={activity.name} className="w-full h-40 sm:h-full object-cover group-hover:scale-105 transition-transform duration-500" onError={(e) => e.target.src = 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} />
                       {activity.activityFactsheetType && (<div className="absolute top-2 left-2 bg-blue-600/90 text-white px-2 py-0.5 rounded text-[10px] font-medium">{activity.activityFactsheetType}</div>)}
@@ -551,9 +551,9 @@ const ActivitySearchResults = () => {
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
           <div className="relative bg-white w-full sm:max-w-3xl sm:rounded-2xl max-h-[92vh] overflow-hidden flex flex-col shadow-2xl" onClick={(e) => e.stopPropagation()}>
             {/* Image collage - clickable */}
-            <div className="relative h-48 sm:h-56 flex-shrink-0">
+            <div className="relative flex-shrink-0 bg-gray-200" style={{minHeight: '200px'}}>
               {selectedActivity.images && selectedActivity.images.length >= 3 ? (
-                <div className="grid grid-cols-3 gap-0.5 h-full">
+                <div className="grid grid-cols-3 gap-0.5 h-48 sm:h-56">
                   <div className="col-span-2 cursor-pointer" onClick={() => { setGalleryImages(selectedActivity.images); setGalleryIndex(0); setGalleryOpen(true); }}><img src={selectedActivity.images[0]} alt="" className="w-full h-full object-cover hover:brightness-90 transition-all" onError={(e) => e.target.src = 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} /></div>
                   <div className="flex flex-col gap-0.5">
                     <div className="h-1/2 cursor-pointer" onClick={() => { setGalleryImages(selectedActivity.images); setGalleryIndex(1); setGalleryOpen(true); }}><img src={selectedActivity.images[1]} alt="" className="w-full h-full object-cover hover:brightness-90 transition-all" onError={(e) => e.target.src = 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} /></div>
@@ -564,7 +564,7 @@ const ActivitySearchResults = () => {
                   </div>
                 </div>
               ) : (
-                <div className="h-full cursor-pointer" onClick={() => { setGalleryImages(selectedActivity.images || []); setGalleryIndex(0); setGalleryOpen(true); }}>
+                <div className="h-48 sm:h-56 cursor-pointer" onClick={() => { setGalleryImages(selectedActivity.images || []); setGalleryIndex(0); setGalleryOpen(true); }}>
                   <img src={selectedActivity.images?.[0] || 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} alt="" className="w-full h-full object-cover hover:brightness-90 transition-all" />
                 </div>
               )}
