@@ -20,6 +20,8 @@ const ActivitySearchResults = () => {
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [galleryIndex, setGalleryIndex] = useState(0);
   const [galleryImages, setGalleryImages] = useState([]);
+  const [activityDetail, setActivityDetail] = useState(null);
+  const [loadingDetail, setLoadingDetail] = useState(false);
 
   // Filter states
   const [nameSearch, setNameSearch] = useState('');
@@ -86,6 +88,23 @@ const ActivitySearchResults = () => {
   const toggleSection = (section) => {
     setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
   };
+
+  // Fetch activity detail when modal opens
+  useEffect(() => {
+    if (!selectedActivity) { setActivityDetail(null); return; }
+    const fetchDetail = async () => {
+      setLoadingDetail(true);
+      try {
+        const res = await fetch(`${API_BASE_URL}/activities/detail/${selectedActivity.code}?from=${from}&to=${to}&language=en`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success) setActivityDetail(data.data);
+        }
+      } catch (err) { console.error('Detail fetch error:', err); }
+      finally { setLoadingDetail(false); }
+    };
+    fetchDetail();
+  }, [selectedActivity]);
 
   const clearFilters = () => {
     setNameSearch('');
@@ -520,6 +539,15 @@ const ActivitySearchResults = () => {
                         {activity.scheduling?.duration?.value && <><span>·</span><span><Clock className="w-3 h-3 inline" /> {activity.scheduling.duration.value}h</span></>}
                         {activity.voucherType && <><span>·</span><span>{activity.voucherType}</span></>}
                       </div>
+                      {/* Time slots */}
+                      {activity.scheduling?.opened && activity.scheduling.opened.length > 0 && (
+                        <div className="flex gap-1 flex-wrap mb-1.5">
+                          {activity.scheduling.opened.slice(0, 3).map((slot, i) => (
+                            <span key={i} className="text-[10px] px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded inline-flex items-center gap-0.5"><Clock className="w-2.5 h-2.5" />{slot.openingTime}</span>
+                          ))}
+                          {activity.scheduling.opened.length > 3 && <span className="text-[10px] text-gray-400 self-center">+{activity.scheduling.opened.length - 3}</span>}
+                        </div>
+                      )}
                       <div className="flex gap-1 flex-wrap mb-3">
                         {activity.segmentationGroups && activity.segmentationGroups.map((g, i) => {
                           if (g.segments) return g.segments.filter(s => s.name).slice(0, 4).map((s, j) => (
@@ -617,31 +645,89 @@ const ActivitySearchResults = () => {
             </div>
             {/* Scrollable details */}
             <div className="overflow-y-auto flex-1 px-5 py-4 space-y-4" style={{scrollbarWidth:'thin'}}>
+              {/* Modalities / Options */}
+              {loadingDetail ? (
+                <div className="flex items-center justify-center py-6"><Loader2 className="w-5 h-5 animate-spin text-blue-600 mr-2" /><span className="text-[13px] text-gray-400">Loading options...</span></div>
+              ) : activityDetail?.modalities && activityDetail.modalities.length > 0 ? (
+                <div>
+                  <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Available Options</div>
+                  <div className="space-y-2">
+                    {activityDetail.modalities.map((mod, mi) => (
+                      <div key={mi} className="border border-gray-100 rounded-xl overflow-hidden">
+                        <div className="px-3 py-2 bg-gray-50 flex items-center justify-between">
+                          <div>
+                            <span className="text-[13px] font-medium text-gray-800">{mod.name}</span>
+                            {mod.duration && <span className="text-[11px] text-gray-400 ml-2">{mod.duration}</span>}
+                          </div>
+                        </div>
+                        <div className="divide-y divide-gray-50">
+                          {mod.pricing && mod.pricing.length > 0 ? mod.pricing.map((p, pi) => (
+                            <div key={pi} className="px-3 py-2 flex items-center justify-between">
+                              <div className="text-[12px] text-gray-600">
+                                {p.paxType && <span className="text-gray-500">{p.paxType === 'ADULT' ? 'Adult' : p.paxType === 'CHILD' ? 'Child' : p.paxType} · </span>}
+                                {p.rateKey && <span className="text-gray-400 text-[10px]">Rate</span>}
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className="text-[14px] font-bold text-blue-600">{p.currency} {parseFloat(p.amount || 0).toFixed(2)}</span>
+                                <button onClick={() => { handleAddActivityToCart({...selectedActivity, pricing: { amount: p.amount, currency: p.currency }, selectedModality: mod.name}); }} className="px-2.5 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-[11px] font-medium inline-flex items-center gap-1"><ShoppingCart className="w-3 h-3" />Add</button>
+                              </div>
+                            </div>
+                          )) : (
+                            <div className="px-3 py-2 text-[12px] text-gray-400">Price on request</div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+
+              {/* Schedule with time slots */}
+              {selectedActivity.scheduling && (
+                <div>
+                  <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Schedule</div>
+                  <div className="space-y-2">
+                    {selectedActivity.scheduling.duration?.value && (
+                      <p className="text-[13px] text-gray-600">Duration: {selectedActivity.scheduling.duration.value} {(selectedActivity.scheduling.duration.metric || 'HOURS').toLowerCase()}</p>
+                    )}
+                    {selectedActivity.scheduling.opened && selectedActivity.scheduling.opened.length > 0 && (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        {selectedActivity.scheduling.opened.map((slot, i) => (
+                          <div key={i} className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg">
+                            <Clock className="w-3.5 h-3.5 text-blue-500" />
+                            <span className="text-[12px] text-gray-700 font-medium">{slot.openingTime} – {slot.closeTime}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {selectedActivity.summary && (
                 <div><div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Summary</div><p className="text-[13px] text-gray-600 leading-relaxed" dangerouslySetInnerHTML={{ __html: selectedActivity.summary }} /></div>
               )}
               {selectedActivity.description && (
                 <div><div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Description</div><p className="text-[13px] text-gray-600 leading-relaxed" dangerouslySetInnerHTML={{ __html: selectedActivity.description }} /></div>
               )}
-              {/* Schedule */}
-              {selectedActivity.scheduling && (
+
+              {/* What's included/excluded */}
+              {activityDetail?.fullDescription && activityDetail.fullDescription.length > 0 && (
                 <div>
-                  <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Schedule</div>
-                  <div className="text-[13px] text-gray-600 space-y-2">
-                    {selectedActivity.scheduling.duration?.value && <p>Duration: {selectedActivity.scheduling.duration.value} {(selectedActivity.scheduling.duration.metric || 'HOURS').toLowerCase()}</p>}
-                    {selectedActivity.scheduling.opened && selectedActivity.scheduling.opened.length > 0 && (
-                      <div>
-                        <p className="mb-1">Available times:</p>
-                        <div className="flex gap-2 flex-wrap">
-                          {selectedActivity.scheduling.opened.map((slot, i) => (
-                            <span key={i} className="text-[11px] px-2 py-1 bg-gray-50 rounded text-gray-600">{slot.openingTime} – {slot.closeTime}</span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                  {activityDetail.fullDescription.map((group, gi) => (
+                    <div key={gi} className="mb-3">
+                      <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">{group.title}</div>
+                      {group.included.length > 0 && (
+                        <ul className="space-y-0.5 mb-1">{group.included.map((item, ii) => <li key={ii} className="text-[12px] text-green-700 flex items-start gap-1"><span className="text-green-500 mt-0.5">✓</span>{item}</li>)}</ul>
+                      )}
+                      {group.excluded.length > 0 && (
+                        <ul className="space-y-0.5">{group.excluded.map((item, ei) => <li key={ei} className="text-[12px] text-red-600 flex items-start gap-1"><span className="text-red-400 mt-0.5">✗</span>{item}</li>)}</ul>
+                      )}
+                    </div>
+                  ))}
                 </div>
               )}
+
               {/* Voucher */}
               {selectedActivity.voucherType && (
                 <div>
@@ -649,15 +735,14 @@ const ActivitySearchResults = () => {
                   <p className="text-[13px] text-gray-600">{selectedActivity.voucherType === 'PRINTED' ? 'Printed voucher required' : selectedActivity.voucherType === 'MOBILE' ? 'Mobile voucher accepted' : selectedActivity.voucherType}</p>
                 </div>
               )}
-              {/* Services */}
-              {selectedActivity.services && selectedActivity.services.filter(Boolean).length > 0 && (
+
+              {/* Cancellation */}
+              {activityDetail?.cancellationPolicies && activityDetail.cancellationPolicies.length > 0 && (
                 <div>
-                  <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Included Services</div>
-                  <div className="flex gap-1.5 flex-wrap">
-                    {selectedActivity.services.filter(Boolean).map((s, i) => (
-                      <span key={i} className="text-[12px] px-2.5 py-1 bg-green-50 text-green-700 rounded-lg">{s}</span>
-                    ))}
-                  </div>
+                  <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Cancellation Policy</div>
+                  {activityDetail.cancellationPolicies.map((cp, ci) => (
+                    <p key={ci} className="text-[12px] text-gray-600">{cp.dateFrom ? `From ${cp.dateFrom}: ` : ''}{cp.amount ? `${cp.amount}%` : 'Free cancellation'}</p>
+                  ))}
                 </div>
               )}
             </div>
