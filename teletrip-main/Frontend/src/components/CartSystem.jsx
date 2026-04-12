@@ -208,15 +208,10 @@ export const CartIcon = ({ onClick }) => {
   const itemCount = getTotalItems();
 
   return (
-    <button
-      onClick={onClick}
-      className="relative p-2 hover:bg-gray-100 rounded-full transition-colors"
-    >
-      <ShoppingCart className="w-6 h-6 text-gray-700" />
+    <button onClick={onClick} className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors">
+      <ShoppingCart className="w-5 h-5 text-gray-600" />
       {itemCount > 0 && (
-        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-          {itemCount}
-        </span>
+        <span className="absolute -top-0.5 -right-0.5 bg-blue-600 text-white text-[10px] rounded-full min-w-[18px] h-[18px] flex items-center justify-center font-semibold">{itemCount}</span>
       )}
     </button>
   );
@@ -861,183 +856,71 @@ export const SlideOutCart = ({ isOpen, onClose, onProceedToCheckout }) => {
 
   return (
     <>
-      {/* Backdrop */}
       {isOpen && (
-        <div
-          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[120] transition-opacity duration-300"
-          onClick={onClose}
-          style={{ pointerEvents: 'auto' }}
-        />
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-[120] transition-opacity duration-300" onClick={onClose} />
       )}
 
-      {/* Slide-out panel - Responsive width */}
-      <div
-        className={`fixed right-0 top-0 h-full w-full sm:w-[480px] md:w-[500px] bg-white shadow-2xl z-[121] transform transition-transform duration-300 ease-in-out ${
-          isOpen ? "translate-x-0" : "translate-x-full"
-        }`}
-        style={{ pointerEvents: 'auto' }}
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className={`fixed right-0 top-0 h-full w-full sm:w-[440px] bg-white shadow-2xl z-[121] transform transition-transform duration-300 ease-in-out ${isOpen ? "translate-x-0" : "translate-x-full"}`} onClick={(e) => e.stopPropagation()}>
         <div className="flex flex-col h-full">
-          {/* Header - Compact */}
-          <div className="flex items-center justify-between p-4 sm:p-5 border-b bg-gradient-to-r from-blue-50 to-white">
-            <div className="flex-1">
-              <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Your Cart</h2>
-              <p className="text-xs sm:text-sm text-gray-500 mt-0.5">
-                {items.length} {items.length === 1 ? 'item' : 'items'} 
-              </p>
+          {/* Header */}
+          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900">Cart</h2>
+              <p className="text-[12px] text-gray-400">{items.length} {items.length === 1 ? 'item' : 'items'}</p>
             </div>
-            <button
-              onClick={handleCloseCart}
-              className="p-2 hover:bg-gray-200 rounded-full transition-colors flex-shrink-0 ml-2"
-              aria-label="Close cart"
-            >
-              <X className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600" />
-            </button>
+            <button onClick={handleCloseCart} className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"><X className="w-5 h-5 text-gray-400" /></button>
           </div>
 
-          {/* Cart Items - Scrollable */}
-          <div className="flex-1 overflow-y-auto">
+          {/* Items */}
+          <div className="flex-1 overflow-y-auto" style={{scrollbarWidth:'thin'}}>
             {items.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full text-center px-4 py-12">
-                <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                  <ShoppingCart className="w-10 h-10 sm:w-12 sm:h-12 text-gray-400" />
+              <div className="flex flex-col items-center justify-center h-full px-6 text-center">
+                <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+                  <ShoppingCart className="w-7 h-7 text-gray-300" />
                 </div>
-                <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">
-                  Your cart is empty
-                </h3>
-                <p className="text-sm sm:text-base text-gray-500 mb-6">
-                  Add some hotels to get started!
-                </p>
-                <button
-                  onClick={onClose}
-                  className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm sm:text-base"
-                >
-                  Continue Shopping
-                </button>
+                <p className="text-[14px] font-medium text-gray-800 mb-1">Your cart is empty</p>
+                <p className="text-[12px] text-gray-400 mb-5">Search and add hotels or experiences</p>
+                <button onClick={onClose} className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-[13px] font-medium transition-colors">Browse</button>
               </div>
             ) : (
-              <div className="p-4 sm:p-5 space-y-4">
-                {/* Date Header */}
-                {items.length > 0 && (
-                  <div className="flex items-center gap-2 text-gray-700 bg-blue-50 px-3 py-2 rounded-lg">
-                    <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
-                    <span className="font-medium text-sm sm:text-base">
-                      {formatDate(items[0].checkIn)}
-                    </span>
-                  </div>
-                )}
-
-                {/* Cart Items */}
+              <div className="p-4 space-y-3">
                 {items.map((item, index) => {
                   const nights = calculateNights(item.checkIn, item.checkOut);
-                  const totalPrice = item.price * nights;
-                  const discountPercent = item.originalPrice 
-                    ? Math.round(((item.originalPrice - item.price) / item.originalPrice) * 100)
-                    : 0;
+                  const totalPrice = item.type === 'activity' ? (item.price || 0) : (item.price * nights);
+                  const isActivity = item.type === 'activity';
 
                   return (
-                    <div
-                      key={index}
-                      className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-md transition-shadow"
-                    >
-                      {/* Item Header */}
-                      <div className="bg-gray-50 px-3 py-2 flex items-center justify-between border-b">
-                        <div className="flex items-center gap-2 flex-1 min-w-0">
-                          <div className="w-8 h-8 bg-blue-100 rounded flex items-center justify-center flex-shrink-0">
-                            <span className="text-lg">{item.type === 'activity' ? '🎭' : '🏨'}</span>
+                    <div key={index} className="bg-white border border-gray-100 rounded-xl overflow-hidden hover:border-gray-200 transition-all">
+                      {/* Thumbnail + Info */}
+                      <div className="flex gap-3 p-3">
+                        {item.thumbnail && (
+                          <img src={item.thumbnail} alt="" className="w-16 h-16 rounded-lg object-cover flex-shrink-0" onError={(e) => e.target.style.display='none'} />
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex justify-between items-start gap-2">
+                            <h3 className="text-[13px] font-semibold text-gray-900 line-clamp-1">{isActivity ? item.name : item.hotelName}</h3>
+                            <button onClick={(e) => { e.stopPropagation(); handleRemoveItem(item); }} className="p-1 hover:bg-red-50 rounded transition-colors flex-shrink-0"><Trash2 className="w-3.5 h-3.5 text-gray-400 hover:text-red-500" /></button>
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <h3 className="font-bold text-sm sm:text-base text-gray-900 truncate">
-                              {item.type === 'activity' ? item.name : item.hotelName}
-                            </h3>
-                            {item.location && (
-                              <div className="flex items-center gap-1 text-xs text-gray-500">
-                                <MapPin className="w-3 h-3" />
-                                <span className="truncate">{item.location}</span>
-                              </div>
-                            )}
-                          </div>
+                          {!isActivity && item.roomName && <p className="text-[11px] text-gray-500 truncate">{item.roomName}</p>}
+                          {item.location && <p className="text-[11px] text-gray-400 truncate flex items-center gap-0.5"><MapPin className="w-3 h-3" />{item.location}</p>}
                         </div>
-                        <button
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            handleRemoveItem(item);
-                          }}
-                          className="p-1.5 hover:bg-red-100 rounded-full transition-colors flex-shrink-0 ml-2"
-                          aria-label="Remove item"
-                        >
-                          <Trash2 className="w-4 h-4 text-red-600" />
-                        </button>
                       </div>
 
-                      {/* Details */}
-                      <div className="p-3 space-y-2">
-                        {/* Type */}
-                        <div className="text-sm">
-                          <span className="font-medium text-gray-900">
-                            {item.type === 'activity' ? item.modalityName : (item.roomType || '1 x Room')}
-                          </span>
-                        </div>
+                      {/* Details row */}
+                      <div className="px-3 pb-2 flex items-center gap-1.5 flex-wrap">
+                        <span className="text-[10px] px-2 py-0.5 bg-blue-50 text-blue-600 rounded-full font-medium">{isActivity ? 'Experience' : 'Hotel'}</span>
+                        {!isActivity && <span className="text-[10px] px-2 py-0.5 bg-gray-50 text-gray-500 rounded-full">{nights}N</span>}
+                        {!isActivity && item.boardName && <span className="text-[10px] px-2 py-0.5 bg-gray-50 text-gray-500 rounded-full">{item.boardName}</span>}
+                        {item.rateClass === 'NRF' && <span className="text-[10px] px-2 py-0.5 bg-red-50 text-red-500 rounded-full">Non-refundable</span>}
+                        {item.rateClass === 'NOR' && <span className="text-[10px] px-2 py-0.5 bg-green-50 text-green-600 rounded-full">Free cancellation</span>}
+                      </div>
 
-                        {/* Details */}
-                        <div className="flex flex-wrap items-center gap-2 text-xs text-gray-600">
-                          {item.type !== 'activity' && (
-                            <span className="bg-gray-100 px-2 py-1 rounded">
-                              {item.mealPlan || 'Room only (RO)'}
-                            </span>
-                          )}
-                          <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded font-medium">
-                            {nights} {nights === 1 ? 'Night' : 'Nights'}
-                          </span>
-                          {item.type !== 'activity' && (
-                            <span className="bg-gray-100 px-2 py-1 rounded">
-                              {item.adults || 2} {item.adults === 1 ? 'Adult' : 'Adults'}
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Rate Class Badge */}
-                        {item.rateClass && (
-                          <div className="flex items-center gap-2">
-                            {item.rateClass.toLowerCase() === 'non-refundable' ? (
-                              <span className="inline-flex items-center px-2 py-1 bg-red-100 text-red-700 rounded text-xs font-medium">
-                                Non-Refundable
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-medium">
-                                ✓ Free Cancellation
-                              </span>
-                            )}
-                          </div>
-                        )}
-
-                        {/* Pricing */}
-                        <div className="pt-2 border-t">
-                          <div className="flex items-center justify-between">
-                            <div className="flex-1">
-                              {discountPercent > 0 && (
-                                <div className="flex items-center gap-2 mb-1">
-                                  <span className="bg-green-600 text-white text-xs font-bold px-2 py-0.5 rounded">
-                                    -{discountPercent}%
-                                  </span>
-                                  <span className="text-xs text-gray-500 line-through">
-                                    {item.currency || 'EUR'} {item.originalPrice?.toFixed(2)}
-                                  </span>
-                                </div>
-                              )}
-                              <div className="flex items-baseline gap-1">
-                                <span className="text-lg sm:text-xl font-bold text-gray-900">
-                                  {item.currency || 'EUR'} {totalPrice.toFixed(2)}
-                                </span>
-                                <span className="text-xs text-gray-500">total</span>
-                              </div>
-                              <p className="text-xs text-gray-500 mt-0.5">
-                                {item.currency || 'EUR'} {item.price.toFixed(2)} per {item.type === 'activity' ? 'person' : 'night'}
-                              </p>
-                            </div>
-                          </div>
+                      {/* Dates + Price */}
+                      <div className="px-3 pb-3 flex items-center justify-between">
+                        <span className="text-[11px] text-gray-400">{formatShortDate(item.checkIn)} → {formatShortDate(item.checkOut)}</span>
+                        <div className="text-right">
+                          <span className="text-[14px] font-bold text-gray-900">{item.currency || 'EUR'} {totalPrice.toFixed(2)}</span>
+                          {!isActivity && <span className="text-[10px] text-gray-400 block">{(item.currency || 'EUR')} {item.price.toFixed(0)}/night</span>}
                         </div>
                       </div>
                     </div>
@@ -1047,54 +930,23 @@ export const SlideOutCart = ({ isOpen, onClose, onProceedToCheckout }) => {
             )}
           </div>
 
-          {/* Footer with Total and Checkout - Fixed at bottom */}
+          {/* Footer */}
           {items.length > 0 && (
-            <div className="border-t bg-white shadow-lg">
-              <div className="p-4 sm:p-5 space-y-3">
-                {/* Subtotal */}
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600">Subtotal</span>
-                  <span className="font-semibold text-gray-900">
-                    {items[0]?.currency || 'EUR'} {getTotalPrice().toFixed(2)}
-                  </span>
-                </div>
-
-                {/* Total */}
-                <div className="flex items-center justify-between pt-3 border-t">
-                  <span className="text-base sm:text-lg font-bold text-gray-900">Total</span>
-                  <span className="text-xl sm:text-2xl font-bold text-blue-600">
-                    {items[0]?.currency || 'EUR'} {getTotalPrice().toFixed(2)}
-                  </span>
-                </div>
-
-                {/* Checkout Button */}
-                <button
-                  onClick={handleCheckoutClick}
-                  className="w-full bg-blue-600 text-white py-3 sm:py-3.5 rounded-lg font-semibold hover:bg-blue-700 transition-colors shadow-md hover:shadow-lg text-sm sm:text-base"
-                >
-                  Proceed to Checkout
-                </button>
-
-                {/* Sign in message */}
-                {!user?.email && (
-                  <p className="text-xs text-center text-gray-500">
-                    🔒 Sign in required to proceed
-                  </p>
-                )}
+            <div className="border-t border-gray-100 bg-white px-5 py-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[13px] text-gray-500">Total</span>
+                <span className="text-xl font-bold text-gray-900">{items[0]?.currency || 'EUR'} {getTotalPrice().toFixed(2)}</span>
               </div>
+              <button onClick={handleCheckoutClick} className="w-full bg-blue-600 text-white py-2.5 rounded-lg font-semibold hover:bg-blue-700 transition-colors text-[14px]">
+                Checkout
+              </button>
+              {!user?.email && <p className="text-[11px] text-center text-gray-400">Sign in required to proceed</p>}
             </div>
           )}
         </div>
       </div>
 
-      {/* Authentication Modal - Higher z-index than cart */}
-      <CartAuthModal
-        isOpen={showAuthModal}
-        onClose={() => setShowAuthModal(false)}
-        onAuthSuccess={handleAuthSuccess}
-        defaultTab="login"
-        returnUrl={window.location.pathname}
-      />
+      <CartAuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} onAuthSuccess={handleAuthSuccess} defaultTab="login" returnUrl={window.location.pathname} />
     </>
   );
 };
