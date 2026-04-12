@@ -504,34 +504,32 @@ const ActivitySearchResults = () => {
                       <img src={activity.images?.[0] || 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} alt={activity.name} className="w-full h-40 sm:h-full object-cover group-hover:scale-105 transition-transform duration-500" onError={(e) => e.target.src = 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} />
                       {activity.activityFactsheetType && (<div className="absolute top-2 left-2 bg-blue-600/90 text-white px-2 py-0.5 rounded text-[10px] font-medium">{activity.activityFactsheetType}</div>)}
                     </div>
-                    <div className="flex-1 p-3 sm:p-4 flex flex-col justify-between min-w-0">
-                      <div>
-                        <div className="flex justify-between items-start gap-2 mb-1">
-                          <h3 className="text-[14px] font-semibold text-gray-900 line-clamp-1 leading-tight">{activity.name}</h3>
-                          <div className="text-right flex-shrink-0">
-                            {activity.pricing?.amount ? (<div className="text-lg font-bold text-blue-600 leading-tight">{activity.pricing.currency} {parseFloat(activity.pricing.amount).toFixed(0)}</div>) : <span className="text-[11px] text-gray-400">On request</span>}
-                            <div className="text-[10px] text-gray-400">per person</div>
-                          </div>
-                        </div>
-                        {activity.summary && <p className="text-[12px] text-gray-500 line-clamp-1 mb-1" dangerouslySetInnerHTML={{ __html: activity.summary }} />}
-                        <div className="flex items-center gap-2 text-[11px] text-gray-400 mb-1.5 flex-wrap">
-                          {activity.destination && <span className="flex items-center gap-0.5"><MapPin className="w-3 h-3" />{activity.destination}</span>}
-                          {activity.supplier && <><span>·</span><span>{activity.supplier}</span></>}
-                          {activity.scheduling?.duration?.hours && <><span>·</span><span><Clock className="w-3 h-3 inline" /> {activity.scheduling.duration.hours}h</span></>}
-                        </div>
-                        {/* Tags */}
-                        <div className="flex gap-1 flex-wrap">
-                          {activity.segmentationGroups?.slice(0, 2).map((g, i) => g.segments?.map((s, j) => (
-                            <span key={`${i}-${j}`} className="text-[10px] px-1.5 py-0.5 bg-purple-50 text-purple-600 rounded">{s.name}</span>
-                          )))}
-                          {activity.services?.slice(0, 2).map((s, i) => (
-                            <span key={i} className="text-[10px] px-1.5 py-0.5 bg-gray-50 text-gray-500 rounded">{s}</span>
-                          ))}
+                    <div className="flex-1 p-3 sm:p-4 flex flex-col min-w-0">
+                      <div className="flex justify-between items-start gap-2 mb-1">
+                        <h3 className="text-[14px] font-semibold text-gray-900 line-clamp-1 leading-tight">{activity.name}</h3>
+                        <div className="text-right flex-shrink-0">
+                          {activity.pricing?.amount ? (<div className="text-lg font-bold text-blue-600 leading-tight">{activity.pricing.currency} {parseFloat(activity.pricing.amount).toFixed(0)}</div>) : <span className="text-[11px] text-gray-400">On request</span>}
+                          <div className="text-[10px] text-gray-400">per person</div>
                         </div>
                       </div>
-                      <div className="flex items-center justify-end gap-2 mt-2 pt-2 border-t border-gray-50">
-                        <button onClick={() => setSelectedActivity(activity)} className="px-3 py-1 border border-gray-200 text-gray-600 rounded-md hover:bg-gray-50 transition-colors text-[12px] font-medium">Details</button>
-                        <button onClick={() => handleAddActivityToCart(activity)} className="px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-[12px] font-medium inline-flex items-center gap-1"><ShoppingCart className="w-3 h-3" />Add to Cart</button>
+                      {activity.summary && <p className="text-[12px] text-gray-500 line-clamp-2 mb-1" dangerouslySetInnerHTML={{ __html: activity.summary }} />}
+                      <div className="flex items-center gap-2 text-[11px] text-gray-400 mb-1.5 flex-wrap">
+                        {activity.destination && <span className="flex items-center gap-0.5"><MapPin className="w-3 h-3" />{activity.destination}</span>}
+                        {activity.supplier && <><span>·</span><span>{activity.supplier}</span></>}
+                        {activity.scheduling?.duration?.hours && <><span>·</span><span><Clock className="w-3 h-3 inline" /> {activity.scheduling.duration.hours}h</span></>}
+                      </div>
+                      <div className="flex gap-1 flex-wrap mb-2">
+                        {activity.activityFactsheetType && <span className="text-[10px] px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded">{activity.activityFactsheetType}</span>}
+                        {activity.segmentationGroups?.slice(0, 2).map((g, i) => g.segments?.map((s, j) => (
+                          <span key={`${i}-${j}`} className="text-[10px] px-1.5 py-0.5 bg-purple-50 text-purple-600 rounded">{s.name}</span>
+                        )))}
+                        {activity.services?.slice(0, 2).map((s, i) => (
+                          <span key={i} className="text-[10px] px-1.5 py-0.5 bg-gray-50 text-gray-500 rounded">{s}</span>
+                        ))}
+                      </div>
+                      <div className="flex items-center justify-end gap-2 mt-auto pt-2 border-t border-gray-50">
+                        <button onClick={() => setSelectedActivity(activity)} className="px-3 py-1.5 border border-gray-200 text-gray-600 rounded-md hover:bg-gray-50 transition-colors text-[12px] font-medium">Details</button>
+                        <button onClick={() => handleAddActivityToCart(activity)} className="px-3 py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-[12px] font-medium inline-flex items-center gap-1"><ShoppingCart className="w-3 h-3" />Add to Cart</button>
                       </div>
                     </div>
                   </div>
