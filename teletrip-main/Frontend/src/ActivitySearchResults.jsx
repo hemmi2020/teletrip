@@ -26,6 +26,7 @@ const ActivitySearchResults = () => {
   const [loadingDetail, setLoadingDetail] = useState(false);
   const [selectedModality, setSelectedModality] = useState(null);
   const [selectedTime, setSelectedTime] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(from);
 
   // Filter states
   const [nameSearch, setNameSearch] = useState('');
@@ -100,7 +101,7 @@ const ActivitySearchResults = () => {
 
   // Fetch activity detail when modal opens
   useEffect(() => {
-    if (!selectedActivity) { setActivityDetail(null); setSelectedModality(null); setSelectedTime(null); return; }
+    if (!selectedActivity) { setActivityDetail(null); setSelectedModality(null); setSelectedTime(null); setSelectedDate(from); return; }
     const fetchDetail = async () => {
       setLoadingDetail(true);
       try {
@@ -131,25 +132,31 @@ const ActivitySearchResults = () => {
     const priceEUR = pricing ? parseFloat(pricing.amount || 0) : parseFloat(activity.pricing?.amount || 0);
     const pricePKR = convert(priceEUR) || priceEUR;
     addToCart({
-      id: `activity-${activity.code}-${modality?.code || 'default'}-${time || ''}`,
+      id: `activity-${activity.code}-${modality?.code || 'default'}-${selectedDate}-${time || ''}`,
       type: 'activity',
       name: activity.name,
       code: activity.code,
+      activityCode: activity.code,
+      modalityCode: modality?.code || null,
       price: pricePKR,
       priceEUR,
       currency: 'PKR',
       currencyEUR: pricing?.currency || activity.pricing?.currency || 'EUR',
-      checkIn: from,
+      checkIn: selectedDate,
       checkOut: to,
+      from: selectedDate,
+      to: to,
       guests: parseInt(adults),
+      adults: parseInt(adults),
+      paxes: Array(parseInt(adults)).fill({ age: 30 }),
       destination: activity.destination,
       country: activity.country,
       category: activity.activityFactsheetType,
       supplier: activity.supplier,
       thumbnail: activity.images?.[0],
-      modalityName: modality?.name || 'Standard',
-      modalityCode: modality?.code,
+      modalityName: modality?.name || activity.activityFactsheetType || 'Standard',
       selectedTime: time,
+      selectedDate: selectedDate,
       duration: modality?.duration || (activity.scheduling?.duration?.value ? `${activity.scheduling.duration.value}h` : null),
       addedAt: new Date().toISOString(),
     });
@@ -658,7 +665,33 @@ const ActivitySearchResults = () => {
             </div>
             {/* Scrollable details */}
             <div className="overflow-y-auto flex-1 px-5 py-4 space-y-4" style={{scrollbarWidth:'thin'}}>
-              {/* Step 1: Select Package */}
+              {/* Select Date */}
+              <div>
+                <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Select Date</div>
+                <div className="flex gap-2 overflow-x-auto pb-1" style={{scrollbarWidth:'none'}}>
+                  {(() => {
+                    const dates = [];
+                    const start = new Date(from);
+                    const end = new Date(to);
+                    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+                      dates.push(new Date(d));
+                    }
+                    return dates.map((d, i) => {
+                      const dateStr = d.toISOString().split('T')[0];
+                      const isSelected = selectedDate === dateStr;
+                      return (
+                        <div key={i} onClick={() => setSelectedDate(dateStr)} className={`flex-shrink-0 px-3 py-2 rounded-xl text-center transition-all min-w-[60px] ${isSelected ? 'bg-blue-600 text-white' : 'bg-gray-50 text-gray-700 hover:bg-gray-100'}`}>
+                          <div className="text-[10px] uppercase">{d.toLocaleDateString('en', { weekday: 'short' })}</div>
+                          <div className="text-[16px] font-bold leading-tight">{d.getDate()}</div>
+                          <div className="text-[10px]">{d.toLocaleDateString('en', { month: 'short' })}</div>
+                        </div>
+                      );
+                    });
+                  })()}
+                </div>
+              </div>
+
+              {/* Select Package */}
               {loadingDetail ? (
                 <div className="flex items-center justify-center py-6"><Loader2 className="w-5 h-5 animate-spin text-blue-600 mr-2" /><span className="text-[13px] text-gray-400">Loading options...</span></div>
               ) : (() => {
@@ -749,7 +782,7 @@ const ActivitySearchResults = () => {
                   )}
                   <div className="flex items-center justify-between text-[12px]">
                     <span className="text-gray-500">Date</span>
-                    <span className="text-gray-700">{from} → {to}</span>
+                    <span className="font-medium text-gray-800">{new Date(selectedDate).toLocaleDateString('en', { weekday: 'short', day: 'numeric', month: 'short' })}</span>
                   </div>
                   <div className="flex items-center justify-between text-[12px]">
                     <span className="text-gray-500">Guests</span>
