@@ -829,21 +829,19 @@ const HotelSearchForm = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    if (!selectedLocation && !hotelNameQuery.trim()) {
-      alert('Please select a destination or enter a hotel name');
+    if (!selectedLocation) {
+      alert('Please select a destination');
       return;
     }
 
     const checkIn = format(dateRange[0].startDate, 'yyyy-MM-dd');
     const checkOut = format(dateRange[0].endDate, 'yyyy-MM-dd');
 
+    const city = selectedLocation.city || selectedLocation.name;
+    const country = selectedLocation.country;
     let url = `/hotel-search-results?checkIn=${checkIn}&checkOut=${checkOut}&rooms=${rooms}&adults=${adults}&children=${children}`;
-    if (selectedLocation) {
-      const city = selectedLocation.city || selectedLocation.name;
-      const country = selectedLocation.country;
-      url += `&country=${encodeURIComponent(country)}`;
-      url += `&city=${encodeURIComponent(city)}`;
-    }
+    url += `&country=${encodeURIComponent(country)}`;
+    url += `&city=${encodeURIComponent(city)}`;
     if (hotelNameQuery.trim()) {
       url += `&hotelName=${encodeURIComponent(hotelNameQuery.trim())}`;
     }
@@ -912,7 +910,7 @@ const HotelSearchForm = () => {
                 {/* Location Search (City/Country) */}
                 <div className="relative" ref={locationRef}>
                   <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2 px-1">
-                    Destination
+                    Destination <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
@@ -932,20 +930,42 @@ const HotelSearchForm = () => {
                     <div className="absolute z-50 w-full mt-2 bg-white border border-gray-200 rounded-xl shadow-xl max-h-72 sm:max-h-96 overflow-y-auto" style={{scrollbarWidth:'thin'}}>
                       {isLoadingLocations ? (
                         <div className="p-4 text-center text-gray-400 text-sm">Searching...</div>
-                      ) : filteredLocations.length > 0 ? (
-                        <div>
-                          <div className="px-3 pt-2.5 pb-1.5 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Destinations</div>
-                          {filteredLocations.map((location, index) => (
-                            <div key={`loc-${index}`} onClick={() => handleLocationSelect(location)} className="px-3 py-2 hover:bg-blue-50 cursor-pointer transition-colors flex items-center gap-2.5">
-                              <MapPin size={15} className="text-blue-600 flex-shrink-0" />
-                              <div className="min-w-0 flex-1">
-                                <div className="text-[13px] font-medium text-gray-800 truncate">{location.city || location.country || location.name}</div>
-                                <div className="text-[11px] text-gray-400 truncate">{location.type === 'country' ? 'Country' : `City in ${location.country}`}</div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
+                      ) : filteredLocations.length > 0 ? (() => {
+                        const hotels = filteredLocations.filter(l => l.type === 'hotel');
+                        const destinations = filteredLocations.filter(l => l.type !== 'hotel');
+                        return (
+                          <div>
+                            {destinations.length > 0 && (
+                              <>
+                                <div className="px-3 pt-2.5 pb-1.5 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Destinations</div>
+                                {destinations.map((location, index) => (
+                                  <div key={`loc-${index}`} onClick={() => handleLocationSelect(location)} className="px-3 py-2 hover:bg-blue-50 cursor-pointer transition-colors flex items-center gap-2.5">
+                                    <MapPin size={15} className="text-blue-600 flex-shrink-0" />
+                                    <div className="min-w-0 flex-1">
+                                      <div className="text-[13px] font-medium text-gray-800 truncate">{location.city || location.country || location.name}</div>
+                                      <div className="text-[11px] text-gray-400 truncate">{location.type === 'country' ? 'Country' : `City in ${location.country}`}</div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </>
+                            )}
+                            {hotels.length > 0 && (
+                              <>
+                                <div className={`px-3 pt-2.5 pb-1.5 text-[11px] font-semibold text-gray-400 uppercase tracking-wider ${destinations.length > 0 ? 'border-t border-gray-100 mt-1' : ''}`}>Hotels</div>
+                                {hotels.map((location, index) => (
+                                  <div key={`htl-${index}`} onClick={() => { setHotelNameQuery(location.name); handleLocationSelect({ ...location, city: location.city, country: location.country || '', displayName: location.city || location.name }); }} className="px-3 py-2 hover:bg-blue-50 cursor-pointer transition-colors flex items-center gap-2.5">
+                                    <Building2 size={15} className="text-green-600 flex-shrink-0" />
+                                    <div className="min-w-0 flex-1">
+                                      <div className="text-[13px] font-medium text-gray-800 truncate">{location.name}</div>
+                                      <div className="text-[11px] text-gray-400 truncate">{location.city}{location.country ? `, ${location.country}` : ''}</div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </>
+                            )}
+                          </div>
+                        );
+                      })() : (
                         <div className="p-4 text-center text-gray-400 text-sm">No destinations found</div>
                       )}
                     </div>
@@ -955,7 +975,7 @@ const HotelSearchForm = () => {
                 {/* Hotel Name */}
                 <div>
                   <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2 px-1">
-                    Hotel Name
+                    Hotel Name <span className="text-gray-400 text-xs font-normal">(filter)</span>
                   </label>
                   <div className="relative">
                     <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />

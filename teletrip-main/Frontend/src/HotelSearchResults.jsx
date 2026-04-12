@@ -674,16 +674,14 @@ const closeReviewsModal = () => {
           throw new Error("Missing required search parameters");
         }
 
-        if (!city && !country && !hotelName) {
-          throw new Error("Please provide a destination or hotel name");
+        if (!city || !country) {
+          throw new Error("Please provide a destination");
         }
 
         let lat, lon;
         
-        // Geocode using city/country if available, otherwise use hotel name
-        const geocodeQuery = city ? `${city}, ${convertCountryCode(country || '')}` : hotelName;
         const geoResponse = await fetch(
-          `${API_BASE_URL}/geocode?q=${encodeURIComponent(geocodeQuery)}`
+          `${API_BASE_URL}/geocode?q=${encodeURIComponent(city + ", " + convertCountryCode(country))}`
         );
 
         if (geoResponse.ok) {
@@ -693,7 +691,7 @@ const closeReviewsModal = () => {
         }
         
         if (!lat || !lon) {
-          throw new Error(`Unable to find coordinates for ${city || hotelName}`);
+          throw new Error(`Unable to find coordinates for ${city}`);
         }
 
 
