@@ -499,39 +499,40 @@ const ActivitySearchResults = () => {
             ) : (
               <div className="space-y-3">
                 {sortedActivities.map((activity, idx) => (
-                  <div key={activity.code} className="bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-lg hover:border-gray-200 transition-all duration-200 flex flex-col sm:flex-row group">
-                    <div className="sm:w-56 lg:w-64 relative overflow-hidden flex-shrink-0">
-                      <img src={activity.images?.[0] || 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} alt={activity.name} className="w-full h-40 sm:h-full object-cover group-hover:scale-105 transition-transform duration-500" onError={(e) => e.target.src = 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} />
+                  <div key={activity.code} className="bg-white rounded-xl border border-gray-100 hover:shadow-lg hover:border-gray-200 transition-all duration-200 flex flex-col sm:flex-row group">
+                    <div className="sm:w-56 lg:w-64 relative flex-shrink-0">
+                      <img src={activity.images?.[0] || 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} alt={activity.name} className="w-full h-44 sm:h-48 object-cover rounded-t-xl sm:rounded-l-xl sm:rounded-tr-none group-hover:scale-105 transition-transform duration-500" onError={(e) => e.target.src = 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} />
                       {activity.activityFactsheetType && (<div className="absolute top-2 left-2 bg-blue-600/90 text-white px-2 py-0.5 rounded text-[10px] font-medium">{activity.activityFactsheetType}</div>)}
                     </div>
-                    <div className="flex-1 p-3 sm:p-4 flex flex-col min-w-0">
-                      <div className="flex justify-between items-start gap-2 mb-1">
-                        <h3 className="text-[14px] font-semibold text-gray-900 line-clamp-1 leading-tight">{activity.name}</h3>
+                    <div className="flex-1 p-3 sm:p-4 min-w-0">
+                      <div className="flex justify-between items-start gap-2 mb-1.5">
+                        <h3 className="text-[14px] font-semibold text-gray-900 leading-tight line-clamp-2">{activity.name}</h3>
                         <div className="text-right flex-shrink-0">
                           {activity.pricing?.amount ? (<div className="text-lg font-bold text-blue-600 leading-tight">{activity.pricing.currency} {parseFloat(activity.pricing.amount).toFixed(0)}</div>) : <span className="text-[11px] text-gray-400">On request</span>}
                           <div className="text-[10px] text-gray-400">per person</div>
                         </div>
                       </div>
-                      {activity.summary && <p className="text-[12px] text-gray-500 line-clamp-2 mb-1" dangerouslySetInnerHTML={{ __html: activity.summary }} />}
+                      {activity.summary && <p className="text-[12px] text-gray-500 line-clamp-2 mb-1.5" dangerouslySetInnerHTML={{ __html: activity.summary }} />}
+                      {!activity.summary && activity.description && <p className="text-[12px] text-gray-500 line-clamp-2 mb-1.5" dangerouslySetInnerHTML={{ __html: activity.description }} />}
                       <div className="flex items-center gap-2 text-[11px] text-gray-400 mb-1.5 flex-wrap">
                         {activity.destination && <span className="flex items-center gap-0.5"><MapPin className="w-3 h-3" />{activity.destination}</span>}
                         {activity.supplier && <><span>·</span><span>{activity.supplier}</span></>}
                         {activity.scheduling?.duration?.value && <><span>·</span><span><Clock className="w-3 h-3 inline" /> {activity.scheduling.duration.value}h</span></>}
+                        {activity.voucherType && <><span>·</span><span>{activity.voucherType}</span></>}
                       </div>
-                      <div className="flex gap-1 flex-wrap mb-2">
-                        {activity.activityFactsheetType && <span className="text-[10px] px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded">{activity.activityFactsheetType}</span>}
+                      <div className="flex gap-1 flex-wrap mb-3">
                         {activity.segmentationGroups && activity.segmentationGroups.map((g, i) => {
-                          if (g.segments) return g.segments.filter(s => s.name).map((s, j) => (
+                          if (g.segments) return g.segments.filter(s => s.name).slice(0, 4).map((s, j) => (
                             <span key={`seg-${i}-${j}`} className="text-[10px] px-1.5 py-0.5 bg-purple-50 text-purple-600 rounded">{s.name}</span>
                           ));
                           if (g.name) return <span key={`g-${i}`} className="text-[10px] px-1.5 py-0.5 bg-purple-50 text-purple-600 rounded">{g.name}</span>;
                           return null;
                         })}
-                        {activity.services && activity.services.filter(Boolean).slice(0, 2).map((s, i) => (
-                          <span key={`svc-${i}`} className="text-[10px] px-1.5 py-0.5 bg-gray-50 text-gray-500 rounded">{s}</span>
+                        {activity.services && activity.services.filter(Boolean).slice(0, 3).map((s, i) => (
+                          <span key={`svc-${i}`} className="text-[10px] px-1.5 py-0.5 bg-green-50 text-green-600 rounded">{s}</span>
                         ))}
                       </div>
-                      <div className="flex items-center justify-end gap-2 mt-auto pt-2 border-t border-gray-50">
+                      <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-100">
                         <button onClick={() => setSelectedActivity(activity)} className="px-3 py-1.5 border border-gray-200 text-gray-600 rounded-md hover:bg-gray-50 transition-colors text-[12px] font-medium">Details</button>
                         <button onClick={() => handleAddActivityToCart(activity)} className="px-3 py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-[12px] font-medium inline-flex items-center gap-1"><ShoppingCart className="w-3 h-3" />Add to Cart</button>
                       </div>
@@ -550,8 +551,8 @@ const ActivitySearchResults = () => {
         <div className="fixed inset-0 z-[150] flex items-end sm:items-center justify-center" onClick={() => setSelectedActivity(null)}>
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
           <div className="relative bg-white w-full sm:max-w-3xl sm:rounded-2xl max-h-[92vh] overflow-hidden flex flex-col shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            {/* Image collage - clickable */}
-            <div className="relative flex-shrink-0 bg-gray-200" style={{minHeight: '200px'}}>
+            {/* Image */}
+            <div className="relative h-48 sm:h-56 flex-shrink-0 bg-gray-200 overflow-hidden">
               {selectedActivity.images && selectedActivity.images.length >= 3 ? (
                 <div className="grid grid-cols-3 gap-0.5 h-48 sm:h-56">
                   <div className="col-span-2 cursor-pointer" onClick={() => { setGalleryImages(selectedActivity.images); setGalleryIndex(0); setGalleryOpen(true); }}><img src={selectedActivity.images[0]} alt="" className="w-full h-full object-cover hover:brightness-90 transition-all" onError={(e) => e.target.src = 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} /></div>
