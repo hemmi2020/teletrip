@@ -1,12 +1,14 @@
 import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Loader2, MapPin, Calendar, Users, Filter, Star, Clock, Search, X, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Loader2, MapPin, Calendar, Users, Filter, Star, Clock, Search, X, ChevronDown, ChevronLeft, ChevronRight, ShoppingCart, CheckCircle } from 'lucide-react';
 import Header from './components/Header';
 import Footer from './components/Footer';
+import { useCart } from './components/CartSystem';
 
 const ActivitySearchResults = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { addToCart } = useCart();
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -14,6 +16,7 @@ const ActivitySearchResults = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState(null);
   const [sortOption, setSortOption] = useState('default');
+  const [notification, setNotification] = useState({ show: false, message: '' });
 
   // Filter states
   const [nameSearch, setNameSearch] = useState('');
@@ -91,6 +94,30 @@ const ActivitySearchResults = () => {
     setSelectedServices([]);
     setPriceMin('');
     setPriceMax('');
+  };
+
+  const handleAddActivityToCart = (activity) => {
+    addToCart({
+      id: `activity-${activity.code}`,
+      type: 'activity',
+      name: activity.name,
+      code: activity.code,
+      price: parseFloat(activity.pricing?.amount || 0),
+      currency: activity.pricing?.currency || 'EUR',
+      checkIn: from,
+      checkOut: to,
+      guests: parseInt(adults),
+      destination: activity.destination,
+      country: activity.country,
+      category: activity.activityFactsheetType,
+      supplier: activity.supplier,
+      thumbnail: activity.images?.[0],
+      addedAt: new Date().toISOString(),
+    });
+    setSelectedActivity(null);
+    setNotification({ show: true, message: `${activity.name} added to cart!` });
+    setTimeout(() => setNotification({ show: false, message: '' }), 3000);
+    window.dispatchEvent(new CustomEvent('openCart'));
   };
 
   // Dynamic filter options from data
@@ -483,13 +510,25 @@ const ActivitySearchResults = () => {
                             <div className="text-[10px] text-gray-400">per person</div>
                           </div>
                         </div>
-                        {activity.summary && <p className="text-[12px] text-gray-500 line-clamp-1 mb-1.5" dangerouslySetInnerHTML={{ __html: activity.summary }} />}
-                        <div className="flex items-center gap-2 text-[11px] text-gray-400">
+                        {activity.summary && <p className="text-[12px] text-gray-500 line-clamp-1 mb-1" dangerouslySetInnerHTML={{ __html: activity.summary }} />}
+                        <div className="flex items-center gap-2 text-[11px] text-gray-400 mb-1.5 flex-wrap">
                           {activity.destination && <span className="flex items-center gap-0.5"><MapPin className="w-3 h-3" />{activity.destination}</span>}
+                          {activity.supplier && <><span>·</span><span>{activity.supplier}</span></>}
+                          {activity.scheduling?.duration?.hours && <><span>·</span><span><Clock className="w-3 h-3 inline" /> {activity.scheduling.duration.hours}h</span></>}
+                        </div>
+                        {/* Tags */}
+                        <div className="flex gap-1 flex-wrap">
+                          {activity.segmentationGroups?.slice(0, 2).map((g, i) => g.segments?.map((s, j) => (
+                            <span key={`${i}-${j}`} className="text-[10px] px-1.5 py-0.5 bg-purple-50 text-purple-600 rounded">{s.name}</span>
+                          )))}
+                          {activity.services?.slice(0, 2).map((s, i) => (
+                            <span key={i} className="text-[10px] px-1.5 py-0.5 bg-gray-50 text-gray-500 rounded">{s}</span>
+                          ))}
                         </div>
                       </div>
-                      <div className="flex items-center justify-end mt-2 pt-2 border-t border-gray-50">
-                        <button onClick={() => setSelectedActivity(activity)} className="px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-[12px] font-medium">View Details</button>
+                      <div className="flex items-center justify-end gap-2 mt-2 pt-2 border-t border-gray-50">
+                        <button onClick={() => setSelectedActivity(activity)} className="px-3 py-1 border border-gray-200 text-gray-600 rounded-md hover:bg-gray-50 transition-colors text-[12px] font-medium">Details</button>
+                        <button onClick={() => handleAddActivityToCart(activity)} className="px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-[12px] font-medium inline-flex items-center gap-1"><ShoppingCart className="w-3 h-3" />Add to Cart</button>
                       </div>
                     </div>
                   </div>
@@ -506,34 +545,56 @@ const ActivitySearchResults = () => {
         <div className="fixed inset-0 z-[150] flex items-end sm:items-center justify-center" onClick={() => setSelectedActivity(null)}>
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
           <div className="relative bg-white w-full sm:max-w-3xl sm:rounded-2xl max-h-[92vh] overflow-hidden flex flex-col shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            {/* Image */}
+            {/* Image collage */}
             <div className="relative h-48 sm:h-56 flex-shrink-0">
-              <img src={selectedActivity.images?.[0] || 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} alt="" className="w-full h-full object-cover" />
+              {selectedActivity.images && selectedActivity.images.length >= 3 ? (
+                <div className="grid grid-cols-3 gap-0.5 h-full">
+                  <div className="col-span-2"><img src={selectedActivity.images[0]} alt="" className="w-full h-full object-cover" onError={(e) => e.target.src = 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} /></div>
+                  <div className="flex flex-col gap-0.5">
+                    <img src={selectedActivity.images[1]} alt="" className="w-full h-1/2 object-cover" onError={(e) => e.target.src = 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} />
+                    <div className="relative h-1/2"><img src={selectedActivity.images[2]} alt="" className="w-full h-full object-cover" onError={(e) => e.target.src = 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} />{selectedActivity.images.length > 3 && <div className="absolute inset-0 bg-black/50 flex items-center justify-center text-white text-sm font-medium">+{selectedActivity.images.length - 3}</div>}</div>
+                  </div>
+                </div>
+              ) : (
+                <img src={selectedActivity.images?.[0] || 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} alt="" className="w-full h-full object-cover" />
+              )}
               <button onClick={() => setSelectedActivity(null)} className="absolute top-3 right-3 p-1.5 bg-black/40 hover:bg-black/60 rounded-full transition-colors"><X className="w-4 h-4 text-white" /></button>
               {selectedActivity.activityFactsheetType && (
                 <div className="absolute bottom-3 left-3 bg-blue-600/90 text-white px-2.5 py-1 rounded-lg text-[12px] font-medium">{selectedActivity.activityFactsheetType}</div>
               )}
             </div>
-            {/* Info */}
+            {/* Info header */}
             <div className="px-5 py-4 border-b border-gray-100 flex-shrink-0">
-              <h2 className="text-lg font-semibold text-gray-900 mb-1">{selectedActivity.name}</h2>
-              <div className="flex items-center gap-2 text-[12px] text-gray-500 mb-3">
-                {selectedActivity.destination && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{selectedActivity.destination}</span>}
-                <span>·</span>
-                <span>{from} → {to}</span>
-                <span>·</span>
-                <span>{adults} adults</span>
+              <h2 className="text-lg font-semibold text-gray-900 mb-1.5">{selectedActivity.name}</h2>
+              <div className="flex items-center gap-2 text-[12px] text-gray-500 mb-2 flex-wrap">
+                {selectedActivity.destination && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{selectedActivity.destination}, {selectedActivity.country}</span>}
+                <span>·</span><span>{from} → {to}</span><span>·</span><span>{adults} adults</span>
               </div>
+              {/* Tags */}
+              <div className="flex gap-1.5 flex-wrap mb-3">
+                {selectedActivity.supplier && <span className="text-[10px] px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full">{selectedActivity.supplier}</span>}
+                {selectedActivity.scheduling?.duration?.hours && <span className="text-[10px] px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full"><Clock className="w-3 h-3 inline mr-0.5" />{selectedActivity.scheduling.duration.hours}h</span>}
+                {selectedActivity.voucherType && <span className="text-[10px] px-2 py-0.5 bg-amber-50 text-amber-600 rounded-full">Voucher: {selectedActivity.voucherType}</span>}
+                {selectedActivity.segmentationGroups?.map((g, i) => g.segments?.map((s, j) => (
+                  <span key={`${i}-${j}`} className="text-[10px] px-2 py-0.5 bg-purple-50 text-purple-600 rounded-full">{s.name}</span>
+                )))}
+                {selectedActivity.services?.map((s, i) => (
+                  <span key={i} className="text-[10px] px-2 py-0.5 bg-green-50 text-green-600 rounded-full">{s}</span>
+                ))}
+              </div>
+              {/* Price + Add to Cart */}
               <div className="flex items-center justify-between">
                 <div>
                   {selectedActivity.pricing?.amount ? (
                     <><span className="text-xl font-bold text-blue-600">{selectedActivity.pricing.currency} {parseFloat(selectedActivity.pricing.amount).toFixed(2)}</span><span className="text-[12px] text-gray-400 ml-1">/ person</span></>
                   ) : <span className="text-gray-400">Price on request</span>}
                 </div>
-                <button onClick={() => navigate(`/activity/${selectedActivity.code}?from=${from}&to=${to}&price=${selectedActivity.pricing?.amount || 0}&currency=${selectedActivity.pricing?.currency || 'AED'}&adults=${adults}`)} className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-[13px] font-semibold">Book Now</button>
+                <button onClick={() => handleAddActivityToCart(selectedActivity)} className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-[13px] font-semibold inline-flex items-center gap-1.5">
+                  <ShoppingCart className="w-4 h-4" />Add to Cart
+                </button>
               </div>
             </div>
-            {/* Description */}
+            {/* Scrollable details */}
             <div className="overflow-y-auto flex-1 px-5 py-4 space-y-4" style={{scrollbarWidth:'thin'}}>
               {selectedActivity.summary && (
                 <div><div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Summary</div><p className="text-[13px] text-gray-600 leading-relaxed" dangerouslySetInnerHTML={{ __html: selectedActivity.summary }} /></div>
@@ -541,18 +602,25 @@ const ActivitySearchResults = () => {
               {selectedActivity.description && (
                 <div><div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Description</div><p className="text-[13px] text-gray-600 leading-relaxed" dangerouslySetInnerHTML={{ __html: selectedActivity.description }} /></div>
               )}
-              {selectedActivity.images && selectedActivity.images.length > 1 && (
+              {/* Scheduling details */}
+              {selectedActivity.scheduling && (
                 <div>
-                  <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Photos</div>
-                  <div className="flex gap-2 overflow-x-auto pb-2">
-                    {selectedActivity.images.map((img, i) => (
-                      <img key={i} src={img} alt="" className="w-24 h-20 rounded-lg object-cover flex-shrink-0" onError={(e) => e.target.style.display='none'} />
-                    ))}
+                  <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">Schedule</div>
+                  <div className="text-[13px] text-gray-600 space-y-1">
+                    {selectedActivity.scheduling.duration?.hours && <p>Duration: {selectedActivity.scheduling.duration.hours} hours</p>}
+                    {selectedActivity.scheduling.opened && <p>Available: Open schedule</p>}
                   </div>
                 </div>
               )}
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Notification */}
+      {notification.show && (
+        <div className="fixed bottom-4 right-4 z-[200] bg-green-600 text-white px-4 py-2.5 rounded-lg shadow-lg text-sm font-medium flex items-center gap-2">
+          <CheckCircle className="w-4 h-4" />{notification.message}
         </div>
       )}
       <Footer />
