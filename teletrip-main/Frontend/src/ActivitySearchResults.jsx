@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Loader2, MapPin, Calendar, Users, Filter, Star, Clock, Search, X, ChevronDown } from 'lucide-react';
+import { Loader2, MapPin, Calendar, Users, Filter, Star, Clock, Search, X, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import Header from './components/Header';
 import Footer from './components/Footer';
 
@@ -11,7 +11,9 @@ const ActivitySearchResults = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState(null);
+  const [sortOption, setSortOption] = useState('default');
 
   // Filter states
   const [nameSearch, setNameSearch] = useState('');
@@ -183,28 +185,26 @@ const ActivitySearchResults = () => {
     return svcs;
   };
 
-  const filteredActivities = activities.filter(a => {
+  const filteredActivities = useMemo(() => activities.filter(a => {
     if (nameSearch && !a.name.toLowerCase().includes(nameSearch.toLowerCase())) return false;
     if (selectedCategories.length > 0 && !selectedCategories.includes(a.activityFactsheetType)) return false;
-    if (selectedDaytimes.length > 0) {
-      const times = getActivityDaytimes(a);
-      if (!selectedDaytimes.some(d => times.has(d))) return false;
-    }
-    if (selectedRecommended.length > 0) {
-      const recs = getActivityRecommended(a);
-      if (!selectedRecommended.some(r => recs.has(r))) return false;
-    }
+    if (selectedDaytimes.length > 0) { const times = getActivityDaytimes(a); if (!selectedDaytimes.some(d => times.has(d))) return false; }
+    if (selectedRecommended.length > 0) { const recs = getActivityRecommended(a); if (!selectedRecommended.some(r => recs.has(r))) return false; }
     if (selectedSuppliers.length > 0 && !selectedSuppliers.includes(a.supplier)) return false;
     if (selectedVoucherTypes.length > 0 && !selectedVoucherTypes.includes(a.voucherType)) return false;
-    if (selectedServices.length > 0) {
-      const svcs = getActivityServices(a);
-      if (!selectedServices.some(s => svcs.has(s))) return false;
-    }
+    if (selectedServices.length > 0) { const svcs = getActivityServices(a); if (!selectedServices.some(s => svcs.has(s))) return false; }
     const price = parseFloat(a.pricing?.amount || 0);
     if (priceMin && price < parseFloat(priceMin)) return false;
     if (priceMax && price > parseFloat(priceMax)) return false;
     return true;
-  });
+  }), [activities, nameSearch, selectedCategories, selectedDaytimes, selectedRecommended, selectedSuppliers, selectedVoucherTypes, selectedServices, priceMin, priceMax]);
+
+  const sortedActivities = useMemo(() => [...filteredActivities].sort((a, b) => {
+    if (sortOption === 'priceLow') return parseFloat(a.pricing?.amount || 0) - parseFloat(b.pricing?.amount || 0);
+    if (sortOption === 'priceHigh') return parseFloat(b.pricing?.amount || 0) - parseFloat(a.pricing?.amount || 0);
+    if (sortOption === 'name') return (a.name || '').localeCompare(b.name || '');
+    return 0;
+  }), [filteredActivities, sortOption]);
 
   if (loading) {
     return (
@@ -221,35 +221,28 @@ const ActivitySearchResults = () => {
   return (
     <>
       <Header />
-      <div className="pt-20 container mx-auto px-4 py-8">
-        <div className="mb-6">
-          <h1 className="text-2xl md:text-3xl font-bold mb-2">Activities in {destination}</h1>
-          <div className="flex flex-wrap gap-2 md:gap-4 text-xs md:text-sm text-gray-600">
-            <span className="flex items-center"><Calendar className="w-4 h-4 mr-1" />{from} to {to}</span>
-            <span className="flex items-center"><Users className="w-4 h-4 mr-1" />{adults} Adults</span>
-          </div>
+      <div className="pt-16 flex">
+        {/* Mobile Filter Toggle */}
+        <div className="lg:hidden fixed top-32 left-4 z-50">
+          <button onClick={() => setShowFilters(!showFilters)} className="bg-white/70 backdrop-blur-sm text-gray-700 p-2.5 rounded-lg shadow-sm border border-gray-200/60 hover:bg-white/90 cursor-pointer flex items-center gap-2">
+            <Filter className="w-4 h-4" /><span className="text-sm font-medium">Filters</span>
+          </button>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-6">
-          {/* Mobile Filter Toggle */}
-          <div className="lg:hidden">
-            <button onClick={() => setShowFilters(!showFilters)} className="bg-white/70 backdrop-blur-sm text-gray-700 px-3 py-2 rounded-lg shadow-sm border border-gray-200/60 hover:bg-white/90 cursor-pointer flex items-center gap-2">
-              <Filter className="w-4 h-4" /><span className="text-sm font-medium">Filters</span>
-            </button>
-          </div>
-
-          {/* Sidebar Filters */}
-          <div className={`fixed lg:sticky lg:top-16 inset-y-0 left-0 z-40 w-[300px] bg-white border-r border-gray-100 transform ${showFilters ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 transition-transform duration-300 ease-in-out lg:h-[calc(100vh-4rem)] lg:flex-shrink-0 pt-16 lg:pt-0`}>
-            <div className="h-full overflow-y-auto overscroll-contain px-4 py-4 text-left" style={{scrollbarWidth:'thin',scrollbarColor:'#e5e7eb transparent'}}>
-              {/* Mobile Close */}
-              <div className="lg:hidden flex justify-between items-center pb-3 mb-3 border-b border-gray-100">
-                <span className="text-xs font-semibold text-gray-900 tracking-wider uppercase">Filters</span>
-                <button onClick={() => setShowFilters(false)} className="p-1 rounded hover:bg-gray-100 cursor-pointer"><X className="w-4 h-4 text-gray-400" /></button>
+        {/* Sidebar */}
+        <div className={`fixed lg:sticky lg:top-16 inset-y-0 left-0 z-40 bg-white border-r border-gray-100 transform transition-all duration-300 ease-in-out lg:h-[calc(100vh-4rem)] pt-16 lg:pt-0 ${showFilters ? 'translate-x-0 w-[300px]' : '-translate-x-full w-[300px]'} ${sidebarCollapsed ? 'lg:w-0 lg:overflow-hidden lg:border-0' : 'lg:w-[300px] lg:translate-x-0'}`}>
+          <div className="h-full overflow-y-auto overscroll-contain px-4 py-4 text-left" style={{scrollbarWidth:'thin',scrollbarColor:'#e5e7eb transparent'}}>
+            <div className="lg:hidden flex justify-between items-center pb-3 mb-3 border-b border-gray-100">
+              <span className="text-xs font-semibold text-gray-900 tracking-wider uppercase">Filters</span>
+              <button onClick={() => setShowFilters(false)} className="p-1 rounded hover:bg-gray-100"><X className="w-4 h-4 text-gray-400" /></button>
+            </div>
+            <div className="hidden lg:flex justify-between items-center pb-3 mb-1 border-b border-gray-100">
+              <span className="text-xs font-semibold text-gray-900 tracking-wider uppercase">Filters</span>
+              <div className="flex items-center gap-2">
+                <button onClick={clearFilters} className="text-xs text-blue-600 hover:text-blue-700 font-medium">Reset all</button>
+                <button onClick={() => setSidebarCollapsed(true)} className="p-1 rounded hover:bg-gray-100"><ChevronLeft className="w-3.5 h-3.5 text-gray-400" /></button>
               </div>
-              <div className="hidden lg:flex justify-between items-center pb-3 mb-1 border-b border-gray-100">
-                <span className="text-xs font-semibold text-gray-900 tracking-wider uppercase">Filters</span>
-                <button onClick={clearFilters} className="text-xs text-blue-600 hover:text-blue-700 font-medium cursor-pointer">Reset all</button>
-              </div>
+            </div>
 
               {/* 1. Search by Activity Name */}
               <div className="py-3 border-b border-gray-50">
@@ -442,56 +435,63 @@ const ActivitySearchResults = () => {
             </div>
           </div>
 
-          {/* Mobile overlay */}
-          {showFilters && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden" onClick={() => setShowFilters(false)} />
-          )}
+        </div>
 
-          <div className="flex-1">
-            {error && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-                <p className="text-red-800">{error}</p>
-              </div>
-            )}
+        {/* Sidebar Open Button */}
+        {sidebarCollapsed && (
+          <button onClick={() => setSidebarCollapsed(false)} className="hidden lg:flex fixed top-20 left-2 z-50 items-center gap-1 px-2 py-1.5 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 text-[12px] text-gray-600">
+            <Filter className="w-3.5 h-3.5" /><ChevronRight className="w-3 h-3" />
+          </button>
+        )}
 
-            {filteredActivities.length === 0 ? (
-              <div className="text-center py-12 bg-white rounded-lg shadow">
-                <p className="text-gray-600 mb-4">No activities found</p>
-                <button
-                  onClick={() => navigate('/')}
-                  className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
-                >
-                  Search Again
-                </button>
+        <div className="flex-1 min-w-0">
+          <div className="max-w-[1280px] mx-auto px-4 sm:px-6 py-6">
+            {error && (<div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6"><p className="text-red-800">{error}</p></div>)}
+
+            <div className="sticky top-16 z-20 bg-white/95 backdrop-blur-sm py-2.5 -mx-4 px-4 border-b border-gray-100 flex items-center justify-between gap-3 mb-2">
+              <h1 className="text-[14px] sm:text-base font-semibold text-gray-900 truncate">{sortedActivities.length} Activities in {destination}</h1>
+              <select value={sortOption} onChange={(e) => setSortOption(e.target.value)} className="text-[12px] sm:text-[13px] px-2.5 py-1.5 border border-gray-200 rounded-lg bg-white text-gray-600 focus:ring-1 focus:ring-blue-500 outline-none flex-shrink-0">
+                <option value="default">Sort: Recommended</option>
+                <option value="priceLow">Price: Low → High</option>
+                <option value="priceHigh">Price: High → Low</option>
+                <option value="name">Name: A → Z</option>
+              </select>
+            </div>
+            <div className="flex items-center gap-2 text-[11px] text-gray-400 py-2 flex-wrap mb-2">
+              <span>{from} → {to}</span><span>·</span><span>{adults} adults</span>
+            </div>
+
+            {sortedActivities.length === 0 ? (
+              <div className="text-center py-16">
+                <div className="text-4xl mb-3">🎭</div>
+                <p className="text-gray-800 text-lg font-medium mb-1">No activities match your filters</p>
+                <p className="text-gray-400 text-sm mb-4">Try adjusting your filters</p>
+                <button onClick={clearFilters} className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium">Clear All Filters</button>
               </div>
             ) : (
-              <div className="space-y-4">
-                <div className="sticky top-16 z-20 bg-white/90 backdrop-blur-sm py-3 -mx-4 px-4 border-b border-gray-100">
-                  <span className="text-lg font-semibold text-gray-900">{filteredActivities.length} activities found</span>
-                </div>
-                {filteredActivities.map((activity) => (
-                  <div key={activity.code} className="bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-lg hover:border-gray-200 transition-all duration-200 flex flex-col md:flex-row group">
-                    <div className="relative w-full md:w-64 h-48 flex-shrink-0 overflow-hidden">
-                      <img src={activity.images?.[0] || 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} alt={activity.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" onError={(e) => e.target.src = 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} />
-                      {activity.activityFactsheetType && (
-                        <div className="absolute top-2 left-2 bg-blue-600/90 text-white px-2 py-0.5 rounded text-[11px] font-medium">{activity.activityFactsheetType}</div>
-                      )}
+              <div className="space-y-3">
+                {sortedActivities.map((activity, idx) => (
+                  <div key={activity.code} className="bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-lg hover:border-gray-200 transition-all duration-200 flex flex-col sm:flex-row group animate-in fade-in slide-in-from-bottom-2" style={{ animationDelay: `${idx * 50}ms`, animationFillMode: 'both' }}>
+                    <div className="sm:w-56 lg:w-64 relative overflow-hidden flex-shrink-0">
+                      <img src={activity.images?.[0] || 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} alt={activity.name} className="w-full h-40 sm:h-full object-cover group-hover:scale-105 transition-transform duration-500" onError={(e) => e.target.src = 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} />
+                      {activity.activityFactsheetType && (<div className="absolute top-2 left-2 bg-blue-600/90 text-white px-2 py-0.5 rounded text-[10px] font-medium">{activity.activityFactsheetType}</div>)}
                     </div>
-                    <div className="flex-1 p-4 flex flex-col justify-between min-w-0">
+                    <div className="flex-1 p-3 sm:p-4 flex flex-col justify-between min-w-0">
                       <div>
-                        <h3 className="text-base font-semibold text-gray-900 mb-1 line-clamp-1">{activity.name}</h3>
-                        {activity.summary && <p className="text-[13px] text-gray-500 mb-2 line-clamp-1" dangerouslySetInnerHTML={{ __html: activity.summary }} />}
-                        <div className="flex items-center gap-2 text-[12px] text-gray-400 mb-2">
-                          {activity.destination && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{activity.destination}</span>}
+                        <div className="flex justify-between items-start gap-2 mb-1">
+                          <h3 className="text-[14px] font-semibold text-gray-900 line-clamp-1 leading-tight">{activity.name}</h3>
+                          <div className="text-right flex-shrink-0">
+                            {activity.pricing?.amount ? (<div className="text-lg font-bold text-blue-600 leading-tight">{activity.pricing.currency} {parseFloat(activity.pricing.amount).toFixed(0)}</div>) : <span className="text-[11px] text-gray-400">On request</span>}
+                            <div className="text-[10px] text-gray-400">per person</div>
+                          </div>
+                        </div>
+                        {activity.summary && <p className="text-[12px] text-gray-500 line-clamp-1 mb-1.5" dangerouslySetInnerHTML={{ __html: activity.summary }} />}
+                        <div className="flex items-center gap-2 text-[11px] text-gray-400">
+                          {activity.destination && <span className="flex items-center gap-0.5"><MapPin className="w-3 h-3" />{activity.destination}</span>}
                         </div>
                       </div>
-                      <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-50">
-                        <div>
-                          {activity.pricing?.amount ? (
-                            <><span className="text-lg font-bold text-blue-600">{activity.pricing.currency} {parseFloat(activity.pricing.amount).toFixed(2)}</span><span className="text-[11px] text-gray-400 ml-1">/ person</span></>
-                          ) : <span className="text-gray-400 text-sm">Price on request</span>}
-                        </div>
-                        <button onClick={() => setSelectedActivity(activity)} className="px-4 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-[13px] font-medium">View Details</button>
+                      <div className="flex items-center justify-end mt-2 pt-2 border-t border-gray-50">
+                        <button onClick={() => setSelectedActivity(activity)} className="px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-[12px] font-medium">View Details</button>
                       </div>
                     </div>
                   </div>
@@ -501,6 +501,8 @@ const ActivitySearchResults = () => {
           </div>
         </div>
       </div>
+
+      {showFilters && (<div className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden" onClick={() => setShowFilters(false)} />)}
       {/* Activity Detail Modal */}
       {selectedActivity && (
         <div className="fixed inset-0 z-[150] flex items-end sm:items-center justify-center" onClick={() => setSelectedActivity(null)}>
