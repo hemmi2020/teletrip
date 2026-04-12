@@ -21,7 +21,7 @@ const Slider = () => {
 
   return (
     <main className="pt-16 w-full">
-      <section className="relative w-full bg-gray-900 overflow-hidden">
+      <section className="relative w-full bg-gray-900 overflow-x-hidden">
         {/* Background Images */}
         {images.map((img, i) => (
           <div key={i} className={`absolute inset-0 transition-all duration-[1500ms] ease-in-out ${i === active ? 'opacity-100 scale-100' : 'opacity-0 scale-105'}`}>
