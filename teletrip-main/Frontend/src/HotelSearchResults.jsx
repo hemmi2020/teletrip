@@ -539,6 +539,8 @@ const [reviewsModal, setReviewsModal] = useState({
     setSelectedChains([]);
     setSelectedEstablishment([]);
     setSelectedPackaging("");
+    setSelectedSight("");
+    setAddressSearch("");
   };
 
   const handleAddToCart = (hotel, room, rate) => {
@@ -884,6 +886,8 @@ if (children > 0 && childAges.length > 0) {
   // Filter hotels (memoized)
   const filteredHotels = useMemo(() => hotels.filter(hotel => {
     if (hotelNameSearch && !hotel.name.toLowerCase().includes(hotelNameSearch.toLowerCase())) return false;
+    if (selectedSight && hotel.zone !== selectedSight) return false;
+    if (addressSearch && !hotel.address.toLowerCase().includes(addressSearch.toLowerCase())) return false;
     if (selectedBoards.length > 0 && !hotel.boards.some(b => selectedBoards.includes(b))) return false;
     if (selectedCategories.length > 0 && !selectedCategories.includes(hotel.category)) return false;
     if (selectedZones.length > 0 && !selectedZones.includes(hotel.zone)) return false;
@@ -911,7 +915,7 @@ if (children > 0 && childAges.length > 0) {
     }
     if (selectedAccommodationTypes.length > 0 && !selectedAccommodationTypes.includes(hotel.type)) return false;
     return true;
-  }), [hotels, hotelNameSearch, selectedBoards, selectedCategories, selectedZones, selectedReviewRatings, hotelReviews, selectedCancellation, priceMin, priceMax, selectedPromos, selectedDiscounts, selectedChains, selectedEstablishment, selectedPackaging, selectedAmenities, selectedAccommodationTypes]);
+  }), [hotels, hotelNameSearch, selectedSight, addressSearch, selectedBoards, selectedCategories, selectedZones, selectedReviewRatings, hotelReviews, selectedCancellation, priceMin, priceMax, selectedPromos, selectedDiscounts, selectedChains, selectedEstablishment, selectedPackaging, selectedAmenities, selectedAccommodationTypes]);
 
   const sortedHotels = useMemo(() => [...filteredHotels].sort((a, b) => {
     if (sortOption === "priceLowHigh") {
