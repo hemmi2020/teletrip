@@ -435,8 +435,6 @@ const ActivitySearchResults = () => {
             </div>
           </div>
 
-        </div>
-
         {/* Sidebar Open Button */}
         {sidebarCollapsed && (
           <button onClick={() => setSidebarCollapsed(false)} className="hidden lg:flex fixed top-20 left-2 z-50 items-center gap-1 px-2 py-1.5 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 text-[12px] text-gray-600">
@@ -500,7 +498,6 @@ const ActivitySearchResults = () => {
             )}
           </div>
         </div>
-      </div>
       </div>
 
       {showFilters && (<div className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden" onClick={() => setShowFilters(false)} />)}
