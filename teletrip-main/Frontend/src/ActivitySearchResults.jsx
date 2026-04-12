@@ -652,18 +652,27 @@ const ActivitySearchResults = () => {
               {/* Step 1: Select Package */}
               {loadingDetail ? (
                 <div className="flex items-center justify-center py-6"><Loader2 className="w-5 h-5 animate-spin text-blue-600 mr-2" /><span className="text-[13px] text-gray-400">Loading options...</span></div>
-              ) : activityDetail?.modalities && activityDetail.modalities.length > 0 ? (
+              ) : (() => {
+                const modalities = activityDetail?.modalities?.length > 0 
+                  ? activityDetail.modalities 
+                  : [{
+                      code: 'standard',
+                      name: selectedActivity.activityFactsheetType || 'Standard',
+                      duration: selectedActivity.scheduling?.duration?.value ? `${selectedActivity.scheduling.duration.value} ${(selectedActivity.scheduling.duration.metric || 'HOURS').toLowerCase()}` : null,
+                      pricing: selectedActivity.pricing?.amount ? [{ amount: selectedActivity.pricing.amount, currency: selectedActivity.pricing.currency || 'EUR', paxType: 'ADULT' }] : []
+                    }];
+                return (
                 <div>
-                  <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">1. Select Package</div>
+                  <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">{selectedActivity.scheduling?.opened?.length > 0 ? '1. Select Package' : 'Select Package'}</div>
                   <div className="space-y-2">
-                    {activityDetail.modalities.map((mod, mi) => {
+                    {modalities.map((mod, mi) => {
                       const isSelected = selectedModality?.code === mod.code;
                       const bestPrice = mod.pricing?.[0];
                       return (
-                        <div key={mi} onClick={() => setSelectedModality(mod)} className={`border rounded-xl p-3 transition-all ${isSelected ? 'border-blue-500 bg-blue-50/50 ring-1 ring-blue-200' : 'border-gray-100 hover:border-gray-200'}`}>
+                        <div key={mi} onClick={() => setSelectedModality(mod)} className={`border rounded-xl p-3 transition-all cursor-pointer ${isSelected ? 'border-blue-500 bg-blue-50/50 ring-1 ring-blue-200' : 'border-gray-100 hover:border-gray-200'}`}>
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
-                              <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${isSelected ? 'border-blue-500' : 'border-gray-300'}`}>
+                              <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${isSelected ? 'border-blue-500' : 'border-gray-300'}`}>
                                 {isSelected && <div className="w-2 h-2 rounded-full bg-blue-500" />}
                               </div>
                               <div>
@@ -688,7 +697,8 @@ const ActivitySearchResults = () => {
                     })}
                   </div>
                 </div>
-              ) : null}
+                );
+              })()}
 
               {/* Step 2: Select Time */}
               {selectedActivity.scheduling?.opened && selectedActivity.scheduling.opened.length > 0 && (
