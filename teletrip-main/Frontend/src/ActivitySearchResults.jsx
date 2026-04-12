@@ -520,11 +520,15 @@ const ActivitySearchResults = () => {
                       </div>
                       <div className="flex gap-1 flex-wrap mb-2">
                         {activity.activityFactsheetType && <span className="text-[10px] px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded">{activity.activityFactsheetType}</span>}
-                        {activity.segmentationGroups?.slice(0, 2).map((g, i) => g.segments?.map((s, j) => (
-                          <span key={`${i}-${j}`} className="text-[10px] px-1.5 py-0.5 bg-purple-50 text-purple-600 rounded">{s.name}</span>
-                        )))}
-                        {activity.services?.slice(0, 2).map((s, i) => (
-                          <span key={i} className="text-[10px] px-1.5 py-0.5 bg-gray-50 text-gray-500 rounded">{s}</span>
+                        {activity.segmentationGroups && activity.segmentationGroups.map((g, i) => {
+                          if (g.segments) return g.segments.filter(s => s.name).map((s, j) => (
+                            <span key={`seg-${i}-${j}`} className="text-[10px] px-1.5 py-0.5 bg-purple-50 text-purple-600 rounded">{s.name}</span>
+                          ));
+                          if (g.name) return <span key={`g-${i}`} className="text-[10px] px-1.5 py-0.5 bg-purple-50 text-purple-600 rounded">{g.name}</span>;
+                          return null;
+                        })}
+                        {activity.services && activity.services.filter(Boolean).slice(0, 2).map((s, i) => (
+                          <span key={`svc-${i}`} className="text-[10px] px-1.5 py-0.5 bg-gray-50 text-gray-500 rounded">{s}</span>
                         ))}
                       </div>
                       <div className="flex items-center justify-end gap-2 mt-auto pt-2 border-t border-gray-50">
@@ -573,29 +577,39 @@ const ActivitySearchResults = () => {
             <div className="px-5 py-4 border-b border-gray-100 flex-shrink-0">
               <h2 className="text-lg font-semibold text-gray-900 mb-1.5">{selectedActivity.name}</h2>
               <div className="flex items-center gap-2 text-[12px] text-gray-500 mb-2 flex-wrap">
-                {selectedActivity.destination && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{selectedActivity.destination}, {selectedActivity.country}</span>}
+                {selectedActivity.destination && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{selectedActivity.destination}{selectedActivity.country ? `, ${selectedActivity.country}` : ''}</span>}
                 <span>·</span><span>{from} → {to}</span><span>·</span><span>{adults} adults</span>
               </div>
               {/* Tags */}
-              <div className="flex gap-1.5 flex-wrap mb-3">
-                {selectedActivity.supplier && <span className="text-[10px] px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full">{selectedActivity.supplier}</span>}
-                {selectedActivity.scheduling?.duration?.hours && <span className="text-[10px] px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full"><Clock className="w-3 h-3 inline mr-0.5" />{selectedActivity.scheduling.duration.hours}h</span>}
-                {selectedActivity.voucherType && <span className="text-[10px] px-2 py-0.5 bg-amber-50 text-amber-600 rounded-full">Voucher: {selectedActivity.voucherType}</span>}
-                {selectedActivity.segmentationGroups?.map((g, i) => g.segments?.map((s, j) => (
-                  <span key={`${i}-${j}`} className="text-[10px] px-2 py-0.5 bg-purple-50 text-purple-600 rounded-full">{s.name}</span>
-                )))}
-                {selectedActivity.services?.map((s, i) => (
-                  <span key={i} className="text-[10px] px-2 py-0.5 bg-green-50 text-green-600 rounded-full">{s}</span>
-                ))}
-              </div>
+              {(() => {
+                const tags = [];
+                if (selectedActivity.supplier) tags.push({ label: selectedActivity.supplier, color: 'bg-gray-100 text-gray-600' });
+                if (selectedActivity.scheduling?.duration?.hours) tags.push({ label: `${selectedActivity.scheduling.duration.hours}h duration`, color: 'bg-gray-100 text-gray-600' });
+                if (selectedActivity.voucherType) tags.push({ label: `Voucher: ${selectedActivity.voucherType}`, color: 'bg-amber-50 text-amber-600' });
+                if (selectedActivity.activityFactsheetType) tags.push({ label: selectedActivity.activityFactsheetType, color: 'bg-blue-50 text-blue-600' });
+                if (selectedActivity.segmentationGroups) {
+                  selectedActivity.segmentationGroups.forEach(g => {
+                    if (g.segments) g.segments.forEach(s => { if (s.name) tags.push({ label: s.name, color: 'bg-purple-50 text-purple-600' }); });
+                    else if (g.name) tags.push({ label: g.name, color: 'bg-purple-50 text-purple-600' });
+                  });
+                }
+                if (selectedActivity.services) {
+                  selectedActivity.services.forEach(s => { if (s) tags.push({ label: s, color: 'bg-green-50 text-green-600' }); });
+                }
+                return tags.length > 0 ? (
+                  <div className="flex gap-1.5 flex-wrap mb-3">
+                    {tags.map((t, i) => <span key={i} className={`text-[10px] px-2 py-0.5 rounded-full ${t.color}`}>{t.label}</span>)}
+                  </div>
+                ) : null;
+              })()}
               {/* Price + Add to Cart */}
-              <div className="flex items-center justify-between">
-                <div>
+              <div className="flex items-center gap-3 flex-wrap">
+                <div className="flex-1 min-w-0">
                   {selectedActivity.pricing?.amount ? (
                     <><span className="text-xl font-bold text-blue-600">{selectedActivity.pricing.currency} {parseFloat(selectedActivity.pricing.amount).toFixed(2)}</span><span className="text-[12px] text-gray-400 ml-1">/ person</span></>
                   ) : <span className="text-gray-400">Price on request</span>}
                 </div>
-                <button onClick={() => handleAddActivityToCart(selectedActivity)} className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-[13px] font-semibold inline-flex items-center gap-1.5">
+                <button onClick={() => handleAddActivityToCart(selectedActivity)} className="flex-shrink-0 px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-[13px] font-semibold inline-flex items-center gap-1.5">
                   <ShoppingCart className="w-4 h-4" />Add to Cart
                 </button>
               </div>
