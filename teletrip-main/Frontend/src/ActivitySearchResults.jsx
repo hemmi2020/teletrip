@@ -584,7 +584,7 @@ const ActivitySearchResults = () => {
               {(() => {
                 const tags = [];
                 if (selectedActivity.supplier) tags.push({ label: selectedActivity.supplier, color: 'bg-gray-100 text-gray-600' });
-                if (selectedactivity.scheduling?.duration?.value) tags.push({ label: `${selectedActivity.scheduling.duration.value}h duration`, color: 'bg-gray-100 text-gray-600' });
+                if (selectedActivity.scheduling?.duration?.value) tags.push({ label: `${selectedActivity.scheduling.duration.value}h duration`, color: 'bg-gray-100 text-gray-600' });
                 if (selectedActivity.voucherType) tags.push({ label: `Voucher: ${selectedActivity.voucherType}`, color: 'bg-amber-50 text-amber-600' });
                 if (selectedActivity.activityFactsheetType) tags.push({ label: selectedActivity.activityFactsheetType, color: 'bg-blue-50 text-blue-600' });
                 if (selectedActivity.segmentationGroups) {
