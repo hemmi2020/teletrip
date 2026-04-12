@@ -21,22 +21,22 @@ const Slider = () => {
 
   return (
     <main className="pt-16 w-full">
-      <section className="relative w-full bg-gray-900 overflow-x-hidden">
-        {/* Background Images */}
-        {images.map((img, i) => (
-          <div key={i} className={`absolute inset-0 transition-all duration-[1500ms] ease-in-out ${i === active ? 'opacity-100 scale-100' : 'opacity-0 scale-105'}`}>
-            <img src={img} alt="" className="w-full h-full object-cover" />
-          </div>
-        ))}
+      {/* Hero with high z-index so dropdowns appear above next section */}
+      <section className="relative w-full bg-gray-900 z-30">
+        {/* BG Images - clipped */}
+        <div className="absolute inset-0 overflow-hidden">
+          {images.map((img, i) => (
+            <div key={i} className={`absolute inset-0 transition-all duration-[1500ms] ease-in-out ${i === active ? 'opacity-100 scale-100' : 'opacity-0 scale-105'}`}>
+              <img src={img} alt="" className="w-full h-full object-cover" />
+            </div>
+          ))}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/30 to-black/60" />
+        </div>
 
-        {/* Gradient Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/30 to-black/60" />
-
-        {/* Content */}
+        {/* Content - NOT clipped */}
         <div className="relative z-10">
-          {/* Tagline */}
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 sm:pt-16 md:pt-20 pb-6 sm:pb-8 text-center">
-            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white leading-tight mb-3 sm:mb-4">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 sm:pt-14 md:pt-16 pb-4 sm:pb-6 text-center">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white leading-tight mb-2 sm:mb-3">
               Find your perfect <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">stay anywhere</span>
             </h1>
             <p className="text-sm sm:text-base text-white/60 max-w-xl mx-auto">
@@ -44,17 +44,16 @@ const Slider = () => {
             </p>
           </div>
 
-          {/* Search Form */}
-          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-10 sm:pb-14 md:pb-16">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-8 sm:pb-10 md:pb-12">
             <HotelSearchForm />
           </div>
+        </div>
 
-          {/* Dots */}
-          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1 z-20">
-            {images.map((_, i) => (
-              <button key={i} onClick={() => setActive(i)} className={`rounded-full transition-all duration-500 ${i === active ? 'w-4 h-[3px] bg-white' : 'w-[3px] h-[3px] bg-white/30'}`} />
-            ))}
-          </div>
+        {/* Dots - tiny */}
+        <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 flex gap-[3px] z-20">
+          {images.map((_, i) => (
+            <button key={i} onClick={() => setActive(i)} className={`rounded-full transition-all duration-500 ${i === active ? 'w-3 h-[2px] bg-white/80' : 'w-[2px] h-[2px] bg-white/25'}`} />
+          ))}
         </div>
       </section>
     </main>

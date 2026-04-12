@@ -142,14 +142,14 @@ const TransfersTab = () => {
   return (
     <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded-lg text-sm">
+        <div className="bg-red-500/20 border border-red-400/30 text-red-200 p-3 rounded-lg text-sm">
           {error}
         </div>
       )}
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
         <div className="relative" ref={pickupRef}>
-          <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2 px-1">
+          <label className="block text-xs sm:text-sm font-medium text-white/80 mb-1.5 sm:mb-2 px-1">
             Pickup Location <span className="text-red-500">*</span>
           </label>
           <div className="relative">
@@ -219,7 +219,7 @@ const TransfersTab = () => {
         </div>
 
         <div className="relative" ref={dropoffRef}>
-          <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2 px-1">
+          <label className="block text-xs sm:text-sm font-medium text-white/80 mb-1.5 sm:mb-2 px-1">
             Dropoff Location <span className="text-red-500">*</span>
           </label>
           <div className="relative">
@@ -292,7 +292,7 @@ const TransfersTab = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
         <div>
-          <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2 px-1">
+          <label className="block text-xs sm:text-sm font-medium text-white/80 mb-1.5 sm:mb-2 px-1">
             Date & Time <span className="text-red-500">*</span>
           </label>
           <input
@@ -306,7 +306,7 @@ const TransfersTab = () => {
         </div>
 
         <div className="relative" ref={travellerRef}>
-          <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2 px-1">
+          <label className="block text-xs sm:text-sm font-medium text-white/80 mb-1.5 sm:mb-2 px-1">
             Travellers <span className="text-red-500">*</span>
           </label>
           <div
@@ -471,7 +471,7 @@ const ExperiencesTab = () => {
   return (
     <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
       <div className="relative" ref={locationRef}>
-        <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2 px-1">
+        <label className="block text-xs sm:text-sm font-medium text-white/80 mb-1.5 sm:mb-2 px-1">
           Destination <span className="text-red-500">*</span>
         </label>
         <div className="relative">
@@ -537,7 +537,7 @@ const ExperiencesTab = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
         <div className="relative" ref={calendarRef}>
-          <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2 px-1">
+          <label className="block text-xs sm:text-sm font-medium text-white/80 mb-1.5 sm:mb-2 px-1">
             Dates <span className="text-red-500">*</span>
           </label>
           <div
@@ -580,7 +580,7 @@ const ExperiencesTab = () => {
         </div>
 
         <div className="relative" ref={travellerRef}>
-          <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2 px-1">
+          <label className="block text-xs sm:text-sm font-medium text-white/80 mb-1.5 sm:mb-2 px-1">
             Travellers <span className="text-red-500">*</span>
           </label>
           <div
@@ -879,17 +879,17 @@ const HotelSearchForm = () => {
 
   return (
     <div className="w-full">
-      <div className="bg-white rounded-2xl shadow-2xl p-4 sm:p-5 md:p-6">
+      <div className="bg-white/15 backdrop-blur-xl rounded-2xl border border-white/20 shadow-2xl p-4 sm:p-5 md:p-6">
         {/* Tabs */}
-        <div className="grid grid-cols-3 gap-1 mb-4 sm:mb-5 bg-gray-100 rounded-xl p-1">
+        <div className="grid grid-cols-3 gap-1 mb-4 sm:mb-5 bg-black/20 rounded-xl p-1">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg font-medium transition-all text-sm ${
                 activeTab === tab.id
-                  ? 'bg-blue-600 text-white shadow-md'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                  ? 'bg-white text-gray-900 shadow-md'
+                  : 'text-white/70 hover:text-white hover:bg-white/10'
               }`}
             >
               <tab.Icon className="w-4 h-4" />
@@ -904,7 +904,7 @@ const HotelSearchForm = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                 {/* Location Search (City/Country) */}
                 <div className="relative" ref={locationRef}>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2 px-1">
+                  <label className="block text-xs sm:text-sm font-medium text-white/80 mb-1.5 sm:mb-2 px-1">
                     Destination <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
@@ -947,8 +947,8 @@ const HotelSearchForm = () => {
 
                 {/* Hotel Name Filter */}
                 <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2 px-1">
-                    Hotel Name <span className="text-gray-400 text-xs font-normal">(filter)</span>
+                  <label className="block text-xs sm:text-sm font-medium text-white/80 mb-1.5 sm:mb-2 px-1">
+                    Hotel Name <span className="text-white/40 text-xs font-normal">(filter)</span>
                   </label>
                   <div className="relative">
                     <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
@@ -972,7 +972,7 @@ const HotelSearchForm = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                 {/* Date Range Picker */}
                 <div className="relative" ref={calendarRef}>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2 px-1">
+                  <label className="block text-xs sm:text-sm font-medium text-white/80 mb-1.5 sm:mb-2 px-1">
                     Dates <span className="text-red-500">*</span>
                   </label>
                   <div
@@ -1017,7 +1017,7 @@ const HotelSearchForm = () => {
 
                 {/* Travellers Dropdown */}
                 <div className="relative" ref={travellerRef}>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2 px-1">
+                  <label className="block text-xs sm:text-sm font-medium text-white/80 mb-1.5 sm:mb-2 px-1">
                     Travellers & Rooms <span className="text-red-500">*</span>
                   </label>
                   <div
@@ -1151,7 +1151,7 @@ const HotelSearchForm = () => {
           {activeTab === 'experiences' && <ExperiencesTab />}
 
           {activeTab !== 'stays' && activeTab !== 'transfers' && activeTab !== 'experiences' && (
-            <div className="text-center py-8 text-gray-400">
+            <div className="text-center py-8 text-white/40">
               <p className="text-sm">{tabs.find(t => t.id === activeTab)?.label} feature coming soon!</p>
             </div>
           )}
