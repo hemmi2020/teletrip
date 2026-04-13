@@ -173,7 +173,7 @@ const TransfersTab = () => {
                 if (e.target.value.trim() === '') setSelectedPickup(null);
               }}
               onFocus={() => setShowPickupDropdown(true)}
-              placeholder="e.g., London"
+              placeholder="Airport, hotel or area, e.g. DXB, Hilton Dubai"
               required
               className="w-full pl-10 pr-10 py-2.5 sm:py-3 border border-gray-300 bg-white rounded-lg focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
             />
@@ -253,7 +253,7 @@ const TransfersTab = () => {
                 if (e.target.value.trim() === '') setSelectedDropoff(null);
               }}
               onFocus={() => setShowDropoffDropdown(true)}
-              placeholder="e.g., Paris"
+              placeholder="Airport, hotel or area, e.g. DXB, DAMAC Maison"
               required
               className="w-full pl-10 pr-10 py-2.5 sm:py-3 border border-gray-300 bg-white rounded-lg focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
             />
