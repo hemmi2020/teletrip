@@ -934,7 +934,12 @@ const handlePaymentSubmit = () => {
             </div>
             <div className="text-right">
               <p className="font-semibold text-gray-900">
-                {formatPKR(parseFloat(item.price || item.totalPrice)) || `${item.currency || 'EUR'} ${parseFloat(item.price || item.totalPrice).toFixed(2)}`}
+                {(() => {
+                  const itemTotal = item.type === 'activity'
+                    ? parseFloat(item.price || 0)
+                    : parseFloat(item.totalPrice || item.net || item.price || 0);
+                  return formatPKR(itemTotal) || `${item.currency || 'EUR'} ${itemTotal.toFixed(2)}`;
+                })()}
               </p>
             </div>
           </div>
@@ -948,13 +953,13 @@ const handlePaymentSubmit = () => {
         <div className="flex justify-between items-center text-lg font-bold">
           <span>Total Amount:</span>
           <span className="text-blue-600">
-            {isLoadingConversion ? (
+            {formatPKR(totalAmount) || (isLoadingConversion ? (
               <span className="text-sm">Converting...</span>
             ) : currencyConversion ? (
-              `PKR ${currencyConversion.totalPKR.toFixed(2)}`
+              `PKR ${currencyConversion.totalPKR.toFixed(0)}`
             ) : (
-              `${checkoutItems[0]?.currency || 'PKR'} ${parseFloat(totalAmount).toFixed(2)}`
-            )}
+              `${checkoutItems[0]?.currency || 'EUR'} ${parseFloat(totalAmount).toFixed(2)}`
+            ))}
           </span>
         </div>
       </div>
@@ -1015,7 +1020,7 @@ const handlePaymentSubmit = () => {
             {paymentMethod === 'hblpay' ? (
               <>
                 <Lock className="w-4 h-4" />
-                <span>Pay with HBLPay - PKR {currencyConversion ? currencyConversion.totalPKR.toFixed(2) : parseFloat(totalAmount).toFixed(2)}</span>
+                <span>Pay with HBLPay - {formatPKR(totalAmount) || (currencyConversion ? `PKR ${currencyConversion.totalPKR.toFixed(0)}` : `PKR ${parseFloat(totalAmount).toFixed(0)}`)}</span>
               </>
             ) : (
               <>
