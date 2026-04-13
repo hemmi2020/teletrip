@@ -28,6 +28,8 @@ const TransfersTab = () => {
   const [selectedDropoff, setSelectedDropoff] = useState(null);
   const [transferDate, setTransferDate] = useState('');
   const [returnDate, setReturnDate] = useState('');
+  const [transferDateRange, setTransferDateRange] = useState([{ startDate: addDays(new Date(), 1), endDate: addDays(new Date(), 1), key: 'selection' }]);
+  const [showCalendar, setShowCalendar] = useState(false);
   const [adults, setAdults] = useState(1);
   const [children, setChildren] = useState(0);
   const [infants, setInfants] = useState(0);
@@ -37,6 +39,7 @@ const TransfersTab = () => {
   const pickupRef = useRef(null);
   const dropoffRef = useRef(null);
   const travellerRef = useRef(null);
+  const calendarRef = useRef(null);
 
   // Debounced search for pickup locations via API (airports + hotels)
   useEffect(() => {
@@ -97,6 +100,9 @@ const TransfersTab = () => {
       if (travellerRef.current && !travellerRef.current.contains(event.target)) {
         setShowTravellerDropdown(false);
       }
+      if (calendarRef.current && !calendarRef.current.contains(event.target)) {
+        setShowCalendar(false);
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -108,15 +114,11 @@ const TransfersTab = () => {
       setError('Please select both pickup and dropoff locations');
       return;
     }
-    if (!transferDate) {
-      setError('Please select outbound date and time');
+    if (!transferDateRange[0].startDate) {
+      setError('Please select a travel date');
       return;
     }
-    if (tripType === 'round_trip' && !returnDate) {
-      setError('Please select return date and time');
-      return;
-    }
-    if (tripType === 'round_trip' && returnDate <= transferDate) {
+    if (tripType === 'round_trip' && transferDateRange[0].startDate >= transferDateRange[0].endDate) {
       setError('Return date must be after outbound date');
       return;
     }
@@ -128,19 +130,20 @@ const TransfersTab = () => {
         setLoading(false);
         return;
       }
-      const dateTime = transferDate.includes('T') ? transferDate : transferDate.replace(' ', 'T');
+      const outboundDate = format(transferDateRange[0].startDate, 'yyyy-MM-dd');
+      const returnDateStr = tripType === 'round_trip' ? format(transferDateRange[0].endDate, 'yyyy-MM-dd') : null;
       const searchParams = {
         language: 'en',
         fromType: selectedPickup.type || 'ATLAS',
         fromCode: selectedPickup.code,
         toType: selectedDropoff.type || 'IATA',
         toCode: selectedDropoff.code,
-        outbound: dateTime + ':00',
+        outbound: `${outboundDate}T10:00:00`,
         adults,
         children,
         infants,
         tripType,
-        ...(tripType === 'round_trip' && returnDate ? { inbound: (returnDate.includes('T') ? returnDate : returnDate.replace(' ', 'T')) + ':00' } : {})
+        ...(returnDateStr ? { inbound: `${returnDateStr}T10:00:00` } : {})
       };
 
       // Store search params for display on results page
@@ -189,16 +192,16 @@ const TransfersTab = () => {
       <div className="flex items-center gap-6">
         <label className="flex items-center gap-2 cursor-pointer">
           <input type="radio" name="tripType" value="one_way" checked={tripType === 'one_way'} onChange={() => setTripType('one_way')} className="w-4 h-4 text-blue-600 cursor-pointer" />
-          <span className="text-sm font-medium text-white">One Way</span>
+          <span className="text-sm font-medium text-gray-700">One Way</span>
         </label>
         <label className="flex items-center gap-2 cursor-pointer">
           <input type="radio" name="tripType" value="round_trip" checked={tripType === 'round_trip'} onChange={() => setTripType('round_trip')} className="w-4 h-4 text-blue-600 cursor-pointer" />
-          <span className="text-sm font-medium text-white">Round Trip</span>
+          <span className="text-sm font-medium text-gray-700">Round Trip</span>
         </label>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
         <div className="relative" ref={pickupRef}>
-          <label className="block text-xs sm:text-sm font-medium text-white/80 mb-1.5 sm:mb-2 px-1">
+          <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2 px-1">
             Pickup Location <span className="text-red-500">*</span>
           </label>
           <div className="relative">
@@ -278,7 +281,7 @@ const TransfersTab = () => {
         </div>
 
         <div className="relative" ref={dropoffRef}>
-          <label className="block text-xs sm:text-sm font-medium text-white/80 mb-1.5 sm:mb-2 px-1">
+          <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2 px-1">
             Dropoff Location <span className="text-red-500">*</span>
           </label>
           <div className="relative">
@@ -359,41 +362,50 @@ const TransfersTab = () => {
 
       </div>
 
-      <div className={`grid gap-3 sm:gap-4 ${tripType === 'round_trip' ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1 md:grid-cols-2'}`}>
-        <div>
-          <label className="block text-xs sm:text-sm font-medium text-white/80 mb-1.5 sm:mb-2 px-1">
-            {tripType === 'round_trip' ? 'Outbound Date & Time' : 'Date & Time'} <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="datetime-local"
-            value={transferDate}
-            onChange={(e) => setTransferDate(e.target.value)}
-            required
-            min={new Date().toISOString().slice(0, 16)}
-            className="w-full px-4 py-2.5 sm:py-3 border border-gray-300 bg-white rounded-lg focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
-          />
+      <div className="relative" ref={calendarRef}>
+        <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2 px-1">
+          {tripType === 'round_trip' ? 'Travel Dates' : 'Travel Date'} <span className="text-red-500">*</span>
+        </label>
+        <div
+          onClick={() => setShowCalendar(!showCalendar)}
+          className="flex items-center w-full px-3 py-2.5 sm:py-3 border border-gray-300 bg-white rounded-lg cursor-pointer hover:border-blue-500 transition-all"
+        >
+          <Calendar className="text-gray-400 mr-2 flex-shrink-0" size={18} />
+          <span className="text-gray-700 flex-1 text-sm sm:text-base truncate">
+            {tripType === 'round_trip'
+              ? `${format(transferDateRange[0].startDate, 'MMM dd, yyyy')} – ${format(transferDateRange[0].endDate, 'MMM dd, yyyy')}`
+              : format(transferDateRange[0].startDate, 'MMM dd, yyyy')}
+          </span>
         </div>
-
-        {tripType === 'round_trip' && (
-          <div>
-            <label className="block text-xs sm:text-sm font-medium text-white/80 mb-1.5 sm:mb-2 px-1">
-              Return Date & Time <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="datetime-local"
-              value={returnDate}
-              onChange={(e) => setReturnDate(e.target.value)}
-              required
-              min={transferDate || new Date().toISOString().slice(0, 16)}
-              className="w-full px-4 py-2.5 sm:py-3 border border-gray-300 bg-white rounded-lg focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
-            />
+        {showCalendar && (
+          <div className="fixed sm:absolute z-50 left-1/2 top-1/2 sm:top-auto transform -translate-x-1/2 -translate-y-1/2 sm:translate-y-0 sm:mt-2 bg-white border border-gray-300 rounded-lg shadow-xl overflow-auto max-w-[95vw]">
+            <Suspense fallback={<div className="p-8 text-center text-gray-400">Loading calendar...</div>}>
+              <LazyDateRange
+                ranges={transferDateRange}
+                onChange={(item) => {
+                  setTransferDateRange([item.selection]);
+                  if (tripType === 'one_way') setShowCalendar(false);
+                }}
+                minDate={new Date()}
+                moveRangeOnFirstSelection={false}
+                preventSnapRefocus={true}
+                months={tripType === 'round_trip' ? (window.innerWidth < 640 ? 1 : 2) : 1}
+                direction="horizontal"
+                rangeColors={['#2563eb']}
+                showDateDisplay={false}
+                selectsRange={tripType === 'round_trip'}
+              />
+            </Suspense>
+            <div className="px-4 pb-3 flex justify-end">
+              <button type="button" onClick={() => setShowCalendar(false)} className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm">OK</button>
+            </div>
           </div>
         )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
         <div className="relative" ref={travellerRef}>
-          <label className="block text-xs sm:text-sm font-medium text-white/80 mb-1.5 sm:mb-2 px-1">
+          <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2 px-1">
             Travellers <span className="text-red-500">*</span>
           </label>
           <div
@@ -1252,3 +1264,4 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays' }) => {
 };
 
 export default HotelSearchForm;
+

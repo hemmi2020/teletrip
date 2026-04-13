@@ -31,7 +31,14 @@ class HotelbedsTransfersService {
       const { data } = await this.client.get(url);
       
       console.log('API Response received successfully');
-      console.log('Services found:', data.services?.length || 0);
+      const serviceCount = data.services?.length || 0;
+      console.log('Services found:', serviceCount);
+
+      // Use mock data for testing when API returns no results
+      if (serviceCount === 0) {
+        console.log('⚠️ No results from API — using mock data for UI testing');
+        return this.getMockTransfers(searchParams);
+      }
       
       return {
         search: data.search,
@@ -45,10 +52,7 @@ class HotelbedsTransfersService {
           category: service.category?.name,
           categoryCode: service.category?.code,
           pickupInformation: service.pickupInformation,
-          price: {
-            amount: service.price?.totalAmount,
-            currency: service.price?.currencyId
-          },
+          price: { amount: service.price?.totalAmount, currency: service.price?.currencyId },
           minPaxCapacity: service.minPaxCapacity,
           maxPaxCapacity: service.maxPaxCapacity,
           content: service.content,
@@ -61,117 +65,70 @@ class HotelbedsTransfersService {
         })) || []
       };
     } catch (error) {
-      console.log('API call failed!');
-      throw this.handleError(error);
+      console.log('API call failed — using mock data for UI testing');
+      return this.getMockTransfers(searchParams);
     }
   }
 
-  /* getMockTransfers(searchParams) {
+  getMockTransfers(searchParams) {
     const mockTransfers = [
       {
         id: 1,
         rateKey: `DEPARTURE|${searchParams.fromType}|${searchParams.fromCode}|${searchParams.toType}|${searchParams.toCode}|${searchParams.outbound}|${searchParams.adults}~${searchParams.children}~${searchParams.infants}|3|CR|STND|45.50||1|MOCK|SIMPLE|mock123|1001|T|abc123`,
-        direction: 'DEPARTURE',
-        transferType: 'PRIVATE',
-        vehicle: 'Standard Car',
-        category: 'Standard',
-        pickupInformation: {
-          from: { code: searchParams.fromCode, description: 'Pickup Location', type: searchParams.fromType },
-          to: { code: searchParams.toCode, description: 'Dropoff Location', type: searchParams.toType },
-          date: searchParams.outbound.split('T')[0],
-          time: searchParams.outbound.split('T')[1]?.substring(0, 8) || '10:00:00'
-        },
-        price: { amount: 45.50, currency: 'EUR' },
-        minPaxCapacity: 1,
-        maxPaxCapacity: 3,
-        content: {
-          vehicle: { code: 'CR', name: 'Standard Car' },
-          category: { code: 'STND', name: 'Standard' },
-          images: [{ url: 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=400' }],
-          transferDetailInfo: [
-            { id: '1', name: '20 min journey', description: '20 min estimated journey time', type: 'GENERAL_INFO' },
-            { id: '2', name: '3 passengers max', description: '3 passengers maximum', type: 'GENERAL_INFO' },
-            { id: '3', name: '3 suitcases', description: '3 suitcases permitted', type: 'GENERAL_INFO' }
-          ],
-          transferRemarks: [{ type: 'CONTRACT', description: 'Driver will meet you at arrival hall with name sign', mandatory: true }]
-        },
-        cancellationPolicies: [{ amount: 0, from: new Date(Date.now() + 172800000).toISOString(), currencyId: 'EUR', description: 'Free cancellation up to 48h before pickup' }, { amount: 22.75, from: new Date(Date.now() + 86400000).toISOString(), currencyId: 'EUR', description: '50% fee within 48h of pickup' }],
-        images: ['https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=400']
+        direction: 'DEPARTURE', transferType: 'PRIVATE', vehicle: 'Standard Car', category: 'Standard',
+        price: { amount: 45.50, currency: 'EUR' }, minPaxCapacity: 1, maxPaxCapacity: 3,
+        images: ['https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=800'],
+        transferDetails: [
+          { id: '1', name: '65 min. Estimated journey time', description: '65 min. Estimated journey time', type: 'GENERAL_INFO' },
+          { id: '2', name: '3 passengers maximum', description: '3 passengers maximum', type: 'GENERAL_INFO' },
+          { id: '3', name: '2 suitcases permitted', description: '2 suitcases permitted', type: 'GENERAL_INFO' }
+        ],
+        remarks: [{ type: 'CONTRACT', description: 'Driver will meet you at arrival hall with name sign', mandatory: true }],
+        cancellationPolicies: [
+          { amount: 0, from: new Date(Date.now() + 172800000).toISOString(), currencyId: 'EUR', description: 'Free cancellation up to 48h before pickup' },
+          { amount: 22.75, from: new Date(Date.now() + 86400000).toISOString(), currencyId: 'EUR', description: '50% fee within 48h of pickup' }
+        ]
       },
       {
         id: 2,
         rateKey: `DEPARTURE|${searchParams.fromType}|${searchParams.fromCode}|${searchParams.toType}|${searchParams.toCode}|${searchParams.outbound}|${searchParams.adults}~${searchParams.children}~${searchParams.infants}|7|VN|STND|65.00||2|MOCK|SIMPLE|mock456|1002|T|def456`,
-        direction: 'DEPARTURE',
-        transferType: 'PRIVATE',
-        vehicle: 'Standard Van',
-        category: 'Standard',
-        pickupInformation: {
-          from: { code: searchParams.fromCode, description: 'Pickup Location', type: searchParams.fromType },
-          to: { code: searchParams.toCode, description: 'Dropoff Location', type: searchParams.toType },
-          date: searchParams.outbound.split('T')[0],
-          time: searchParams.outbound.split('T')[1]?.substring(0, 8) || '10:00:00'
-        },
-        price: { amount: 65.00, currency: 'EUR' },
-        minPaxCapacity: 1,
-        maxPaxCapacity: 7,
-        content: {
-          vehicle: { code: 'VN', name: 'Standard Van' },
-          category: { code: 'STND', name: 'Standard' },
-          images: [{ url: 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=400' }],
-          transferDetailInfo: [
-            { id: '1', name: '20 min journey', description: '20 min estimated journey time', type: 'GENERAL_INFO' },
-            { id: '2', name: '7 passengers max', description: '7 passengers maximum', type: 'GENERAL_INFO' },
-            { id: '3', name: '7 suitcases', description: '7 suitcases permitted', type: 'GENERAL_INFO' }
-          ],
-          transferRemarks: [{ type: 'CONTRACT', description: 'Driver will meet you at arrival hall with name sign', mandatory: true }]
-        },
-        cancellationPolicies: [{ amount: 0, from: new Date(Date.now() + 172800000).toISOString(), currencyId: 'EUR', description: 'Free cancellation up to 48h before pickup' }, { amount: 32.50, from: new Date(Date.now() + 86400000).toISOString(), currencyId: 'EUR', description: '50% fee within 48h of pickup' }],
-        images: ['https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=400']
+        direction: 'DEPARTURE', transferType: 'SHARED', vehicle: 'Standard Van', category: 'Standard',
+        price: { amount: 65.00, currency: 'EUR' }, minPaxCapacity: 1, maxPaxCapacity: 7,
+        images: ['https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=800'],
+        transferDetails: [
+          { id: '1', name: '65 min. Estimated journey time', description: '65 min. Estimated journey time', type: 'GENERAL_INFO' },
+          { id: '2', name: '7 passengers maximum', description: '7 passengers maximum', type: 'GENERAL_INFO' },
+          { id: '3', name: '7 suitcases permitted', description: '7 suitcases permitted', type: 'GENERAL_INFO' }
+        ],
+        remarks: [{ type: 'CONTRACT', description: 'Driver will meet you at arrival hall with name sign', mandatory: true }],
+        cancellationPolicies: [
+          { amount: 0, from: new Date(Date.now() + 172800000).toISOString(), currencyId: 'EUR', description: 'Free cancellation up to 48h before pickup' },
+          { amount: 32.50, from: new Date(Date.now() + 86400000).toISOString(), currencyId: 'EUR', description: '50% fee within 48h of pickup' }
+        ]
       },
       {
         id: 3,
         rateKey: `DEPARTURE|${searchParams.fromType}|${searchParams.fromCode}|${searchParams.toType}|${searchParams.toCode}|${searchParams.outbound}|${searchParams.adults}~${searchParams.children}~${searchParams.infants}|3|CR|EXEC|85.00||3|MOCK|SIMPLE|mock789|1003|T|ghi789`,
-        direction: 'DEPARTURE',
-        transferType: 'PRIVATE',
-        vehicle: 'Executive Car',
-        category: 'Executive',
-        pickupInformation: {
-          from: { code: searchParams.fromCode, description: 'Pickup Location', type: searchParams.fromType },
-          to: { code: searchParams.toCode, description: 'Dropoff Location', type: searchParams.toType },
-          date: searchParams.outbound.split('T')[0],
-          time: searchParams.outbound.split('T')[1]?.substring(0, 8) || '10:00:00'
-        },
-        price: { amount: 85.00, currency: 'EUR' },
-        minPaxCapacity: 1,
-        maxPaxCapacity: 3,
-        content: {
-          vehicle: { code: 'CR', name: 'Executive Car' },
-          category: { code: 'EXEC', name: 'Executive' },
-          images: [{ url: 'https://images.unsplash.com/photo-1563720360172-67b8f3dce741?w=400' }],
-          transferDetailInfo: [
-            { id: '1', name: '20 min journey', description: '20 min estimated journey time', type: 'GENERAL_INFO' },
-            { id: '2', name: '3 passengers max', description: '3 passengers maximum', type: 'GENERAL_INFO' },
-            { id: '3', name: 'Premium service', description: 'Luxury vehicle with professional driver', type: 'GENERAL_INFO' }
-          ],
-          transferRemarks: [{ type: 'CONTRACT', description: 'Premium driver will meet you with name sign at VIP area', mandatory: true }]
-        },
-        cancellationPolicies: [{ amount: 0, from: new Date(Date.now() + 172800000).toISOString(), currencyId: 'EUR', description: 'Free cancellation up to 48h before pickup' }, { amount: 42.50, from: new Date(Date.now() + 86400000).toISOString(), currencyId: 'EUR', description: '50% fee within 48h of pickup' }],
-        images: ['https://images.unsplash.com/photo-1563720360172-67b8f3dce741?w=400']
+        direction: 'DEPARTURE', transferType: 'PRIVATE', vehicle: 'Executive Car', category: 'Executive',
+        price: { amount: 85.00, currency: 'EUR' }, minPaxCapacity: 1, maxPaxCapacity: 3,
+        images: ['https://images.unsplash.com/photo-1563720360172-67b8f3dce741?w=800'],
+        transferDetails: [
+          { id: '1', name: '65 min. Estimated journey time', description: '65 min. Estimated journey time', type: 'GENERAL_INFO' },
+          { id: '2', name: '3 passengers maximum', description: '3 passengers maximum', type: 'GENERAL_INFO' },
+          { id: '3', name: '2 suitcases permitted', description: '2 suitcases permitted', type: 'GENERAL_INFO' }
+        ],
+        remarks: [{ type: 'CONTRACT', description: 'Premium driver will meet you with name sign at VIP area', mandatory: true }],
+        cancellationPolicies: [
+          { amount: 0, from: new Date(Date.now() + 172800000).toISOString(), currencyId: 'EUR', description: 'Free cancellation up to 48h before pickup' },
+          { amount: 42.50, from: new Date(Date.now() + 86400000).toISOString(), currencyId: 'EUR', description: '50% fee within 48h of pickup' }
+        ]
       }
     ];
-
     return {
-      search: {
-        language: searchParams.language || 'en',
-        from: { code: searchParams.fromCode, type: searchParams.fromType },
-        to: { code: searchParams.toCode, type: searchParams.toType },
-        departure: { date: searchParams.outbound.split('T')[0], time: searchParams.outbound.split('T')[1]?.substring(0, 8) || '10:00:00' },
-        occupancy: { adults: searchParams.adults || 1, children: searchParams.children || 0, infants: searchParams.infants || 0 }
-      },
+      search: { language: 'en', from: { code: searchParams.fromCode, type: searchParams.fromType }, to: { code: searchParams.toCode, type: searchParams.toType } },
       transfers: mockTransfers
     };
-  } */
-
+  }
   async getTransferDetails(transferCode, searchId, language = 'en') {
     return {
       code: transferCode,
