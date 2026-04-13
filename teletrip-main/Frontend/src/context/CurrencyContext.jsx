@@ -44,6 +44,7 @@ export const CurrencyProvider = ({ children }) => {
   };
 
   const formatPKR = (amountEUR) => {
+    if (!rate) return null; // rate not loaded yet — return null, don't show EUR
     const pkr = convert(amountEUR);
     if (pkr === null) return null;
     return `PKR ${pkr.toLocaleString('en-PK', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;

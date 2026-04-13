@@ -185,22 +185,16 @@ const TransfersTab = () => {
         </div>
       )}
 
-      {/* Trip Type Toggle */}
-      <div className="flex gap-2">
-        <button
-          type="button"
-          onClick={() => setTripType('one_way')}
-          className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer ${tripType === 'one_way' ? 'bg-white text-blue-600 shadow-sm border border-blue-200' : 'bg-white/20 text-white/70 hover:bg-white/30 border border-white/20'}`}
-        >
-          One Way
-        </button>
-        <button
-          type="button"
-          onClick={() => setTripType('round_trip')}
-          className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer ${tripType === 'round_trip' ? 'bg-white text-blue-600 shadow-sm border border-blue-200' : 'bg-white/20 text-white/70 hover:bg-white/30 border border-white/20'}`}
-        >
-          Round Trip
-        </button>
+      {/* Trip Type Radio Buttons */}
+      <div className="flex items-center gap-6">
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input type="radio" name="tripType" value="one_way" checked={tripType === 'one_way'} onChange={() => setTripType('one_way')} className="w-4 h-4 text-blue-600 cursor-pointer" />
+          <span className="text-sm font-medium text-white">One Way</span>
+        </label>
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input type="radio" name="tripType" value="round_trip" checked={tripType === 'round_trip'} onChange={() => setTripType('round_trip')} className="w-4 h-4 text-blue-600 cursor-pointer" />
+          <span className="text-sm font-medium text-white">Round Trip</span>
+        </label>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
         <div className="relative" ref={pickupRef}>
