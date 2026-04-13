@@ -913,6 +913,13 @@ if (children > 0 && childAges.length > 0) {
     '33': 'City Hotels', '35': 'Ski Hotels', '38': 'Spa Hotels',
   };
 
+  // Compute price bounds from all hotels for slider
+  const priceBounds = useMemo(() => {
+    if (!hotels.length) return { min: 0, max: 1000 };
+    const prices = hotels.map(h => parseFloat(h.price)).filter(p => p > 0);
+    return { min: Math.floor(Math.min(...prices)), max: Math.ceil(Math.max(...prices)) };
+  }, [hotels]);
+
   // Filter hotels (memoized)
   const filteredHotels = useMemo(() => hotels.filter(hotel => {
     if (hotelNameSearch && !hotel.name.toLowerCase().includes(hotelNameSearch.toLowerCase())) return false;
@@ -1163,26 +1170,68 @@ if (children > 0 && childAges.length > 0) {
                 onClick={() => toggleSection('price')}
                 className="flex items-center justify-between w-full cursor-pointer"
               >
-                <span className="text-[13px] font-semibold text-gray-800">Price Range</span>
+                <span className="text-[13px] font-semibold text-gray-800">Price Range (EUR)</span>
                 {expandedSections.price ? <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 rotate-180" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200" />}
               </button>
               {expandedSections.price && (
-                <div className="flex items-center gap-2">
-                  <input
-                    type="number"
-                    value={priceMin}
-                    onChange={(e) => setPriceMin(e.target.value)}
-                    placeholder="Min"
-                    className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 rounded-md bg-gray-50/50 focus:bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                  />
-                  <span className="text-gray-300 text-xs">�</span>
-                  <input
-                    type="number"
-                    value={priceMax}
-                    onChange={(e) => setPriceMax(e.target.value)}
-                    placeholder="Max"
-                    className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 rounded-md bg-gray-50/50 focus:bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                  />
+                <div className="mt-2 space-y-3">
+                  <div className="relative h-6 flex items-center">
+                    <div className="absolute left-0 right-0 h-1 bg-gray-200 rounded-full" />
+                    <div
+                      className="absolute h-1 bg-blue-500 rounded-full"
+                      style={{
+                        left: `${((parseFloat(priceMin) || priceBounds.min) - priceBounds.min) / (priceBounds.max - priceBounds.min || 1) * 100}%`,
+                        right: `${100 - ((parseFloat(priceMax) || priceBounds.max) - priceBounds.min) / (priceBounds.max - priceBounds.min || 1) * 100}%`
+                      }}
+                    />
+                    <input
+                      type="range"
+                      min={priceBounds.min}
+                      max={priceBounds.max}
+                      value={parseFloat(priceMin) || priceBounds.min}
+                      onChange={(e) => {
+                        const v = parseFloat(e.target.value);
+                        const maxV = parseFloat(priceMax) || priceBounds.max;
+                        setPriceMin(v >= maxV ? String(maxV - 1) : String(v));
+                      }}
+                      className="absolute w-full appearance-none bg-transparent pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-blue-500 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:shadow-sm [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-blue-500 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:cursor-pointer"
+                      style={{ zIndex: 3 }}
+                    />
+                    <input
+                      type="range"
+                      min={priceBounds.min}
+                      max={priceBounds.max}
+                      value={parseFloat(priceMax) || priceBounds.max}
+                      onChange={(e) => {
+                        const v = parseFloat(e.target.value);
+                        const minV = parseFloat(priceMin) || priceBounds.min;
+                        setPriceMax(v <= minV ? String(minV + 1) : String(v));
+                      }}
+                      className="absolute w-full appearance-none bg-transparent pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-blue-500 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:shadow-sm [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-blue-500 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:cursor-pointer"
+                      style={{ zIndex: 4 }}
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      value={priceMin}
+                      onChange={(e) => setPriceMin(e.target.value)}
+                      placeholder={String(priceBounds.min)}
+                      className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 rounded-md bg-gray-50/50 focus:bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    />
+                    <span className="text-gray-300 text-xs">–</span>
+                    <input
+                      type="number"
+                      value={priceMax}
+                      onChange={(e) => setPriceMax(e.target.value)}
+                      placeholder={String(priceBounds.max)}
+                      className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 rounded-md bg-gray-50/50 focus:bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                    />
+                  </div>
+                  <div className="flex justify-between text-[10px] text-gray-400">
+                    <span>EUR {priceBounds.min}</span>
+                    <span>EUR {priceBounds.max}</span>
+                  </div>
                 </div>
               )}
             </div>
