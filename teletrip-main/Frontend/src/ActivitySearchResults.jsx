@@ -257,13 +257,17 @@ const ActivitySearchResults = () => {
     return svcs;
   };
 
-  // Compute price bounds from all activities for slider
+  // Compute price bounds from all activities for slider (in PKR)
   const priceBounds = useMemo(() => {
     if (!activities.length) return { min: 0, max: 500 };
     const prices = activities.map(a => parseFloat(a.pricing?.amount || 0)).filter(p => p > 0);
     if (!prices.length) return { min: 0, max: 500 };
-    return { min: Math.floor(Math.min(...prices)), max: Math.ceil(Math.max(...prices)) };
-  }, [activities]);
+    const minEur = Math.floor(Math.min(...prices));
+    const maxEur = Math.ceil(Math.max(...prices));
+    const minPkr = convert ? Math.floor(convert(minEur) || minEur) : minEur;
+    const maxPkr = convert ? Math.ceil(convert(maxEur) || maxEur) : maxEur;
+    return { min: minPkr, max: maxPkr };
+  }, [activities, convert]);
 
   const filteredActivities = useMemo(() => activities.filter(a => {
     if (nameSearch && !a.name.toLowerCase().includes(nameSearch.toLowerCase())) return false;
@@ -274,10 +278,11 @@ const ActivitySearchResults = () => {
     if (selectedVoucherTypes.length > 0 && !selectedVoucherTypes.includes(a.voucherType)) return false;
     if (selectedServices.length > 0) { const svcs = getActivityServices(a); if (!selectedServices.some(s => svcs.has(s))) return false; }
     const price = parseFloat(a.pricing?.amount || 0);
-    if (priceMin && price < parseFloat(priceMin)) return false;
-    if (priceMax && price > parseFloat(priceMax)) return false;
+    const pricePkr = convert ? (convert(price) || price) : price;
+    if (priceMin && pricePkr < parseFloat(priceMin)) return false;
+    if (priceMax && pricePkr > parseFloat(priceMax)) return false;
     return true;
-  }), [activities, nameSearch, selectedCategories, selectedDaytimes, selectedRecommended, selectedSuppliers, selectedVoucherTypes, selectedServices, priceMin, priceMax]);
+  }), [activities, nameSearch, selectedCategories, selectedDaytimes, selectedRecommended, selectedSuppliers, selectedVoucherTypes, selectedServices, priceMin, priceMax, convert]);
 
   const sortedActivities = useMemo(() => [...filteredActivities].sort((a, b) => {
     if (sortOption === 'priceLow') return parseFloat(a.pricing?.amount || 0) - parseFloat(b.pricing?.amount || 0);
@@ -489,7 +494,7 @@ const ActivitySearchResults = () => {
               {/* 8. Price Min & Max */}
               <div className="py-3 border-b border-gray-50">
                 <button onClick={() => toggleSection('price')} className="flex items-center justify-between w-full cursor-pointer">
-                  <span className="text-[13px] font-semibold text-gray-800">Price Range (EUR)</span>
+                  <span className="text-[13px] font-semibold text-gray-800">Price Range (PKR)</span>
                   {expandedSections.price ? <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 rotate-180" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200" />}
                 </button>
                 {expandedSections.price && (
@@ -548,8 +553,8 @@ const ActivitySearchResults = () => {
                       />
                     </div>
                     <div className="flex justify-between text-[10px] text-gray-400">
-                      <span>EUR {priceBounds.min}</span>
-                      <span>EUR {priceBounds.max}</span>
+                      <span>PKR {priceBounds.min.toLocaleString()}</span>
+                      <span>PKR {priceBounds.max.toLocaleString()}</span>
                     </div>
                   </div>
                 )}

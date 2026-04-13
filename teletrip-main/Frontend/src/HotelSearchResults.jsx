@@ -913,12 +913,16 @@ if (children > 0 && childAges.length > 0) {
     '33': 'City Hotels', '35': 'Ski Hotels', '38': 'Spa Hotels',
   };
 
-  // Compute price bounds from all hotels for slider
+  // Compute price bounds from all hotels for slider (in PKR)
   const priceBounds = useMemo(() => {
     if (!hotels.length) return { min: 0, max: 1000 };
     const prices = hotels.map(h => parseFloat(h.price)).filter(p => p > 0);
-    return { min: Math.floor(Math.min(...prices)), max: Math.ceil(Math.max(...prices)) };
-  }, [hotels]);
+    const minEur = Math.floor(Math.min(...prices));
+    const maxEur = Math.ceil(Math.max(...prices));
+    const minPkr = convert ? Math.floor(convert(minEur) || minEur) : minEur;
+    const maxPkr = convert ? Math.ceil(convert(maxEur) || maxEur) : maxEur;
+    return { min: minPkr, max: maxPkr, minEur, maxEur };
+  }, [hotels, convert]);
 
   // Filter hotels (memoized)
   const filteredHotels = useMemo(() => hotels.filter(hotel => {
@@ -939,8 +943,9 @@ if (children > 0 && childAges.length > 0) {
     if (selectedCancellation === "nonrefundable" && (hotel.hasFreeCancellation || hotel.hasNoCancellationInfo)) return false;
     if (selectedCancellation === "notavailable" && !hotel.hasNoCancellationInfo) return false;
     const price = parseFloat(hotel.price);
-    if (priceMin && price < parseFloat(priceMin)) return false;
-    if (priceMax && price > parseFloat(priceMax)) return false;
+    const pricePkr = convert ? (convert(price) || price) : price;
+    if (priceMin && pricePkr < parseFloat(priceMin)) return false;
+    if (priceMax && pricePkr > parseFloat(priceMax)) return false;
     if (selectedPromos.length > 0 && !hotel.promos.some(p => selectedPromos.includes(p))) return false;
     if (selectedDiscounts.length > 0 && !hotel.discounts.some(d => selectedDiscounts.includes(d))) return false;
     if (selectedChains.length > 0 && !selectedChains.includes(hotel.chain)) return false;
@@ -952,7 +957,7 @@ if (children > 0 && childAges.length > 0) {
     }
     if (selectedAccommodationTypes.length > 0 && !selectedAccommodationTypes.includes(hotel.type)) return false;
     return true;
-  }), [hotels, hotelNameSearch, selectedSight, addressSearch, selectedBoards, selectedCategories, selectedZones, selectedReviewRatings, hotelReviews, selectedCancellation, priceMin, priceMax, selectedPromos, selectedDiscounts, selectedChains, selectedEstablishment, selectedPackaging, selectedAmenities, selectedAccommodationTypes]);
+  }), [hotels, hotelNameSearch, selectedSight, addressSearch, selectedBoards, selectedCategories, selectedZones, selectedReviewRatings, hotelReviews, selectedCancellation, priceMin, priceMax, selectedPromos, selectedDiscounts, selectedChains, selectedEstablishment, selectedPackaging, selectedAmenities, selectedAccommodationTypes, convert]);
 
   const sortedHotels = useMemo(() => [...filteredHotels].sort((a, b) => {
     if (sortOption === "priceLowHigh") {
@@ -1170,7 +1175,7 @@ if (children > 0 && childAges.length > 0) {
                 onClick={() => toggleSection('price')}
                 className="flex items-center justify-between w-full cursor-pointer"
               >
-                <span className="text-[13px] font-semibold text-gray-800">Price Range (EUR)</span>
+                <span className="text-[13px] font-semibold text-gray-800">Price Range (PKR)</span>
                 {expandedSections.price ? <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 rotate-180" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200" />}
               </button>
               {expandedSections.price && (
@@ -1229,8 +1234,8 @@ if (children > 0 && childAges.length > 0) {
                     />
                   </div>
                   <div className="flex justify-between text-[10px] text-gray-400">
-                    <span>EUR {priceBounds.min}</span>
-                    <span>EUR {priceBounds.max}</span>
+                    <span>PKR {priceBounds.min.toLocaleString()}</span>
+                    <span>PKR {priceBounds.max.toLocaleString()}</span>
                   </div>
                 </div>
               )}
@@ -1758,8 +1763,9 @@ if (children > 0 && childAges.length > 0) {
                       if (!selectedPromos.some(p => ratePromos.includes(p))) return false;
                     }
                     const ratePrice = parseFloat(rate.net);
-                    if (priceMin && ratePrice < parseFloat(priceMin)) return false;
-                    if (priceMax && ratePrice > parseFloat(priceMax)) return false;
+                    const ratePkr = convert ? (convert(ratePrice) || ratePrice) : ratePrice;
+                    if (priceMin && ratePkr < parseFloat(priceMin)) return false;
+                    if (priceMax && ratePkr > parseFloat(priceMax)) return false;
                     return true;
                   });
                   if (filteredRates.length === 0) return null;
