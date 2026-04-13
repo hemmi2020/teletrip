@@ -11,6 +11,13 @@ const ActivitySearchResults = () => {
   const navigate = useNavigate();
   const { addToCart } = useCart();
   const { formatPKR, convert } = useCurrency();
+
+  const destination = searchParams.get('destination');
+  const country = searchParams.get('country');
+  const from = searchParams.get('from');
+  const to = searchParams.get('to');
+  const adults = searchParams.get('adults') || '2';
+
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -48,12 +55,6 @@ const ActivitySearchResults = () => {
     services: true,
     price: true,
   });
-
-  const destination = searchParams.get('destination');
-  const country = searchParams.get('country');
-  const from = searchParams.get('from');
-  const to = searchParams.get('to');
-  const adults = searchParams.get('adults') || '2';
 
   const API_BASE_URL = (import.meta.env.VITE_BASE_URL || 'http://localhost:3000') + '/api';
 
