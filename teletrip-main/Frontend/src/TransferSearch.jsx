@@ -244,54 +244,51 @@ const TransferSearch = () => {
                     const price = parseFloat(t.price?.amount || 0);
                     const typeLabel = t.transferType === 'PRIVATE' ? 'Private' : t.transferType === 'SHARED' ? 'Shared' : t.transferType || 'Transfer';
                     const details = t.transferDetails || [];
-                    const luggageInfo = details.find(d => /luggage|suitcase|bag/i.test(d.name || d.description || ''));
-                    const durationInfo = details.find(d => /duration|journey|time|min/i.test(d.name || d.description || ''));
 
                     return (
                       <div key={idx} className="bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-lg hover:border-gray-200 transition-all duration-200 flex flex-col sm:flex-row group">
-                          <div className="sm:w-56 lg:w-64 relative overflow-hidden flex-shrink-0 bg-gradient-to-br from-blue-50 to-blue-100">
-                            {t.images?.[0] ? (<img src={t.images[0]} alt={t.vehicle} className="w-full h-40 sm:h-full object-cover group-hover:scale-105 transition-transform duration-500" onError={(e) => { e.target.style.display = 'none'; }} />) : (<div className="w-full h-40 sm:h-full flex items-center justify-center"><Car className="w-12 h-12 text-blue-200" /></div>)}
-                            <span className={`absolute top-2 left-2 text-[10px] px-2 py-0.5 rounded font-medium ${t.transferType === 'PRIVATE' ? 'bg-blue-600/90 text-white' : 'bg-amber-500/90 text-white'}`}>{typeLabel}</span>
-                          </div>
-                          <div className="flex-1 p-3 sm:p-4 flex flex-col justify-between min-w-0">
-                            <div>
-                              <div className="flex items-start justify-between gap-3">
-                                <div className="min-w-0">
-                                  <h3 className="text-[14px] font-semibold text-gray-900 leading-tight line-clamp-1">{t.vehicle || 'Transfer Vehicle'}</h3>
-                                  <p className="text-[12px] text-gray-500 mt-0.5">{t.category || 'Standard'}</p>
-                                </div>
-                                <div className="text-right flex-shrink-0">
-                                  <div className="text-lg font-bold text-blue-600 leading-tight">{formatPKR(price) || `${t.price?.currency} ${price.toFixed(0)}`}</div>
-                                  <div className="text-[10px] text-gray-400">total</div>
-                                </div>
+                        <div className="sm:w-56 lg:w-64 min-h-[160px] relative overflow-hidden flex-shrink-0 bg-gradient-to-br from-blue-50 to-blue-100">
+                          {t.images?.[0] ? (<img src={t.images[0]} alt={t.vehicle} className="w-full h-full absolute inset-0 object-cover group-hover:scale-105 transition-transform duration-500" onError={(e) => { e.target.style.display = 'none'; }} />) : (<div className="w-full h-full flex items-center justify-center"><Car className="w-12 h-12 text-blue-200" /></div>)}
+                          <span className={`absolute top-2 left-2 text-[10px] px-2 py-0.5 rounded font-medium z-10 ${t.transferType === 'PRIVATE' ? 'bg-blue-600/90 text-white' : 'bg-amber-500/90 text-white'}`}>{typeLabel}</span>
+                        </div>
+                        <div className="flex-1 p-3 sm:p-4 flex flex-col justify-between min-w-0">
+                          <div>
+                            <div className="flex items-start justify-between gap-3 mb-1">
+                              <div className="min-w-0">
+                                <h3 className="text-[14px] font-semibold text-gray-900 leading-tight">{t.vehicle || 'Transfer Vehicle'}</h3>
+                                <p className="text-[12px] text-gray-500">{t.category || 'Standard'}</p>
                               </div>
-                              {/* Route */}
-                              {searchInfo && (
-                                <div className="flex items-center gap-1.5 mt-2 text-[11px] text-gray-500">
-                                  <MapPin className="w-3 h-3 text-blue-400" />
-                                  <span className="truncate">{searchInfo.pickupName || searchInfo.fromCode}</span>
-                                  <ArrowRight className="w-3 h-3 text-gray-300 flex-shrink-0" />
-                                  <span className="truncate">{searchInfo.dropoffName || searchInfo.toCode}</span>
-                                </div>
+                              <div className="text-right flex-shrink-0">
+                                <div className="text-lg font-bold text-blue-600 leading-tight">{formatPKR(price) || `${t.price?.currency} ${price.toFixed(0)}`}</div>
+                                <div className="text-[10px] text-gray-400">total</div>
+                              </div>
+                            </div>
+                            {searchInfo && (
+                              <div className="flex items-center gap-1 text-[11px] text-gray-500 mb-2">
+                                <MapPin className="w-3 h-3 text-blue-400 flex-shrink-0" />
+                                <span className="truncate">{searchInfo.pickupName || searchInfo.fromCode}</span>
+                                <ArrowRight className="w-3 h-3 text-gray-300 flex-shrink-0" />
+                                <span className="truncate">{searchInfo.dropoffName || searchInfo.toCode}</span>
+                              </div>
+                            )}
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              <span className="text-[10px] px-2 py-0.5 bg-blue-50 text-blue-600 rounded-full flex items-center gap-1"><Users className="w-3 h-3" />{t.minPaxCapacity || 1}–{t.maxPaxCapacity || '?'} pax</span>
+                              {details.map((d, di) => (
+                                <span key={di} className="text-[10px] px-2 py-0.5 bg-gray-50 text-gray-500 rounded-full">{d.name || d.description}</span>
+                              ))}
+                              {t.direction && <span className="text-[10px] px-2 py-0.5 bg-gray-50 text-gray-500 rounded-full">{t.direction}</span>}
+                              {t.cancellationPolicies?.length > 0 && (
+                                <span className={`text-[10px] px-2 py-0.5 rounded-full ${t.cancellationPolicies[0]?.amount === 0 ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-500'}`}>
+                                  {t.cancellationPolicies[0]?.amount === 0 ? 'Free cancellation' : 'Cancellation fee'}
+                                </span>
                               )}
-                              {/* Tags */}
-                              <div className="flex flex-wrap items-center gap-1.5 mt-2">
-                                <span className="text-[10px] px-2 py-0.5 bg-blue-50 text-blue-600 rounded-full flex items-center gap-1"><Users className="w-3 h-3" /> {t.minPaxCapacity || 1}–{t.maxPaxCapacity || '?'} pax</span>
-                                {durationInfo && <span className="text-[10px] px-2 py-0.5 bg-gray-50 text-gray-500 rounded-full flex items-center gap-1"><Clock className="w-3 h-3" /> {durationInfo.name || durationInfo.description}</span>}
-                                {luggageInfo && <span className="text-[10px] px-2 py-0.5 bg-gray-50 text-gray-500 rounded-full flex items-center gap-1"><Luggage className="w-3 h-3" /> {luggageInfo.name || luggageInfo.description}</span>}
-                                {t.direction && <span className="text-[10px] px-2 py-0.5 bg-gray-50 text-gray-500 rounded-full">{t.direction}</span>}
-                                {t.cancellationPolicies?.length > 0 && (
-                                  <span className={`text-[10px] px-2 py-0.5 rounded-full ${t.cancellationPolicies[0]?.amount === 0 ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-500'}`}>
-                                    {t.cancellationPolicies[0]?.amount === 0 ? 'Free cancellation' : 'Cancellation fee'}
-                                  </span>
-                                )}
-                              </div>
                             </div>
-                            <div className="flex items-center justify-end gap-2 mt-3">
-                              <button onClick={() => setSelectedTransfer(t)} className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-[12px] font-semibold cursor-pointer"><Eye className="w-3.5 h-3.5" /> View Details</button>
-                            </div>
+                          </div>
+                          <div className="flex items-center justify-end mt-3 pt-2 border-t border-gray-50">
+                            <button onClick={() => setSelectedTransfer(t)} className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-[12px] font-semibold cursor-pointer"><Eye className="w-3.5 h-3.5" /> View Details</button>
                           </div>
                         </div>
+                      </div>
                     );
                   })}
                 </div>
@@ -316,11 +313,27 @@ const TransferSearch = () => {
             </div>
 
             {selectedTransfer.images?.length > 0 && (
-              <div className="relative h-[200px] overflow-hidden cursor-pointer" onClick={() => { setGalleryImages(selectedTransfer.images); setGalleryIndex(0); setGalleryOpen(true); }}>
-                {selectedTransfer.images.length === 1 ? (<img src={selectedTransfer.images[0]} alt="" className="w-full h-full object-cover" />) : (
-                  <div className="grid grid-cols-3 gap-1 h-full">
-                    <div className="col-span-2"><img src={selectedTransfer.images[0]} alt="" className="w-full h-full object-cover" /></div>
-                    <div className="flex flex-col gap-1">{selectedTransfer.images.slice(1, 3).map((img, i) => (<div key={i} className="flex-1 relative"><img src={img} alt="" className="w-full h-full object-cover" />{i === 1 && selectedTransfer.images.length > 3 && (<div className="absolute inset-0 bg-black/40 flex items-center justify-center text-white text-sm font-medium">+{selectedTransfer.images.length - 3}</div>)}</div>))}</div>
+              <div className="relative h-[220px] overflow-hidden cursor-pointer flex-shrink-0" onClick={() => { setGalleryImages(selectedTransfer.images); setGalleryIndex(0); setGalleryOpen(true); }}>
+                {selectedTransfer.images.length === 1 ? (
+                  <img src={selectedTransfer.images[0]} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="grid grid-cols-3 gap-0.5 h-full">
+                    <div className="col-span-2 h-full overflow-hidden">
+                      <img src={selectedTransfer.images[0]} alt="" className="w-full h-full object-cover" />
+                    </div>
+                    <div className="flex flex-col gap-0.5 h-full">
+                      <div className="h-1/2 overflow-hidden relative">
+                        <img src={selectedTransfer.images[1]} alt="" className="w-full h-full object-cover" />
+                      </div>
+                      {selectedTransfer.images[2] && (
+                        <div className="h-1/2 overflow-hidden relative">
+                          <img src={selectedTransfer.images[2]} alt="" className="w-full h-full object-cover" />
+                          {selectedTransfer.images.length > 3 && (
+                            <div className="absolute inset-0 bg-black/40 flex items-center justify-center text-white text-sm font-medium">+{selectedTransfer.images.length - 3}</div>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
