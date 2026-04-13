@@ -359,7 +359,7 @@ const TransferSearch = () => {
 
               {/* Cancellation */}
               {selectedTransfer.cancellationPolicies?.length > 0 && (
-                <div><h4 className="text-[13px] font-semibold text-gray-800 mb-2">Cancellation Policy</h4><div className="space-y-1">{selectedTransfer.cancellationPolicies.map((p, i) => (<div key={i} className="text-[12px] text-gray-600 flex items-center gap-2"><span className={`w-2 h-2 rounded-full ${parseFloat(p.amount) === 0 ? 'bg-green-500' : 'bg-red-500'}`} />{parseFloat(p.amount) === 0 ? 'Free cancellation' : `${formatPKR(parseFloat(p.amount)) || `PKR ${parseFloat(p.amount).toFixed(0)}`} fee`}{p.dateFrom && <span className="text-gray-400">from {new Date(p.dateFrom).toLocaleDateString()}</span>}</div>))}</div></div>
+                <div><h4 className="text-[13px] font-semibold text-gray-800 mb-2">Cancellation Policy</h4><div className="space-y-1.5">{selectedTransfer.cancellationPolicies.map((p, i) => (<div key={i} className="text-[12px] text-gray-600 flex flex-col gap-0.5"><div className="flex items-center gap-2"><span className={`w-2 h-2 rounded-full flex-shrink-0 ${parseFloat(p.amount) === 0 ? 'bg-green-500' : 'bg-red-500'}`} /><span className="font-medium">{parseFloat(p.amount) === 0 ? 'Free cancellation' : `${formatPKR(parseFloat(p.amount)) || `PKR ${parseFloat(p.amount).toFixed(0)}`} cancellation fee`}</span>{(p.from || p.dateFrom) && <span className="text-gray-400">from {new Date(p.from || p.dateFrom).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}</span>}</div>{p.description && <span className="text-[11px] text-gray-400 ml-4">{p.description}</span>}</div>))}</div></div>
               )}
 
               {/* Pickup Time / Flight Details */}

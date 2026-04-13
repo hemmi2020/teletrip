@@ -95,7 +95,7 @@ class HotelbedsTransfersService {
           ],
           transferRemarks: [{ type: 'CONTRACT', description: 'Driver will meet you at arrival hall with name sign', mandatory: true }]
         },
-        cancellationPolicies: [{ amount: 45.50, from: new Date(Date.now() + 86400000).toISOString(), currencyId: 'EUR' }],
+        cancellationPolicies: [{ amount: 0, from: new Date(Date.now() + 172800000).toISOString(), currencyId: 'EUR', description: 'Free cancellation up to 48h before pickup' }, { amount: 22.75, from: new Date(Date.now() + 86400000).toISOString(), currencyId: 'EUR', description: '50% fee within 48h of pickup' }],
         images: ['https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=400']
       },
       {
@@ -125,7 +125,7 @@ class HotelbedsTransfersService {
           ],
           transferRemarks: [{ type: 'CONTRACT', description: 'Driver will meet you at arrival hall with name sign', mandatory: true }]
         },
-        cancellationPolicies: [{ amount: 65.00, from: new Date(Date.now() + 86400000).toISOString(), currencyId: 'EUR' }],
+        cancellationPolicies: [{ amount: 0, from: new Date(Date.now() + 172800000).toISOString(), currencyId: 'EUR', description: 'Free cancellation up to 48h before pickup' }, { amount: 32.50, from: new Date(Date.now() + 86400000).toISOString(), currencyId: 'EUR', description: '50% fee within 48h of pickup' }],
         images: ['https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=400']
       },
       {
@@ -155,7 +155,7 @@ class HotelbedsTransfersService {
           ],
           transferRemarks: [{ type: 'CONTRACT', description: 'Premium driver will meet you with name sign at VIP area', mandatory: true }]
         },
-        cancellationPolicies: [{ amount: 85.00, from: new Date(Date.now() + 86400000).toISOString(), currencyId: 'EUR' }],
+        cancellationPolicies: [{ amount: 0, from: new Date(Date.now() + 172800000).toISOString(), currencyId: 'EUR', description: 'Free cancellation up to 48h before pickup' }, { amount: 42.50, from: new Date(Date.now() + 86400000).toISOString(), currencyId: 'EUR', description: '50% fee within 48h of pickup' }],
         images: ['https://images.unsplash.com/photo-1563720360172-67b8f3dce741?w=400']
       }
     ];
