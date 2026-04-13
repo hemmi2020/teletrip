@@ -3,7 +3,6 @@ import React, { createContext, useContext, useReducer, useEffect, useState, useR
 import { X, ShoppingCart, MapPin, Calendar, Trash2, User, Eye, EyeOff, Lock, Mail, Save, Bed, Info, XCircle, CreditCard  } from "lucide-react";
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { useCurrency } from '../hooks/useCurrency';
 
 // User Data Context
 export const UserDataContext = createContext();
@@ -731,7 +730,6 @@ const CartAuthModal = ({ isOpen, onClose, onAuthSuccess, defaultTab, returnUrl }
 export const SlideOutCart = ({ isOpen, onClose, onProceedToCheckout }) => {
   const { items, removeFromCart, getTotalPrice } = useCart();
   const { user } = useContext(UserDataContext);
-  const { formatPKR } = useCurrency();
   const [showAuthModal, setShowAuthModal] = useState(false);
 
   const handleCheckoutClick = () => {

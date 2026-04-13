@@ -584,53 +584,51 @@ router.get('/geocode', async (req, res) => {
             }); 
         }
 
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 5000);
-
+        // Try OpenCage first (has API key)
         try {
+            const opencageKey = process.env.GEOCODING_API_KEY;
+            if (opencageKey) {
+                const response = await fetch(
+                    `https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(q)}&key=${opencageKey}&limit=5`,
+                    { headers: { 'User-Agent': 'TeleTrip/1.0' } }
+                );
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.results && data.results.length > 0) {
+                        const results = data.results.map(r => ({
+                            lat: String(r.geometry.lat),
+                            lon: String(r.geometry.lng),
+                            display_name: r.formatted
+                        }));
+                        return res.json({ success: true, data: results });
+                    }
+                }
+            }
+        } catch (err) {
+            console.warn('OpenCage failed:', err.message);
+        }
+
+        // Fallback to Nominatim
+        try {
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 5000);
             const response = await fetch( 
                 `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=5`,
-                {
-                    headers: {
-                        'User-Agent': 'TeleTrip/1.0 (contact@teletrip.com)'
-                    },
-                    signal: controller.signal
-                }
+                { headers: { 'User-Agent': 'TeleTrip/1.0' }, signal: controller.signal }
             );
-
             clearTimeout(timeout);
 
-            if (!response.ok) {
-                throw new Error(`Nominatim returned ${response.status}`);
+            if (response.ok) {
+                const data = await response.json();
+                if (data && Array.isArray(data) && data.length > 0) {
+                    return res.json({ success: true, data: data });
+                }
             }
-
-            const data = await response.json();
-            
-            if (!data || !Array.isArray(data) || data.length === 0) {
-                return res.status(404).json({
-                    success: false,
-                    error: `Location "${q}" not found`
-                });
-            }
-
-            res.json({
-                success: true,
-                data: data
-            });
-        } catch (fetchError) {
-            clearTimeout(timeout);
-            console.warn('Nominatim failed, returning mock data:', fetchError.message);
-            
-            res.json({
-                success: true,
-                data: [{
-                    lat: '0',
-                    lon: '0',
-                    display_name: q,
-                    fallback: true
-                }]
-            });
+        } catch (err) {
+            console.warn('Nominatim failed:', err.message);
         }
+
+        return res.status(404).json({ success: false, error: `Location "${q}" not found` });
 
     } catch (error) {
         console.error('Geocoding Error:', error);

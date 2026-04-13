@@ -32,7 +32,7 @@ import Header from "./components/Header";
 import Footer from "./components/Footer";
 import ReviewsModal from "./components/ReviewsModal";
 import { useCart } from "./components/CartSystem";
-import { useCurrency } from "./hooks/useCurrency";
+import { useCurrency } from "./context/CurrencyContext";
 
 
 const RatingCircles = ({ rating, size = 'w-5 h-5' }) => {
@@ -724,7 +724,7 @@ const closeReviewsModal = () => {
           lon = geoResult?.data?.[0]?.lon;
         }
         
-        if (!lat || !lon) {
+        if (!lat || !lon || (parseFloat(lat) === 0 && parseFloat(lon) === 0)) {
           throw new Error(`Unable to find coordinates for ${city}`);
         }
 
