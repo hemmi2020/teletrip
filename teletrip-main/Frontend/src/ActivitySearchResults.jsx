@@ -596,8 +596,15 @@ const ActivitySearchResults = () => {
                 </div>
               )}
             </div>
-            <div className="flex items-center gap-2 text-[11px] text-gray-400 py-2 flex-wrap mb-2">
-              <span>{from} → {to}</span><span>·</span><span>{adults} adults</span>
+            <div className="flex items-center gap-2 text-[12px] text-gray-500 py-2.5 flex-wrap border-b border-gray-50 mb-1">
+              <MapPin className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" />
+              <span className="font-medium text-gray-700">{destination}{country ? `, ${country}` : ''}</span>
+              <span className="text-gray-300">|</span>
+              <Calendar className="w-3.5 h-3.5 flex-shrink-0" />
+              <span>{from} → {to}</span>
+              <span className="text-gray-300">|</span>
+              <Users className="w-3.5 h-3.5 flex-shrink-0" />
+              <span>{adults} adult{parseInt(adults) !== 1 ? 's' : ''}</span>
             </div>
 
             {sortedActivities.length === 0 ? (

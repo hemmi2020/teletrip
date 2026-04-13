@@ -4,6 +4,7 @@ import {
   Loader2,
   Star,
   MapPin,
+  Calendar,
   Wifi,
   Coffee,
   Car,
@@ -1540,13 +1541,16 @@ if (children > 0 && childAges.length > 0) {
             </div>
 
             {/* Search summary */}
-            <div className="flex items-center gap-2 text-[11px] text-gray-400 py-2 flex-wrap">
+            <div className="flex items-center gap-2 text-[12px] text-gray-500 py-2.5 flex-wrap border-b border-gray-50 mb-1">
+              <MapPin className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" />
+              <span className="font-medium text-gray-700">{searchParams.get("city")}{searchParams.get("country") ? `, ${searchParams.get("country")}` : ''}</span>
+              <span className="text-gray-300">|</span>
+              <Calendar className="w-3.5 h-3.5 flex-shrink-0" />
               <span>{searchParams.get("checkIn")} → {searchParams.get("checkOut")}</span>
-              <span>·</span>
-              <span>{searchParams.get("adults")} adult{searchParams.get("adults") !== "1" ? 's' : ''}{searchParams.get("children") && searchParams.get("children") !== "0" ? `, ${searchParams.get("children")} children` : ''}</span>
-              <span>·</span>
-              <span>{searchParams.get("rooms")} room{searchParams.get("rooms") !== "1" ? 's' : ''}</span>
-              {searchParams.get("hotelName") && <><span>·</span><span className="text-blue-600">Hotel: {searchParams.get("hotelName")}</span></>}
+              <span className="text-gray-300">|</span>
+              <User className="w-3.5 h-3.5 flex-shrink-0" />
+              <span>{searchParams.get("adults")} adult{searchParams.get("adults") !== "1" ? 's' : ''}{searchParams.get("children") && searchParams.get("children") !== "0" ? `, ${searchParams.get("children")} children` : ''} · {searchParams.get("rooms")} room{searchParams.get("rooms") !== "1" ? 's' : ''}</span>
+              {searchParams.get("hotelName") && <><span className="text-gray-300">|</span><span className="text-blue-600 font-medium">"{searchParams.get("hotelName")}"</span></>}
             </div>
 
             {/* Hotel Cards */}

@@ -240,13 +240,12 @@ const TransferSearch = () => {
                     const durationInfo = details.find(d => /duration|journey|time|min/i.test(d.name || d.description || ''));
 
                     return (
-                      <div key={idx} className="bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all overflow-hidden">
-                        <div className="flex flex-col sm:flex-row">
-                          <div className="sm:w-[200px] h-[150px] sm:h-auto flex-shrink-0 relative overflow-hidden bg-gradient-to-br from-blue-50 to-blue-100">
-                            {t.images?.[0] ? (<img src={t.images[0]} alt={t.vehicle} className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; }} />) : (<div className="w-full h-full flex items-center justify-center"><Car className="w-12 h-12 text-blue-200" /></div>)}
-                            <span className={`absolute top-2 left-2 text-[10px] px-2 py-0.5 rounded-full font-medium ${t.transferType === 'PRIVATE' ? 'bg-blue-600 text-white' : 'bg-amber-500 text-white'}`}>{typeLabel}</span>
+                      <div key={idx} className="bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-lg hover:border-gray-200 transition-all duration-200 flex flex-col sm:flex-row group">
+                          <div className="sm:w-56 lg:w-64 relative overflow-hidden flex-shrink-0 bg-gradient-to-br from-blue-50 to-blue-100">
+                            {t.images?.[0] ? (<img src={t.images[0]} alt={t.vehicle} className="w-full h-40 sm:h-full object-cover group-hover:scale-105 transition-transform duration-500" onError={(e) => { e.target.style.display = 'none'; }} />) : (<div className="w-full h-40 sm:h-full flex items-center justify-center"><Car className="w-12 h-12 text-blue-200" /></div>)}
+                            <span className={`absolute top-2 left-2 text-[10px] px-2 py-0.5 rounded font-medium ${t.transferType === 'PRIVATE' ? 'bg-blue-600/90 text-white' : 'bg-amber-500/90 text-white'}`}>{typeLabel}</span>
                           </div>
-                          <div className="flex-1 p-4 flex flex-col justify-between min-w-0">
+                          <div className="flex-1 p-3 sm:p-4 flex flex-col justify-between min-w-0">
                             <div>
                               <div className="flex items-start justify-between gap-3">
                                 <div className="min-w-0">
@@ -285,7 +284,6 @@ const TransferSearch = () => {
                             </div>
                           </div>
                         </div>
-                      </div>
                     );
                   })}
                 </div>
@@ -299,8 +297,8 @@ const TransferSearch = () => {
 
       {/* ─── MODAL ─── */}
       {selectedTransfer && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-start justify-center overflow-y-auto py-6" onClick={() => setSelectedTransfer(null)}>
-          <div className="bg-white rounded-2xl w-full max-w-2xl mx-4 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-end sm:items-center justify-center" onClick={() => setSelectedTransfer(null)}>
+          <div className="relative bg-white w-full sm:max-w-4xl sm:rounded-2xl max-h-[92vh] overflow-hidden flex flex-col shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
               <div>
                 <h2 className="text-lg font-semibold text-gray-900">{selectedTransfer.vehicle || 'Transfer'}</h2>
