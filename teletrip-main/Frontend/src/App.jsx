@@ -68,74 +68,44 @@ const App = () => {
   return (
     <ErrorBoundary>
       <HelmetProvider>
-      <BrowserRouter>
-        <UserProvider>
-          <CurrencyProvider>
-          <CartProvider>
-            <Routes>
-              {/* Default route redirects to home */}
-              <Route path="/" element={<Navigate to="/home" replace />} />
-              
-              {/* Authentication routes */}
-              <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<Signup />} />
-              
-              {/* Main application routes */}
-              <Route path="/home" element={<Home />} />
-              <Route path="/hotel-search-results" element={<HotelSearchResults />} />
-              <Route path="/hotel-details/:hotelCode" element={<HotelDetails />} />
-              <Route path="/activity-search-results" element={<ActivitySearchResults />} />
-              <Route path="/activity/:activityCode" element={<ActivityDetails />} />
-              <Route path="/transfers" element={<TransferSearch />} />
-              
-              {/* User account routes */}
-              <Route path="/account" element={<AccountDashboard />} />
-              <Route path="/bookings" element={<BookingManagement />} />
-              <Route path="/bookings/:bookingId" element={<BookingDetails />} />
-              
-              {/* Checkout & Payment routes */}
-              <Route path="/checkout" element={<Checkout />} />
-              <Route path="/payment/success" element={<PaymentSuccess />} />
-              <Route path="/payment/cancel" element={<PaymentCancel />} />
-              <Route path="/payment-success-onsite" element={<PaymentSuccessOnSite />} />
-              
-              {/* ===== ADMIN ROUTES ===== */}
-              {/* Admin Login - Public route */}
-              <Route path="/admin/login" element={<AdminLogin />} />
-              
-              {/* Admin Dashboard - Protected route */}
-              <Route 
-                path="/admin/dashboard" 
-                element={
-                  <ProtectedAdminRoute>
-                    <AdminDashboard />
-                  </ProtectedAdminRoute>
-                } 
-              />
-
-              {/* Optional: Redirect /admin to /admin/login */}
-              <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
-              
-              {/* Catch-all route for 404s */}
-              <Route path="*" element={
-                <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                  <div className="text-center">
-                    <h1 className="text-4xl font-bold text-gray-900 mb-4">404</h1>
-                    <p className="text-gray-600 mb-6">Page not found</p>
-                    <button
-                      onClick={() => window.location.href = '/home'}
-                      className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700"
-                    >
-                      Go Home
-                    </button>
-                  </div>
-                </div>
-              } />
-            </Routes>
-          </CartProvider>
-          </CurrencyProvider>
-        </UserProvider>
-      </BrowserRouter>
+        <CurrencyProvider>
+          <BrowserRouter>
+            <UserProvider>
+              <CartProvider>
+                <Routes>
+                  <Route path="/" element={<Navigate to="/home" replace />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/signup" element={<Signup />} />
+                  <Route path="/home" element={<Home />} />
+                  <Route path="/hotel-search-results" element={<HotelSearchResults />} />
+                  <Route path="/hotel-details/:hotelCode" element={<HotelDetails />} />
+                  <Route path="/activity-search-results" element={<ActivitySearchResults />} />
+                  <Route path="/activity/:activityCode" element={<ActivityDetails />} />
+                  <Route path="/transfers" element={<TransferSearch />} />
+                  <Route path="/account" element={<AccountDashboard />} />
+                  <Route path="/bookings" element={<BookingManagement />} />
+                  <Route path="/bookings/:bookingId" element={<BookingDetails />} />
+                  <Route path="/checkout" element={<Checkout />} />
+                  <Route path="/payment/success" element={<PaymentSuccess />} />
+                  <Route path="/payment/cancel" element={<PaymentCancel />} />
+                  <Route path="/payment-success-onsite" element={<PaymentSuccessOnSite />} />
+                  <Route path="/admin/login" element={<AdminLogin />} />
+                  <Route path="/admin/dashboard" element={<ProtectedAdminRoute><AdminDashboard /></ProtectedAdminRoute>} />
+                  <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
+                  <Route path="*" element={
+                    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                      <div className="text-center">
+                        <h1 className="text-4xl font-bold text-gray-900 mb-4">404</h1>
+                        <p className="text-gray-600 mb-6">Page not found</p>
+                        <button onClick={() => window.location.href = '/home'} className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700">Go Home</button>
+                      </div>
+                    </div>
+                  } />
+                </Routes>
+              </CartProvider>
+            </UserProvider>
+          </BrowserRouter>
+        </CurrencyProvider>
       </HelmetProvider>
     </ErrorBoundary>
   );

@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { UserDataContext } from './components/CartSystem';
 import { useCart } from './components/CartSystem';
 import { AuthModal } from './components/CartSystem';
+import { useCurrency } from './context/CurrencyContext';
 import Header from './components/Header';
 import axios from 'axios';
 import { hotelApi } from './services/hotelApi';
@@ -26,6 +27,7 @@ const Checkout = () => {
   const location = useLocation();
   const { user } = useContext(UserDataContext);
   const { items: cartItems, getTotalPrice, clearCart } = useCart();
+  const { formatPKR, convert } = useCurrency();
   
   // Get cart data from navigation state or use current cart
   const checkoutItems = location.state?.cartItems || cartItems;
@@ -932,7 +934,7 @@ const handlePaymentSubmit = () => {
             </div>
             <div className="text-right">
               <p className="font-semibold text-gray-900">
-                {item.currency || 'PKR'} {parseFloat(item.price || item.totalPrice).toFixed(2)}
+                {formatPKR(parseFloat(item.price || item.totalPrice)) || `${item.currency || 'EUR'} ${parseFloat(item.price || item.totalPrice).toFixed(2)}`}
               </p>
             </div>
           </div>
