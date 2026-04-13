@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from './components/Header';
 import Footer from './components/Footer';
+import HotelSearchForm from './components/HotelSearchForm';
 import { useCart } from './components/CartSystem';
 import { useCurrency } from './context/CurrencyContext';
 import {
@@ -159,14 +160,13 @@ const TransferSearch = () => {
           </div>
           {/* Expandable Modify Search */}
           {showModifySearch && (
-            <div className="max-w-[1280px] mx-auto px-4 pb-4 pt-2 border-t border-gray-100 bg-white">
-              <p className="text-[12px] text-gray-400 mb-2">Modify your search and search again from the home page.</p>
-              <button onClick={() => navigate('/home')} className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium cursor-pointer">Go to Search Form</button>
+            <div className="max-w-[1280px] mx-auto px-4 pb-4 pt-3 border-t border-gray-100 bg-white">
+              <HotelSearchForm defaultTab="transfers" />
             </div>
           )}
         </div>
 
-        <div className="max-w-[1280px] mx-auto px-4 py-5">
+        <div className="px-4 py-5">
           {/* Error / Empty / No search states */}
           {error && (
             <div className="bg-white rounded-xl shadow-sm border border-red-100 p-8 text-center mb-6">
@@ -200,11 +200,11 @@ const TransferSearch = () => {
 
           {/* Main: Sidebar + Cards */}
           {!error && transfers.length > 0 && (
-            <div className="flex gap-5">
-              {/* Sidebar */}
+            <div className="flex gap-0">
+              {/* Sidebar — flush left */}
               {!sidebarCollapsed && (
                 <div className="hidden lg:block w-[260px] flex-shrink-0">
-                  <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sticky top-[120px] max-h-[calc(100vh-140px)] overflow-y-auto" style={{scrollbarWidth:'thin'}}>
+                  <div className="bg-white border-r border-gray-100 p-4 sticky top-[120px] h-[calc(100vh-120px)] overflow-y-auto" style={{scrollbarWidth:'thin'}}>
                     <div className="flex items-center justify-between mb-3">
                       <h3 className="text-[14px] font-semibold text-gray-900">Filters</h3>
                       <div className="flex items-center gap-2">
@@ -223,7 +223,7 @@ const TransferSearch = () => {
 
 
               {/* Cards */}
-              <div className="flex-1 min-w-0">
+              <div className="flex-1 min-w-0 px-4 py-0 max-w-[1020px]">
                 {filteredTransfers.length === 0 && transfers.length > 0 && (
                   <div className="bg-white rounded-xl p-8 text-center border border-gray-100">
                     <p className="text-gray-500 text-sm">No transfers match your filters.</p>
@@ -280,8 +280,7 @@ const TransferSearch = () => {
                               </div>
                             </div>
                             <div className="flex items-center justify-end gap-2 mt-3">
-                              <button onClick={() => setSelectedTransfer(t)} className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50 text-[12px] font-medium cursor-pointer"><Eye className="w-3.5 h-3.5" /> Details</button>
-                              <button onClick={() => setSelectedTransfer(t)} className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-[12px] font-semibold cursor-pointer"><ShoppingCart className="w-3.5 h-3.5" /> Book</button>
+                              <button onClick={() => setSelectedTransfer(t)} className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-[12px] font-semibold cursor-pointer"><Eye className="w-3.5 h-3.5" /> View Details</button>
                             </div>
                           </div>
                         </div>
@@ -341,6 +340,11 @@ const TransferSearch = () => {
                 <div className="bg-gray-50 rounded-lg p-3 text-center"><Briefcase className="w-5 h-5 text-amber-500 mx-auto mb-1" /><div className="text-[13px] font-semibold">{selectedTransfer.direction || 'ONE WAY'}</div><div className="text-[10px] text-gray-400">Direction</div></div>
               </div>
 
+              {/* Description */}
+              {selectedTransfer.description && (
+                <div><h4 className="text-[13px] font-semibold text-gray-800 mb-2">About this Transfer</h4><p className="text-[12px] text-gray-600 leading-relaxed">{selectedTransfer.description}</p></div>
+              )}
+
               {/* Transfer Details */}
               {selectedTransfer.transferDetails?.length > 0 && (
                 <div><h4 className="text-[13px] font-semibold text-gray-800 mb-2">Service Details</h4><div className="space-y-1.5">{selectedTransfer.transferDetails.map((d, i) => (<div key={i} className="flex items-start gap-2 text-[12px]"><CheckCircle className="w-3.5 h-3.5 text-green-500 mt-0.5 flex-shrink-0" /><span className="text-gray-600">{d.description || d.name}</span></div>))}</div></div>
@@ -353,7 +357,7 @@ const TransferSearch = () => {
 
               {/* Cancellation */}
               {selectedTransfer.cancellationPolicies?.length > 0 && (
-                <div><h4 className="text-[13px] font-semibold text-gray-800 mb-2">Cancellation Policy</h4><div className="space-y-1">{selectedTransfer.cancellationPolicies.map((p, i) => (<div key={i} className="text-[12px] text-gray-600 flex items-center gap-2"><span className={`w-2 h-2 rounded-full ${parseFloat(p.amount) === 0 ? 'bg-green-500' : 'bg-red-500'}`} />{parseFloat(p.amount) === 0 ? 'Free cancellation' : `${p.currencyId || 'EUR'} ${p.amount} fee`}{p.dateFrom && <span className="text-gray-400">from {new Date(p.dateFrom).toLocaleDateString()}</span>}</div>))}</div></div>
+                <div><h4 className="text-[13px] font-semibold text-gray-800 mb-2">Cancellation Policy</h4><div className="space-y-1">{selectedTransfer.cancellationPolicies.map((p, i) => (<div key={i} className="text-[12px] text-gray-600 flex items-center gap-2"><span className={`w-2 h-2 rounded-full ${parseFloat(p.amount) === 0 ? 'bg-green-500' : 'bg-red-500'}`} />{parseFloat(p.amount) === 0 ? 'Free cancellation' : `${formatPKR(parseFloat(p.amount)) || `PKR ${parseFloat(p.amount).toFixed(0)}`} fee`}{p.dateFrom && <span className="text-gray-400">from {new Date(p.dateFrom).toLocaleDateString()}</span>}</div>))}</div></div>
               )}
 
               {/* Pickup Time / Flight Details */}

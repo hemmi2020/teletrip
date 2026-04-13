@@ -56,6 +56,7 @@ class HotelbedsTransfersService {
           images: service.content?.images?.map(img => img.url) || [],
           transferDetails: service.content?.transferDetailInfo || [],
           remarks: service.content?.transferRemarks || [],
+          description: service.content?.description || service.content?.vehicle?.description || '',
           factsheetId: service.factsheetId
         })) || []
       };
