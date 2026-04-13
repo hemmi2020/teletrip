@@ -223,7 +223,8 @@ const TransferSearch = () => {
 
 
               {/* Cards */}
-              <div className="flex-1 min-w-0 px-4 py-0 max-w-[1020px]">
+              <div className="flex-1 min-w-0 flex justify-center">
+                <div className="w-full max-w-[900px] px-4 py-0">
                 {filteredTransfers.length === 0 && transfers.length > 0 && (
                   <div className="bg-white rounded-xl p-8 text-center border border-gray-100">
                     <p className="text-gray-500 text-sm">No transfers match your filters.</p>
@@ -288,6 +289,7 @@ const TransferSearch = () => {
                     );
                   })}
                 </div>
+              </div>
               </div>
             </div>
           )}
