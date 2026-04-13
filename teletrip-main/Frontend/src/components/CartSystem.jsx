@@ -163,13 +163,15 @@ export const CartProvider = ({ children }) => {
 
   const getTotalPrice = () => {
     return state.items.reduce((total, item) => {
-      // Calculate nights
-      const checkIn = new Date(item.checkIn);
-      const checkOut = new Date(item.checkOut);
-      const nights = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24));
-      
-      // Total price = price per night * number of nights
-      return total + (item.price * nights);
+      if (item.type === 'activity') return total + (item.price || 0);
+      // Use stored total if available, otherwise calculate
+      const itemTotal = item.totalPrice || item.net || (() => {
+        const checkIn = new Date(item.checkIn);
+        const checkOut = new Date(item.checkOut);
+        const nights = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24));
+        return item.price * nights;
+      })();
+      return total + parseFloat(itemTotal);
     }, 0);
   };
 
@@ -861,7 +863,7 @@ export const SlideOutCart = ({ isOpen, onClose, onProceedToCheckout }) => {
               <div className="p-4 space-y-3">
                 {items.map((item, index) => {
                   const nights = calculateNights(item.checkIn, item.checkOut);
-                  const totalPrice = item.type === 'activity' ? (item.price || 0) : (item.price * nights);
+                  const totalPrice = item.type === 'activity' ? (item.price || 0) : (item.totalPrice || item.net || (item.price * nights));
                   const isActivity = item.type === 'activity';
 
                   return (
