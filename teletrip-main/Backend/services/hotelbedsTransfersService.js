@@ -41,7 +41,9 @@ class HotelbedsTransfersService {
           direction: service.direction,
           transferType: service.transferType,
           vehicle: service.vehicle?.name,
+          vehicleCode: service.vehicle?.code,
           category: service.category?.name,
+          categoryCode: service.category?.code,
           pickupInformation: service.pickupInformation,
           price: {
             amount: service.price?.totalAmount,
@@ -51,7 +53,10 @@ class HotelbedsTransfersService {
           maxPaxCapacity: service.maxPaxCapacity,
           content: service.content,
           cancellationPolicies: service.cancellationPolicies,
-          images: service.content?.images?.map(img => img.url) || []
+          images: service.content?.images?.map(img => img.url) || [],
+          transferDetails: service.content?.transferDetailInfo || [],
+          remarks: service.content?.transferRemarks || [],
+          factsheetId: service.factsheetId
         })) || []
       };
     } catch (error) {
