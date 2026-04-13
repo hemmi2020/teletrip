@@ -4,25 +4,55 @@ const { validationResult } = require('express-validator');
 exports.searchTransfers = async (req, res) => {
   console.log('\n========== TRANSFERS SEARCH REQUEST ==========');
   console.log('Request Body:', JSON.stringify(req.body, null, 2));
-  console.log('Request Headers:', req.headers);
   
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       console.log('Validation Errors:', errors.array());
-      return res.status(400).json({ success: false, message: 'Validation failed', error: errors.array()[0].msg });
+      return res.status(400).json({ success: false, message: 'Validation failed', error: errors.array().map(e => e.msg).join(', ') });
+    }
+
+    if (!process.env.TRANSFERS_API_KEY && !process.env.HOTELBEDS_API_KEY) {
+      return res.status(503).json({ success: false, message: 'Transfer service not configured', error: 'API keys not set' });
     }
 
     console.log('Calling transfersService.searchTransfers...');
     const result = await transfersService.searchTransfers(req.body);
-    console.log('Search successful, transfers found:', result.transfers?.length || 0);
+    const transferCount = result.transfers?.length || 0;
+    console.log('Search successful, transfers found:', transferCount);
     console.log('========== SEARCH COMPLETED ==========\n');
-    res.json({ success: true, data: result, message: 'Transfers found' });
+    
+    res.json({ 
+      success: true, 
+      data: result, 
+      message: transferCount > 0 ? `${transferCount} transfers found` : 'No transfers available for this route. Try a different pickup/dropoff combination.',
+      count: transferCount
+    });
   } catch (error) {
     console.error('Transfer search error:', error.message);
-    console.error('Error stack:', error.stack);
+    console.error('Error details:', error.response?.data || error.stack);
     console.log('========== SEARCH FAILED ==========\n');
-    res.status(500).json({ success: false, message: 'Search failed', error: error.message });
+    
+    const statusCode = error.response?.status || 500;
+    const apiError = error.response?.data;
+    let userMessage = 'Transfer search failed. Please try again.';
+    
+    if (statusCode === 401 || statusCode === 403) {
+      userMessage = 'Transfer service authentication failed. Please contact support.';
+    } else if (statusCode === 404) {
+      userMessage = 'No transfer routes found between these locations.';
+    } else if (apiError?.error?.message) {
+      userMessage = apiError.error.message;
+    } else if (error.message) {
+      userMessage = error.message;
+    }
+    
+    res.status(statusCode >= 400 && statusCode < 600 ? statusCode : 500).json({ 
+      success: false, 
+      message: userMessage, 
+      error: error.message,
+      code: statusCode
+    });
   }
 };
 

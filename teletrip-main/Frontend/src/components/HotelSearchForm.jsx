@@ -114,7 +114,7 @@ const TransfersTab = () => {
     setError(null);
     try {
       if (!selectedPickup?.code || !selectedDropoff?.code) {
-        setError('Please select valid pickup and dropoff locations with codes');
+        setError('Please select valid pickup and dropoff locations from the dropdown');
         setLoading(false);
         return;
       }
@@ -130,20 +130,36 @@ const TransfersTab = () => {
         children,
         infants
       };
+
+      // Store search params for display on results page
+      sessionStorage.setItem('transferSearch', JSON.stringify({
+        ...searchParams,
+        pickupName: selectedPickup.name,
+        dropoffName: selectedDropoff.name
+      }));
+      sessionStorage.removeItem('transferError');
+
       console.log('Calling searchTransfers API...');
       const results = await searchTransfers(searchParams);
       console.log('API Response:', results);
-      sessionStorage.setItem('transferResults', JSON.stringify(results.data));
-      sessionStorage.setItem('transferSearch', JSON.stringify(searchParams));
-      window.location.href = '/transfers';
+
+      if (results.success) {
+        sessionStorage.setItem('transferResults', JSON.stringify(results.data));
+        window.location.href = '/transfers';
+      } else {
+        // API returned success:false
+        sessionStorage.setItem('transferError', JSON.stringify({ message: results.message || 'No transfers found for this route.' }));
+        window.location.href = '/transfers';
+      }
     } catch (err) {
       console.error('Search error:', err);
-      const errorMsg = err.response?.data?.error;
-      if (Array.isArray(errorMsg)) {
-        setError(errorMsg.map(e => e.msg).join(', '));
-      } else {
-        setError(typeof errorMsg === 'string' ? errorMsg : err.response?.data?.message || 'Search failed');
-      }
+      const apiResponse = err.response?.data;
+      const errorMessage = apiResponse?.message || err.message || 'Transfer search failed. Please try again.';
+
+      // Store error and navigate to results page to show it properly
+      sessionStorage.setItem('transferResults', JSON.stringify({ transfers: [] }));
+      sessionStorage.setItem('transferError', JSON.stringify({ message: errorMessage, error: apiResponse?.error }));
+      window.location.href = '/transfers';
     } finally {
       setLoading(false);
     }

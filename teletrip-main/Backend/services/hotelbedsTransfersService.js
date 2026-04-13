@@ -3,8 +3,8 @@ const crypto = require('crypto');
 
 class HotelbedsTransfersService {
   constructor() {
-    this.apiKey = process.env.TRANSFERS_API_KEY;
-    this.secret = process.env.TRANSFERS_SECRET;
+    this.apiKey = process.env.TRANSFERS_API_KEY || process.env.HOTELBEDS_API_KEY;
+    this.secret = process.env.TRANSFERS_SECRET || process.env.HOTELBEDS_SECRET;
     this.baseURL = 'https://api.test.hotelbeds.com/transfer-api/1.0';
     
     this.client = axios.create({ baseURL: this.baseURL });
