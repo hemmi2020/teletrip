@@ -48,7 +48,7 @@ const TransfersTab = () => {
       try {
         const response = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/locations/transfers?search=${encodeURIComponent(pickupQuery.trim())}`);
         if (response.data.success) {
-          setFilteredPickupLocations(response.data.data);
+          setFilteredPickupLocations(response.data.data || []);
           setGroupedPickup(response.data.grouped || []);
         }
       } catch (error) {
@@ -72,7 +72,7 @@ const TransfersTab = () => {
       try {
         const response = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/locations/transfers?search=${encodeURIComponent(dropoffQuery.trim())}`);
         if (response.data.success) {
-          setFilteredDropoffLocations(response.data.data);
+          setFilteredDropoffLocations(response.data.data || []);
           setGroupedDropoff(response.data.grouped || []);
         }
       } catch (error) {
@@ -221,6 +221,16 @@ const TransfersTab = () => {
                     ))}
                   </div>
                 ))
+              ) : filteredPickupLocations.length > 0 ? (
+                filteredPickupLocations.map((loc, i) => (
+                  <div key={i} onClick={() => { setSelectedPickup(loc); setPickupQuery(loc.name); setShowPickupDropdown(false); }} className="px-3 py-2 hover:bg-blue-50 cursor-pointer flex items-center gap-2.5">
+                    {loc.type === 'IATA' ? <Plane size={15} className="text-blue-600 flex-shrink-0" /> : <Building2 size={15} className="text-green-600 flex-shrink-0" />}
+                    <div className="min-w-0 flex-1">
+                      <div className="text-[13px] font-medium text-gray-800 truncate">{loc.name}</div>
+                      <div className="text-[11px] text-gray-400">{loc.type === 'IATA' ? 'Airport' : 'Hotel'} · {loc.city}{loc.country ? `, ${loc.country}` : ''}</div>
+                    </div>
+                  </div>
+                ))
               ) : (
                 <div className="p-3 text-center text-gray-500 text-sm">No locations found</div>
               )}
@@ -289,6 +299,16 @@ const TransfersTab = () => {
                         </div>
                       </div>
                     ))}
+                  </div>
+                ))
+              ) : filteredDropoffLocations.length > 0 ? (
+                filteredDropoffLocations.map((loc, i) => (
+                  <div key={i} onClick={() => { setSelectedDropoff(loc); setDropoffQuery(loc.name); setShowDropoffDropdown(false); }} className="px-3 py-2 hover:bg-blue-50 cursor-pointer flex items-center gap-2.5">
+                    {loc.type === 'IATA' ? <Plane size={15} className="text-blue-600 flex-shrink-0" /> : <Building2 size={15} className="text-green-600 flex-shrink-0" />}
+                    <div className="min-w-0 flex-1">
+                      <div className="text-[13px] font-medium text-gray-800 truncate">{loc.name}</div>
+                      <div className="text-[11px] text-gray-400">{loc.type === 'IATA' ? 'Airport' : 'Hotel'} · {loc.city}{loc.country ? `, ${loc.country}` : ''}</div>
+                    </div>
                   </div>
                 ))
               ) : (

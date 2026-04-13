@@ -15,7 +15,7 @@ exports.getTransferLocations = async (req, res) => {
         loc.country.toLowerCase().includes(searchLower)
       );
 
-      // Also search hotels from Hotelbeds if query is at least 3 chars
+      // Also search hotels from Hotelbeds Transfers Cache API if query is at least 3 chars
       if (searchLower.length >= 3) {
         try {
           const crypto = require('crypto');
@@ -25,14 +25,27 @@ exports.getTransferLocations = async (req, res) => {
           const sig = crypto.createHash('sha256').update(apiKey + secret + timestamp).digest('hex');
 
           const fetch = (await import('node-fetch')).default;
+          
+          // Use Hotel Content API with POST body for name filtering
           const hotelRes = await fetch(
-            `https://api.test.hotelbeds.com/hotel-content-api/1.0/hotels?fields=name,code,city,country,destinationCode&language=en&from=1&to=30&keywords=${encodeURIComponent(search)}`,
+            `https://api.test.hotelbeds.com/hotel-content-api/1.0/hotels`,
             {
+              method: 'POST',
               headers: {
                 'Accept': 'application/json',
+                'Content-Type': 'application/json',
                 'Api-key': apiKey,
                 'X-Signature': sig
-              }
+              },
+              body: JSON.stringify({
+                fields: ['name', 'code', 'city', 'country', 'destinationCode', 'coordinates'],
+                language: 'en',
+                from: 1,
+                to: 25,
+                filter: {
+                  name: search
+                }
+              })
             }
           );
 
@@ -47,6 +60,8 @@ exports.getTransferLocations = async (req, res) => {
               destinationCode: h.destinationCode || ''
             }));
             filteredLocations = [...filteredLocations, ...hotels];
+          } else {
+            console.error('Hotel Content API status:', hotelRes.status);
           }
         } catch (hotelErr) {
           console.error('Hotel search for transfers failed:', hotelErr.message);
