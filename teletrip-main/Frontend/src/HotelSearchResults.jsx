@@ -563,9 +563,7 @@ const [reviewsModal, setReviewsModal] = useState({
       id: `${hotel.id}-${room.code}-${rate.rateKey || rate.net}`,
       hotelId: hotel.id, hotelName: hotel.name, hotelCode: hotel.code,
       roomCode: room.code, roomName: room.name, rateKey: rate.rateKey,
-      price: pricePerNight, pricePerNight, currency: 'PKR',
-      priceEUR: pricePerNight, currencyEUR: hotel.currency || 'EUR',
-      pricePKR: convert(pricePerNight), totalPricePKR: convert(totalFromAPI),
+      price: pricePerNight, pricePerNight, currency: hotel.currency || 'EUR',
       checkIn, checkOut, nights, guests: adults + children, adults, children, rooms,
       location: `${hotel.zoneName}, ${hotel.destinationName}`,
       boardName: rate.boardName, rateClass: rate.rateClass, paymentType: rate.paymentType,
@@ -575,7 +573,7 @@ const [reviewsModal, setReviewsModal] = useState({
       thumbnail: hotel.thumbnail, allotment: rate.allotment,
       packaging: rate.packaging, taxes: rate.taxes,
       city: hotel.destinationName, zone: hotel.zoneName,
-      category: hotel.categoryName, totalPrice: convert(totalFromAPI) || totalFromAPI, net: totalFromAPI,
+      category: hotel.categoryName, totalPrice: totalFromAPI, net: totalFromAPI,
       addedAt: new Date().toISOString(),
     });
     setNotification({ show: true, message: `${room.name} added to cart!`, type: 'success' });

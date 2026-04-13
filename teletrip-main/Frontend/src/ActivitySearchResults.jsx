@@ -129,8 +129,8 @@ const ActivitySearchResults = () => {
   };
 
   const handleAddActivityToCart = (activity, modality = null, pricing = null, time = null) => {
-    const priceEUR = pricing ? parseFloat(pricing.amount || 0) : parseFloat(activity.pricing?.amount || 0);
-    const pricePKR = convert(priceEUR) || priceEUR;
+    const price = pricing ? parseFloat(pricing.amount || 0) : parseFloat(activity.pricing?.amount || 0);
+    const currency = pricing?.currency || activity.pricing?.currency || 'EUR';
     addToCart({
       id: `activity-${activity.code}-${modality?.code || 'default'}-${selectedDate}-${time || ''}`,
       type: 'activity',
@@ -138,10 +138,8 @@ const ActivitySearchResults = () => {
       code: activity.code,
       activityCode: activity.code,
       modalityCode: modality?.code || null,
-      price: pricePKR,
-      priceEUR,
-      currency: 'PKR',
-      currencyEUR: pricing?.currency || activity.pricing?.currency || 'EUR',
+      price,
+      currency,
       checkIn: selectedDate,
       checkOut: to,
       from: selectedDate,

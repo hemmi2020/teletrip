@@ -3,6 +3,7 @@ import React, { createContext, useContext, useReducer, useEffect, useState, useR
 import { X, ShoppingCart, MapPin, Calendar, Trash2, User, Eye, EyeOff, Lock, Mail, Save, Bed, Info, XCircle, CreditCard  } from "lucide-react";
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { useCurrency } from '../context/CurrencyContext';
 
 // User Data Context
 export const UserDataContext = createContext();
@@ -730,6 +731,7 @@ const CartAuthModal = ({ isOpen, onClose, onAuthSuccess, defaultTab, returnUrl }
 export const SlideOutCart = ({ isOpen, onClose, onProceedToCheckout }) => {
   const { items, removeFromCart, getTotalPrice } = useCart();
   const { user } = useContext(UserDataContext);
+  const { formatPKR, convert: convertToPKR } = useCurrency();
   const [showAuthModal, setShowAuthModal] = useState(false);
 
   const handleCheckoutClick = () => {
@@ -866,8 +868,8 @@ export const SlideOutCart = ({ isOpen, onClose, onProceedToCheckout }) => {
                       <div className="px-3 pb-3 flex items-center justify-between">
                         <span className="text-[11px] text-gray-400">{formatShortDate(item.checkIn)} → {formatShortDate(item.checkOut)}</span>
                         <div className="text-right">
-                          <span className="text-[14px] font-bold text-gray-900">{item.currency || 'PKR'} {totalPrice.toFixed(0)}</span>
-                          {!isActivity && <span className="text-[10px] text-gray-400 block">{item.currency || 'PKR'} {item.price.toFixed(0)}/night</span>}
+                          <span className="text-[14px] font-bold text-gray-900">{formatPKR(totalPrice) || `${item.currency || 'EUR'} ${totalPrice.toFixed(0)}`}</span>
+                          {!isActivity && <span className="text-[10px] text-gray-400 block">{formatPKR(item.price) || `${item.currency || 'EUR'} ${item.price.toFixed(0)}`}/night</span>}
                         </div>
                       </div>
                     </div>
@@ -882,7 +884,7 @@ export const SlideOutCart = ({ isOpen, onClose, onProceedToCheckout }) => {
             <div className="border-t border-gray-100 bg-white px-5 py-4 space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-[13px] text-gray-500">Total</span>
-                <span className="text-xl font-bold text-gray-900">{items[0]?.currency || 'PKR'} {getTotalPrice().toFixed(0)}</span>
+                <span className="text-xl font-bold text-gray-900">{formatPKR(getTotalPrice()) || `${items[0]?.currency || 'EUR'} ${getTotalPrice().toFixed(0)}`}</span>
               </div>
               <button onClick={handleCheckoutClick} className="w-full bg-blue-600 text-white py-2.5 rounded-lg font-semibold hover:bg-blue-700 transition-colors text-[14px]">
                 Checkout
