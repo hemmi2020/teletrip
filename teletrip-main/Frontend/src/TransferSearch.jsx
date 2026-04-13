@@ -231,15 +231,14 @@ const TransferSearch = () => {
 
 
               {/* Cards */}
-              <div className="flex-1 min-w-0 flex justify-center">
-                <div className="w-full max-w-[900px] px-4 py-0">
+              <div className="flex-1 min-w-0">
                 {filteredTransfers.length === 0 && transfers.length > 0 && (
                   <div className="bg-white rounded-xl p-8 text-center border border-gray-100">
                     <p className="text-gray-500 text-sm">No transfers match your filters.</p>
                     <button onClick={clearFilters} className="mt-3 text-blue-600 text-sm font-medium cursor-pointer">Clear Filters</button>
                   </div>
                 )}
-                <div className="space-y-3">
+                <div className="space-y-3 pt-0">
                   {sortedTransfers.map((t, idx) => {
                     const price = parseFloat(t.price?.amount || 0);
                     const pkrPrice = formatPKR(price);
@@ -251,9 +250,9 @@ const TransferSearch = () => {
                     return (
                       <div key={idx} className="bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-lg hover:border-gray-200 transition-all duration-200 flex flex-col sm:flex-row group">
                         {/* Image — exact same as hotel card */}
-                        <div className="sm:w-56 lg:w-64 relative overflow-hidden flex-shrink-0 bg-gradient-to-br from-blue-50 to-blue-100">
+                        <div className="sm:w-56 lg:w-64 relative overflow-hidden flex-shrink-0 bg-gradient-to-br from-blue-50 to-blue-100 self-stretch">
                           {t.images?.[0] ? (
-                            <img src={t.images[0]} alt={t.vehicle} className="w-full h-40 sm:h-full object-cover" onError={(e) => { e.target.style.display='none'; }} />
+                            <img src={t.images[0]} alt={t.vehicle} className="w-full h-40 sm:h-full sm:absolute sm:inset-0 object-cover" onError={(e) => { e.target.style.display='none'; }} />
                           ) : (
                             <div className="w-full h-40 sm:h-full flex items-center justify-center"><Car className="w-12 h-12 text-blue-200" /></div>
                           )}
@@ -303,7 +302,6 @@ const TransferSearch = () => {
                     );
                   })}
                 </div>
-              </div>
               </div>
             </div>
           )}
