@@ -17,6 +17,7 @@ const searchValidation = [
   body('toType').isIn(['ATLAS', 'IATA', 'GIATA', 'PORT', 'STATION']).withMessage('Invalid toType'),
   body('toCode').notEmpty().withMessage('toCode is required'),
   body('outbound').notEmpty().withMessage('Date is required'),
+  body('inbound').optional().isString(),
   body('adults').optional().isInt({ min: 1 }),
   body('children').optional().isInt({ min: 0 }),
   body('infants').optional().isInt({ min: 0 })

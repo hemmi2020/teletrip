@@ -103,7 +103,7 @@ const TransferSearch = () => {
       vehicle: transfer.vehicle, category: transfer.category,
       price: parseFloat(transfer.price?.amount || 0), totalPrice: parseFloat(transfer.price?.amount || 0),
       currency: transfer.price?.currency || 'EUR',
-      checkIn: searchInfo.outbound?.split('T')[0] || '', checkOut: searchInfo.outbound?.split('T')[0] || '',
+      checkIn: searchInfo.outbound?.split('T')[0] || '', checkOut: searchInfo.inbound?.split('T')[0] || searchInfo.outbound?.split('T')[0] || '',
       from: searchInfo.pickupName || searchInfo.fromCode, to: searchInfo.dropoffName || searchInfo.toCode,
       fromCode: searchInfo.fromCode, toCode: searchInfo.toCode, fromType: searchInfo.fromType, toType: searchInfo.toType,
       adults: searchInfo.adults || 1, children: searchInfo.children || 0, infants: searchInfo.infants || 0,
@@ -114,6 +114,8 @@ const TransferSearch = () => {
       flightCode: flightCode || '', flightTime: flightTime || '',
       direction: transfer.direction, pickupInformation: transfer.pickupInformation,
       transferDetails: transfer.transferDetails || [], remarks: transfer.remarks || [],
+      tripType: searchInfo.tripType || 'one_way',
+      inbound: searchInfo.inbound || null,
       addedAt: new Date().toISOString(),
     });
     setSelectedTransfer(null);
@@ -138,12 +140,18 @@ const TransferSearch = () => {
           <div className="max-w-[1280px] mx-auto px-4 py-2.5 flex items-center justify-between">
             <div className="hidden md:flex items-center gap-2 text-[13px] text-gray-600">
               {searchInfo && (<>
+                {searchInfo.tripType === 'round_trip' ? (
+                  <span className="text-[11px] px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full font-medium">Round Trip</span>
+                ) : (
+                  <span className="text-[11px] px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full font-medium">One Way</span>
+                )}
                 <MapPin className="w-3.5 h-3.5 text-blue-500" />
                 <span className="font-medium">{searchInfo.pickupName || searchInfo.fromCode}</span>
                 <ArrowRight className="w-3 h-3 text-gray-300" />
                 <span className="font-medium">{searchInfo.dropoffName || searchInfo.toCode}</span>
                 <span className="text-gray-300 mx-1">|</span>
                 <Calendar className="w-3.5 h-3.5" /><span>{fmtDT(searchInfo.outbound)}</span>
+                {searchInfo.inbound && <><ArrowRight className="w-3 h-3 text-gray-300" /><span>{fmtDT(searchInfo.inbound)}</span></>}
                 <span className="text-gray-300 mx-1">|</span>
                 <Users className="w-3.5 h-3.5" /><span>{searchInfo.adults || 1} Adult{(searchInfo.adults || 1) > 1 ? 's' : ''}</span>
               </>)}
@@ -322,13 +330,22 @@ const TransferSearch = () => {
               {/* Route */}
               {searchInfo && (
                 <div className="bg-blue-50 rounded-lg p-3">
-                  <div className="text-[11px] text-blue-500 font-medium mb-1">Transfer Route</div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className="text-[11px] text-blue-500 font-medium">Transfer Route</div>
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${searchInfo.tripType === 'round_trip' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-600'}`}>
+                      {searchInfo.tripType === 'round_trip' ? 'Round Trip' : 'One Way'}
+                    </span>
+                  </div>
                   <div className="flex items-center gap-2 text-sm text-gray-700">
                     <span className="font-medium">{searchInfo.pickupName || searchInfo.fromCode}</span>
                     <ArrowRight className="w-4 h-4 text-gray-300" />
                     <span className="font-medium">{searchInfo.dropoffName || searchInfo.toCode}</span>
                   </div>
-                  <div className="text-[11px] text-gray-500 mt-1">{fmtDT(searchInfo.outbound)} · {searchInfo.adults || 1} Adult{(searchInfo.adults || 1) > 1 ? 's' : ''}{searchInfo.children > 0 ? `, ${searchInfo.children} Children` : ''}</div>
+                  <div className="text-[11px] text-gray-500 mt-1">
+                    <span>Outbound: {fmtDT(searchInfo.outbound)}</span>
+                    {searchInfo.inbound && <span className="ml-3">Return: {fmtDT(searchInfo.inbound)}</span>}
+                  </div>
+                  <div className="text-[11px] text-gray-500 mt-0.5">{searchInfo.adults || 1} Adult{(searchInfo.adults || 1) > 1 ? 's' : ''}{searchInfo.children > 0 ? `, ${searchInfo.children} Children` : ''}</div>
                 </div>
               )}
 

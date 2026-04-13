@@ -164,7 +164,7 @@ export const CartProvider = ({ children }) => {
   const getTotalPrice = () => {
     return state.items.reduce((total, item) => {
       if (item.type === 'activity') return total + (item.price || 0);
-      // Use stored total if available, otherwise calculate
+      if (item.type === 'transfer') return total + (item.totalPrice || item.price || 0);
       const itemTotal = item.totalPrice || item.net || (() => {
         const checkIn = new Date(item.checkIn);
         const checkOut = new Date(item.checkOut);
@@ -865,6 +865,7 @@ export const SlideOutCart = ({ isOpen, onClose, onProceedToCheckout }) => {
                   const nights = calculateNights(item.checkIn, item.checkOut);
                   const totalPrice = item.type === 'activity' ? (item.price || 0) : (item.totalPrice || item.net || (item.price * nights));
                   const isActivity = item.type === 'activity';
+                  const isTransfer = item.type === 'transfer';
 
                   return (
                     <div key={index} className="bg-white border border-gray-100 rounded-xl overflow-hidden hover:border-gray-200 transition-all">
@@ -875,23 +876,26 @@ export const SlideOutCart = ({ isOpen, onClose, onProceedToCheckout }) => {
                         )}
                         <div className="flex-1 min-w-0">
                           <div className="flex justify-between items-start gap-2">
-                            <h3 className="text-[13px] font-semibold text-gray-900 line-clamp-1">{isActivity ? item.name : item.hotelName}</h3>
+                            <h3 className="text-[13px] font-semibold text-gray-900 line-clamp-1">{isActivity ? item.name : isTransfer ? item.vehicle || item.name : item.hotelName}</h3>
                             <button onClick={(e) => { e.stopPropagation(); handleRemoveItem(item); }} className="p-1 hover:bg-red-50 rounded transition-colors flex-shrink-0"><Trash2 className="w-3.5 h-3.5 text-gray-400 hover:text-red-500" /></button>
                           </div>
                           {isActivity && item.modalityName && <p className="text-[11px] text-purple-600 font-medium">{item.modalityName}{item.selectedTime ? ` · ${item.selectedTime}` : ''}</p>}
-                          {!isActivity && item.roomName && <p className="text-[11px] text-gray-500 truncate">{item.roomName}</p>}
+                          {isTransfer && <p className="text-[11px] text-blue-600 font-medium">{item.from} → {item.to}</p>}
+                          {!isActivity && !isTransfer && item.roomName && <p className="text-[11px] text-gray-500 truncate">{item.roomName}</p>}
                           {item.location && <p className="text-[11px] text-gray-400 truncate flex items-center gap-0.5"><MapPin className="w-3 h-3" />{item.location}</p>}
                         </div>
                       </div>
 
                       {/* Details row */}
                       <div className="px-3 pb-2 flex items-center gap-1.5 flex-wrap">
-                        <span className="text-[10px] px-2 py-0.5 bg-blue-50 text-blue-600 rounded-full font-medium">{isActivity ? 'Experience' : 'Hotel'}</span>
+                        <span className="text-[10px] px-2 py-0.5 bg-blue-50 text-blue-600 rounded-full font-medium">{isActivity ? 'Experience' : isTransfer ? 'Transfer' : 'Hotel'}</span>
+                        {isTransfer && item.tripType === 'round_trip' && <span className="text-[10px] px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full">Round Trip</span>}
+                        {isTransfer && item.transferType && <span className="text-[10px] px-2 py-0.5 bg-gray-50 text-gray-500 rounded-full">{item.transferType}</span>}
                         {isActivity && item.modalityName && <span className="text-[10px] px-2 py-0.5 bg-purple-50 text-purple-600 rounded-full">{item.modalityName}</span>}
                         {isActivity && item.selectedTime && <span className="text-[10px] px-2 py-0.5 bg-amber-50 text-amber-600 rounded-full">{item.selectedTime}</span>}
                         {isActivity && item.duration && <span className="text-[10px] px-2 py-0.5 bg-gray-50 text-gray-500 rounded-full">{item.duration}</span>}
-                        {!isActivity && <span className="text-[10px] px-2 py-0.5 bg-gray-50 text-gray-500 rounded-full">{nights}N</span>}
-                        {!isActivity && item.boardName && <span className="text-[10px] px-2 py-0.5 bg-gray-50 text-gray-500 rounded-full">{item.boardName}</span>}
+                        {!isActivity && !isTransfer && <span className="text-[10px] px-2 py-0.5 bg-gray-50 text-gray-500 rounded-full">{nights}N</span>}
+                        {!isActivity && !isTransfer && item.boardName && <span className="text-[10px] px-2 py-0.5 bg-gray-50 text-gray-500 rounded-full">{item.boardName}</span>}
                         {item.rateClass === 'NRF' && <span className="text-[10px] px-2 py-0.5 bg-red-50 text-red-500 rounded-full">Non-refundable</span>}
                         {item.rateClass === 'NOR' && <span className="text-[10px] px-2 py-0.5 bg-green-50 text-green-600 rounded-full">Free cancellation</span>}
                       </div>
@@ -901,7 +905,7 @@ export const SlideOutCart = ({ isOpen, onClose, onProceedToCheckout }) => {
                         <span className="text-[11px] text-gray-400">{formatShortDate(item.checkIn)} → {formatShortDate(item.checkOut)}</span>
                         <div className="text-right">
                           <span className="text-[14px] font-bold text-gray-900">{fmtPKR(totalPrice) || `${item.currency || 'EUR'} ${totalPrice.toFixed(0)}`}</span>
-                          {!isActivity && <span className="text-[10px] text-gray-400 block">{fmtPKR(item.price) || `${item.currency || 'EUR'} ${item.price.toFixed(0)}`}/night</span>}
+                          {!isActivity && !isTransfer && <span className="text-[10px] text-gray-400 block">{fmtPKR(item.price) || `${item.currency || 'EUR'} ${item.price.toFixed(0)}`}/night</span>}
                         </div>
                       </div>
                     </div>

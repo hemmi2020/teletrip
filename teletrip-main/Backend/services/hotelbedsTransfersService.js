@@ -23,7 +23,7 @@ class HotelbedsTransfersService {
     console.log('Search Params:', JSON.stringify(searchParams, null, 2));
     
     try {
-      const url = `/availability/${searchParams.language || 'en'}/from/${searchParams.fromType}/${searchParams.fromCode}/to/${searchParams.toType}/${searchParams.toCode}/${searchParams.outbound}/${searchParams.adults || 1}/${searchParams.children || 0}/${searchParams.infants || 0}`;
+      const url = `/availability/${searchParams.language || 'en'}/from/${searchParams.fromType}/${searchParams.fromCode}/to/${searchParams.toType}/${searchParams.toCode}/${searchParams.outbound}${searchParams.inbound ? `/${searchParams.inbound}` : ''}/${searchParams.adults || 1}/${searchParams.children || 0}/${searchParams.infants || 0}`;
       
       console.log('Full API URL:', this.baseURL + url);
       console.log('Making GET request to Hotelbeds Transfers API...');

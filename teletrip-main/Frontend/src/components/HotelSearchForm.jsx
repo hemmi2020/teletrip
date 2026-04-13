@@ -13,11 +13,12 @@ const LazyDateRange = lazy(() =>
 
 // Transfers Tab Component
 const TransfersTab = () => {
+  const [tripType, setTripType] = useState('one_way'); // 'one_way' | 'round_trip'
   const [pickupQuery, setPickupQuery] = useState('');
   const [dropoffQuery, setDropoffQuery] = useState('');
   const [showPickupDropdown, setShowPickupDropdown] = useState(false);
   const [showDropoffDropdown, setShowDropoffDropdown] = useState(false);
-  const [transferLocations, setTransferLocations] = useState([]); // kept for compatibility
+  const [transferLocations, setTransferLocations] = useState([]);
   const [isLoadingLocations, setIsLoadingLocations] = useState(false);
   const [filteredPickupLocations, setFilteredPickupLocations] = useState([]);
   const [filteredDropoffLocations, setFilteredDropoffLocations] = useState([]);
@@ -26,6 +27,7 @@ const TransfersTab = () => {
   const [selectedPickup, setSelectedPickup] = useState(null);
   const [selectedDropoff, setSelectedDropoff] = useState(null);
   const [transferDate, setTransferDate] = useState('');
+  const [returnDate, setReturnDate] = useState('');
   const [adults, setAdults] = useState(1);
   const [children, setChildren] = useState(0);
   const [infants, setInfants] = useState(0);
@@ -107,7 +109,15 @@ const TransfersTab = () => {
       return;
     }
     if (!transferDate) {
-      setError('Please select date and time');
+      setError('Please select outbound date and time');
+      return;
+    }
+    if (tripType === 'round_trip' && !returnDate) {
+      setError('Please select return date and time');
+      return;
+    }
+    if (tripType === 'round_trip' && returnDate <= transferDate) {
+      setError('Return date must be after outbound date');
       return;
     }
     setLoading(true);
@@ -128,7 +138,9 @@ const TransfersTab = () => {
         outbound: dateTime + ':00',
         adults,
         children,
-        infants
+        infants,
+        tripType,
+        ...(tripType === 'round_trip' && returnDate ? { inbound: (returnDate.includes('T') ? returnDate : returnDate.replace(' ', 'T')) + ':00' } : {})
       };
 
       // Store search params for display on results page
@@ -172,7 +184,24 @@ const TransfersTab = () => {
           {error}
         </div>
       )}
-      
+
+      {/* Trip Type Toggle */}
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={() => setTripType('one_way')}
+          className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer ${tripType === 'one_way' ? 'bg-white text-blue-600 shadow-sm border border-blue-200' : 'bg-white/20 text-white/70 hover:bg-white/30 border border-white/20'}`}
+        >
+          One Way
+        </button>
+        <button
+          type="button"
+          onClick={() => setTripType('round_trip')}
+          className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer ${tripType === 'round_trip' ? 'bg-white text-blue-600 shadow-sm border border-blue-200' : 'bg-white/20 text-white/70 hover:bg-white/30 border border-white/20'}`}
+        >
+          Round Trip
+        </button>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
         <div className="relative" ref={pickupRef}>
           <label className="block text-xs sm:text-sm font-medium text-white/80 mb-1.5 sm:mb-2 px-1">
@@ -336,10 +365,10 @@ const TransfersTab = () => {
 
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+      <div className={`grid gap-3 sm:gap-4 ${tripType === 'round_trip' ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1 md:grid-cols-2'}`}>
         <div>
           <label className="block text-xs sm:text-sm font-medium text-white/80 mb-1.5 sm:mb-2 px-1">
-            Date & Time <span className="text-red-500">*</span>
+            {tripType === 'round_trip' ? 'Outbound Date & Time' : 'Date & Time'} <span className="text-red-500">*</span>
           </label>
           <input
             type="datetime-local"
@@ -351,6 +380,24 @@ const TransfersTab = () => {
           />
         </div>
 
+        {tripType === 'round_trip' && (
+          <div>
+            <label className="block text-xs sm:text-sm font-medium text-white/80 mb-1.5 sm:mb-2 px-1">
+              Return Date & Time <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="datetime-local"
+              value={returnDate}
+              onChange={(e) => setReturnDate(e.target.value)}
+              required
+              min={transferDate || new Date().toISOString().slice(0, 16)}
+              className="w-full px-4 py-2.5 sm:py-3 border border-gray-300 bg-white rounded-lg focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
+            />
+          </div>
+        )}
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
         <div className="relative" ref={travellerRef}>
           <label className="block text-xs sm:text-sm font-medium text-white/80 mb-1.5 sm:mb-2 px-1">
             Travellers <span className="text-red-500">*</span>
