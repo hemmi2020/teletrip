@@ -749,7 +749,7 @@ const OldExperiencesResults = ({ experiences }) => {
   );
 };
 
-const HotelSearchForm = () => {
+const HotelSearchForm = ({ defaultTab: initialTab = 'stays' }) => {
   // Date range state
   const [dateRange, setDateRange] = useState([
     {
@@ -777,7 +777,7 @@ const HotelSearchForm = () => {
   const [adults, setAdults] = useState(2);
   const [children, setChildren] = useState(0);
   const [childAges, setChildAges] = useState([]);
-  const [activeTab, setActiveTab] = useState('stays');
+  const [activeTab, setActiveTab] = useState(initialTab);
 
   // Debounced location search via API (cities + countries + hotels)
   useEffect(() => {

@@ -31,6 +31,7 @@ import {
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import ReviewsModal from "./components/ReviewsModal";
+import HotelSearchForm from "./components/HotelSearchForm";
 import { useCart } from "./components/CartSystem";
 import { useCurrency } from "./context/CurrencyContext";
 
@@ -60,6 +61,7 @@ const HotelSearchResults = () => {
   const [error, setError] = useState(null);
   const [user, setUser] = useState(null);
   const [sortOption, setSortOption] = useState("default");
+  const [showModifySearch, setShowModifySearch] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [selectedAmenities, setSelectedAmenities] = useState([]);
@@ -1512,17 +1514,29 @@ if (children > 0 && childAges.length > 0) {
               </div>
             )}
 
-            <div className="sticky top-16 z-20 bg-white/95 backdrop-blur-sm py-2.5 -mx-4 px-4 border-b border-gray-100 flex items-center justify-between gap-3">
-              <h1 className="text-[14px] sm:text-base font-semibold text-gray-900 truncate">
-                {sortedHotels.length} Hotels{searchParams.get("city") ? ` in ${searchParams.get("city")}` : searchParams.get("hotelName") ? ` matching "${searchParams.get("hotelName")}"` : ''}
-              </h1>
-              <select value={sortOption} onChange={(e) => setSortOption(e.target.value)} className="text-[12px] sm:text-[13px] px-2.5 py-1.5 border border-gray-200 rounded-lg bg-white text-gray-600 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none flex-shrink-0">
-                <option value="default">Sort: Recommended</option>
-                <option value="priceLowHigh">Price: Low → High</option>
-                <option value="priceHighLow">Price: High → Low</option>
-                <option value="ratingHighLow">Rating: High → Low</option>
-                <option value="ratingLowHigh">Rating: Low → High</option>
-              </select>
+            <div className="sticky top-16 z-20 bg-white/95 backdrop-blur-sm py-2.5 -mx-4 px-4 border-b border-gray-100 flex flex-col gap-0">
+              <div className="flex items-center justify-between gap-3">
+                <h1 className="text-[14px] sm:text-base font-semibold text-gray-900 truncate">
+                  {sortedHotels.length} Hotels{searchParams.get("city") ? ` in ${searchParams.get("city")}` : searchParams.get("hotelName") ? ` matching "${searchParams.get("hotelName")}"` : ''}
+                </h1>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <select value={sortOption} onChange={(e) => setSortOption(e.target.value)} className="text-[12px] sm:text-[13px] px-2.5 py-1.5 border border-gray-200 rounded-lg bg-white text-gray-600 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none">
+                    <option value="default">Sort: Recommended</option>
+                    <option value="priceLowHigh">Price: Low → High</option>
+                    <option value="priceHighLow">Price: High → Low</option>
+                    <option value="ratingHighLow">Rating: High → Low</option>
+                    <option value="ratingLowHigh">Rating: Low → High</option>
+                  </select>
+                  <button onClick={() => setShowModifySearch(s => !s)} className="text-[12px] text-blue-600 hover:text-blue-700 font-medium whitespace-nowrap cursor-pointer">
+                    {showModifySearch ? 'Close' : 'Modify Search'}
+                  </button>
+                </div>
+              </div>
+              {showModifySearch && (
+                <div className="pt-3 pb-2 border-t border-gray-100 mt-2">
+                  <HotelSearchForm defaultTab="stays" />
+                </div>
+              )}
             </div>
 
             {/* Search summary */}

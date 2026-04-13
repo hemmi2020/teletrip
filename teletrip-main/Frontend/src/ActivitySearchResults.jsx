@@ -5,6 +5,7 @@ import Header from './components/Header';
 import Footer from './components/Footer';
 import { useCart } from './components/CartSystem';
 import { useCurrency } from './context/CurrencyContext';
+import HotelSearchForm from './components/HotelSearchForm';
 
 const ActivitySearchResults = () => {
   const [searchParams] = useSearchParams();
@@ -25,6 +26,7 @@ const ActivitySearchResults = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState(null);
   const [sortOption, setSortOption] = useState('default');
+  const [showModifySearch, setShowModifySearch] = useState(false);
   const [notification, setNotification] = useState({ show: false, message: '' });
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [galleryIndex, setGalleryIndex] = useState(0);
@@ -573,14 +575,26 @@ const ActivitySearchResults = () => {
           <div className="max-w-[1280px] mx-auto px-4 sm:px-6 py-6">
             {error && (<div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6"><p className="text-red-800">{error}</p></div>)}
 
-            <div className="sticky top-16 z-20 bg-white py-2.5 -mx-4 px-4 border-b border-gray-100 flex items-center justify-between gap-3">
-              <h1 className="text-[14px] sm:text-base font-semibold text-gray-900 truncate">{sortedActivities.length} Activities in {destination}</h1>
-              <select value={sortOption} onChange={(e) => setSortOption(e.target.value)} className="text-[12px] sm:text-[13px] px-2.5 py-1.5 border border-gray-200 rounded-lg bg-white text-gray-600 focus:ring-1 focus:ring-blue-500 outline-none flex-shrink-0">
-                <option value="default">Sort: Recommended</option>
-                <option value="priceLow">Price: Low → High</option>
-                <option value="priceHigh">Price: High → Low</option>
-                <option value="name">Name: A → Z</option>
-              </select>
+            <div className="sticky top-16 z-20 bg-white py-2.5 -mx-4 px-4 border-b border-gray-100 flex flex-col gap-0">
+              <div className="flex items-center justify-between gap-3">
+                <h1 className="text-[14px] sm:text-base font-semibold text-gray-900 truncate">{sortedActivities.length} Activities in {destination}</h1>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <select value={sortOption} onChange={(e) => setSortOption(e.target.value)} className="text-[12px] sm:text-[13px] px-2.5 py-1.5 border border-gray-200 rounded-lg bg-white text-gray-600 focus:ring-1 focus:ring-blue-500 outline-none">
+                    <option value="default">Sort: Recommended</option>
+                    <option value="priceLow">Price: Low → High</option>
+                    <option value="priceHigh">Price: High → Low</option>
+                    <option value="name">Name: A → Z</option>
+                  </select>
+                  <button onClick={() => setShowModifySearch(s => !s)} className="text-[12px] text-blue-600 hover:text-blue-700 font-medium whitespace-nowrap cursor-pointer">
+                    {showModifySearch ? 'Close' : 'Modify Search'}
+                  </button>
+                </div>
+              </div>
+              {showModifySearch && (
+                <div className="pt-3 pb-2 border-t border-gray-100 mt-2">
+                  <HotelSearchForm defaultTab="experiences" />
+                </div>
+              )}
             </div>
             <div className="flex items-center gap-2 text-[11px] text-gray-400 py-2 flex-wrap mb-2">
               <span>{from} → {to}</span><span>·</span><span>{adults} adults</span>
