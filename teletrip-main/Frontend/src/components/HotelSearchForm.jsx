@@ -21,6 +21,8 @@ const TransfersTab = () => {
   const [isLoadingLocations, setIsLoadingLocations] = useState(false);
   const [filteredPickupLocations, setFilteredPickupLocations] = useState([]);
   const [filteredDropoffLocations, setFilteredDropoffLocations] = useState([]);
+  const [groupedPickup, setGroupedPickup] = useState([]);
+  const [groupedDropoff, setGroupedDropoff] = useState([]);
   const [selectedPickup, setSelectedPickup] = useState(null);
   const [selectedDropoff, setSelectedDropoff] = useState(null);
   const [transferDate, setTransferDate] = useState('');
@@ -38,6 +40,7 @@ const TransfersTab = () => {
   useEffect(() => {
     if (pickupQuery.trim().length < 2) {
       setFilteredPickupLocations([]);
+      setGroupedPickup([]);
       return;
     }
     setIsLoadingLocations(true);
@@ -46,6 +49,7 @@ const TransfersTab = () => {
         const response = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/locations/transfers?search=${encodeURIComponent(pickupQuery.trim())}`);
         if (response.data.success) {
           setFilteredPickupLocations(response.data.data);
+          setGroupedPickup(response.data.grouped || []);
         }
       } catch (error) {
         console.error('Error searching pickup locations:', error);
@@ -60,6 +64,7 @@ const TransfersTab = () => {
   useEffect(() => {
     if (dropoffQuery.trim().length < 2) {
       setFilteredDropoffLocations([]);
+      setGroupedDropoff([]);
       return;
     }
     setIsLoadingLocations(true);
@@ -68,6 +73,7 @@ const TransfersTab = () => {
         const response = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/locations/transfers?search=${encodeURIComponent(dropoffQuery.trim())}`);
         if (response.data.success) {
           setFilteredDropoffLocations(response.data.data);
+          setGroupedDropoff(response.data.grouped || []);
         }
       } catch (error) {
         console.error('Error searching dropoff locations:', error);
@@ -186,35 +192,35 @@ const TransfersTab = () => {
             )}
           </div>
           {showPickupDropdown && pickupQuery.trim() !== '' && (
-            <div className="absolute z-50 w-full mt-2 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+            <div className="absolute z-50 w-full mt-2 bg-white border border-gray-200 rounded-xl shadow-xl max-h-72 overflow-y-auto" style={{scrollbarWidth:'thin'}}>
               {isLoadingLocations ? (
                 <div className="p-3 text-center text-gray-500 text-sm">Searching locations...</div>
-              ) : filteredPickupLocations.length > 0 ? (
-                <ul>
-                  {filteredPickupLocations.map((location, index) => (
-                    <li
-                      key={`${location.type}-${location.code}-${index}`}
-                      onClick={() => {
-                        setSelectedPickup(location);
-                        setPickupQuery(location.name);
-                        setShowPickupDropdown(false);
-                      }}
-                      className="px-4 py-2.5 hover:bg-blue-50 cursor-pointer border-b last:border-b-0"
-                    >
-                      <div className="flex items-center space-x-2">
-                        {location.type === 'IATA' ? (
-                          <Plane size={16} className="text-blue-600 flex-shrink-0" />
-                        ) : (
-                          <Building2 size={16} className="text-green-600 flex-shrink-0" />
-                        )}
+              ) : groupedPickup.length > 0 ? (
+                groupedPickup.map((group, gi) => (
+                  <div key={gi}>
+                    <div className="px-3 pt-2.5 pb-1 text-[11px] font-semibold text-gray-400 uppercase tracking-wider bg-gray-50 sticky top-0">
+                      {group.city}{group.country ? `, ${group.country}` : ''}
+                    </div>
+                    {group.airports.map((loc, i) => (
+                      <div key={`a-${gi}-${i}`} onClick={() => { setSelectedPickup(loc); setPickupQuery(loc.name); setShowPickupDropdown(false); }} className="px-3 py-2 hover:bg-blue-50 cursor-pointer flex items-center gap-2.5">
+                        <Plane size={15} className="text-blue-600 flex-shrink-0" />
                         <div className="min-w-0 flex-1">
-                          <div className="font-medium text-sm truncate">{location.name}</div>
-                          <div className="text-xs text-gray-500">{location.type === 'IATA' ? 'Airport' : 'Hotel'} · {location.city}{location.country ? `, ${location.country}` : ''}</div>
+                          <div className="text-[13px] font-medium text-gray-800 truncate">{loc.name}</div>
+                          <div className="text-[11px] text-gray-400">Airport · {loc.code}</div>
                         </div>
                       </div>
-                    </li>
-                  ))}
-                </ul>
+                    ))}
+                    {group.hotels.map((loc, i) => (
+                      <div key={`h-${gi}-${i}`} onClick={() => { setSelectedPickup(loc); setPickupQuery(loc.name); setShowPickupDropdown(false); }} className="px-3 py-2 hover:bg-blue-50 cursor-pointer flex items-center gap-2.5">
+                        <Building2 size={15} className="text-green-600 flex-shrink-0" />
+                        <div className="min-w-0 flex-1">
+                          <div className="text-[13px] font-medium text-gray-800 truncate">{loc.name}</div>
+                          <div className="text-[11px] text-gray-400">Hotel · {loc.code}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ))
               ) : (
                 <div className="p-3 text-center text-gray-500 text-sm">No locations found</div>
               )}
@@ -256,35 +262,35 @@ const TransfersTab = () => {
             )}
           </div>
           {showDropoffDropdown && dropoffQuery.trim() !== '' && (
-            <div className="absolute z-50 w-full mt-2 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+            <div className="absolute z-50 w-full mt-2 bg-white border border-gray-200 rounded-xl shadow-xl max-h-72 overflow-y-auto" style={{scrollbarWidth:'thin'}}>
               {isLoadingLocations ? (
                 <div className="p-3 text-center text-gray-500 text-sm">Searching locations...</div>
-              ) : filteredDropoffLocations.length > 0 ? (
-                <ul>
-                  {filteredDropoffLocations.map((location, index) => (
-                    <li
-                      key={`${location.type}-${location.code}-${index}`}
-                      onClick={() => {
-                        setSelectedDropoff(location);
-                        setDropoffQuery(location.name);
-                        setShowDropoffDropdown(false);
-                      }}
-                      className="px-4 py-2.5 hover:bg-blue-50 cursor-pointer border-b last:border-b-0"
-                    >
-                      <div className="flex items-center space-x-2">
-                        {location.type === 'IATA' ? (
-                          <Plane size={16} className="text-blue-600 flex-shrink-0" />
-                        ) : (
-                          <Building2 size={16} className="text-green-600 flex-shrink-0" />
-                        )}
+              ) : groupedDropoff.length > 0 ? (
+                groupedDropoff.map((group, gi) => (
+                  <div key={gi}>
+                    <div className="px-3 pt-2.5 pb-1 text-[11px] font-semibold text-gray-400 uppercase tracking-wider bg-gray-50 sticky top-0">
+                      {group.city}{group.country ? `, ${group.country}` : ''}
+                    </div>
+                    {group.airports.map((loc, i) => (
+                      <div key={`a-${gi}-${i}`} onClick={() => { setSelectedDropoff(loc); setDropoffQuery(loc.name); setShowDropoffDropdown(false); }} className="px-3 py-2 hover:bg-blue-50 cursor-pointer flex items-center gap-2.5">
+                        <Plane size={15} className="text-blue-600 flex-shrink-0" />
                         <div className="min-w-0 flex-1">
-                          <div className="font-medium text-sm truncate">{location.name}</div>
-                          <div className="text-xs text-gray-500">{location.type === 'IATA' ? 'Airport' : 'Hotel'} · {location.city}{location.country ? `, ${location.country}` : ''}</div>
+                          <div className="text-[13px] font-medium text-gray-800 truncate">{loc.name}</div>
+                          <div className="text-[11px] text-gray-400">Airport · {loc.code}</div>
                         </div>
                       </div>
-                    </li>
-                  ))}
-                </ul>
+                    ))}
+                    {group.hotels.map((loc, i) => (
+                      <div key={`h-${gi}-${i}`} onClick={() => { setSelectedDropoff(loc); setDropoffQuery(loc.name); setShowDropoffDropdown(false); }} className="px-3 py-2 hover:bg-blue-50 cursor-pointer flex items-center gap-2.5">
+                        <Building2 size={15} className="text-green-600 flex-shrink-0" />
+                        <div className="min-w-0 flex-1">
+                          <div className="text-[13px] font-medium text-gray-800 truncate">{loc.name}</div>
+                          <div className="text-[11px] text-gray-400">Hotel · {loc.code}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ))
               ) : (
                 <div className="p-3 text-center text-gray-500 text-sm">No locations found</div>
               )}

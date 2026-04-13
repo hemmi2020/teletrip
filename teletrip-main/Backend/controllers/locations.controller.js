@@ -26,7 +26,7 @@ exports.getTransferLocations = async (req, res) => {
 
           const fetch = (await import('node-fetch')).default;
           const hotelRes = await fetch(
-            `https://api.test.hotelbeds.com/hotel-content-api/1.0/hotels?fields=name,code,city,country&language=en&from=1&to=20&keywords=${encodeURIComponent(search)}`,
+            `https://api.test.hotelbeds.com/hotel-content-api/1.0/hotels?fields=name,code,city,country,destinationCode&language=en&from=1&to=30&keywords=${encodeURIComponent(search)}`,
             {
               headers: {
                 'Accept': 'application/json',
@@ -43,13 +43,13 @@ exports.getTransferLocations = async (req, res) => {
               type: 'ATLAS',
               name: h.name?.content || h.name || 'Hotel',
               city: h.city?.content || h.city || '',
-              country: h.country?.description?.content || h.countryCode || ''
+              country: h.country?.description?.content || h.countryCode || '',
+              destinationCode: h.destinationCode || ''
             }));
             filteredLocations = [...filteredLocations, ...hotels];
           }
         } catch (hotelErr) {
           console.error('Hotel search for transfers failed:', hotelErr.message);
-          // Continue with airport-only results
         }
       }
     }
@@ -57,10 +57,20 @@ exports.getTransferLocations = async (req, res) => {
     if (type) {
       filteredLocations = filteredLocations.filter(loc => loc.type === type);
     }
+
+    // Group by city for Hotelbeds-style display
+    const grouped = {};
+    for (const loc of filteredLocations) {
+      const cityKey = `${loc.city || 'Other'}, ${loc.country || ''}`.trim().replace(/,\s*$/, '');
+      if (!grouped[cityKey]) grouped[cityKey] = { city: loc.city || 'Other', country: loc.country || '', airports: [], hotels: [] };
+      if (loc.type === 'IATA') grouped[cityKey].airports.push(loc);
+      else grouped[cityKey].hotels.push(loc);
+    }
     
     res.json({
       success: true,
       data: filteredLocations,
+      grouped: Object.values(grouped),
       total: filteredLocations.length
     });
   } catch (error) {
