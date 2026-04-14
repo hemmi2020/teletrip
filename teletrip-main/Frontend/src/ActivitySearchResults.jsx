@@ -592,7 +592,7 @@ const ActivitySearchResults = () => {
               </div>
               {showModifySearch && (
                 <div className="pt-3 pb-2 border-t border-gray-100 mt-2">
-                  <HotelSearchForm defaultTab="experiences" />
+                  <HotelSearchForm defaultTab="experiences" variant="light" />
                 </div>
               )}
             </div>

@@ -169,7 +169,7 @@ const TransferSearch = () => {
           {/* Expandable Modify Search */}
           {showModifySearch && (
             <div className="max-w-[1280px] mx-auto px-4 pb-4 pt-3 border-t border-gray-100 bg-white">
-              <HotelSearchForm defaultTab="transfers" />
+              <HotelSearchForm defaultTab="transfers" variant="light" />
             </div>
           )}
         </div>

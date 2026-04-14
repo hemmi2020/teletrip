@@ -1535,7 +1535,7 @@ if (children > 0 && childAges.length > 0) {
               </div>
               {showModifySearch && (
                 <div className="pt-3 pb-2 border-t border-gray-100 mt-2">
-                  <HotelSearchForm defaultTab="stays" />
+                  <HotelSearchForm defaultTab="stays" variant="light" />
                 </div>
               )}
             </div>
