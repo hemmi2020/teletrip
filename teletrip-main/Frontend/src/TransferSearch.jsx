@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import HotelSearchForm from './components/HotelSearchForm';
@@ -13,6 +13,7 @@ import {
 
 const TransferSearch = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { addToCart } = useCart();
   const { formatPKR, convert } = useCurrency();
 
@@ -28,6 +29,8 @@ const TransferSearch = () => {
   // Modal booking fields
   const [flightCode, setFlightCode] = useState('');
   const [flightTime, setFlightTime] = useState('');
+  const [returnFlightCode, setReturnFlightCode] = useState('');
+  const [returnFlightTime, setReturnFlightTime] = useState('');
 
   // Filters
   const [selectedTypes, setSelectedTypes] = useState([]);
@@ -48,11 +51,27 @@ const TransferSearch = () => {
     const se = sessionStorage.getItem('transferError');
     if (se) { setError(JSON.parse(se)); sessionStorage.removeItem('transferError'); }
     if (sr) { try { setResults(JSON.parse(sr)); } catch { setError({ message: 'Failed to load results.' }); } }
-    if (ss) { try { setSearchInfo(JSON.parse(ss)); } catch {} }
-  }, []);
+    // Prefer URL params over sessionStorage for searchInfo
+    if (searchParams.get('from')) {
+      setSearchInfo({
+        pickupName: searchParams.get('from'),
+        dropoffName: searchParams.get('to'),
+        fromCode: searchParams.get('fromCode'),
+        toCode: searchParams.get('toCode'),
+        outbound: searchParams.get('date') ? `${searchParams.get('date')}T10:00:00` : null,
+        inbound: searchParams.get('returnDate') ? `${searchParams.get('returnDate')}T10:00:00` : null,
+        tripType: searchParams.get('tripType') || 'one_way',
+        adults: parseInt(searchParams.get('adults') || '1'),
+        children: parseInt(searchParams.get('children') || '0'),
+        infants: parseInt(searchParams.get('infants') || '0'),
+      });
+    } else if (ss) {
+      try { setSearchInfo(JSON.parse(ss)); } catch {}
+    }
+  }, [searchParams]);
 
   // Reset modal fields when transfer changes
-  useEffect(() => { setFlightCode(''); setFlightTime(''); }, [selectedTransfer]);
+  useEffect(() => { setFlightCode(''); setFlightTime(''); setReturnFlightCode(''); setReturnFlightTime(''); }, [selectedTransfer]);
 
   const transfers = results?.transfers || [];
   const hasSearched = results !== null || error !== null;
@@ -112,6 +131,7 @@ const TransferSearch = () => {
       thumbnail: transfer.images?.[0] || '',
       location: `${searchInfo.pickupName || searchInfo.fromCode} → ${searchInfo.dropoffName || searchInfo.toCode}`,
       flightCode: flightCode || '', flightTime: flightTime || '',
+      returnFlightCode: returnFlightCode || '', returnFlightTime: returnFlightTime || '',
       direction: transfer.direction, pickupInformation: transfer.pickupInformation,
       transferDetails: transfer.transferDetails || [], remarks: transfer.remarks || [],
       tripType: searchInfo.tripType || 'one_way',
@@ -376,25 +396,52 @@ const TransferSearch = () => {
 
               {/* Pickup Time / Flight Details */}
               {isAirportRoute && (
-                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                  <div className="flex items-start gap-2 mb-3">
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 space-y-4">
+                  <div className="flex items-start gap-2">
                     <Plane className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
                     <div>
                       <h4 className="text-[13px] font-semibold text-amber-800">Pick-up Time Details</h4>
                       <p className="text-[11px] text-amber-700 mt-0.5">Please provide the following information. It is vital to confirm your transfer reservation. If it is not accurate, the supplier is not responsible for incorrect service and you may be subject to cancellation/no-show fees.</p>
                     </div>
                   </div>
-                  <div className="space-y-3">
-                    <div>
-                      <label className="block text-[12px] font-medium text-gray-700 mb-1">Flight Code <span className="text-red-500">*</span></label>
-                      <input type="text" value={flightCode} onChange={(e) => setFlightCode(e.target.value.toUpperCase().slice(0, 7))} placeholder="e.g. EK203" maxLength={7} className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
-                      <p className="text-[10px] text-gray-400 mt-0.5">Limited to 7 characters</p>
-                    </div>
-                    <div>
-                      <label className="block text-[12px] font-medium text-gray-700 mb-1">Flight {isDeparture ? 'Departure' : 'Arrival'} Time <span className="text-red-500">*</span></label>
-                      <input type="time" value={flightTime} onChange={(e) => setFlightTime(e.target.value)} className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+
+                  {/* Outbound flight */}
+                  <div className="border-t border-amber-200 pt-3">
+                    <p className="text-[12px] font-semibold text-gray-700 mb-2">
+                      Transfer: From {searchInfo?.pickupName || searchInfo?.fromCode} to {searchInfo?.dropoffName || searchInfo?.toCode}
+                    </p>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-[12px] font-medium text-gray-700 mb-1">Flight Code <span className="text-red-500">*</span></label>
+                        <input type="text" value={flightCode} onChange={(e) => setFlightCode(e.target.value.toUpperCase().slice(0, 7))} placeholder="e.g. EK203" maxLength={7} className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+                        <p className="text-[10px] text-gray-400 mt-0.5">This field is limited to 7 characters</p>
+                      </div>
+                      <div>
+                        <label className="block text-[12px] font-medium text-gray-700 mb-1">Flight {isDeparture ? 'Departure' : 'Arrival'} Time <span className="text-red-500">*</span></label>
+                        <input type="time" value={flightTime} onChange={(e) => setFlightTime(e.target.value)} className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+                      </div>
                     </div>
                   </div>
+
+                  {/* Return flight — only for round trips */}
+                  {searchInfo?.tripType === 'round_trip' && (
+                    <div className="border-t border-amber-200 pt-3">
+                      <p className="text-[12px] font-semibold text-gray-700 mb-2">
+                        Transfer: From {searchInfo?.dropoffName || searchInfo?.toCode} to {searchInfo?.pickupName || searchInfo?.fromCode}
+                      </p>
+                      <div className="space-y-3">
+                        <div>
+                          <label className="block text-[12px] font-medium text-gray-700 mb-1">Flight Code <span className="text-red-500">*</span></label>
+                          <input type="text" value={returnFlightCode} onChange={(e) => setReturnFlightCode(e.target.value.toUpperCase().slice(0, 7))} placeholder="e.g. EK204" maxLength={7} className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+                          <p className="text-[10px] text-gray-400 mt-0.5">This field is limited to 7 characters</p>
+                        </div>
+                        <div>
+                          <label className="block text-[12px] font-medium text-gray-700 mb-1">Flight Departure Time <span className="text-red-500">*</span></label>
+                          <input type="time" value={returnFlightTime} onChange={(e) => setReturnFlightTime(e.target.value)} className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -407,7 +454,7 @@ const TransferSearch = () => {
               </div>
               <button
                 onClick={() => handleAddToCart(selectedTransfer)}
-                disabled={isAirportRoute && (!flightCode.trim() || !flightTime)}
+                disabled={isAirportRoute && (!flightCode.trim() || !flightTime || (searchInfo?.tripType === 'round_trip' && (!returnFlightCode.trim() || !returnFlightTime)))}
                 className="inline-flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold text-[14px] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <ShoppingCart className="w-4 h-4" /> Add to Cart

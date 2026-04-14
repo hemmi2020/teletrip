@@ -161,9 +161,20 @@ const TransfersTab = ({ variant = 'dark' }) => {
 
       if (results.success) {
         sessionStorage.setItem('transferResults', JSON.stringify(results.data));
-        window.location.href = '/transfers';
+        const params = new URLSearchParams({
+          from: selectedPickup.name,
+          to: selectedDropoff.name,
+          fromCode: selectedPickup.code,
+          toCode: selectedDropoff.code,
+          date: outboundDate,
+          ...(returnDateStr ? { returnDate: returnDateStr } : {}),
+          tripType,
+          adults: String(adults),
+          ...(children > 0 ? { children: String(children) } : {}),
+          ...(infants > 0 ? { infants: String(infants) } : {})
+        });
+        window.location.href = `/transfers?${params.toString()}`;
       } else {
-        // API returned success:false
         sessionStorage.setItem('transferError', JSON.stringify({ message: results.message || 'No transfers found for this route.' }));
         window.location.href = '/transfers';
       }
@@ -171,8 +182,6 @@ const TransfersTab = ({ variant = 'dark' }) => {
       console.error('Search error:', err);
       const apiResponse = err.response?.data;
       const errorMessage = apiResponse?.message || err.message || 'Transfer search failed. Please try again.';
-
-      // Store error and navigate to results page to show it properly
       sessionStorage.setItem('transferResults', JSON.stringify({ transfers: [] }));
       sessionStorage.setItem('transferError', JSON.stringify({ message: errorMessage, error: apiResponse?.error }));
       window.location.href = '/transfers';
