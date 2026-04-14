@@ -208,11 +208,11 @@ const TransferSearch = () => {
 
           {/* Main: Sidebar + Cards */}
           {!error && transfers.length > 0 && (
-            <div className="flex gap-0">
+            <div className="flex gap-5">
               {/* Sidebar — flush left */}
               {!sidebarCollapsed && (
                 <div className="hidden lg:block w-[260px] flex-shrink-0">
-                  <div className="bg-white border-r border-gray-100 p-4 sticky top-[120px] h-[calc(100vh-120px)] overflow-y-auto" style={{scrollbarWidth:'thin'}}>
+                  <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sticky top-[120px] max-h-[calc(100vh-140px)] overflow-y-auto" style={{scrollbarWidth:'thin'}}>
                     <div className="flex items-center justify-between mb-3">
                       <h3 className="text-[14px] font-semibold text-gray-900">Filters</h3>
                       <div className="flex items-center gap-2">
@@ -250,9 +250,9 @@ const TransferSearch = () => {
                     return (
                       <div key={idx} className="bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-lg hover:border-gray-200 transition-all duration-200 flex flex-col sm:flex-row group">
                         {/* Image — exact same as hotel card */}
-                        <div className="sm:w-56 lg:w-64 relative overflow-hidden flex-shrink-0 bg-gradient-to-br from-blue-50 to-blue-100 self-stretch">
+                        <div className="sm:w-56 lg:w-64 relative overflow-hidden flex-shrink-0 bg-gradient-to-br from-blue-50 to-blue-100">
                           {t.images?.[0] ? (
-                            <img src={t.images[0]} alt={t.vehicle} className="w-full h-40 sm:h-full sm:absolute sm:inset-0 object-cover" onError={(e) => { e.target.style.display='none'; }} />
+                            <img src={t.images[0]} alt={t.vehicle} className="w-full h-40 sm:h-full object-cover" onError={(e) => { e.target.style.display='none'; }} />
                           ) : (
                             <div className="w-full h-40 sm:h-full flex items-center justify-center"><Car className="w-12 h-12 text-blue-200" /></div>
                           )}
@@ -321,11 +321,7 @@ const TransferSearch = () => {
               <button onClick={() => setSelectedTransfer(null)} className="p-1.5 hover:bg-gray-100 rounded-lg cursor-pointer"><X className="w-5 h-5 text-gray-400" /></button>
             </div>
 
-            {selectedTransfer.images?.[0] && (
-              <div className="h-[200px] overflow-hidden flex-shrink-0">
-                <img src={selectedTransfer.images[0]} alt={selectedTransfer.vehicle} className="w-full h-full object-cover" />
-              </div>
-            )}
+            {/* No image in modal — clean header only */}
 
             <div className="p-5 space-y-4 max-h-[60vh] overflow-y-auto" style={{scrollbarWidth:'thin'}}>
               {/* Route */}
