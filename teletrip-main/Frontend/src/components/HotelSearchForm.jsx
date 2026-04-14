@@ -14,6 +14,7 @@ const LazyDateRange = lazy(() =>
 // Transfers Tab Component
 const TransfersTab = ({ variant = 'dark' }) => {
   const lbl = variant === 'light' ? 'text-gray-700' : 'text-white/80';
+  const [tripType, setTripType] = useState('one_way');
   const [pickupQuery, setPickupQuery] = useState('');
   const [dropoffQuery, setDropoffQuery] = useState('');
   const [showPickupDropdown, setShowPickupDropdown] = useState(false);
