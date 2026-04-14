@@ -154,8 +154,30 @@ const TransferSearch = () => {
         </div>
       )}
 
-      <div className="pt-20 min-h-screen bg-gray-50">
-        {/* Sticky Sort Bar */}
+      <div className="pt-20 min-h-screen bg-gray-50 flex">
+        {/* Sidebar — sticky left, outside max-width container */}
+        {!sidebarCollapsed && transfers.length > 0 && (
+          <div className="hidden lg:block w-[300px] flex-shrink-0 sticky top-[120px] self-start">
+            <div className="bg-white border-r border-gray-100 h-[calc(100vh-120px)] overflow-y-auto px-4 py-4" style={{scrollbarWidth:'thin'}}>
+              <div className="flex items-center justify-between pb-3 mb-1 border-b border-gray-100">
+                <span className="text-xs font-semibold text-gray-900 tracking-wider uppercase">Filters</span>
+                <div className="flex items-center gap-2">
+                  <button onClick={clearFilters} className="text-xs text-blue-600 hover:text-blue-700 font-medium cursor-pointer">Reset all</button>
+                  <button onClick={() => setSidebarCollapsed(true)} className="p-1 rounded hover:bg-gray-100 cursor-pointer"><ChevronLeft className="w-3.5 h-3.5 text-gray-400" /></button>
+                </div>
+              </div>
+              {dynamicTypes.length > 0 && (<div className="py-3 border-b border-gray-50"><button onClick={() => toggleSection('type')} className="flex items-center justify-between w-full cursor-pointer"><span className="text-[13px] font-semibold text-gray-800">Transfer Type</span><ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${expandedSections.type ? 'rotate-180' : ''}`} /></button>{expandedSections.type && (<div className="mt-2 space-y-1.5">{dynamicTypes.map(([t, c]) => (<label key={t} className="flex items-center gap-2.5 py-0.5 cursor-pointer group"><input type="checkbox" checked={selectedTypes.includes(t)} onChange={() => toggleFilter(selectedTypes, setSelectedTypes, t)} className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 cursor-pointer" /><span className="text-[13px] text-gray-600 group-hover:text-gray-900 flex-1">{t}</span><span className="text-[11px] text-gray-400">{c}</span></label>))}</div>)}</div>)}
+              {dynamicCategories.length > 0 && (<div className="py-3 border-b border-gray-50"><button onClick={() => toggleSection('category')} className="flex items-center justify-between w-full cursor-pointer"><span className="text-[13px] font-semibold text-gray-800">Vehicle Category</span><ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${expandedSections.category ? 'rotate-180' : ''}`} /></button>{expandedSections.category && (<div className="mt-2 space-y-1.5">{dynamicCategories.map(([cat, c]) => (<label key={cat} className="flex items-center gap-2.5 py-0.5 cursor-pointer group"><input type="checkbox" checked={selectedCategories.includes(cat)} onChange={() => toggleFilter(selectedCategories, setSelectedCategories, cat)} className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 cursor-pointer" /><span className="text-[13px] text-gray-600 group-hover:text-gray-900 flex-1">{cat}</span><span className="text-[11px] text-gray-400">{c}</span></label>))}</div>)}</div>)}
+              <div className="py-3 border-b border-gray-50"><button onClick={() => toggleSection('price')} className="flex items-center justify-between w-full cursor-pointer"><span className="text-[13px] font-semibold text-gray-800">Price Range (PKR)</span><ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${expandedSections.price ? 'rotate-180' : ''}`} /></button>{expandedSections.price && (<div className="mt-2 space-y-3"><div className="relative h-6 flex items-center"><div className="absolute left-0 right-0 h-1 bg-gray-200 rounded-full" /><div className="absolute h-1 bg-blue-500 rounded-full" style={{ left: `${((parseFloat(priceMin) || priceBounds.min) - priceBounds.min) / (priceBounds.max - priceBounds.min || 1) * 100}%`, right: `${100 - ((parseFloat(priceMax) || priceBounds.max) - priceBounds.min) / (priceBounds.max - priceBounds.min || 1) * 100}%` }} /><input type="range" min={priceBounds.min} max={priceBounds.max} value={parseFloat(priceMin) || priceBounds.min} onChange={(e) => { const v = parseFloat(e.target.value); setPriceMin(v >= (parseFloat(priceMax) || priceBounds.max) ? String((parseFloat(priceMax) || priceBounds.max) - 1) : String(v)); }} className="absolute w-full appearance-none bg-transparent pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-blue-500 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:cursor-pointer [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-blue-500 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:cursor-pointer" style={{ zIndex: 3 }} /><input type="range" min={priceBounds.min} max={priceBounds.max} value={parseFloat(priceMax) || priceBounds.max} onChange={(e) => { const v = parseFloat(e.target.value); setPriceMax(v <= (parseFloat(priceMin) || priceBounds.min) ? String((parseFloat(priceMin) || priceBounds.min) + 1) : String(v)); }} className="absolute w-full appearance-none bg-transparent pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-blue-500 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:cursor-pointer [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-blue-500 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:cursor-pointer" style={{ zIndex: 4 }} /></div><div className="flex items-center gap-2"><input type="number" value={priceMin} onChange={(e) => setPriceMin(e.target.value)} placeholder={String(priceBounds.min)} className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 rounded-md outline-none" /><span className="text-gray-300 text-xs">–</span><input type="number" value={priceMax} onChange={(e) => setPriceMax(e.target.value)} placeholder={String(priceBounds.max)} className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 rounded-md outline-none" /></div><div className="flex justify-between text-[10px] text-gray-400"><span>PKR {priceBounds.min.toLocaleString()}</span><span>PKR {priceBounds.max.toLocaleString()}</span></div></div>)}</div>
+              <div className="py-3"><button onClick={() => toggleSection('capacity')} className="flex items-center justify-between w-full cursor-pointer"><span className="text-[13px] font-semibold text-gray-800">Min Passengers</span><ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${expandedSections.capacity ? 'rotate-180' : ''}`} /></button>{expandedSections.capacity && (<div className="mt-2"><input type="number" min="1" max="50" value={minCapacity} onChange={(e) => setMinCapacity(e.target.value)} placeholder="Any" className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 rounded-md outline-none" /></div>)}</div>
+            </div>
+          </div>
+        )}
+        {sidebarCollapsed && (<button onClick={() => setSidebarCollapsed(false)} className="hidden lg:flex fixed top-20 left-2 z-50 items-center gap-1 px-2 py-1.5 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 text-[12px] text-gray-600 cursor-pointer"><Filter className="w-3.5 h-3.5" /><ChevronRight className="w-3 h-3" /></button>)}
+
+        {/* Main content — boxed */}
+        <div className="flex-1 min-w-0">
+          <div className="max-w-[1280px] mx-auto px-4 py-5">
         <div className="sticky top-[64px] z-40 bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm">
           <div className="max-w-[1280px] mx-auto px-4 py-2.5 flex items-center justify-between">
             <div className="hidden md:flex items-center gap-2 text-[13px] text-gray-600">
@@ -196,14 +218,6 @@ const TransferSearch = () => {
 
         <div className="px-4 py-5">
           {/* Error / Empty / No search states */}
-          {error && (
-            <div className="bg-white rounded-xl shadow-sm border border-red-100 p-8 text-center mb-6">
-              <AlertTriangle className="w-10 h-10 text-red-400 mx-auto mb-3" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-1">Transfer Search Failed</h3>
-              <p className="text-gray-500 text-sm mb-4">{error.message}</p>
-              <button onClick={() => navigate('/home')} className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium cursor-pointer">Try Again</button>
-            </div>
-          )}
           {hasSearched && !error && transfers.length === 0 && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-10 text-center">
               <SearchX className="w-10 h-10 text-gray-300 mx-auto mb-3" />
@@ -226,40 +240,16 @@ const TransferSearch = () => {
             </div>
           )}
 
-          {/* Main: Sidebar + Cards */}
+          {/* Cards */}
           {!error && transfers.length > 0 && (
-            <div className="flex gap-5">
-              {/* Sidebar — flush left */}
-              {!sidebarCollapsed && (
-                <div className="hidden lg:block w-[260px] flex-shrink-0">
-                  <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sticky top-[120px] max-h-[calc(100vh-140px)] overflow-y-auto" style={{scrollbarWidth:'thin'}}>
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-[14px] font-semibold text-gray-900">Filters</h3>
-                      <div className="flex items-center gap-2">
-                        <button onClick={clearFilters} className="text-[11px] text-blue-600 cursor-pointer">Clear all</button>
-                        <button onClick={() => setSidebarCollapsed(true)} className="p-1 hover:bg-gray-100 rounded cursor-pointer"><ChevronLeft className="w-4 h-4 text-gray-400" /></button>
-                      </div>
-                    </div>
-                    {dynamicTypes.length > 0 && (<div className="py-3 border-b border-gray-50"><button onClick={() => toggleSection('type')} className="flex items-center justify-between w-full cursor-pointer"><span className="text-[13px] font-semibold text-gray-800">Transfer Type</span><ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${expandedSections.type ? 'rotate-180' : ''}`} /></button>{expandedSections.type && (<div className="mt-2 space-y-1">{dynamicTypes.map(([t, c]) => (<label key={t} className="flex items-center gap-2 py-1 cursor-pointer hover:bg-gray-50 rounded px-1"><input type="checkbox" checked={selectedTypes.includes(t)} onChange={() => toggleFilter(selectedTypes, setSelectedTypes, t)} className="w-3.5 h-3.5 rounded border-gray-300 text-blue-600 cursor-pointer" /><span className="text-[12px] text-gray-700 flex-1">{t}</span><span className="text-[10px] text-gray-400">{c}</span></label>))}</div>)}</div>)}
-                    {dynamicCategories.length > 0 && (<div className="py-3 border-b border-gray-50"><button onClick={() => toggleSection('category')} className="flex items-center justify-between w-full cursor-pointer"><span className="text-[13px] font-semibold text-gray-800">Vehicle Category</span><ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${expandedSections.category ? 'rotate-180' : ''}`} /></button>{expandedSections.category && (<div className="mt-2 space-y-1">{dynamicCategories.map(([cat, c]) => (<label key={cat} className="flex items-center gap-2 py-1 cursor-pointer hover:bg-gray-50 rounded px-1"><input type="checkbox" checked={selectedCategories.includes(cat)} onChange={() => toggleFilter(selectedCategories, setSelectedCategories, cat)} className="w-3.5 h-3.5 rounded border-gray-300 text-blue-600 cursor-pointer" /><span className="text-[12px] text-gray-700 flex-1">{cat}</span><span className="text-[10px] text-gray-400">{c}</span></label>))}</div>)}</div>)}
-                    <div className="py-3 border-b border-gray-50"><button onClick={() => toggleSection('price')} className="flex items-center justify-between w-full cursor-pointer"><span className="text-[13px] font-semibold text-gray-800">Price Range (PKR)</span><ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${expandedSections.price ? 'rotate-180' : ''}`} /></button>{expandedSections.price && (<div className="mt-2 space-y-3"><div className="relative h-6 flex items-center"><div className="absolute left-0 right-0 h-1 bg-gray-200 rounded-full" /><div className="absolute h-1 bg-blue-500 rounded-full" style={{ left: `${((parseFloat(priceMin) || priceBounds.min) - priceBounds.min) / (priceBounds.max - priceBounds.min || 1) * 100}%`, right: `${100 - ((parseFloat(priceMax) || priceBounds.max) - priceBounds.min) / (priceBounds.max - priceBounds.min || 1) * 100}%` }} /><input type="range" min={priceBounds.min} max={priceBounds.max} value={parseFloat(priceMin) || priceBounds.min} onChange={(e) => { const v = parseFloat(e.target.value); setPriceMin(v >= (parseFloat(priceMax) || priceBounds.max) ? String((parseFloat(priceMax) || priceBounds.max) - 1) : String(v)); }} className="absolute w-full appearance-none bg-transparent pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-blue-500 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:cursor-pointer [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-blue-500 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:cursor-pointer" style={{ zIndex: 3 }} /><input type="range" min={priceBounds.min} max={priceBounds.max} value={parseFloat(priceMax) || priceBounds.max} onChange={(e) => { const v = parseFloat(e.target.value); setPriceMax(v <= (parseFloat(priceMin) || priceBounds.min) ? String((parseFloat(priceMin) || priceBounds.min) + 1) : String(v)); }} className="absolute w-full appearance-none bg-transparent pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-blue-500 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:cursor-pointer [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-blue-500 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:cursor-pointer" style={{ zIndex: 4 }} /></div><div className="flex items-center gap-2"><input type="number" value={priceMin} onChange={(e) => setPriceMin(e.target.value)} placeholder={String(priceBounds.min)} className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 rounded-md outline-none" /><span className="text-gray-300 text-xs">–</span><input type="number" value={priceMax} onChange={(e) => setPriceMax(e.target.value)} placeholder={String(priceBounds.max)} className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 rounded-md outline-none" /></div><div className="flex justify-between text-[10px] text-gray-400"><span>PKR {priceBounds.min.toLocaleString()}</span><span>PKR {priceBounds.max.toLocaleString()}</span></div></div>)}</div>
-                    <div className="py-3"><button onClick={() => toggleSection('capacity')} className="flex items-center justify-between w-full cursor-pointer"><span className="text-[13px] font-semibold text-gray-800">Min Passengers</span><ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${expandedSections.capacity ? 'rotate-180' : ''}`} /></button>{expandedSections.capacity && (<div className="mt-2"><input type="number" min="1" max="50" value={minCapacity} onChange={(e) => setMinCapacity(e.target.value)} placeholder="Any" className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 rounded-md outline-none" /></div>)}</div>
-                  </div>
+            <div className="space-y-3">
+              {filteredTransfers.length === 0 && (
+                <div className="bg-white rounded-xl p-8 text-center border border-gray-100">
+                  <p className="text-gray-500 text-sm">No transfers match your filters.</p>
+                  <button onClick={clearFilters} className="mt-3 text-blue-600 text-sm font-medium cursor-pointer">Clear Filters</button>
                 </div>
               )}
-              {sidebarCollapsed && (<button onClick={() => setSidebarCollapsed(false)} className="hidden lg:flex fixed top-20 left-2 z-50 items-center gap-1 px-2 py-1.5 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 text-[12px] text-gray-600 cursor-pointer"><Filter className="w-3.5 h-3.5" /><ChevronRight className="w-3 h-3" /></button>)}
-
-
-              {/* Cards */}
-              <div className="flex-1 min-w-0">
-                {filteredTransfers.length === 0 && transfers.length > 0 && (
-                  <div className="bg-white rounded-xl p-8 text-center border border-gray-100">
-                    <p className="text-gray-500 text-sm">No transfers match your filters.</p>
-                    <button onClick={clearFilters} className="mt-3 text-blue-600 text-sm font-medium cursor-pointer">Clear Filters</button>
-                  </div>
-                )}
-                <div className="space-y-3 pt-0">
-                  {sortedTransfers.map((t, idx) => {
+              {sortedTransfers.map((t, idx) => {
                     const price = parseFloat(t.price?.amount || 0);
                     const pkrPrice = formatPKR(price);
                     const typeLabel = t.transferType === 'PRIVATE' ? 'Private' : t.transferType === 'SHARED' ? 'Shared' : t.transferType || 'Transfer';
@@ -321,10 +311,9 @@ const TransferSearch = () => {
                       </div>
                     );
                   })}
-                </div>
-              </div>
             </div>
           )}
+          </div>
         </div>
       </div>
 
@@ -474,6 +463,8 @@ const TransferSearch = () => {
           <div className="absolute bottom-4 text-white/60 text-sm">{galleryIndex + 1} / {galleryImages.length}</div>
         </div>
       )}
+
+      </div>
 
       <Footer />
     </>
