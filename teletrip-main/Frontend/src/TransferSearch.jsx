@@ -26,6 +26,13 @@ const TransferSearch = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [sortOption, setSortOption] = useState('price_asc');
   const [showModifySearch, setShowModifySearch] = useState(false);
+
+  // Listen for Search tab press from BottomNavBar
+  useEffect(() => {
+    const handler = () => setShowModifySearch(s => !s);
+    window.addEventListener('toggleModifySearch', handler);
+    return () => window.removeEventListener('toggleModifySearch', handler);
+  }, []);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   // Modal booking fields

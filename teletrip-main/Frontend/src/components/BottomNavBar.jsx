@@ -29,16 +29,21 @@ const BottomNavBar = () => {
     if (tab.action === 'cart') {
       window.dispatchEvent(new CustomEvent("openCart"));
     } else if (tab.action === 'search') {
-      // Navigate to home and scroll to search form
-      if (location.pathname !== '/home') {
+      // On search result pages — toggle the inline modify search bar
+      const isSearchPage = ['/hotel-search-results', '/activity-search-results', '/transfers'].some(p => location.pathname.startsWith(p));
+      if (isSearchPage) {
+        window.dispatchEvent(new CustomEvent("toggleModifySearch"));
+      } else if (location.pathname === '/home' || location.pathname === '/') {
+        // On home page — scroll to search form
+        const el = document.querySelector('.search-form-section');
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
+      } else {
+        // On any other page — go home and scroll
         navigate('/home');
         setTimeout(() => {
           const el = document.querySelector('.search-form-section');
           if (el) el.scrollIntoView({ behavior: 'smooth' });
-        }, 300);
-      } else {
-        const el = document.querySelector('.search-form-section');
-        if (el) el.scrollIntoView({ behavior: 'smooth' });
+        }, 400);
       }
     } else if (tab.path) {
       navigate(tab.path);

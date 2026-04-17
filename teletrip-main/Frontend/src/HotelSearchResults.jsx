@@ -64,6 +64,13 @@ const HotelSearchResults = () => {
   const [user, setUser] = useState(null);
   const [sortOption, setSortOption] = useState("default");
   const [showModifySearch, setShowModifySearch] = useState(false);
+
+  // Listen for Search tab press from BottomNavBar
+  useEffect(() => {
+    const handler = () => setShowModifySearch(s => !s);
+    window.addEventListener('toggleModifySearch', handler);
+    return () => window.removeEventListener('toggleModifySearch', handler);
+  }, []);
   const [showFilters, setShowFilters] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [showMobileFilters, setShowMobileFilters] = useState(false);

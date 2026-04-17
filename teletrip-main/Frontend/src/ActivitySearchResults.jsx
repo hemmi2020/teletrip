@@ -28,6 +28,13 @@ const ActivitySearchResults = () => {
   const [selectedActivity, setSelectedActivity] = useState(null);
   const [sortOption, setSortOption] = useState('default');
   const [showModifySearch, setShowModifySearch] = useState(false);
+
+  // Listen for Search tab press from BottomNavBar
+  useEffect(() => {
+    const handler = () => setShowModifySearch(s => !s);
+    window.addEventListener('toggleModifySearch', handler);
+    return () => window.removeEventListener('toggleModifySearch', handler);
+  }, []);
   const [notification, setNotification] = useState({ show: false, message: '' });
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [galleryIndex, setGalleryIndex] = useState(0);
