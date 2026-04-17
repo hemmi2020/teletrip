@@ -1522,7 +1522,7 @@ if (children > 0 && childAges.length > 0) {
         <button
           onClick={() => setShowMobileFilters(true)}
           style={{
-            position: 'fixed', bottom: 64, right: 16, zIndex: 115,
+            position: 'fixed', bottom: 80, right: 16, zIndex: 115,
             display: 'flex', alignItems: 'center', gap: 8,
             backgroundColor: '#2563eb', color: '#fff',
             padding: '10px 18px', borderRadius: 99,
@@ -1611,7 +1611,7 @@ if (children > 0 && childAges.length > 0) {
         />
 
         <div className="flex-1 min-w-0">
-          <div className="max-w-[1280px] mx-auto px-4 sm:px-6 py-6">
+          <div className="max-w-[1280px] mx-auto px-4 sm:px-6">
             {user && (
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
                 <div className="flex items-center">
@@ -1667,7 +1667,7 @@ if (children > 0 && childAges.length > 0) {
             </div>
 
             {/* Hotel Cards */}
-            <div className="space-y-3">
+            <div className="space-y-3 pb-20">
               {sortedHotels.map((hotel, cardIndex) => {
                 const checkIn = searchParams.get("checkIn");
                 const checkOut = searchParams.get("checkOut");

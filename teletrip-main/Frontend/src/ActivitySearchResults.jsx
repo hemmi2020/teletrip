@@ -583,7 +583,7 @@ const ActivitySearchResults = () => {
         <button
           onClick={() => setShowMobileFilters(true)}
           style={{
-            position: 'fixed', bottom: 64, right: 16, zIndex: 115,
+            position: 'fixed', bottom: 80, right: 16, zIndex: 115,
             display: 'flex', alignItems: 'center', gap: 8,
             backgroundColor: '#2563eb', color: '#fff',
             padding: '10px 18px', borderRadius: 99,
@@ -658,7 +658,7 @@ const ActivitySearchResults = () => {
         />
 
         <div className="flex-1 min-w-0">
-          <div className="max-w-[1280px] mx-auto px-4 sm:px-6 py-6">
+          <div className="max-w-[1280px] mx-auto px-4 sm:px-6">
             {error && (<div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6"><p className="text-red-800">{error}</p></div>)}
 
             <div className="sticky top-12 sm:top-16 z-20 bg-white py-2 -mx-4 px-3 border-b border-gray-100">
