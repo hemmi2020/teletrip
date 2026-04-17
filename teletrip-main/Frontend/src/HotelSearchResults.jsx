@@ -1611,38 +1611,29 @@ if (children > 0 && childAges.length > 0) {
         />
 
         <div className="flex-1 min-w-0 flex flex-col">
-          {/* Sticky sort bar — outside the padded content, sticks right below header */}
-          <div className="fixed top-12 sm:top-16 left-0 right-0 z-[99] bg-white/95 backdrop-blur-sm py-2 px-3 border-b border-gray-100 shadow-sm">
-            <div className="max-w-[1280px] mx-auto flex items-center gap-2">
+          {/* Sort bar — fixed, always below header with gap */}
+          <div className="fixed top-12 sm:top-16 left-0 right-0 z-[99] bg-white border-b border-gray-200 shadow-sm">
+            <div className="max-w-[1280px] mx-auto px-4 py-2.5 flex items-center gap-2">
               <h1 className="text-[13px] sm:text-base font-semibold text-gray-900 truncate flex-1 min-w-0">
                 {sortedHotels.length} Hotels{searchParams.get("city") ? ` in ${searchParams.get("city")}` : searchParams.get("hotelName") ? ` · "${searchParams.get("hotelName")}"` : ''}
               </h1>
-              <select
-                value={sortOption}
-                onChange={(e) => setSortOption(e.target.value)}
-                className="text-[12px] px-2 py-1 border border-gray-200 rounded-lg bg-white text-gray-600 outline-none flex-shrink-0 max-w-[130px] sm:max-w-none"
-              >
+              <select value={sortOption} onChange={(e) => setSortOption(e.target.value)} className="text-[12px] px-2 py-1.5 border border-gray-200 rounded-lg bg-white text-gray-600 outline-none flex-shrink-0" style={{minHeight:'unset'}}>
                 <option value="default">Recommended</option>
                 <option value="priceLowHigh">Price ↑</option>
                 <option value="priceHighLow">Price ↓</option>
                 <option value="ratingHighLow">Rating ↓</option>
                 <option value="ratingLowHigh">Rating ↑</option>
               </select>
-              <button
-                onClick={() => setShowModifySearch(s => !s)}
-                className="text-[12px] text-blue-600 font-medium whitespace-nowrap cursor-pointer flex-shrink-0 px-2 py-1 rounded-lg border border-blue-200 bg-blue-50 no-min-h"
-                style={{ minHeight: 'unset' }}
-              >
+              <button onClick={() => setShowModifySearch(s => !s)} className="text-[12px] text-blue-600 font-medium whitespace-nowrap cursor-pointer flex-shrink-0 px-3 py-1.5 rounded-lg border border-blue-200 bg-blue-50" style={{minHeight:'unset'}}>
                 {showModifySearch ? 'Close' : 'Modify'}
               </button>
             </div>
             {showModifySearch && (
-              <div className="max-w-[1280px] mx-auto pt-3 pb-2 border-t border-gray-100 mt-2">
+              <div className="max-w-[1280px] mx-auto px-4 pb-3 pt-2 border-t border-gray-100">
                 <HotelSearchForm defaultTab="stays" variant="light" />
               </div>
             )}
           </div>
-
           <div className="max-w-[1280px] mx-auto px-4 sm:px-6 w-full pt-10 sm:pt-11">
             {user && (
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4 mb-2">

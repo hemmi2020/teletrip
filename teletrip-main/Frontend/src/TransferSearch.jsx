@@ -254,47 +254,40 @@ const TransferSearch = () => {
 
         {/* Main content — boxed */}
         <div className="flex-1 min-w-0 flex flex-col">
-          {/* Sticky sort bar — outside padded content */}
-          <div className="fixed top-12 sm:top-16 left-0 right-0 z-[99] bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm">
-          <div className="max-w-[1280px] mx-auto px-3 py-2 flex items-center gap-2">
-            {/* Route summary — mobile compact, desktop full */}
-            <div className="flex-1 min-w-0 hidden md:flex items-center gap-2 text-[13px] text-gray-600">
-              {searchInfo && (<>
-                {searchInfo.tripType === 'round_trip' ? (
-                  <span className="text-[11px] px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full font-medium">Round Trip</span>
-                ) : (
-                  <span className="text-[11px] px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full font-medium">One Way</span>
-                )}
-                <MapPin className="w-3.5 h-3.5 text-blue-500" />
-                <span className="font-medium">{searchInfo.pickupName || searchInfo.fromCode}</span>
-                <ArrowRight className="w-3 h-3 text-gray-300" />
-                <span className="font-medium">{searchInfo.dropoffName || searchInfo.toCode}</span>
-                <span className="text-gray-300 mx-1">|</span>
-                <Calendar className="w-3.5 h-3.5" /><span>{fmtDT(searchInfo.outbound)}</span>
-                {searchInfo.inbound && <><ArrowRight className="w-3 h-3 text-gray-300" /><span>{fmtDT(searchInfo.inbound)}</span></>}
-                <span className="text-gray-300 mx-1">|</span>
-                <Users className="w-3.5 h-3.5" /><span>{searchInfo.adults || 1} Adult{(searchInfo.adults || 1) > 1 ? 's' : ''}</span>
-              </>)}
+          {/* Sort bar — fixed, always below header */}
+          <div className="fixed top-12 sm:top-16 left-0 right-0 z-[99] bg-white border-b border-gray-200 shadow-sm">
+            <div className="max-w-[1280px] mx-auto px-4 py-2.5 flex items-center gap-2">
+              {/* Mobile: count */}
+              <span className="text-[13px] font-semibold text-gray-900 md:hidden flex-1 min-w-0 truncate">
+                {filteredTransfers.length} Transfers
+              </span>
+              {/* Desktop: route summary */}
+              <div className="flex-1 min-w-0 hidden md:flex items-center gap-2 text-[13px] text-gray-600">
+                {searchInfo && (<>
+                  <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${searchInfo.tripType === 'round_trip' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'}`}>
+                    {searchInfo.tripType === 'round_trip' ? 'Round Trip' : 'One Way'}
+                  </span>
+                  <MapPin className="w-3.5 h-3.5 text-blue-500" />
+                  <span className="font-medium truncate">{searchInfo.pickupName || searchInfo.fromCode}</span>
+                  <ArrowRight className="w-3 h-3 text-gray-300 flex-shrink-0" />
+                  <span className="font-medium truncate">{searchInfo.dropoffName || searchInfo.toCode}</span>
+                  <span className="text-gray-300 mx-1 hidden lg:block">|</span>
+                  <span className="hidden lg:block">{filteredTransfers.length} of {transfers.length}</span>
+                </>)}
+              </div>
+              <select value={sortOption} onChange={(e) => setSortOption(e.target.value)} className="text-[12px] px-2 py-1.5 border border-gray-200 rounded-lg bg-white cursor-pointer outline-none flex-shrink-0" style={{minHeight:'unset'}}>
+                <option value="price_asc">Price ↑</option>
+                <option value="price_desc">Price ↓</option>
+                <option value="capacity">Capacity</option>
+              </select>
+              <button onClick={() => setShowModifySearch(!showModifySearch)} className="text-[12px] text-blue-600 font-medium cursor-pointer flex-shrink-0 px-3 py-1.5 rounded-lg border border-blue-200 bg-blue-50" style={{minHeight:'unset'}}>{showModifySearch ? 'Close' : 'Modify'}</button>
             </div>
-            {/* Mobile: count */}
-            <span className="text-[12px] font-semibold text-gray-700 md:hidden flex-1 min-w-0 truncate">
-              {filteredTransfers.length} Transfers
-            </span>
-            <span className="text-[12px] text-gray-400 hidden md:block">{filteredTransfers.length} of {transfers.length}</span>
-            <select value={sortOption} onChange={(e) => setSortOption(e.target.value)} className="text-[12px] border border-gray-200 rounded-lg px-2 py-1 bg-white cursor-pointer outline-none flex-shrink-0 max-w-[110px] sm:max-w-none">
-              <option value="price_asc">Price ↑</option>
-              <option value="price_desc">Price ↓</option>
-              <option value="capacity">Capacity</option>
-            </select>
-            <button onClick={() => setShowModifySearch(!showModifySearch)} className="text-[12px] text-blue-600 font-medium cursor-pointer flex-shrink-0 px-2 py-1 rounded-lg border border-blue-200 bg-blue-50">{showModifySearch ? 'Close' : 'Modify'}</button>
+            {showModifySearch && (
+              <div className="max-w-[1280px] mx-auto px-4 pb-3 pt-2 border-t border-gray-100">
+                <HotelSearchForm defaultTab="transfers" variant="light" />
+              </div>
+            )}
           </div>
-          {/* Expandable Modify Search */}
-          {showModifySearch && (
-            <div className="max-w-[1280px] mx-auto px-4 pb-4 pt-3 border-t border-gray-100 bg-white">
-              <HotelSearchForm defaultTab="transfers" variant="light" />
-            </div>
-          )}
-        </div>
 
         <div className="max-w-[1280px] mx-auto px-4 py-4 pt-10 sm:pt-11">
           {/* Error / Empty / No search states */}
@@ -334,52 +327,69 @@ const TransferSearch = () => {
                     const pkrPrice = formatPKR(price);
                     const typeLabel = t.transferType === 'PRIVATE' ? 'Private' : t.transferType === 'SHARED' ? 'Shared' : t.transferType || 'Transfer';
                     const details = t.transferDetails || [];
-                    const luggageInfo = details.find(d => /luggage|suitcase|bag/i.test(d.name || d.description || ''));
                     const durationInfo = details.find(d => /duration|journey|time|min/i.test(d.name || d.description || ''));
+                    const luggageInfo = details.find(d => /luggage|suitcase|bag/i.test(d.name || d.description || ''));
 
                     return (
-                      <div key={idx} className="bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-md transition-all duration-200">
-                        {/* Card: horizontal on all sizes */}
-                        <div className="flex gap-0">
-                          {/* Image — fixed width */}
-                          <div className="w-28 sm:w-40 relative flex-shrink-0 bg-gradient-to-br from-blue-50 to-blue-100">
-                            {t.images?.[0] ? (
-                              <img src={t.images[0]} alt={t.vehicle} className="w-full h-full object-cover" style={{minHeight:100}} onError={(e) => { e.target.style.display='none'; }} />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center" style={{minHeight:100}}><Car className="w-8 h-8 text-blue-200" /></div>
-                            )}
-                            <span className={`absolute top-2 left-2 text-[9px] px-1.5 py-0.5 rounded font-semibold ${t.transferType === 'PRIVATE' ? 'bg-blue-600 text-white' : 'bg-amber-500 text-white'}`}>{typeLabel}</span>
-                          </div>
-                          {/* Content */}
-                          <div className="flex-1 p-2.5 min-w-0 flex flex-col justify-between">
-                            {/* Top: name + price */}
-                            <div className="flex items-start justify-between gap-1 mb-1">
+                      <div key={idx} className="bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-lg hover:border-gray-200 transition-all duration-200 flex flex-col sm:flex-row group">
+                        {/* Image — same as hotel card */}
+                        <div className="sm:w-56 lg:w-64 relative overflow-hidden flex-shrink-0 bg-gradient-to-br from-blue-50 to-blue-100">
+                          {t.images?.[0] ? (
+                            <img src={t.images[0]} alt={t.vehicle} className="w-full aspect-video sm:aspect-auto sm:h-full object-cover group-hover:scale-105 transition-transform duration-500" onError={(e) => { e.target.style.display='none'; }} />
+                          ) : (
+                            <div className="w-full aspect-video sm:aspect-auto sm:h-full flex items-center justify-center min-h-[120px]">
+                              <Car className="w-12 h-12 text-blue-200" />
+                            </div>
+                          )}
+                          <span className={`absolute top-2 left-2 text-[10px] px-2 py-0.5 rounded font-medium ${t.transferType === 'PRIVATE' ? 'bg-blue-600/90 text-white' : 'bg-amber-500/90 text-white'}`}>{typeLabel}</span>
+                          {t.cancellationPolicies?.[0]?.amount === 0 && (
+                            <div className="absolute top-2 right-2 bg-green-600/90 text-white px-2 py-0.5 rounded text-[10px] font-medium">Free cancel</div>
+                          )}
+                        </div>
+
+                        {/* Content — same structure as hotel card */}
+                        <div className="flex-1 p-3 sm:p-4 flex flex-col justify-between min-w-0">
+                          <div>
+                            {/* Name + Price row */}
+                            <div className="flex justify-between items-start gap-2 mb-1">
                               <div className="min-w-0 flex-1">
-                                <h3 className="text-[13px] font-semibold text-gray-900 leading-tight truncate">{t.vehicle || 'Transfer'}</h3>
-                                <p className="text-[11px] text-gray-400">{t.category}</p>
+                                <h2 className="text-[14px] font-semibold text-gray-900 truncate leading-tight">{t.vehicle || 'Transfer Vehicle'}</h2>
+                                <p className="text-[12px] text-gray-500">{t.category || 'Standard'}</p>
                               </div>
-                              <div className="text-right flex-shrink-0 ml-1">
-                                <div className="text-[13px] font-bold text-blue-600 leading-tight whitespace-nowrap">{pkrPrice || '...'}</div>
-                                <div className="text-[9px] text-gray-400">total</div>
+                              <div className="text-right flex-shrink-0">
+                                <div className="text-lg font-bold text-blue-600 leading-tight">{pkrPrice || '...'}</div>
+                                <div className="text-[10px] text-gray-400">total</div>
                               </div>
                             </div>
+
                             {/* Route */}
                             {searchInfo && (
-                              <div className="text-[10px] text-gray-400 mb-1 truncate">
-                                {searchInfo.pickupName || searchInfo.fromCode} → {searchInfo.dropoffName || searchInfo.toCode}
+                              <div className="flex items-center text-gray-400 text-[12px] mb-2">
+                                <MapPin className="w-3 h-3 mr-0.5 flex-shrink-0" />
+                                <span className="truncate">{searchInfo.pickupName || searchInfo.fromCode} → {searchInfo.dropoffName || searchInfo.toCode}</span>
                               </div>
                             )}
-                            {/* Tags */}
+
+                            {/* Tags row */}
                             <div className="flex gap-1 flex-wrap mb-1.5">
-                              <span className="text-[9px] px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded font-medium whitespace-nowrap">{t.minPaxCapacity || 1}–{t.maxPaxCapacity || '?'} pax</span>
-                              {t.cancellationPolicies?.length > 0 && (
-                                <span className={`text-[9px] px-1.5 py-0.5 rounded whitespace-nowrap ${t.cancellationPolicies[0]?.amount === 0 ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-500'}`}>
-                                  {t.cancellationPolicies[0]?.amount === 0 ? 'Free cancel' : 'Cancel fee'}
-                                </span>
-                              )}
+                              <span className="text-[10px] px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded font-medium">{t.minPaxCapacity || 1}–{t.maxPaxCapacity || '?'} passengers</span>
+                              {durationInfo && <span className="text-[10px] px-1.5 py-0.5 bg-gray-50 text-gray-500 rounded">{durationInfo.name || durationInfo.description}</span>}
+                              {luggageInfo && <span className="text-[10px] px-1.5 py-0.5 bg-gray-50 text-gray-500 rounded">{luggageInfo.name || luggageInfo.description}</span>}
                             </div>
-                            {/* CTA */}
-                            <button onClick={() => setSelectedTransfer(t)} className="w-full py-1.5 bg-blue-600 text-white rounded-lg text-[11px] font-semibold inline-flex items-center justify-center gap-1 cursor-pointer hover:bg-blue-700 transition-colors" style={{minHeight:'unset'}}>
+
+                            {/* Cancellation */}
+                            {t.cancellationPolicies?.length > 0 && (
+                              <div className="flex gap-1 flex-wrap">
+                                <span className={`text-[10px] px-1.5 py-0.5 rounded ${t.cancellationPolicies[0]?.amount === 0 ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-500'}`}>
+                                  {t.cancellationPolicies[0]?.amount === 0 ? 'Free cancellation' : 'Cancellation fee applies'}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* CTA — same as hotel card */}
+                          <div className="flex items-center justify-end mt-2 pt-2 border-t border-gray-50">
+                            <button onClick={() => setSelectedTransfer(t)} className="w-full sm:w-auto px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-[12px] font-medium inline-flex items-center justify-center gap-1 cursor-pointer" style={{minHeight:'40px'}}>
                               <Eye className="w-3 h-3" /> View Details
                             </button>
                           </div>
