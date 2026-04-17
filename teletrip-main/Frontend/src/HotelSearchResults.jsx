@@ -1044,7 +1044,7 @@ if (children > 0 && childAges.length > 0) {
           ${sidebarCollapsed ? 'lg:w-0 lg:overflow-hidden lg:border-0' : ''}
           lg:block
         `}>
-          <div className="h-full overflow-y-auto overscroll-contain px-4 py-4 text-left" style={{scrollbarWidth:'thin',scrollbarColor:'#e5e7eb transparent'}}>
+          <div className="filter-sidebar-inner h-full overflow-y-auto overscroll-contain px-4 py-4 text-left" style={{scrollbarWidth:'thin',scrollbarColor:'#e5e7eb transparent', width: '100%', boxSizing: 'border-box'}}>
             <div className="flex justify-between items-center pb-3 mb-1 border-b border-gray-100">
               <span className="text-xs font-semibold text-gray-900 tracking-wider uppercase">Filters</span>
               <div className="flex items-center gap-2">

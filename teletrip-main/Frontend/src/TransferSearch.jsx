@@ -173,7 +173,7 @@ const TransferSearch = () => {
           ${(sidebarCollapsed || transfers.length === 0) ? 'lg:hidden' : ''}
           lg:block
         `}>
-          <div className="h-full overflow-y-auto px-4 py-4" style={{scrollbarWidth:'thin'}}>
+          <div className="filter-sidebar-inner h-full overflow-y-auto px-4 py-4" style={{scrollbarWidth:'thin'}}>
             <div className="flex items-center justify-between pb-3 mb-1 border-b border-gray-100">
               <span className="text-xs font-semibold text-gray-900 tracking-wider uppercase">Filters</span>
               <div className="flex items-center gap-2">

@@ -18,8 +18,8 @@ body {
 
 /* Mobile touch targets — only actual interactive elements, not labels */
 @media (max-width: 767px) {
-  button:not(.no-min-h):not(.filter-toggle),
-  [role="button"],
+  button:not(.no-min-h):not(.filter-toggle):not(.filter-section-btn),
+  [role="button"]:not(.filter-section-btn),
   select,
   input[type="submit"],
   input[type="button"] {
@@ -32,7 +32,7 @@ body {
   }
 }
 
-/* Fix filter labels — no min-height ever, always full-width flex row */
+/* Fix filter labels — no min-height, no centering */
 label {
   min-height: unset !important;
 }
@@ -44,22 +44,46 @@ label:has(input[type="radio"]) {
   flex-direction: row !important;
   align-items: center !important;
   justify-content: flex-start !important;
+  text-align: left !important;
   width: 100% !important;
   min-height: unset !important;
   box-sizing: border-box !important;
 }
 
-/* Force space-y containers in filter areas to be full-width block */
-.space-y-1\.5,
-.space-y-1 {
-  display: block !important;
+/* Text spans inside filter labels must left-align */
+label:has(input[type="checkbox"]) span,
+label:has(input[type="radio"]) span {
+  text-align: left !important;
+}
+
+/* Filter section toggle buttons — no min-height */
+.filter-section-btn {
+  min-height: unset !important;
+  height: auto !important;
+}
+
+/* Filter sidebar container — ensure full width layout */
+.filter-sidebar-inner {
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.filter-sidebar-inner .space-y-1\.5,
+.filter-sidebar-inner .space-y-1 {
   width: 100% !important;
 }
 
-/* Force py-3 filter section containers to be full-width */
-.py-3 {
+.filter-sidebar-inner label {
   width: 100% !important;
-  box-sizing: border-box !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  text-align: left !important;
+  min-height: unset !important;
+}
+
+.filter-sidebar-inner label span {
+  text-align: left !important;
 }
 
 /* Filter FAB — above bottom navbar */
