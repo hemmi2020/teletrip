@@ -1029,7 +1029,7 @@ if (children > 0 && childAges.length > 0) {
   return (
     <>
       <Header />
-      <div className="pt-16 flex">
+      <div className="pt-12 sm:pt-16 flex">
 
         {/* Sidebar Filters — desktop only */}
         <div className={`
@@ -1515,7 +1515,7 @@ if (children > 0 && childAges.length > 0) {
         <button
           onClick={() => setShowMobileFilters(true)}
           style={{
-            position: 'fixed', bottom: 80, right: 16, zIndex: 115,
+            position: 'fixed', bottom: 64, right: 16, zIndex: 115,
             display: 'flex', alignItems: 'center', gap: 8,
             backgroundColor: '#2563eb', color: '#fff',
             padding: '10px 18px', borderRadius: 99,
@@ -1616,23 +1616,28 @@ if (children > 0 && childAges.length > 0) {
               </div>
             )}
 
-            <div className="sticky top-16 z-20 bg-white/95 backdrop-blur-sm py-2.5 -mx-4 px-4 border-b border-gray-100 flex flex-col gap-0">
-              <div className="flex items-center justify-between gap-3">
-                <h1 className="text-[14px] sm:text-base font-semibold text-gray-900 truncate">
-                  {sortedHotels.length} Hotels{searchParams.get("city") ? ` in ${searchParams.get("city")}` : searchParams.get("hotelName") ? ` matching "${searchParams.get("hotelName")}"` : ''}
+            <div className="sticky top-12 sm:top-16 z-20 bg-white/95 backdrop-blur-sm py-2 -mx-4 px-3 border-b border-gray-100">
+              <div className="flex items-center gap-2">
+                <h1 className="text-[13px] sm:text-base font-semibold text-gray-900 truncate flex-1 min-w-0">
+                  {sortedHotels.length} Hotels{searchParams.get("city") ? ` in ${searchParams.get("city")}` : searchParams.get("hotelName") ? ` · "${searchParams.get("hotelName")}"` : ''}
                 </h1>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <select value={sortOption} onChange={(e) => setSortOption(e.target.value)} className="text-[12px] sm:text-[13px] px-2.5 py-1.5 border border-gray-200 rounded-lg bg-white text-gray-600 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none">
-                    <option value="default">Sort: Recommended</option>
-                    <option value="priceLowHigh">Price: Low → High</option>
-                    <option value="priceHighLow">Price: High → Low</option>
-                    <option value="ratingHighLow">Rating: High → Low</option>
-                    <option value="ratingLowHigh">Rating: Low → High</option>
-                  </select>
-                  <button onClick={() => setShowModifySearch(s => !s)} className="text-[12px] text-blue-600 hover:text-blue-700 font-medium whitespace-nowrap cursor-pointer">
-                    {showModifySearch ? 'Close' : 'Modify Search'}
-                  </button>
-                </div>
+                <select
+                  value={sortOption}
+                  onChange={(e) => setSortOption(e.target.value)}
+                  className="text-[12px] px-2 py-1 border border-gray-200 rounded-lg bg-white text-gray-600 outline-none flex-shrink-0 max-w-[130px] sm:max-w-none"
+                >
+                  <option value="default">Recommended</option>
+                  <option value="priceLowHigh">Price ↑</option>
+                  <option value="priceHighLow">Price ↓</option>
+                  <option value="ratingHighLow">Rating ↓</option>
+                  <option value="ratingLowHigh">Rating ↑</option>
+                </select>
+                <button
+                  onClick={() => setShowModifySearch(s => !s)}
+                  className="text-[12px] text-blue-600 font-medium whitespace-nowrap cursor-pointer flex-shrink-0 px-2 py-1 rounded-lg border border-blue-200 bg-blue-50"
+                >
+                  {showModifySearch ? 'Close' : 'Modify'}
+                </button>
               </div>
               {showModifySearch && (
                 <div className="pt-3 pb-2 border-t border-gray-100 mt-2">

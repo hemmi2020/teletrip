@@ -58,10 +58,10 @@ const BottomNavBar = () => {
             <button
               key={tab.label}
               onClick={() => handleTabClick(tab)}
-              className={`flex flex-col items-center justify-center flex-1 py-2 cursor-pointer relative ${
+              className={`flex flex-col items-center justify-center flex-1 py-1.5 cursor-pointer relative ${
                 active ? "text-blue-600" : "text-gray-400"
               }`}
-              style={{ minHeight: '56px' }}
+              style={{ minHeight: '48px' }}
             >
               <div className="relative">
                 <Icon className="w-5 h-5" />

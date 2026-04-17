@@ -158,7 +158,7 @@ const TransferSearch = () => {
         </div>
       )}
 
-      <div className="pt-20 min-h-screen bg-gray-50 flex">
+      <div className="pt-16 sm:pt-20 min-h-screen bg-gray-50 flex">
         {/* Mobile overlay backdrop */}
         {showMobileFilters && (
           <div className="fixed inset-0 bg-black/40 z-[120] lg:hidden" onClick={() => setShowMobileFilters(false)} />
@@ -191,7 +191,7 @@ const TransferSearch = () => {
         <button
           onClick={() => setShowMobileFilters(true)}
           style={{
-            position: 'fixed', bottom: 80, right: 16, zIndex: 115,
+            position: 'fixed', bottom: 64, right: 16, zIndex: 115,
             display: 'flex', alignItems: 'center', gap: 8,
             backgroundColor: '#2563eb', color: '#fff',
             padding: '10px 18px', borderRadius: 99,
@@ -248,9 +248,10 @@ const TransferSearch = () => {
         {/* Main content — boxed */}
         <div className="flex-1 min-w-0">
           <div className="max-w-[1280px] mx-auto px-4 py-5">
-        <div className="sticky top-[64px] z-40 bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm">
-          <div className="max-w-[1280px] mx-auto px-4 py-2.5 flex items-center justify-between">
-            <div className="hidden md:flex items-center gap-2 text-[13px] text-gray-600">
+        <div className="sticky top-[48px] sm:top-[64px] z-40 bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm">
+          <div className="max-w-[1280px] mx-auto px-3 py-2 flex items-center gap-2">
+            {/* Route summary — mobile compact, desktop full */}
+            <div className="flex-1 min-w-0 hidden md:flex items-center gap-2 text-[13px] text-gray-600">
               {searchInfo && (<>
                 {searchInfo.tripType === 'round_trip' ? (
                   <span className="text-[11px] px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full font-medium">Round Trip</span>
@@ -268,15 +269,17 @@ const TransferSearch = () => {
                 <Users className="w-3.5 h-3.5" /><span>{searchInfo.adults || 1} Adult{(searchInfo.adults || 1) > 1 ? 's' : ''}</span>
               </>)}
             </div>
-            <div className="flex items-center gap-3">
-              <span className="text-[12px] text-gray-400">{filteredTransfers.length} of {transfers.length}</span>
-              <select value={sortOption} onChange={(e) => setSortOption(e.target.value)} className="text-[13px] border border-gray-200 rounded-lg px-3 py-1.5 bg-white cursor-pointer outline-none">
-                <option value="price_asc">Price: Low → High</option>
-                <option value="price_desc">Price: High → Low</option>
-                <option value="capacity">Capacity: Most</option>
-              </select>
-              <button onClick={() => setShowModifySearch(!showModifySearch)} className="text-[13px] text-blue-600 hover:text-blue-700 font-medium cursor-pointer">{showModifySearch ? 'Close' : 'Modify'}</button>
-            </div>
+            {/* Mobile: count */}
+            <span className="text-[12px] font-semibold text-gray-700 md:hidden flex-1 min-w-0 truncate">
+              {filteredTransfers.length} Transfers
+            </span>
+            <span className="text-[12px] text-gray-400 hidden md:block">{filteredTransfers.length} of {transfers.length}</span>
+            <select value={sortOption} onChange={(e) => setSortOption(e.target.value)} className="text-[12px] border border-gray-200 rounded-lg px-2 py-1 bg-white cursor-pointer outline-none flex-shrink-0 max-w-[110px] sm:max-w-none">
+              <option value="price_asc">Price ↑</option>
+              <option value="price_desc">Price ↓</option>
+              <option value="capacity">Capacity</option>
+            </select>
+            <button onClick={() => setShowModifySearch(!showModifySearch)} className="text-[12px] text-blue-600 font-medium cursor-pointer flex-shrink-0 px-2 py-1 rounded-lg border border-blue-200 bg-blue-50">{showModifySearch ? 'Close' : 'Modify'}</button>
           </div>
           {/* Expandable Modify Search */}
           {showModifySearch && (

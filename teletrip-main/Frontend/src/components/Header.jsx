@@ -113,11 +113,11 @@ const Header = () => {
   return (
     <>
       <header className="bg-white fixed top-0 left-0 right-0 z-[100] shadow-md">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-12 sm:h-16">
             {/* Logo on the left */}
             <NavLink to="/home" className="flex-shrink-0">
-              <img src={logo} alt="Logo" className="h-14" />
+              <img src={logo} alt="Logo" className="h-9 sm:h-14" />
             </NavLink>
 
             {/* Mobile Cart Icon (visible only on mobile) */}
