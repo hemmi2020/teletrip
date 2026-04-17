@@ -1743,7 +1743,7 @@ if (children > 0 && childAges.length > 0) {
                 >
                   {/* Image */}
                   <div className="sm:w-56 lg:w-64 relative overflow-hidden flex-shrink-0">
-                    <img src={hotel.thumbnail || "https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg"} alt={hotel.name} className="w-full h-40 sm:h-full object-cover group-hover:scale-105 transition-transform duration-500" onError={(e) => (e.target.src = "https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg")} />
+                    <img src={hotel.thumbnail || "https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg"} alt={hotel.name} className="w-full aspect-video sm:aspect-auto sm:h-full object-cover group-hover:scale-105 transition-transform duration-500" onError={(e) => (e.target.src = "https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg")} />
                     {hotel.hasFreeCancellation && (
                       <div className="absolute top-2 left-2 bg-green-600/90 text-white px-2 py-0.5 rounded text-[10px] font-medium">Free cancellation</div>
                     )}
@@ -1797,7 +1797,7 @@ if (children > 0 && childAges.length > 0) {
                           <span className="text-[10px] text-gray-400">{hotelReviews[hotel.id].numReviews.toLocaleString()}</span>
                         </div>
                       ) : <div />}
-                      <button onClick={(e) => { e.stopPropagation(); setSelectedHotel(hotel); }} className="px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-[12px] font-medium inline-flex items-center gap-1">
+                      <button onClick={(e) => { e.stopPropagation(); setSelectedHotel(hotel); }} className="w-full sm:w-auto min-h-[44px] px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-[12px] font-medium inline-flex items-center justify-center gap-1">
                         <Bed className="w-3 h-3" />View Rooms
                       </button>
                     </div>

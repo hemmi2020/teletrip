@@ -43,6 +43,7 @@ const Checkout = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('hblpay'); // 'hblpay' or 'pay_on_site'
+  const [showOrderSummary, setShowOrderSummary] = useState(true);
 
 
   // Form data matching your backend validation
@@ -677,7 +678,7 @@ const handlePaymentSubmit = () => {
       
       <div className="space-y-4">
         {/* Name Fields */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               First Name *
@@ -688,7 +689,7 @@ const handlePaymentSubmit = () => {
                 type="text"
                 value={billingInfo.firstName}
                 onChange={(e) => handleInputChange('firstName', e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Enter first name"
                 required
               />
@@ -705,7 +706,7 @@ const handlePaymentSubmit = () => {
                 type="text"
                 value={billingInfo.lastName}
                 onChange={(e) => handleInputChange('lastName', e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Enter last name"
                 required
               />
@@ -714,7 +715,7 @@ const handlePaymentSubmit = () => {
         </div>
 
         {/* Contact Fields */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Email Address *
@@ -725,7 +726,7 @@ const handlePaymentSubmit = () => {
                 type="email"
                 value={billingInfo.email}
                 onChange={(e) => handleInputChange('email', e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Enter email address"
                 required
               />
@@ -742,7 +743,7 @@ const handlePaymentSubmit = () => {
                 type="tel"
                 value={billingInfo.phone}
                 onChange={(e) => handleInputChange('phone', e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="03001234567"
                 required
               />
@@ -761,7 +762,7 @@ const handlePaymentSubmit = () => {
               type="text"
               value={billingInfo.address}
               onChange={(e) => handleInputChange('address', e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="Enter full address"
               required
             />
@@ -769,7 +770,7 @@ const handlePaymentSubmit = () => {
         </div>
 
         {/* City and State */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               City *
@@ -778,7 +779,7 @@ const handlePaymentSubmit = () => {
               type="text"
               value={billingInfo.city}
               onChange={(e) => handleInputChange('city', e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="Enter city"
               required
             />
@@ -791,7 +792,7 @@ const handlePaymentSubmit = () => {
             <select
               value={billingInfo.state}
               onChange={(e) => handleInputChange('state', e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               required
             >
               <option value="">Select State</option>
@@ -897,9 +898,17 @@ const handlePaymentSubmit = () => {
 
   const renderOrderSummary = () => (
     <div className="bg-white rounded-lg shadow-sm p-6 sticky top-24">
-      <h2 className="text-xl font-semibold text-gray-900 mb-4">Order Summary</h2>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-xl font-semibold text-gray-900">Order Summary</h2>
+        <button
+          onClick={() => setShowOrderSummary(v => !v)}
+          className="lg:hidden text-sm text-blue-600 font-medium"
+        >
+          {showOrderSummary ? 'Hide' : 'Show'}
+        </button>
+      </div>
       
-      <div className="space-y-4 mb-6">
+      <div className={`space-y-4 mb-6 ${showOrderSummary ? '' : 'hidden lg:block'}`}>
         {checkoutItems.map((item, index) => (
           <div key={index} className="flex gap-4 border-b pb-4">
             {item.image && (
@@ -1004,7 +1013,7 @@ const handlePaymentSubmit = () => {
       <button
         onClick={handlePaymentSubmit}
         disabled={isProcessing || checkoutItems.length === 0}
-        className={`w-full py-3 px-4 rounded-lg font-medium flex items-center justify-center space-x-2 transition-all ${
+        className={`w-full min-h-[52px] py-3 px-4 rounded-lg font-medium flex items-center justify-center space-x-2 transition-all ${
           paymentMethod === 'hblpay'
             ? 'bg-blue-600 hover:bg-blue-700 text-white'
             : 'bg-green-600 hover:bg-green-700 text-white'

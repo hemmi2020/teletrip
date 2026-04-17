@@ -10,6 +10,22 @@ body {
   min-height: 100vh;
 }
 
+/* Prevent horizontal overflow */
+html, body, #root {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+/* Mobile touch targets */
+@media (max-width: 767px) {
+  button, [role="button"], a, select {
+    min-height: 44px;
+  }
+  input, textarea, select {
+    font-size: 16px !important;
+  }
+}
+
 /* ─── Global font size scale-up for search pages ─── */
 /* Bump all the tiny custom pixel sizes up by ~2px */
 .text-\[10px\] { font-size: 12px !important; }

@@ -870,14 +870,14 @@ export const SlideOutCart = ({ isOpen, onClose, onProceedToCheckout }) => {
                   return (
                     <div key={index} className="bg-white border border-gray-100 rounded-xl overflow-hidden hover:border-gray-200 transition-all">
                       {/* Thumbnail + Info */}
-                      <div className="flex gap-3 p-3">
+                      <div className="flex flex-col sm:flex-row gap-3 p-3">
                         {item.thumbnail && (
-                          <img src={item.thumbnail} alt="" className="w-16 h-16 rounded-lg object-cover flex-shrink-0" onError={(e) => e.target.style.display='none'} />
+                          <img src={item.thumbnail} alt="" className="w-full h-32 sm:w-16 sm:h-16 rounded-lg object-cover flex-shrink-0" onError={(e) => e.target.style.display='none'} />
                         )}
                         <div className="flex-1 min-w-0">
                           <div className="flex justify-between items-start gap-2">
                             <h3 className="text-[13px] font-semibold text-gray-900 line-clamp-1">{isActivity ? item.name : isTransfer ? item.vehicle || item.name : item.hotelName}</h3>
-                            <button onClick={(e) => { e.stopPropagation(); handleRemoveItem(item); }} className="p-1 hover:bg-red-50 rounded transition-colors flex-shrink-0"><Trash2 className="w-3.5 h-3.5 text-gray-400 hover:text-red-500" /></button>
+                            <button onClick={(e) => { e.stopPropagation(); handleRemoveItem(item); }} className="p-3 hover:bg-red-50 rounded transition-colors flex-shrink-0"><Trash2 className="w-3.5 h-3.5 text-gray-400 hover:text-red-500" /></button>
                           </div>
                           {isActivity && item.modalityName && <p className="text-[11px] text-purple-600 font-medium">{item.modalityName}{item.selectedTime ? ` · ${item.selectedTime}` : ''}</p>}
                           {isTransfer && <p className="text-[11px] text-blue-600 font-medium">{item.from} → {item.to}</p>}
@@ -917,7 +917,7 @@ export const SlideOutCart = ({ isOpen, onClose, onProceedToCheckout }) => {
 
           {/* Footer */}
           {items.length > 0 && (
-            <div className="border-t border-gray-100 bg-white px-5 py-4 space-y-3">
+            <div className="sticky bottom-0 border-t border-gray-100 bg-white px-5 py-4 space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-[13px] text-gray-500">Total</span>
                 <span className="text-xl font-bold text-gray-900">{fmtPKR(getTotalPrice()) || `${items[0]?.currency || 'EUR'} ${getTotalPrice().toFixed(0)}`}</span>

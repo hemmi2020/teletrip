@@ -362,7 +362,7 @@ const TransferSearch = () => {
                         {/* Image — exact same as hotel card */}
                         <div className="sm:w-56 lg:w-64 relative overflow-hidden flex-shrink-0 bg-gradient-to-br from-blue-50 to-blue-100">
                           {t.images?.[0] ? (
-                            <img src={t.images[0]} alt={t.vehicle} className="w-full h-40 sm:h-full object-cover" onError={(e) => { e.target.style.display='none'; }} />
+                            <img src={t.images[0]} alt={t.vehicle} className="w-full aspect-video sm:aspect-auto sm:h-full object-cover" onError={(e) => { e.target.style.display='none'; }} />
                           ) : (
                             <div className="w-full h-40 sm:h-full flex items-center justify-center"><Car className="w-12 h-12 text-blue-200" /></div>
                           )}
@@ -403,7 +403,7 @@ const TransferSearch = () => {
                           </div>
                           <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-50">
                             <div />
-                            <button onClick={() => setSelectedTransfer(t)} className="px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-[12px] font-medium inline-flex items-center gap-1 cursor-pointer">
+                            <button onClick={() => setSelectedTransfer(t)} className="w-full sm:w-auto min-h-[44px] px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-[12px] font-medium inline-flex items-center justify-center gap-1 cursor-pointer">
                               <Eye className="w-3 h-3" /> View Details
                             </button>
                           </div>

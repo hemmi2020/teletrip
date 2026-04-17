@@ -790,7 +790,7 @@ const ActivitySearchResults = () => {
                 {sortedActivities.map((activity, idx) => (
                   <div key={activity.code} className="bg-white rounded-xl border border-gray-100 hover:shadow-lg hover:border-gray-200 transition-all duration-200 flex flex-col sm:flex-row group">
                     <div className="sm:w-56 lg:w-64 relative flex-shrink-0">
-                      <img src={activity.images?.[0] || 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} alt={activity.name} className="w-full h-44 sm:h-48 object-cover rounded-t-xl sm:rounded-l-xl sm:rounded-tr-none group-hover:scale-105 transition-transform duration-500" onError={(e) => e.target.src = 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} />
+                      <img src={activity.images?.[0] || 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} alt={activity.name} className="w-full aspect-video sm:aspect-auto sm:h-full object-cover rounded-t-xl sm:rounded-l-xl sm:rounded-tr-none group-hover:scale-105 transition-transform duration-500" onError={(e) => e.target.src = 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} />
                       {activity.activityFactsheetType && (<div className="absolute top-2 left-2 bg-blue-600/90 text-white px-2 py-0.5 rounded text-[10px] font-medium">{activity.activityFactsheetType}</div>)}
                     </div>
                     <div className="flex-1 p-3 sm:p-4 min-w-0">
@@ -831,7 +831,7 @@ const ActivitySearchResults = () => {
                         ))}
                       </div>
                       <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-100">
-                        <button onClick={() => setSelectedActivity(activity)} className="px-4 py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-[12px] font-medium inline-flex items-center gap-1.5">View Options</button>
+                        <button onClick={() => setSelectedActivity(activity)} className="w-full sm:w-auto min-h-[44px] px-4 py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-[12px] font-medium inline-flex items-center justify-center gap-1.5">View Options</button>
                       </div>
                     </div>
                   </div>

@@ -35,13 +35,13 @@
   - [ ] 5.3 In `TransferSearch.jsx`: hide sidebar on `< lg`, add Filter FAB, wire `MobileFilterDrawer`
   - [ ] 5.4 Position Filter FAB sticky at bottom-right (`fixed bottom-20 right-4 z-50 md:hidden`)
 
-- [~] 6. Reflow search result cards for mobile
+- [-] 6. Reflow search result cards for mobile
   - [ ] 6.1 Update hotel result cards in `HotelSearchResults.jsx` to stacked layout on mobile
   - [ ] 6.2 Update activity result cards in `ActivitySearchResults.jsx` to stacked layout on mobile
   - [ ] 6.3 Update transfer result cards in `TransferSearch.jsx` to stacked layout on mobile
   - [ ] 6.4 Ensure CTA buttons are `w-full min-h-[44px]` on mobile across all card types
 
-- [~] 7. Build FullScreenModal component
+- [-] 7. Build FullScreenModal component
   - [ ] 7.1 Create `src/components/FullScreenModal.jsx` with `fixed inset-0` on mobile, centred overlay on `md+`
   - [ ] 7.2 Add sticky header (back/close button + title) and sticky footer (primary action slot)
   - [ ] 7.3 Implement swipe-down-to-dismiss gesture (touch delta > 80 px when scrollTop === 0)
