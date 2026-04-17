@@ -37,9 +37,10 @@ const MobileFilterDrawer = ({ isOpen, onClose, onApply, onReset, title = 'Filter
 
       {/* Drawer */}
       <div
-        className={`fixed bottom-0 left-0 right-0 z-[131] bg-white rounded-t-2xl max-h-[85vh] flex flex-col items-stretch
+        className={`fixed bottom-0 left-0 right-0 z-[131] bg-white rounded-t-2xl max-h-[85vh] flex flex-col
           transform transition-transform duration-300 ease-out
           ${isOpen ? 'translate-y-0' : 'translate-y-full'}`}
+        style={{ width: '100%' }}
         role="dialog"
         aria-modal="true"
         aria-label={title}
@@ -61,8 +62,10 @@ const MobileFilterDrawer = ({ isOpen, onClose, onApply, onReset, title = 'Filter
         </div>
 
         {/* Scrollable content */}
-        <div className="flex-1 overflow-y-auto px-4 py-2 text-left">
-          {children}
+        <div className="flex-1 overflow-y-auto text-left" style={{ width: '100%' }}>
+          <div className="px-4 py-2 w-full">
+            {children}
+          </div>
         </div>
 
         {/* Sticky footer */}
