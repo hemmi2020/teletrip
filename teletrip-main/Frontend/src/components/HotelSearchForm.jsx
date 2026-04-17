@@ -229,7 +229,7 @@ const TransfersTab = ({ variant = 'dark' }) => {
               onFocus={() => setShowPickupDropdown(true)}
               placeholder="Airport, hotel or area, e.g. DXB, Hilton Dubai"
               required
-              className="w-full pl-10 pr-10 py-2.5 sm:py-3 border border-gray-300 bg-white rounded-lg focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
+              className="search-form-input w-full pl-10 pr-10 py-2.5 sm:py-3 border border-gray-300 bg-white rounded-lg focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
             />
             {pickupQuery && (
               <button
@@ -309,7 +309,7 @@ const TransfersTab = ({ variant = 'dark' }) => {
               onFocus={() => setShowDropoffDropdown(true)}
               placeholder="Airport, hotel or area, e.g. DXB, DAMAC Maison"
               required
-              className="w-full pl-10 pr-10 py-2.5 sm:py-3 border border-gray-300 bg-white rounded-lg focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
+              className="search-form-input w-full pl-10 pr-10 py-2.5 sm:py-3 border border-gray-300 bg-white rounded-lg focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
             />
             {dropoffQuery && (
               <button
@@ -598,7 +598,7 @@ const ExperiencesTab = ({ variant = 'dark' }) => {
             }}
             onFocus={() => setShowLocationDropdown(true)}
             placeholder="Where are you going? e.g: Dubai"
-            className="w-full pl-10 pr-10 py-2.5 sm:py-3 border border-gray-300 bg-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
+            className="search-form-input w-full pl-10 pr-10 py-2.5 sm:py-3 border border-gray-300 bg-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
             required
           />
           {searchQuery && (
@@ -1032,7 +1032,7 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
                       onChange={handleSearchInputChange}
                       onFocus={() => setShowLocationDropdown(true)}
                       placeholder="City or country, e.g: London"
-                      className="w-full pl-10 pr-10 py-2.5 sm:py-3 border border-gray-300 bg-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-700 text-sm sm:text-base"
+                      className="search-form-input w-full pl-10 pr-10 py-2.5 sm:py-3 border border-gray-300 bg-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-700 text-sm sm:text-base"
                     />
                     {searchQuery && (
                       <button type="button" onClick={() => { setSearchQuery(''); setSelectedLocation(null); setFilteredLocations([]); }} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"><X size={18} /></button>
@@ -1074,7 +1074,7 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
                       value={hotelNameQuery}
                       onChange={(e) => setHotelNameQuery(e.target.value)}
                       placeholder="e.g. Hilton, Marriott..."
-                      className="w-full pl-10 pr-10 py-2.5 sm:py-3 border border-gray-300 bg-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-700 text-sm sm:text-base"
+                      className="search-form-input w-full pl-10 pr-10 py-2.5 sm:py-3 border border-gray-300 bg-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-700 text-sm sm:text-base"
                     />
                     {hotelNameQuery && (
                       <button type="button" onClick={() => setHotelNameQuery('')} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"><X size={18} /></button>

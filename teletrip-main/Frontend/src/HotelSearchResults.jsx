@@ -1796,13 +1796,13 @@ if (children > 0 && childAges.length > 0) {
                     <span className="text-[11px] text-gray-400">·</span>
                     <span className="text-[11px] text-gray-500 flex items-center gap-0.5 truncate"><MapPin className="w-3 h-3 flex-shrink-0" />{selectedHotel.address}</span>
                   </div>
-                  {/* Room type chips */}
-                  <div className="flex items-center gap-1 flex-wrap mt-1.5">
+                  {/* Room type chips — horizontal scroll, no wrap */}
+                  <div className="flex items-center gap-1.5 mt-1.5 overflow-x-auto pb-0.5" style={{scrollbarWidth:'none', WebkitOverflowScrolling:'touch'}}>
                     <span className="text-[11px] text-gray-400 flex-shrink-0">{selectedHotel.rooms?.length || 0} types:</span>
                     {uniqueRoomTypes.slice(0, 6).map((rt, i) => (
-                      <button key={i} onClick={() => { const el = document.getElementById(`room-${selectedHotel.rooms.find(r => r.name === rt)?.code}`); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }} className="text-[10px] px-2 py-0.5 bg-blue-50 text-blue-600 rounded-full font-medium hover:bg-blue-100 transition-colors flex-shrink-0 cursor-pointer">{rt}</button>
+                      <button key={i} onClick={() => { const el = document.getElementById(`room-${selectedHotel.rooms.find(r => r.name === rt)?.code}`); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }} className="text-[10px] px-2.5 py-1 bg-blue-50 text-blue-600 rounded-full font-medium hover:bg-blue-100 transition-colors flex-shrink-0 cursor-pointer whitespace-nowrap">{rt}</button>
                     ))}
-                    {uniqueRoomTypes.length > 6 && <span className="text-[10px] text-gray-400">+{uniqueRoomTypes.length - 6}</span>}
+                    {uniqueRoomTypes.length > 6 && <span className="text-[10px] text-gray-400 flex-shrink-0">+{uniqueRoomTypes.length - 6}</span>}
                   </div>
                 </div>
                 {/* Price + Close */}
@@ -1828,31 +1828,28 @@ if (children > 0 && childAges.length > 0) {
 
               {/* Image collage — full width, no negative margins */}
               {modalImages.length >= 3 ? (
-                <div className="grid grid-cols-4 grid-rows-2 gap-0.5 h-44 sm:h-56 w-full">
-                  <div className="col-span-2 row-span-2 cursor-pointer overflow-hidden" onClick={() => openGallery(0)}>
-                    <img src={modalImages[0]} alt="" className="w-full h-full object-cover hover:brightness-90 transition-all" onError={(e) => e.target.src = 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg'} />
+                <div style={{display:'grid', gridTemplateColumns:'2fr 1fr', gridTemplateRows:'1fr 1fr', gap:2, height: 200, width:'100%'}}>
+                  {/* Large left image — spans 2 rows */}
+                  <div style={{gridRow:'1/3', overflow:'hidden', cursor:'pointer'}} onClick={() => openGallery(0)}>
+                    <img src={modalImages[0]} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}} onError={(e) => e.target.src='https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg'} />
                   </div>
-                  <div className="col-span-1 row-span-1 cursor-pointer overflow-hidden" onClick={() => openGallery(1)}>
-                    <img src={modalImages[1]} alt="" className="w-full h-full object-cover hover:brightness-90 transition-all" onError={(e) => e.target.src = 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg'} />
+                  {/* Top right */}
+                  <div style={{overflow:'hidden', cursor:'pointer'}} onClick={() => openGallery(1)}>
+                    <img src={modalImages[1]} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}} onError={(e) => e.target.src='https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg'} />
                   </div>
-                  <div className="col-span-1 row-span-1 cursor-pointer overflow-hidden" onClick={() => openGallery(2)}>
-                    <img src={modalImages[2]} alt="" className="w-full h-full object-cover hover:brightness-90 transition-all" onError={(e) => e.target.src = 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg'} />
-                  </div>
-                  <div className="col-span-1 row-span-1 cursor-pointer overflow-hidden" onClick={() => openGallery(3)}>
-                    <img src={modalImages[3] || modalImages[0]} alt="" className="w-full h-full object-cover hover:brightness-90 transition-all" onError={(e) => e.target.src = 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg'} />
-                  </div>
-                  <div className="col-span-1 row-span-1 relative cursor-pointer overflow-hidden" onClick={() => openGallery(4)}>
-                    <img src={modalImages[4] || modalImages[1]} alt="" className="w-full h-full object-cover hover:brightness-90 transition-all" onError={(e) => e.target.src = 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg'} />
-                    {allImages.length > 5 && (
-                      <div className="absolute inset-0 bg-black/50 flex items-center justify-center hover:bg-black/60 transition-colors">
-                        <span className="text-white text-sm font-semibold">+{allImages.length - 5} photos</span>
+                  {/* Bottom right — with photo count overlay */}
+                  <div style={{overflow:'hidden', cursor:'pointer', position:'relative'}} onClick={() => openGallery(2)}>
+                    <img src={modalImages[2]} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}} onError={(e) => e.target.src='https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg'} />
+                    {allImages.length > 3 && (
+                      <div style={{position:'absolute',inset:0,backgroundColor:'rgba(0,0,0,0.5)',display:'flex',alignItems:'center',justifyContent:'center'}}>
+                        <span style={{color:'#fff',fontSize:13,fontWeight:600}}>+{allImages.length - 3} photos</span>
                       </div>
                     )}
                   </div>
                 </div>
               ) : (
-                <div className="h-44 sm:h-56 w-full cursor-pointer overflow-hidden" onClick={() => openGallery(0)}>
-                  <img src={modalImages[0] || 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg'} alt="" className="w-full h-full object-cover hover:brightness-90 transition-all" />
+                <div style={{height:180, width:'100%', overflow:'hidden', cursor:'pointer'}} onClick={() => openGallery(0)}>
+                  <img src={modalImages[0] || 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg'} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}} />
                 </div>
               )}
 

@@ -701,35 +701,38 @@ const ActivitySearchResults = () => {
             ) : (
               <div className="space-y-3">
                 {sortedActivities.map((activity, idx) => (
-                  <div key={activity.code} className="bg-white rounded-xl border border-gray-100 hover:shadow-lg hover:border-gray-200 transition-all duration-200 flex flex-col sm:flex-row group overflow-hidden">
-                    <div className="sm:w-56 lg:w-64 relative flex-shrink-0">
-                      <img src={activity.images?.[0] || 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} alt={activity.name} className="w-full h-44 sm:h-full object-cover sm:rounded-l-xl group-hover:scale-105 transition-transform duration-500" onError={(e) => e.target.src = 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} />
+                  <div key={activity.code} className="bg-white rounded-xl border border-gray-100 hover:shadow-lg hover:border-gray-200 transition-all duration-200 overflow-hidden">
+                    {/* Image — full width on mobile */}
+                    <div className="relative w-full h-40 overflow-hidden">
+                      <img src={activity.images?.[0] || 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} alt={activity.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onError={(e) => e.target.src = 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} />
                       {activity.activityFactsheetType && (<div className="absolute top-2 left-2 bg-blue-600/90 text-white px-2 py-0.5 rounded text-[10px] font-medium">{activity.activityFactsheetType}</div>)}
                     </div>
-                    <div className="flex-1 p-3 sm:p-4 min-w-0 flex flex-col justify-between">
-                      <div>
-                        <div className="flex justify-between items-start gap-2 mb-1.5">
-                          <h3 className="text-[14px] font-semibold text-gray-900 leading-tight line-clamp-2 flex-1 min-w-0">{activity.name}</h3>
-                          <div className="text-right flex-shrink-0 ml-2">
-                            {activity.pricing?.amount ? (<div className="text-base font-bold text-blue-600 leading-tight whitespace-nowrap">{formatPKR(activity.pricing.amount) || `${activity.pricing.currency} ${parseFloat(activity.pricing.amount).toFixed(0)}`}</div>) : <span className="text-[11px] text-gray-400">On request</span>}
-                            <div className="text-[10px] text-gray-400">per person</div>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2 text-[11px] text-gray-400 mb-1.5 flex-wrap">
-                          {activity.destination && <span className="flex items-center gap-0.5"><MapPin className="w-3 h-3" />{activity.destination}</span>}
-                          {activity.scheduling?.duration?.value && <><span>·</span><span><Clock className="w-3 h-3 inline" /> {activity.scheduling.duration.value}h</span></>}
-                        </div>
-                        <div className="flex gap-1 flex-wrap">
-                          {activity.supplier && <span className="text-[10px] px-1.5 py-0.5 bg-gray-50 text-gray-500 rounded">{activity.supplier}</span>}
-                          {activity.voucherType && <span className="text-[10px] px-1.5 py-0.5 bg-gray-50 text-gray-500 rounded">{activity.voucherType}</span>}
-                          {activity.services && activity.services.filter(Boolean).slice(0, 2).map((s, i) => (
-                            <span key={`svc-${i}`} className="text-[10px] px-1.5 py-0.5 bg-green-50 text-green-600 rounded">{s}</span>
-                          ))}
+                    {/* Content */}
+                    <div className="p-3 min-w-0">
+                      {/* Name + Price row */}
+                      <div className="flex items-start justify-between gap-2 mb-1.5">
+                        <h3 className="text-[14px] font-semibold text-gray-900 leading-tight flex-1 min-w-0">{activity.name}</h3>
+                        <div className="text-right flex-shrink-0 ml-1">
+                          {activity.pricing?.amount
+                            ? <div className="text-[13px] font-bold text-blue-600 leading-tight whitespace-nowrap">{formatPKR(activity.pricing.amount) || `${activity.pricing.currency} ${parseFloat(activity.pricing.amount).toFixed(0)}`}</div>
+                            : <span className="text-[11px] text-gray-400">On request</span>}
+                          <div className="text-[10px] text-gray-400">per person</div>
                         </div>
                       </div>
-                      <div className="flex items-center justify-end pt-2 mt-2 border-t border-gray-100">
-                        <button onClick={() => setSelectedActivity(activity)} className="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-[12px] font-medium inline-flex items-center justify-center gap-1.5">View Options</button>
+                      {/* Meta */}
+                      <div className="flex items-center gap-2 text-[11px] text-gray-400 mb-1.5 flex-wrap">
+                        {activity.destination && <span className="flex items-center gap-0.5"><MapPin className="w-3 h-3" />{activity.destination}</span>}
+                        {activity.scheduling?.duration?.value && <><span>·</span><span className="flex items-center gap-0.5"><Clock className="w-3 h-3" />{activity.scheduling.duration.value}h</span></>}
                       </div>
+                      {/* Tags */}
+                      <div className="flex gap-1 flex-wrap mb-2">
+                        {activity.supplier && <span className="text-[10px] px-1.5 py-0.5 bg-gray-100 text-gray-500 rounded">{activity.supplier}</span>}
+                        {activity.voucherType && <span className="text-[10px] px-1.5 py-0.5 bg-gray-100 text-gray-500 rounded">{activity.voucherType}</span>}
+                        {activity.services && activity.services.filter(Boolean).slice(0, 2).map((s, i) => (
+                          <span key={`svc-${i}`} className="text-[10px] px-1.5 py-0.5 bg-green-50 text-green-600 rounded">{s}</span>
+                        ))}
+                      </div>
+                      <button onClick={() => setSelectedActivity(activity)} className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-[13px] font-medium inline-flex items-center justify-center gap-1.5">View Options</button>
                     </div>
                   </div>
                 ))}

@@ -16,18 +16,16 @@ body {
   overflow-x: clip;
 }
 
-/* Mobile touch targets — only actual interactive elements, not labels */
+/* Search form inputs — keep font size consistent, don't override */
+.search-form-input {
+  font-size: 14px !important;
+  line-height: 1.4 !important;
+}
+
 @media (max-width: 767px) {
-  button:not(.no-min-h):not(.filter-toggle):not(.filter-section-btn),
-  [role="button"]:not(.filter-section-btn),
-  select,
-  input[type="submit"],
-  input[type="button"] {
-    min-height: 44px;
-  }
-  input:not([type="checkbox"]):not([type="radio"]),
-  textarea,
-  select {
+  /* Prevent iOS zoom on focus — use 16px only for non-search inputs */
+  input:not([type="checkbox"]):not([type="radio"]):not(.search-form-input),
+  textarea {
     font-size: 16px !important;
   }
 }
