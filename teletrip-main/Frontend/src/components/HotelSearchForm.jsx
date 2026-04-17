@@ -166,6 +166,8 @@ const TransfersTab = ({ variant = 'dark' }) => {
           to: selectedDropoff.name,
           fromCode: selectedPickup.code,
           toCode: selectedDropoff.code,
+          fromType: selectedPickup.type || 'ATLAS',
+          toType: selectedDropoff.type || 'IATA',
           date: outboundDate,
           ...(returnDateStr ? { returnDate: returnDateStr } : {}),
           tripType,

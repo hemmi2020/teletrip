@@ -58,6 +58,8 @@ const TransferSearch = () => {
         dropoffName: searchParams.get('to'),
         fromCode: searchParams.get('fromCode'),
         toCode: searchParams.get('toCode'),
+        fromType: searchParams.get('fromType') || 'ATLAS',
+        toType: searchParams.get('toType') || 'IATA',
         outbound: searchParams.get('date') ? `${searchParams.get('date')}T10:00:00` : null,
         inbound: searchParams.get('returnDate') ? `${searchParams.get('returnDate')}T10:00:00` : null,
         tripType: searchParams.get('tripType') || 'one_way',
@@ -109,8 +111,8 @@ const TransferSearch = () => {
   }), [filteredTransfers, sortOption]);
 
   const fmtDT = (dt) => { if (!dt) return ''; try { const d = new Date(dt); return d.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' }) + ' · ' + d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }); } catch { return dt; } };
-  const isAirportRoute = searchInfo?.fromType === 'IATA' || searchInfo?.toType === 'IATA';
-  const isDeparture = searchInfo?.toType === 'IATA';
+  const isAirportRoute = true; // Always show flight details for all transfers
+  const isDeparture = searchInfo?.toType === 'IATA' || (!searchInfo?.fromType && !searchInfo?.toType);
 
   const handleAddToCart = (transfer) => {
     if (!searchInfo) return;
@@ -443,7 +445,7 @@ const TransferSearch = () => {
               </div>
               <button
                 onClick={() => handleAddToCart(selectedTransfer)}
-                disabled={isAirportRoute && (!flightCode.trim() || !flightTime || (searchInfo?.tripType === 'round_trip' && (!returnFlightCode.trim() || !returnFlightTime)))}
+                disabled={!flightCode.trim() || !flightTime || (searchInfo?.tripType === 'round_trip' && (!returnFlightCode.trim() || !returnFlightTime))}
                 className="inline-flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold text-[14px] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <ShoppingCart className="w-4 h-4" /> Add to Cart
