@@ -3,6 +3,7 @@ import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import logo from "../images/Telitrip-Logo-1.png";
 import { SlideOutCart, AuthModal, useCart } from './CartSystem';
 import { UserDataContext } from './CartSystem';
+import BottomNavBar from './BottomNavBar';
 
 const Header = () => {
   const navigate = useNavigate();
@@ -119,14 +120,19 @@ const Header = () => {
               <img src={logo} alt="Logo" className="h-14" />
             </NavLink>
 
-            {/* Mobile Menu Button */}
+            {/* Mobile Cart Icon (visible only on mobile) */}
             <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              onClick={() => setIsCartOpen(true)}
+              className="md:hidden relative p-2 text-gray-700"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.5 6M7 13l-1.5 6m0 0h12" />
               </svg>
+              {getTotalItems() > 0 && (
+                <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                  {getTotalItems()}
+                </span>
+              )}
             </button>
 
             {/* Desktop Navigation */}
@@ -313,6 +319,9 @@ const Header = () => {
         defaultTab="login"
         returnUrl={location.pathname}
       />
+
+      {/* Bottom Navigation Bar (mobile only) */}
+      <BottomNavBar />
     </>
   );
 };
