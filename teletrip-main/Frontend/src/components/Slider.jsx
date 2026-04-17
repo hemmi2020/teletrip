@@ -44,7 +44,7 @@ const Slider = () => {
             </p>
           </div>
 
-          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-8 sm:pb-10 md:pb-12">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-8 sm:pb-10 md:pb-12 search-form-section">
             <HotelSearchForm />
           </div>
         </div>

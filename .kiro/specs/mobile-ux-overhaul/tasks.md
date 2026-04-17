@@ -35,28 +35,28 @@
   - [ ] 5.3 In `TransferSearch.jsx`: hide sidebar on `< lg`, add Filter FAB, wire `MobileFilterDrawer`
   - [ ] 5.4 Position Filter FAB sticky at bottom-right (`fixed bottom-20 right-4 z-50 md:hidden`)
 
-- [-] 6. Reflow search result cards for mobile
-  - [ ] 6.1 Update hotel result cards in `HotelSearchResults.jsx` to stacked layout on mobile
-  - [ ] 6.2 Update activity result cards in `ActivitySearchResults.jsx` to stacked layout on mobile
-  - [ ] 6.3 Update transfer result cards in `TransferSearch.jsx` to stacked layout on mobile
-  - [ ] 6.4 Ensure CTA buttons are `w-full min-h-[44px]` on mobile across all card types
+- [x] 6. Reflow search result cards for mobile
+  - [x] 6.1 Update hotel result cards in `HotelSearchResults.jsx` to stacked layout on mobile
+  - [x] 6.2 Update activity result cards in `ActivitySearchResults.jsx` to stacked layout on mobile
+  - [x] 6.3 Update transfer result cards in `TransferSearch.jsx` to stacked layout on mobile
+  - [x] 6.4 Ensure CTA buttons are `w-full min-h-[44px]` on mobile across all card types
 
-- [-] 7. Build FullScreenModal component
-  - [ ] 7.1 Create `src/components/FullScreenModal.jsx` with `fixed inset-0` on mobile, centred overlay on `md+`
-  - [ ] 7.2 Add sticky header (back/close button + title) and sticky footer (primary action slot)
-  - [ ] 7.3 Implement swipe-down-to-dismiss gesture (touch delta > 80 px when scrollTop === 0)
-  - [ ] 7.4 Apply scroll lock on `document.body` when open; restore on close/unmount
+- [x] 7. Build FullScreenModal component
+  - [x] 7.1 Create `src/components/FullScreenModal.jsx` with `fixed inset-0` on mobile, centred overlay on `md+`
+  - [x] 7.2 Add sticky header (back/close button + title) and sticky footer (primary action slot)
+  - [x] 7.3 Implement swipe-down-to-dismiss gesture (touch delta > 80 px when scrollTop === 0)
+  - [x] 7.4 Apply scroll lock on `document.body` when open; restore on close/unmount
 
-- [~] 8. Replace booking modals with FullScreenModal on mobile
-  - [ ] 8.1 Wrap hotel room booking modal in `HotelSearchResults.jsx` / `HotelDetails.jsx` with `FullScreenModal`
-  - [ ] 8.2 Wrap experience booking modal in `ActivitySearchResults.jsx` / `ActivityDetails.jsx` with `FullScreenModal`
-  - [ ] 8.3 Wrap transfer booking modal in `TransferSearch.jsx` with `FullScreenModal`
+- [x] 8. Replace booking modals with FullScreenModal on mobile
+  - [x] 8.1 Wrap hotel room booking modal in `HotelSearchResults.jsx` / `HotelDetails.jsx` with `FullScreenModal`
+  - [x] 8.2 Wrap experience booking modal in `ActivitySearchResults.jsx` / `ActivityDetails.jsx` with `FullScreenModal`
+  - [x] 8.3 Wrap transfer booking modal in `TransferSearch.jsx` with `FullScreenModal`
 
-- [~] 9. Update SlideOutCart for mobile
-  - [ ] 9.1 Change cart panel width to `w-full sm:w-[440px]` (already partially done — verify and fix)
-  - [ ] 9.2 Update cart item rows to stacked layout on mobile
-  - [ ] 9.3 Ensure remove button has `p-3` (44 px touch target)
-  - [ ] 9.4 Make cart footer sticky with full-width "Proceed to Checkout" button on mobile
+- [x] 9. Update SlideOutCart for mobile
+  - [x] 9.1 Change cart panel width to `w-full sm:w-[440px]` (already partially done — verify and fix)
+  - [x] 9.2 Update cart item rows to stacked layout on mobile
+  - [x] 9.3 Ensure remove button has `p-3` (44 px touch target)
+  - [x] 9.4 Make cart footer sticky with full-width "Proceed to Checkout" button on mobile
 
 - [~] 10. Update Checkout page for mobile
   - [ ] 10.1 Change billing form grid to `grid-cols-1 md:grid-cols-2`

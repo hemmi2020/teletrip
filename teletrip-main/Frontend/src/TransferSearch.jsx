@@ -421,7 +421,7 @@ const TransferSearch = () => {
       {/* ─── MODAL ─── */}
       {selectedTransfer && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-end sm:items-center justify-center" onClick={() => setSelectedTransfer(null)}>
-          <div className="relative bg-white w-full sm:max-w-4xl sm:rounded-2xl max-h-[92vh] overflow-hidden flex flex-col shadow-2xl" onClick={(e) => e.stopPropagation()}>
+          <div className="relative bg-white w-full sm:max-w-4xl sm:rounded-2xl rounded-t-2xl max-h-[95vh] sm:max-h-[92vh] overflow-hidden flex flex-col shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
               <div>
                 <h2 className="text-lg font-semibold text-gray-900">{selectedTransfer.vehicle || 'Transfer'}</h2>
@@ -432,7 +432,7 @@ const TransferSearch = () => {
 
             {/* No image in modal — clean header only */}
 
-            <div className="p-5 space-y-4 max-h-[60vh] overflow-y-auto" style={{scrollbarWidth:'thin'}}>
+            <div className="p-4 sm:p-5 space-y-4 flex-1 overflow-y-auto" style={{scrollbarWidth:'thin'}}>
               {/* Route */}
               {searchInfo && (
                 <div className="bg-blue-50 rounded-lg p-3">

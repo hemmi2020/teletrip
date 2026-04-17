@@ -1030,21 +1030,10 @@ if (children > 0 && childAges.length > 0) {
     <>
       <Header />
       <div className="pt-16 flex">
-        {/* Mobile Filter Toggle */}
-        <div className="lg:hidden fixed top-32 left-4 z-50">
-          <button onClick={() => setShowFilters(!showFilters)} className="bg-white/70 backdrop-blur-sm text-gray-700 p-2.5 rounded-lg shadow-sm border border-gray-200/60 hover:bg-white/90 cursor-pointer flex items-center gap-2">
-            <Filter className="w-4 h-4" /><span className="text-sm font-medium">Filters</span>
-          </button>
-        </div>
 
         {/* Sidebar Filters */}
-        <div className={`hidden lg:block fixed lg:sticky lg:top-16 inset-y-0 left-0 z-40 bg-white border-r border-gray-100 transform transition-all duration-300 ease-in-out lg:h-[calc(100vh-4rem)] pt-16 lg:pt-0 ${showFilters ? 'translate-x-0 w-[300px]' : '-translate-x-full w-[300px]'} ${sidebarCollapsed ? 'lg:w-0 lg:overflow-hidden lg:border-0' : 'lg:w-[300px] lg:translate-x-0'}`}>
+        <div className={`hidden lg:block fixed lg:sticky lg:top-16 inset-y-0 left-0 z-40 bg-white border-r border-gray-100 transform transition-all duration-300 ease-in-out lg:h-[calc(100vh-4rem)] pt-16 lg:pt-0 ${sidebarCollapsed ? 'lg:w-0 lg:overflow-hidden lg:border-0' : 'lg:w-[300px] lg:translate-x-0'}`}>
           <div className="h-full overflow-y-auto overscroll-contain px-4 py-4 text-left" style={{scrollbarWidth:'thin',scrollbarColor:'#e5e7eb transparent'}}>
-            {/* Mobile Close */}
-            <div className="lg:hidden flex justify-between items-center pb-3 mb-3 border-b border-gray-100">
-              <span className="text-xs font-semibold text-gray-900 tracking-wider uppercase">Filters</span>
-              <button onClick={() => setShowFilters(false)} className="p-1 rounded hover:bg-gray-100 cursor-pointer"><X className="w-4 h-4 text-gray-400" /></button>
-            </div>
             <div className="hidden lg:flex justify-between items-center pb-3 mb-1 border-b border-gray-100">
               <span className="text-xs font-semibold text-gray-900 tracking-wider uppercase">Filters</span>
               <div className="flex items-center gap-2">
@@ -1753,15 +1742,23 @@ if (children > 0 && childAges.length > 0) {
                   <div className="flex-1 p-3 sm:p-4 flex flex-col justify-between min-w-0">
                     <div>
                       <div className="flex justify-between items-start gap-2 mb-1">
-                        <div className="min-w-0">
-                          <h2 className="text-[14px] font-semibold text-gray-900 truncate leading-tight">{hotel.name}</h2>
-                          <div className="flex items-center gap-0.5 mt-0.5">
-                            {[...Array(hotel.stars)].map((_, i) => <Star key={i} className="w-2.5 h-2.5 text-amber-400 fill-current" />)}
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <h2 className="text-[14px] font-semibold text-gray-900 truncate leading-tight">{hotel.name}</h2>
+                            <div className="flex items-center gap-0.5 flex-shrink-0">
+                              {[...Array(hotel.stars)].map((_, i) => <Star key={i} className="w-2.5 h-2.5 text-amber-400 fill-current" />)}
+                            </div>
                           </div>
                         </div>
                         <div className="text-right flex-shrink-0">
                           <div className="text-lg font-bold text-blue-600 leading-tight">{formatPKR(totalPrice) || `${hotel.currency} ${totalPrice.toFixed(0)}`}</div>
                           <div className="text-[10px] text-gray-400">{formatPKR(pricePerNight) || `${pricePerNight.toFixed(0)}`}/night · {nights}n</div>
+                          {hotelReviews[hotel.id] && hotelReviews[hotel.id].numReviews > 0 && (
+                            <div className="flex items-center gap-1 mt-0.5 justify-end">
+                              <RatingCircles rating={hotelReviews[hotel.id].rating} size="w-2 h-2" />
+                              <span className="text-[10px] text-gray-400">{hotelReviews[hotel.id].numReviews.toLocaleString()}</span>
+                            </div>
+                          )}
                         </div>
                       </div>
 
@@ -1790,14 +1787,8 @@ if (children > 0 && childAges.length > 0) {
                     </div>
 
                     {/* Bottom row */}
-                    <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-50">
-                      {hotelReviews[hotel.id] && hotelReviews[hotel.id].numReviews > 0 ? (
-                        <div className="flex items-center gap-1.5">
-                          <RatingCircles rating={hotelReviews[hotel.id].rating} size="w-2 h-2" />
-                          <span className="text-[10px] text-gray-400">{hotelReviews[hotel.id].numReviews.toLocaleString()}</span>
-                        </div>
-                      ) : <div />}
-                      <button onClick={(e) => { e.stopPropagation(); setSelectedHotel(hotel); }} className="w-full sm:w-auto min-h-[44px] px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-[12px] font-medium inline-flex items-center justify-center gap-1">
+                    <div className="flex items-center justify-end mt-2 pt-2 border-t border-gray-50">
+                      <button onClick={(e) => { e.stopPropagation(); setSelectedHotel(hotel); }} className="w-full sm:w-auto px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-[12px] font-medium inline-flex items-center justify-center gap-1" style={{ minHeight: '40px' }}>
                         <Bed className="w-3 h-3" />View Rooms
                       </button>
                     </div>

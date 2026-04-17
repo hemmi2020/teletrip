@@ -16,14 +16,32 @@ html, body, #root {
   max-width: 100vw;
 }
 
-/* Mobile touch targets */
+/* Mobile touch targets — only actual interactive elements, not labels */
 @media (max-width: 767px) {
-  button, [role="button"], a, select {
+  button:not(.no-min-h),
+  [role="button"],
+  select,
+  input[type="submit"],
+  input[type="button"] {
     min-height: 44px;
   }
-  input, textarea, select {
+  input:not([type="checkbox"]):not([type="radio"]),
+  textarea,
+  select {
     font-size: 16px !important;
   }
+}
+
+/* Fix filter sidebar text alignment — prevent flex stretch from right-aligning text */
+.filter-label,
+label.flex {
+  align-items: center !important;
+  min-height: unset !important;
+}
+
+/* Filter FAB — above bottom navbar */
+.filter-fab {
+  bottom: 72px !important;
 }
 
 /* ─── Global font size scale-up for search pages ─── */

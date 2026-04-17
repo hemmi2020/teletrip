@@ -311,20 +311,10 @@ const ActivitySearchResults = () => {
     <>
       <Header />
       <div className="pt-16 flex">
-        {/* Mobile Filter Toggle */}
-        <div className="lg:hidden fixed top-32 left-4 z-50">
-          <button onClick={() => setShowFilters(!showFilters)} className="bg-white/70 backdrop-blur-sm text-gray-700 p-2.5 rounded-lg shadow-sm border border-gray-200/60 hover:bg-white/90 cursor-pointer flex items-center gap-2">
-            <Filter className="w-4 h-4" /><span className="text-sm font-medium">Filters</span>
-          </button>
-        </div>
 
         {/* Sidebar */}
-        <div className={`hidden lg:block fixed lg:sticky lg:top-16 inset-y-0 left-0 z-40 bg-white border-r border-gray-100 transform transition-all duration-300 ease-in-out lg:h-[calc(100vh-4rem)] pt-16 lg:pt-0 ${showFilters ? 'translate-x-0 w-[300px]' : '-translate-x-full w-[300px]'} ${sidebarCollapsed ? 'lg:w-0 lg:overflow-hidden lg:border-0' : 'lg:w-[300px] lg:translate-x-0'}`}>
+        <div className={`hidden lg:block fixed lg:sticky lg:top-16 inset-y-0 left-0 z-40 bg-white border-r border-gray-100 transform transition-all duration-300 ease-in-out lg:h-[calc(100vh-4rem)] pt-16 lg:pt-0 ${sidebarCollapsed ? 'lg:w-0 lg:overflow-hidden lg:border-0' : 'lg:w-[300px] lg:translate-x-0'}`}>
           <div className="h-full overflow-y-auto overscroll-contain px-4 py-4 text-left" style={{scrollbarWidth:'thin',scrollbarColor:'#e5e7eb transparent'}}>
-            <div className="lg:hidden flex justify-between items-center pb-3 mb-3 border-b border-gray-100">
-              <span className="text-xs font-semibold text-gray-900 tracking-wider uppercase">Filters</span>
-              <button onClick={() => setShowFilters(false)} className="p-1 rounded hover:bg-gray-100"><X className="w-4 h-4 text-gray-400" /></button>
-            </div>
             <div className="hidden lg:flex justify-between items-center pb-3 mb-1 border-b border-gray-100">
               <span className="text-xs font-semibold text-gray-900 tracking-wider uppercase">Filters</span>
               <div className="flex items-center gap-2">
@@ -788,50 +778,34 @@ const ActivitySearchResults = () => {
             ) : (
               <div className="space-y-3">
                 {sortedActivities.map((activity, idx) => (
-                  <div key={activity.code} className="bg-white rounded-xl border border-gray-100 hover:shadow-lg hover:border-gray-200 transition-all duration-200 flex flex-col sm:flex-row group">
+                  <div key={activity.code} className="bg-white rounded-xl border border-gray-100 hover:shadow-lg hover:border-gray-200 transition-all duration-200 flex flex-col sm:flex-row group overflow-hidden">
                     <div className="sm:w-56 lg:w-64 relative flex-shrink-0">
-                      <img src={activity.images?.[0] || 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} alt={activity.name} className="w-full aspect-video sm:aspect-auto sm:h-full object-cover rounded-t-xl sm:rounded-l-xl sm:rounded-tr-none group-hover:scale-105 transition-transform duration-500" onError={(e) => e.target.src = 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} />
+                      <img src={activity.images?.[0] || 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} alt={activity.name} className="w-full h-44 sm:h-full object-cover sm:rounded-l-xl group-hover:scale-105 transition-transform duration-500" onError={(e) => e.target.src = 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} />
                       {activity.activityFactsheetType && (<div className="absolute top-2 left-2 bg-blue-600/90 text-white px-2 py-0.5 rounded text-[10px] font-medium">{activity.activityFactsheetType}</div>)}
                     </div>
-                    <div className="flex-1 p-3 sm:p-4 min-w-0">
-                      <div className="flex justify-between items-start gap-2 mb-1.5">
-                        <h3 className="text-[14px] font-semibold text-gray-900 leading-tight line-clamp-2">{activity.name}</h3>
-                        <div className="text-right flex-shrink-0">
-                          {activity.pricing?.amount ? (<div className="text-lg font-bold text-blue-600 leading-tight">{formatPKR(activity.pricing.amount) || `${activity.pricing.currency} ${parseFloat(activity.pricing.amount).toFixed(0)}`}</div>) : <span className="text-[11px] text-gray-400">On request</span>}
-                          <div className="text-[10px] text-gray-400">per person</div>
+                    <div className="flex-1 p-3 sm:p-4 min-w-0 flex flex-col justify-between">
+                      <div>
+                        <div className="flex justify-between items-start gap-2 mb-1.5">
+                          <h3 className="text-[14px] font-semibold text-gray-900 leading-tight line-clamp-2 flex-1 min-w-0">{activity.name}</h3>
+                          <div className="text-right flex-shrink-0 ml-2">
+                            {activity.pricing?.amount ? (<div className="text-base font-bold text-blue-600 leading-tight whitespace-nowrap">{formatPKR(activity.pricing.amount) || `${activity.pricing.currency} ${parseFloat(activity.pricing.amount).toFixed(0)}`}</div>) : <span className="text-[11px] text-gray-400">On request</span>}
+                            <div className="text-[10px] text-gray-400">per person</div>
+                          </div>
                         </div>
-                      </div>
-                      {activity.summary && <p className="text-[12px] text-gray-500 line-clamp-2 mb-1.5" dangerouslySetInnerHTML={{ __html: activity.summary }} />}
-                      {!activity.summary && activity.description && <p className="text-[12px] text-gray-500 line-clamp-2 mb-1.5" dangerouslySetInnerHTML={{ __html: activity.description }} />}
-                      <div className="flex items-center gap-2 text-[11px] text-gray-400 mb-1.5 flex-wrap">
-                        {activity.destination && <span className="flex items-center gap-0.5"><MapPin className="w-3 h-3" />{activity.destination}</span>}
-                        {activity.supplier && <><span>·</span><span>{activity.supplier}</span></>}
-                        {activity.scheduling?.duration?.value && <><span>·</span><span><Clock className="w-3 h-3 inline" /> {activity.scheduling.duration.value}h</span></>}
-                        {activity.voucherType && <><span>·</span><span>{activity.voucherType}</span></>}
-                      </div>
-                      {/* Time slots */}
-                      {activity.scheduling?.opened && activity.scheduling.opened.length > 0 && (
-                        <div className="flex gap-1 flex-wrap mb-1.5">
-                          {activity.scheduling.opened.slice(0, 3).map((slot, i) => (
-                            <span key={i} className="text-[10px] px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded inline-flex items-center gap-0.5"><Clock className="w-2.5 h-2.5" />{slot.openingTime}</span>
+                        <div className="flex items-center gap-2 text-[11px] text-gray-400 mb-1.5 flex-wrap">
+                          {activity.destination && <span className="flex items-center gap-0.5"><MapPin className="w-3 h-3" />{activity.destination}</span>}
+                          {activity.scheduling?.duration?.value && <><span>·</span><span><Clock className="w-3 h-3 inline" /> {activity.scheduling.duration.value}h</span></>}
+                        </div>
+                        <div className="flex gap-1 flex-wrap">
+                          {activity.supplier && <span className="text-[10px] px-1.5 py-0.5 bg-gray-50 text-gray-500 rounded">{activity.supplier}</span>}
+                          {activity.voucherType && <span className="text-[10px] px-1.5 py-0.5 bg-gray-50 text-gray-500 rounded">{activity.voucherType}</span>}
+                          {activity.services && activity.services.filter(Boolean).slice(0, 2).map((s, i) => (
+                            <span key={`svc-${i}`} className="text-[10px] px-1.5 py-0.5 bg-green-50 text-green-600 rounded">{s}</span>
                           ))}
-                          {activity.scheduling.opened.length > 3 && <span className="text-[10px] text-gray-400 self-center">+{activity.scheduling.opened.length - 3}</span>}
                         </div>
-                      )}
-                      <div className="flex gap-1 flex-wrap mb-3">
-                        {activity.segmentationGroups && activity.segmentationGroups.map((g, i) => {
-                          if (g.segments) return g.segments.filter(s => s.name).slice(0, 4).map((s, j) => (
-                            <span key={`seg-${i}-${j}`} className="text-[10px] px-1.5 py-0.5 bg-purple-50 text-purple-600 rounded">{s.name}</span>
-                          ));
-                          if (g.name) return <span key={`g-${i}`} className="text-[10px] px-1.5 py-0.5 bg-purple-50 text-purple-600 rounded">{g.name}</span>;
-                          return null;
-                        })}
-                        {activity.services && activity.services.filter(Boolean).slice(0, 3).map((s, i) => (
-                          <span key={`svc-${i}`} className="text-[10px] px-1.5 py-0.5 bg-green-50 text-green-600 rounded">{s}</span>
-                        ))}
                       </div>
-                      <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-100">
-                        <button onClick={() => setSelectedActivity(activity)} className="w-full sm:w-auto min-h-[44px] px-4 py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-[12px] font-medium inline-flex items-center justify-center gap-1.5">View Options</button>
+                      <div className="flex items-center justify-end pt-2 mt-2 border-t border-gray-100">
+                        <button onClick={() => setSelectedActivity(activity)} className="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-[12px] font-medium inline-flex items-center justify-center gap-1.5">View Options</button>
                       </div>
                     </div>
                   </div>
@@ -842,7 +816,6 @@ const ActivitySearchResults = () => {
         </div>
       </div>
 
-      {showFilters && (<div className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden" onClick={() => setShowFilters(false)} />)}
       {/* Activity Detail Modal */}
       {selectedActivity && (
         <div className="fixed inset-0 z-[150] flex items-end sm:items-center justify-center" onClick={() => setSelectedActivity(null)}>
