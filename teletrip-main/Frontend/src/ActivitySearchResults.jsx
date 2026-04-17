@@ -6,7 +6,6 @@ import Footer from './components/Footer';
 import { useCart } from './components/CartSystem';
 import { useCurrency } from './context/CurrencyContext';
 import HotelSearchForm from './components/HotelSearchForm';
-import MobileFilterDrawer from './components/MobileFilterDrawer';
 
 const ActivitySearchResults = () => {
   const [searchParams] = useSearchParams();
@@ -312,14 +311,28 @@ const ActivitySearchResults = () => {
       <Header />
       <div className="pt-16 flex">
 
-        {/* Sidebar */}
-        <div className={`hidden lg:block fixed lg:sticky lg:top-16 inset-y-0 left-0 z-40 bg-white border-r border-gray-100 transform transition-all duration-300 ease-in-out lg:h-[calc(100vh-4rem)] pt-16 lg:pt-0 ${sidebarCollapsed ? 'lg:w-0 lg:overflow-hidden lg:border-0' : 'lg:w-[300px] lg:translate-x-0'}`}>
+        {/* Mobile overlay backdrop */}
+        {showMobileFilters && (
+          <div className="fixed inset-0 bg-black/40 z-[120] lg:hidden" onClick={() => setShowMobileFilters(false)} />
+        )}
+
+        {/* Sidebar — slide-in on mobile, sticky on desktop */}
+        <div className={`
+          fixed inset-y-0 left-0 z-[121] bg-white border-r border-gray-100
+          transform transition-all duration-300 ease-in-out
+          w-[85vw] max-w-[320px] overflow-y-auto
+          lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)] lg:w-[300px] lg:translate-x-0 lg:z-40
+          ${showMobileFilters ? 'translate-x-0' : '-translate-x-full'}
+          ${sidebarCollapsed ? 'lg:w-0 lg:overflow-hidden lg:border-0' : ''}
+          lg:block
+        `}>
           <div className="h-full overflow-y-auto overscroll-contain px-4 py-4 text-left" style={{scrollbarWidth:'thin',scrollbarColor:'#e5e7eb transparent'}}>
-            <div className="hidden lg:flex justify-between items-center pb-3 mb-1 border-b border-gray-100">
+            <div className="flex justify-between items-center pb-3 mb-1 border-b border-gray-100">
               <span className="text-xs font-semibold text-gray-900 tracking-wider uppercase">Filters</span>
               <div className="flex items-center gap-2">
                 <button onClick={clearFilters} className="text-xs text-blue-600 hover:text-blue-700 font-medium">Reset all</button>
-                <button onClick={() => setSidebarCollapsed(true)} className="p-1 rounded hover:bg-gray-100"><ChevronLeft className="w-3.5 h-3.5 text-gray-400" /></button>
+                <button onClick={() => setSidebarCollapsed(true)} className="p-1 rounded hover:bg-gray-100 lg:flex hidden"><ChevronLeft className="w-3.5 h-3.5 text-gray-400" /></button>
+                <button onClick={() => setShowMobileFilters(false)} className="p-1 rounded hover:bg-gray-100 lg:hidden"><X className="w-4 h-4 text-gray-400" /></button>
               </div>
             </div>
 
@@ -553,10 +566,10 @@ const ActivitySearchResults = () => {
                   </div>
                 )}
               </div>
-            </div>
           </div>
+        </div>
 
-        {/* Sidebar Open Button */}
+        {/* Sidebar Open Button (desktop) */}
         {sidebarCollapsed && (
           <button onClick={() => setSidebarCollapsed(false)} className="hidden lg:flex fixed top-20 left-2 z-50 items-center gap-1 px-2 py-1.5 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 text-[12px] text-gray-600">
             <Filter className="w-3.5 h-3.5" /><ChevronRight className="w-3 h-3" />
@@ -576,161 +589,6 @@ const ActivitySearchResults = () => {
             </span>
           )}
         </button>
-
-        {/* Mobile Filter Drawer */}
-        <MobileFilterDrawer
-          isOpen={showMobileFilters}
-          onClose={() => setShowMobileFilters(false)}
-          onApply={() => setShowMobileFilters(false)}
-          onReset={clearFilters}
-          title="Filters"
-        >
-          {/* 1. Search by Activity Name */}
-          <div className="py-3 border-b border-gray-50">
-            <button onClick={() => toggleSection('name')} className="flex items-center justify-between w-full cursor-pointer">
-              <span className="text-[13px] font-semibold text-gray-800">Activity Name</span>
-              <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-200 ${expandedSections.name ? 'rotate-180' : ''}`} />
-            </button>
-            {expandedSections.name && (
-              <div className="relative mt-2.5">
-                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
-                <input type="text" value={nameSearch} onChange={(e) => setNameSearch(e.target.value)} placeholder="Search activity..." className="w-full pl-8 pr-3 py-1.5 text-[13px] border border-gray-200 rounded-md bg-gray-50/50 focus:bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" />
-              </div>
-            )}
-          </div>
-          {/* 2. Categories */}
-          {dynamicCategories.length > 0 && (
-            <div className="py-3 border-b border-gray-50">
-              <button onClick={() => toggleSection('categories')} className="flex items-center justify-between w-full cursor-pointer">
-                <span className="text-[13px] font-semibold text-gray-800">Categories</span>
-                <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-200 ${expandedSections.categories ? 'rotate-180' : ''}`} />
-              </button>
-              {expandedSections.categories && (
-                <div className="space-y-1.5 max-h-44 overflow-y-auto mt-2">
-                  {dynamicCategories.map(cat => (
-                    <label key={cat} className="flex items-center gap-2.5 py-0.5 cursor-pointer group">
-                      <input type="checkbox" checked={selectedCategories.includes(cat)} onChange={() => setSelectedCategories(prev => prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat])} className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer" />
-                      <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1">{cat}</span><span className="text-[11px] text-gray-400">{countCat(cat)}</span>
-                    </label>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-          {/* 3. Daytime */}
-          <div className="py-3 border-b border-gray-50">
-            <button onClick={() => toggleSection('daytime')} className="flex items-center justify-between w-full cursor-pointer">
-              <span className="text-[13px] font-semibold text-gray-800">Daytime</span>
-              <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-200 ${expandedSections.daytime ? 'rotate-180' : ''}`} />
-            </button>
-            {expandedSections.daytime && (
-              <div className="space-y-1.5 mt-2">
-                {daytimeOptions.map(time => (
-                  <label key={time} className="flex items-center gap-2.5 py-0.5 cursor-pointer group">
-                    <input type="checkbox" checked={selectedDaytimes.includes(time)} onChange={() => setSelectedDaytimes(prev => prev.includes(time) ? prev.filter(t => t !== time) : [...prev, time])} className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer" />
-                    <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1">{time}</span><span className="text-[11px] text-gray-400">{countDaytime(time)}</span>
-                  </label>
-                ))}
-              </div>
-            )}
-          </div>
-          {/* 4. Recommended For */}
-          {dynamicRecommended.length > 0 && (
-            <div className="py-3 border-b border-gray-50">
-              <button onClick={() => toggleSection('recommended')} className="flex items-center justify-between w-full cursor-pointer">
-                <span className="text-[13px] font-semibold text-gray-800">Recommended For</span>
-                <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-200 ${expandedSections.recommended ? 'rotate-180' : ''}`} />
-              </button>
-              {expandedSections.recommended && (
-                <div className="space-y-1.5 mt-2">
-                  {dynamicRecommended.map(rec => (
-                    <label key={rec} className="flex items-center gap-2.5 py-0.5 cursor-pointer group">
-                      <input type="checkbox" checked={selectedRecommended.includes(rec)} onChange={() => setSelectedRecommended(prev => prev.includes(rec) ? prev.filter(r => r !== rec) : [...prev, rec])} className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer" />
-                      <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1">{rec}</span><span className="text-[11px] text-gray-400">{countRec(rec)}</span>
-                    </label>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-          {/* 5. Supplier */}
-          {dynamicSuppliers.length > 0 && (
-            <div className="py-3 border-b border-gray-50">
-              <button onClick={() => toggleSection('supplier')} className="flex items-center justify-between w-full cursor-pointer">
-                <span className="text-[13px] font-semibold text-gray-800">Supplier</span>
-                <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-200 ${expandedSections.supplier ? 'rotate-180' : ''}`} />
-              </button>
-              {expandedSections.supplier && (
-                <div className="space-y-1.5 max-h-44 overflow-y-auto mt-2">
-                  {dynamicSuppliers.map(sup => (
-                    <label key={sup} className="flex items-center gap-2.5 py-0.5 cursor-pointer group">
-                      <input type="checkbox" checked={selectedSuppliers.includes(sup)} onChange={() => setSelectedSuppliers(prev => prev.includes(sup) ? prev.filter(s => s !== sup) : [...prev, sup])} className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer" />
-                      <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1">{sup}</span><span className="text-[11px] text-gray-400">{countSupplier(sup)}</span>
-                    </label>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-          {/* 6. Voucher Validity */}
-          {dynamicVoucherTypes.length > 0 && (
-            <div className="py-3 border-b border-gray-50">
-              <button onClick={() => toggleSection('voucherValidity')} className="flex items-center justify-between w-full cursor-pointer">
-                <span className="text-[13px] font-semibold text-gray-800">Voucher Validity</span>
-                <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-200 ${expandedSections.voucherValidity ? 'rotate-180' : ''}`} />
-              </button>
-              {expandedSections.voucherValidity && (
-                <div className="space-y-1.5 mt-2">
-                  {dynamicVoucherTypes.map(vt => (
-                    <label key={vt} className="flex items-center gap-2.5 py-0.5 cursor-pointer group">
-                      <input type="checkbox" checked={selectedVoucherTypes.includes(vt)} onChange={() => setSelectedVoucherTypes(prev => prev.includes(vt) ? prev.filter(v => v !== vt) : [...prev, vt])} className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer" />
-                      <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1">{vt}</span><span className="text-[11px] text-gray-400">{countVoucher(vt)}</span>
-                    </label>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-          {/* 7. Services */}
-          {dynamicServices.length > 0 && (
-            <div className="py-3 border-b border-gray-50">
-              <button onClick={() => toggleSection('services')} className="flex items-center justify-between w-full cursor-pointer">
-                <span className="text-[13px] font-semibold text-gray-800">Services</span>
-                <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-200 ${expandedSections.services ? 'rotate-180' : ''}`} />
-              </button>
-              {expandedSections.services && (
-                <div className="space-y-1.5 mt-2">
-                  {dynamicServices.map(svc => (
-                    <label key={svc} className="flex items-center gap-2.5 py-0.5 cursor-pointer group">
-                      <input type="checkbox" checked={selectedServices.includes(svc)} onChange={() => setSelectedServices(prev => prev.includes(svc) ? prev.filter(s => s !== svc) : [...prev, svc])} className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer" />
-                      <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1">{svc}</span><span className="text-[11px] text-gray-400">{countService(svc)}</span>
-                    </label>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-          {/* 8. Price Range */}
-          <div className="py-3">
-            <button onClick={() => toggleSection('price')} className="flex items-center justify-between w-full cursor-pointer">
-              <span className="text-[13px] font-semibold text-gray-800">Price Range (PKR)</span>
-              <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-200 ${expandedSections.price ? 'rotate-180' : ''}`} />
-            </button>
-            {expandedSections.price && (
-              <div className="mt-2 space-y-2">
-                <div className="flex items-center gap-2">
-                  <input type="number" value={priceMin} onChange={(e) => setPriceMin(e.target.value)} placeholder={String(priceBounds.min)} className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 rounded-md bg-gray-50/50 focus:bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none" />
-                  <span className="text-gray-300 text-xs">–</span>
-                  <input type="number" value={priceMax} onChange={(e) => setPriceMax(e.target.value)} placeholder={String(priceBounds.max)} className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 rounded-md bg-gray-50/50 focus:bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none" />
-                </div>
-                <div className="flex justify-between text-[10px] text-gray-400">
-                  <span>PKR {priceBounds.min.toLocaleString()}</span>
-                  <span>PKR {priceBounds.max.toLocaleString()}</span>
-                </div>
-              </div>
-            )}
-          </div>
-        </MobileFilterDrawer>
 
         <div className="flex-1 min-w-0">
           <div className="max-w-[1280px] mx-auto px-4 sm:px-6 py-6">
