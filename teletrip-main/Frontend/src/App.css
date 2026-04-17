@@ -32,8 +32,18 @@ html, body, #root {
   }
 }
 
-/* Fix filter labels — no min-height ever */
+/* Fix filter labels — no min-height ever, always full-width flex row */
 label {
+  min-height: unset !important;
+}
+
+/* Filter labels with checkboxes must be full-width flex rows */
+label:has(input[type="checkbox"]),
+label:has(input[type="radio"]) {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  width: 100% !important;
   min-height: unset !important;
 }
 
