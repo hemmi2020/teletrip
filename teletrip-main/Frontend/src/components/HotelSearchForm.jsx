@@ -200,16 +200,36 @@ const TransfersTab = ({ variant = 'dark' }) => {
         </div>
       )}
 
-      {/* Trip Type Radio Buttons */}
-      <div className="search-form-radio flex items-center gap-4 flex-wrap">
-        <label className="inline-flex items-center gap-2 cursor-pointer" style={{minHeight:'unset', width:'auto', display:'inline-flex'}}>
-          <input type="radio" name="tripType" value="one_way" checked={tripType === 'one_way'} onChange={() => setTripType('one_way')} style={{width:16, height:16, minHeight:'unset', flexShrink:0}} />
-          <span className={`text-sm font-medium ${lbl}`}>One Way</span>
-        </label>
-        <label className="inline-flex items-center gap-2 cursor-pointer" style={{minHeight:'unset', width:'auto', display:'inline-flex'}}>
-          <input type="radio" name="tripType" value="round_trip" checked={tripType === 'round_trip'} onChange={() => setTripType('round_trip')} style={{width:16, height:16, minHeight:'unset', flexShrink:0}} />
-          <span className={`text-sm font-medium ${lbl}`}>Round Trip</span>
-        </label>
+      {/* Trip Type — pill toggle buttons, not radio inputs */}
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={() => setTripType('one_way')}
+          style={{ minHeight: 'unset' }}
+          className={`no-min-h flex-1 py-2 rounded-lg text-sm font-semibold transition-all border ${
+            tripType === 'one_way'
+              ? 'bg-blue-600 text-white border-blue-600'
+              : variant === 'light'
+                ? 'bg-white text-gray-600 border-gray-300 hover:border-blue-400'
+                : 'bg-white/10 text-white/80 border-white/20 hover:bg-white/20'
+          }`}
+        >
+          One Way
+        </button>
+        <button
+          type="button"
+          onClick={() => setTripType('round_trip')}
+          style={{ minHeight: 'unset' }}
+          className={`no-min-h flex-1 py-2 rounded-lg text-sm font-semibold transition-all border ${
+            tripType === 'round_trip'
+              ? 'bg-blue-600 text-white border-blue-600'
+              : variant === 'light'
+                ? 'bg-white text-gray-600 border-gray-300 hover:border-blue-400'
+                : 'bg-white/10 text-white/80 border-white/20 hover:bg-white/20'
+          }`}
+        >
+          Round Trip
+        </button>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
         <div className="relative" ref={pickupRef}>
@@ -973,17 +993,18 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg font-medium transition-all text-sm ${
+              style={{ minHeight: 'unset' }}
+              className={`no-min-h flex items-center justify-center gap-1.5 px-2 py-2 rounded-lg font-medium transition-all text-xs sm:text-sm ${
                 activeTab === tab.id
                   ? 'bg-white text-gray-900 shadow-md'
                   : 'text-white/70 hover:text-white hover:bg-white/10'
               }`}
             >
-              <tab.Icon className="w-4 h-4" />
-              <span>{tab.label}</span>
-              </button>
-            ))}
-          </div>
+              <tab.Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
+              <span className="truncate">{tab.label}</span>
+            </button>
+          ))}
+        </div>
 
           {activeTab === 'stays' && (
             <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
