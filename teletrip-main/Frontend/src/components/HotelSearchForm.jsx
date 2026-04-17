@@ -431,7 +431,7 @@ const TransfersTab = ({ variant = 'dark' }) => {
             <ChevronDown className="text-gray-400 flex-shrink-0" size={18} />
           </div>
           {showTravellerDropdown && (
-            <div className="absolute z-50 w-full mt-2 bg-white border border-gray-300 rounded-lg shadow-xl p-3 sm:p-4 space-y-3 sm:space-y-4">
+            <div className="fixed sm:absolute inset-x-0 sm:inset-x-auto bottom-0 sm:bottom-auto sm:top-full sm:mt-2 z-[200] bg-white border border-gray-300 rounded-t-2xl sm:rounded-xl shadow-2xl p-4 space-y-3 max-h-[70vh] overflow-y-auto">
               <div className="flex items-center justify-between">
                 <span className="text-gray-700 font-medium text-sm sm:text-base">Adults</span>
                 <div className="flex items-center space-x-2 sm:space-x-3">
@@ -708,7 +708,7 @@ const ExperiencesTab = ({ variant = 'dark' }) => {
             <ChevronDown className="text-gray-400 flex-shrink-0" size={18} />
           </div>
           {showTravellerDropdown && (
-            <div className="absolute z-50 w-full mt-2 bg-white border border-gray-300 rounded-lg shadow-xl p-3 sm:p-4 space-y-3 sm:space-y-4">
+            <div className="fixed sm:absolute inset-x-0 sm:inset-x-auto bottom-0 sm:bottom-auto sm:top-full sm:mt-2 z-[200] bg-white border border-gray-300 rounded-t-2xl sm:rounded-xl shadow-2xl p-4 space-y-3 max-h-[70vh] overflow-y-auto">
               <div className="flex items-center justify-between">
                 <span className="text-gray-700 font-medium text-sm sm:text-base">Adults</span>
                 <div className="flex items-center space-x-2 sm:space-x-3">
@@ -1151,7 +1151,12 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
                   </div>
 
                   {showTravellerDropdown && (
-                    <div className="absolute z-50 w-full mt-2 bg-white border border-gray-300 rounded-lg shadow-xl p-3 sm:p-4 space-y-3 sm:space-y-4 max-h-96 overflow-y-auto">
+                    <>
+                      {/* Mobile backdrop — prevents background scroll */}
+                      <div className="fixed inset-0 bg-black/30 z-[199] sm:hidden" onClick={() => setShowTravellerDropdown(false)} />
+                      <div className="fixed sm:absolute inset-x-0 sm:inset-x-auto bottom-0 sm:bottom-auto sm:top-full sm:mt-2 z-[200] bg-white border border-gray-300 rounded-t-2xl sm:rounded-xl shadow-2xl p-4 space-y-3 max-h-[70vh] overflow-y-auto">
+                      {/* Mobile drag handle */}
+                      <div className="w-10 h-1 bg-gray-300 rounded-full mx-auto mb-2 sm:hidden" />
                       {/* Rooms */}
                       <div className="flex items-center justify-between">
                         <span className="text-gray-700 font-medium text-sm sm:text-base">Rooms</span>
@@ -1248,6 +1253,7 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
                         Done
                       </button>
                     </div>
+                  </>
                   )}
                 </div>
               </div>

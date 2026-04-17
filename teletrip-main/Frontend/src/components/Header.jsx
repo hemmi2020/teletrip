@@ -120,20 +120,7 @@ const Header = () => {
               <img src={logo} alt="Logo" className="h-9 sm:h-14" />
             </NavLink>
 
-            {/* Mobile Cart Icon (visible only on mobile) */}
-            <button
-              onClick={() => setIsCartOpen(true)}
-              className="md:hidden relative p-2 text-gray-700"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.5 6M7 13l-1.5 6m0 0h12" />
-              </svg>
-              {getTotalItems() > 0 && (
-                <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                  {getTotalItems()}
-                </span>
-              )}
-            </button>
+            {/* Mobile: no cart button — it's in the bottom navbar */}
 
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center space-x-8">

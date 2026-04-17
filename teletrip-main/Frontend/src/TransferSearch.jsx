@@ -165,7 +165,7 @@ const TransferSearch = () => {
         </div>
       )}
 
-      <div className="pt-16 sm:pt-20 min-h-screen bg-gray-50 flex">
+      <div className="pt-12 sm:pt-16 min-h-screen bg-gray-50 flex">
         {/* Mobile overlay backdrop */}
         {showMobileFilters && (
           <div className="fixed inset-0 bg-black/40 z-[120] lg:hidden" onClick={() => setShowMobileFilters(false)} />
@@ -339,52 +339,47 @@ const TransferSearch = () => {
 
                     return (
                       <div key={idx} className="bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-lg hover:border-gray-200 transition-all duration-200 flex flex-col sm:flex-row group">
-                        {/* Image — exact same as hotel card */}
-                        <div className="sm:w-56 lg:w-64 relative overflow-hidden flex-shrink-0 bg-gradient-to-br from-blue-50 to-blue-100">
+                        {/* Image */}
+                        <div className="sm:w-48 lg:w-56 relative overflow-hidden flex-shrink-0 bg-gradient-to-br from-blue-50 to-blue-100 h-36 sm:h-auto">
                           {t.images?.[0] ? (
-                            <img src={t.images[0]} alt={t.vehicle} className="w-full aspect-video sm:aspect-auto sm:h-full object-cover" onError={(e) => { e.target.style.display='none'; }} />
+                            <img src={t.images[0]} alt={t.vehicle} className="w-full h-full object-cover" onError={(e) => { e.target.style.display='none'; }} />
                           ) : (
-                            <div className="w-full h-40 sm:h-full flex items-center justify-center"><Car className="w-12 h-12 text-blue-200" /></div>
+                            <div className="w-full h-full flex items-center justify-center"><Car className="w-10 h-10 text-blue-200" /></div>
                           )}
                           <span className={`absolute top-2 left-2 text-[10px] px-2 py-0.5 rounded font-medium ${t.transferType === 'PRIVATE' ? 'bg-blue-600/90 text-white' : 'bg-amber-500/90 text-white'}`}>{typeLabel}</span>
                         </div>
                         {/* Content */}
-                        <div className="flex-1 p-3 sm:p-4 flex flex-col justify-between min-w-0">
+                        <div className="flex-1 p-3 flex flex-col justify-between min-w-0">
                           <div>
-                            <div className="flex justify-between items-start gap-2 mb-1">
-                              <div className="min-w-0">
-                                <h3 className="text-[14px] font-semibold text-gray-900 truncate leading-tight">{t.vehicle || 'Transfer Vehicle'}</h3>
+                            <div className="flex justify-between items-start gap-2 mb-1.5">
+                              <div className="min-w-0 flex-1">
+                                <h3 className="text-[14px] font-semibold text-gray-900 leading-tight">{t.vehicle || 'Transfer Vehicle'}</h3>
                                 <p className="text-[12px] text-gray-500">{t.category || 'Standard'}</p>
                               </div>
                               <div className="text-right flex-shrink-0">
-                                <div className="text-lg font-bold text-blue-600 leading-tight">{pkrPrice || '...'}</div>
+                                <div className="text-base font-bold text-blue-600 leading-tight">{pkrPrice || '...'}</div>
                                 <div className="text-[10px] text-gray-400">total</div>
                               </div>
                             </div>
                             {searchInfo && (
-                              <div className="flex items-center text-gray-400 text-[12px] mb-2">
+                              <div className="flex items-center text-gray-400 text-[11px] mb-1.5">
                                 <MapPin className="w-3 h-3 mr-0.5 flex-shrink-0" />
                                 <span className="truncate">{searchInfo.pickupName || searchInfo.fromCode} → {searchInfo.dropoffName || searchInfo.toCode}</span>
                               </div>
                             )}
-                            <div className="flex gap-1 flex-wrap mb-1.5">
-                              <span className="text-[10px] px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded font-medium">{t.minPaxCapacity || 1}–{t.maxPaxCapacity || '?'} passengers</span>
-                              {durationInfo && <span className="text-[10px] px-1.5 py-0.5 bg-gray-50 text-gray-500 rounded">{durationInfo.name || durationInfo.description}</span>}
-                              {luggageInfo && <span className="text-[10px] px-1.5 py-0.5 bg-gray-50 text-gray-500 rounded">{luggageInfo.name || luggageInfo.description}</span>}
-                            </div>
                             <div className="flex gap-1 flex-wrap">
-                              {t.direction && <span className="text-[10px] px-1.5 py-0.5 bg-gray-50 text-gray-500 rounded">{t.direction}</span>}
+                              <span className="text-[10px] px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded font-medium">{t.minPaxCapacity || 1}–{t.maxPaxCapacity || '?'} pax</span>
+                              {durationInfo && <span className="text-[10px] px-1.5 py-0.5 bg-gray-50 text-gray-500 rounded">{durationInfo.name || durationInfo.description}</span>}
                               {t.cancellationPolicies?.length > 0 && (
                                 <span className={`text-[10px] px-1.5 py-0.5 rounded ${t.cancellationPolicies[0]?.amount === 0 ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-500'}`}>
-                                  {t.cancellationPolicies[0]?.amount === 0 ? 'Free cancellation' : 'Cancellation fee'}
+                                  {t.cancellationPolicies[0]?.amount === 0 ? 'Free cancel' : 'Cancel fee'}
                                 </span>
                               )}
                             </div>
                           </div>
-                          <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-50">
-                            <div />
-                            <button onClick={() => setSelectedTransfer(t)} className="w-full sm:w-auto min-h-[44px] px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-[12px] font-medium inline-flex items-center justify-center gap-1 cursor-pointer">
-                              <Eye className="w-3 h-3" /> View Details
+                          <div className="flex items-center justify-end mt-2 pt-2 border-t border-gray-50">
+                            <button onClick={() => setSelectedTransfer(t)} className="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-[13px] font-medium inline-flex items-center justify-center gap-1.5 cursor-pointer">
+                              <Eye className="w-3.5 h-3.5" /> View Details
                             </button>
                           </div>
                         </div>
@@ -401,13 +396,14 @@ const TransferSearch = () => {
       {/* ─── MODAL ─── */}
       {selectedTransfer && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-end sm:items-center justify-center" onClick={() => setSelectedTransfer(null)}>
-          <div className="relative bg-white w-full sm:max-w-4xl sm:rounded-2xl rounded-t-2xl max-h-[95vh] sm:max-h-[92vh] overflow-hidden flex flex-col shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900">{selectedTransfer.vehicle || 'Transfer'}</h2>
+          <div className="relative bg-white w-full sm:max-w-2xl sm:rounded-2xl rounded-t-2xl max-h-[92vh] overflow-hidden flex flex-col shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            {/* Header */}
+            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 flex-shrink-0">
+              <div className="min-w-0 flex-1">
+                <h2 className="text-[15px] font-bold text-gray-900 truncate">{selectedTransfer.vehicle || 'Transfer'}</h2>
                 <p className="text-[12px] text-gray-500">{selectedTransfer.category} · {selectedTransfer.transferType}</p>
               </div>
-              <button onClick={() => setSelectedTransfer(null)} className="p-1.5 hover:bg-gray-100 rounded-lg cursor-pointer"><X className="w-5 h-5 text-gray-400" /></button>
+              <button onClick={() => setSelectedTransfer(null)} className="ml-3 w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center flex-shrink-0 cursor-pointer"><X className="w-4 h-4 text-gray-600" /></button>
             </div>
 
             {/* No image in modal — clean header only */}
