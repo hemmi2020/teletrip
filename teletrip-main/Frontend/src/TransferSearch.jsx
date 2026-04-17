@@ -10,6 +10,7 @@ import {
   Filter, ChevronDown, ChevronRight, X, ShoppingCart, CheckCircle, Plane,
   Briefcase, Shield, Info, ChevronLeft, Eye, Luggage
 } from 'lucide-react';
+import MobileFilterDrawer from './components/MobileFilterDrawer';
 
 const TransferSearch = () => {
   const navigate = useNavigate();
@@ -25,6 +26,7 @@ const TransferSearch = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [sortOption, setSortOption] = useState('price_asc');
   const [showModifySearch, setShowModifySearch] = useState(false);
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   // Modal booking fields
   const [flightCode, setFlightCode] = useState('');
@@ -176,6 +178,102 @@ const TransferSearch = () => {
           </div>
         )}
         {sidebarCollapsed && (<button onClick={() => setSidebarCollapsed(false)} className="hidden lg:flex fixed top-20 left-2 z-50 items-center gap-1 px-2 py-1.5 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 text-[12px] text-gray-600 cursor-pointer"><Filter className="w-3.5 h-3.5" /><ChevronRight className="w-3 h-3" /></button>)}
+
+        {/* Mobile Filter FAB */}
+        <button
+          onClick={() => setShowMobileFilters(true)}
+          className="fixed bottom-20 right-4 z-50 lg:hidden flex items-center gap-2 bg-blue-600 text-white px-4 py-2.5 rounded-full shadow-lg hover:bg-blue-700 transition-colors"
+        >
+          <Filter className="w-4 h-4" />
+          <span className="text-sm font-medium">Filters</span>
+          {(selectedTypes.length + selectedCategories.length + (priceMin ? 1 : 0) + (priceMax ? 1 : 0) + (minCapacity ? 1 : 0)) > 0 && (
+            <span className="bg-white text-blue-600 text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+              {selectedTypes.length + selectedCategories.length + (priceMin ? 1 : 0) + (priceMax ? 1 : 0) + (minCapacity ? 1 : 0)}
+            </span>
+          )}
+        </button>
+
+        {/* Mobile Filter Drawer */}
+        <MobileFilterDrawer
+          isOpen={showMobileFilters}
+          onClose={() => setShowMobileFilters(false)}
+          onApply={() => setShowMobileFilters(false)}
+          onReset={clearFilters}
+          title="Filters"
+        >
+          {/* Transfer Type */}
+          {dynamicTypes.length > 0 && (
+            <div className="py-3 border-b border-gray-50">
+              <button onClick={() => toggleSection('type')} className="flex items-center justify-between w-full cursor-pointer">
+                <span className="text-[13px] font-semibold text-gray-800">Transfer Type</span>
+                <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${expandedSections.type ? 'rotate-180' : ''}`} />
+              </button>
+              {expandedSections.type && (
+                <div className="mt-2 space-y-1.5">
+                  {dynamicTypes.map(([t, c]) => (
+                    <label key={t} className="flex items-center gap-2.5 py-0.5 cursor-pointer group">
+                      <input type="checkbox" checked={selectedTypes.includes(t)} onChange={() => toggleFilter(selectedTypes, setSelectedTypes, t)} className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 cursor-pointer" />
+                      <span className="text-[13px] text-gray-600 group-hover:text-gray-900 flex-1">{t}</span>
+                      <span className="text-[11px] text-gray-400">{c}</span>
+                    </label>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+          {/* Vehicle Category */}
+          {dynamicCategories.length > 0 && (
+            <div className="py-3 border-b border-gray-50">
+              <button onClick={() => toggleSection('category')} className="flex items-center justify-between w-full cursor-pointer">
+                <span className="text-[13px] font-semibold text-gray-800">Vehicle Category</span>
+                <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${expandedSections.category ? 'rotate-180' : ''}`} />
+              </button>
+              {expandedSections.category && (
+                <div className="mt-2 space-y-1.5">
+                  {dynamicCategories.map(([cat, c]) => (
+                    <label key={cat} className="flex items-center gap-2.5 py-0.5 cursor-pointer group">
+                      <input type="checkbox" checked={selectedCategories.includes(cat)} onChange={() => toggleFilter(selectedCategories, setSelectedCategories, cat)} className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 cursor-pointer" />
+                      <span className="text-[13px] text-gray-600 group-hover:text-gray-900 flex-1">{cat}</span>
+                      <span className="text-[11px] text-gray-400">{c}</span>
+                    </label>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+          {/* Price Range */}
+          <div className="py-3 border-b border-gray-50">
+            <button onClick={() => toggleSection('price')} className="flex items-center justify-between w-full cursor-pointer">
+              <span className="text-[13px] font-semibold text-gray-800">Price Range (PKR)</span>
+              <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${expandedSections.price ? 'rotate-180' : ''}`} />
+            </button>
+            {expandedSections.price && (
+              <div className="mt-2 space-y-2">
+                <div className="flex items-center gap-2">
+                  <input type="number" value={priceMin} onChange={(e) => setPriceMin(e.target.value)} placeholder={String(priceBounds.min)} className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 rounded-md outline-none" />
+                  <span className="text-gray-300 text-xs">–</span>
+                  <input type="number" value={priceMax} onChange={(e) => setPriceMax(e.target.value)} placeholder={String(priceBounds.max)} className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 rounded-md outline-none" />
+                </div>
+                <div className="flex justify-between text-[10px] text-gray-400">
+                  <span>PKR {priceBounds.min.toLocaleString()}</span>
+                  <span>PKR {priceBounds.max.toLocaleString()}</span>
+                </div>
+              </div>
+            )}
+          </div>
+          {/* Min Passengers */}
+          <div className="py-3">
+            <button onClick={() => toggleSection('capacity')} className="flex items-center justify-between w-full cursor-pointer">
+              <span className="text-[13px] font-semibold text-gray-800">Min Passengers</span>
+              <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${expandedSections.capacity ? 'rotate-180' : ''}`} />
+            </button>
+            {expandedSections.capacity && (
+              <div className="mt-2">
+                <input type="number" min="1" max="50" value={minCapacity} onChange={(e) => setMinCapacity(e.target.value)} placeholder="Any" className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 rounded-md outline-none" />
+              </div>
+            )}
+          </div>
+        </MobileFilterDrawer>
 
         {/* Main content — boxed */}
         <div className="flex-1 min-w-0">
