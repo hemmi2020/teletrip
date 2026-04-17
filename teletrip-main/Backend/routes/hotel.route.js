@@ -611,10 +611,10 @@ router.get('/geocode', async (req, res) => {
         // Fallback to Nominatim
         try {
             const controller = new AbortController();
-            const timeout = setTimeout(() => controller.abort(), 5000);
+            const timeout = setTimeout(() => controller.abort(), 10000);
             const response = await fetch( 
                 `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=5`,
-                { headers: { 'User-Agent': 'TeleTrip/1.0' }, signal: controller.signal }
+                { headers: { 'User-Agent': 'TeleTrip/1.0 (telitrip.com)' }, signal: controller.signal }
             );
             clearTimeout(timeout);
 
@@ -628,7 +628,8 @@ router.get('/geocode', async (req, res) => {
             console.warn('Nominatim failed:', err.message);
         }
 
-        return res.status(404).json({ success: false, error: `Location "${q}" not found` });
+        // Return empty results instead of 404 — let frontend handle
+        return res.json({ success: true, data: [], message: `No results found for "${q}"` });
 
     } catch (error) {
         console.error('Geocoding Error:', error);

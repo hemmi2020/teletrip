@@ -724,6 +724,20 @@ const closeReviewsModal = () => {
           lat = geoResult?.data?.[0]?.lat;
           lon = geoResult?.data?.[0]?.lon;
         }
+
+        // If backend geocode failed, try Nominatim directly from frontend
+        if (!lat || !lon || (parseFloat(lat) === 0 && parseFloat(lon) === 0)) {
+          try {
+            const nomRes = await fetch(
+              `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(city + ", " + convertCountryCode(country))}&format=json&limit=1`,
+              { headers: { 'User-Agent': 'TeleTrip/1.0' } }
+            );
+            if (nomRes.ok) {
+              const nomData = await nomRes.json();
+              if (nomData?.[0]) { lat = nomData[0].lat; lon = nomData[0].lon; }
+            }
+          } catch (nomErr) { console.warn('Direct Nominatim fallback failed:', nomErr.message); }
+        }
         
         if (!lat || !lon || (parseFloat(lat) === 0 && parseFloat(lon) === 0)) {
           throw new Error(`Unable to find coordinates for ${city}`);
