@@ -164,23 +164,18 @@ const TransferSearch = () => {
           <div className="fixed inset-0 bg-black/40 z-[120] lg:hidden" onClick={() => setShowMobileFilters(false)} />
         )}
 
-        {/* Sidebar — slide-in on mobile, sticky on desktop */}
+        {/* Sidebar — desktop only */}
         <div className={`
-          fixed inset-y-0 left-0 z-[121] bg-white border-r border-gray-100
-          transform transition-all duration-300 ease-in-out
-          w-[85vw] max-w-[320px] overflow-y-auto
-          lg:sticky lg:top-[120px] lg:self-start lg:h-[calc(100vh-120px)] lg:w-[300px] lg:translate-x-0 lg:z-40
-          ${showMobileFilters ? 'translate-x-0' : '-translate-x-full'}
-          ${(sidebarCollapsed || transfers.length === 0) ? 'lg:hidden' : ''}
-          lg:block
+          hidden lg:block
+          lg:sticky lg:top-[120px] lg:self-start lg:h-[calc(100vh-120px)] lg:z-40
+          ${(sidebarCollapsed || transfers.length === 0) ? 'lg:hidden' : 'lg:w-[300px]'}
         `}>
           <div className="filter-sidebar-inner h-full overflow-y-auto px-4 py-4" style={{scrollbarWidth:'thin'}}>
             <div className="flex items-center justify-between pb-3 mb-1 border-b border-gray-100">
               <span className="text-xs font-semibold text-gray-900 tracking-wider uppercase">Filters</span>
               <div className="flex items-center gap-2">
                 <button onClick={clearFilters} className="text-xs text-blue-600 hover:text-blue-700 font-medium cursor-pointer">Reset all</button>
-                <button onClick={() => setSidebarCollapsed(true)} className="p-1 rounded hover:bg-gray-100 lg:flex hidden cursor-pointer"><ChevronLeft className="w-3.5 h-3.5 text-gray-400" /></button>
-                <button onClick={() => setShowMobileFilters(false)} className="p-1 rounded hover:bg-gray-100 lg:hidden"><X className="w-4 h-4 text-gray-400" /></button>
+                <button onClick={() => setSidebarCollapsed(true)} className="p-1 rounded hover:bg-gray-100 flex cursor-pointer"><ChevronLeft className="w-3.5 h-3.5 text-gray-400" /></button>
               </div>
             </div>
             {dynamicTypes.length > 0 && (<div className="py-3 border-b border-gray-50"><button onClick={() => toggleSection('type')} className="flex items-center justify-between w-full cursor-pointer"><span className="text-[13px] font-semibold text-gray-800">Transfer Type</span><ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${expandedSections.type ? 'rotate-180' : ''}`} /></button>{expandedSections.type && (<div className="mt-2 space-y-1.5">{dynamicTypes.map(([t, c]) => (<label key={t} className="flex flex-row items-center justify-start gap-2.5 py-0.5 cursor-pointer group"><input type="checkbox" checked={selectedTypes.includes(t)} onChange={() => toggleFilter(selectedTypes, setSelectedTypes, t)} className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 cursor-pointer" /><span className="text-[13px] text-gray-600 group-hover:text-gray-900 flex-1 text-left">{t}</span><span className="text-[11px] text-gray-400">{c}</span></label>))}</div>)}</div>)}

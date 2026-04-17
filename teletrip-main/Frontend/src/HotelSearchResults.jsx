@@ -1031,26 +1031,18 @@ if (children > 0 && childAges.length > 0) {
       <Header />
       <div className="pt-16 flex">
 
-        {/* Sidebar Filters — desktop sticky + mobile full-screen overlay */}
-        {showMobileFilters && (
-          <div className="fixed inset-0 bg-black/40 z-[120] lg:hidden" onClick={() => setShowMobileFilters(false)} />
-        )}
+        {/* Sidebar Filters — desktop only */}
         <div className={`
-          fixed inset-y-0 left-0 z-[121] bg-white border-r border-gray-100 
-          transform transition-all duration-300 ease-in-out
-          w-[85vw] max-w-[320px] overflow-y-auto
-          lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)] lg:w-[300px] lg:translate-x-0 lg:z-40
-          ${showMobileFilters ? 'translate-x-0' : '-translate-x-full'}
-          ${sidebarCollapsed ? 'lg:w-0 lg:overflow-hidden lg:border-0' : ''}
-          lg:block
+          hidden lg:block
+          lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)] lg:z-40
+          ${sidebarCollapsed ? 'lg:w-0 lg:overflow-hidden lg:border-0' : 'lg:w-[300px]'}
         `}>
           <div className="filter-sidebar-inner h-full overflow-y-auto overscroll-contain px-4 py-4 text-left" style={{scrollbarWidth:'thin',scrollbarColor:'#e5e7eb transparent', width: '100%', boxSizing: 'border-box'}}>
             <div className="flex justify-between items-center pb-3 mb-1 border-b border-gray-100">
               <span className="text-xs font-semibold text-gray-900 tracking-wider uppercase">Filters</span>
               <div className="flex items-center gap-2">
                 <button onClick={clearFilters} className="text-xs text-blue-600 hover:text-blue-700 font-medium cursor-pointer">Reset all</button>
-                <button onClick={() => { setSidebarCollapsed(true); setShowMobileFilters(false); }} className="p-1 rounded hover:bg-gray-100 lg:flex hidden"><ChevronLeft className="w-3.5 h-3.5 text-gray-400" /></button>
-                <button onClick={() => setShowMobileFilters(false)} className="p-1 rounded hover:bg-gray-100 lg:hidden"><X className="w-4 h-4 text-gray-400" /></button>
+                <button onClick={() => { setSidebarCollapsed(true); setShowMobileFilters(false); }} className="p-1 rounded hover:bg-gray-100 flex"><ChevronLeft className="w-3.5 h-3.5 text-gray-400" /></button>
               </div>
             </div>
 

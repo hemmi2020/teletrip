@@ -34,7 +34,9 @@ const S = {
   },
   header: {
     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-    padding: '12px 20px 12px', borderBottom: '1px solid #f3f4f6', flexShrink: 0,
+    padding: '12px 20px 12px',
+    borderBottomWidth: 1, borderBottomStyle: 'solid', borderBottomColor: '#f3f4f6',
+    flexShrink: 0,
   },
   headerTitle: {
     fontSize: 17, fontWeight: 700, color: '#111827', margin: 0,
@@ -44,11 +46,13 @@ const S = {
   },
   resetBtn: {
     fontSize: 14, color: '#2563eb', fontWeight: 600,
-    background: 'none', border: 'none', padding: '4px 0', cursor: 'pointer',
+    background: 'none', borderWidth: 0, borderStyle: 'solid',
+    borderColor: 'transparent', padding: '4px 0', cursor: 'pointer',
   },
   closeBtn: {
     width: 32, height: 32, borderRadius: '50%', backgroundColor: '#f3f4f6',
-    border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center',
+    borderWidth: 0, borderStyle: 'solid', borderColor: 'transparent',
+    cursor: 'pointer', display: 'flex', alignItems: 'center',
     justifyContent: 'center', flexShrink: 0,
   },
   body: {
@@ -56,12 +60,13 @@ const S = {
     WebkitOverflowScrolling: 'touch',
   },
   section: {
-    borderBottom: '1px solid #f3f4f6',
+    borderBottomWidth: 1, borderBottomStyle: 'solid', borderBottomColor: '#f3f4f6',
   },
   sectionHeader: {
     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
     padding: '14px 20px', cursor: 'pointer', background: 'none',
-    border: 'none', width: '100%', textAlign: 'left',
+    borderWidth: 0, borderStyle: 'solid', borderColor: 'transparent',
+    width: '100%', textAlign: 'left',
   },
   sectionLabel: {
     fontSize: 15, fontWeight: 600, color: '#1f2937', margin: 0,
@@ -73,15 +78,18 @@ const S = {
   optionRow: {
     display: 'flex', flexDirection: 'row', alignItems: 'center',
     justifyContent: 'space-between', padding: '9px 0',
-    borderBottom: '1px solid #f9fafb', cursor: 'pointer',
-    background: 'none', border: 'none', width: '100%', textAlign: 'left',
+    borderBottomWidth: 1, borderBottomStyle: 'solid', borderBottomColor: '#f9fafb',
+    cursor: 'pointer', background: 'none', borderTopWidth: 0,
+    borderLeftWidth: 0, borderRightWidth: 0,
+    width: '100%', textAlign: 'left',
   },
   optionLeft: {
     display: 'flex', flexDirection: 'row', alignItems: 'center',
     gap: 12, flex: 1, minWidth: 0,
   },
   checkbox: {
-    width: 20, height: 20, borderRadius: 6, border: '2px solid #d1d5db',
+    width: 20, height: 20, borderRadius: 6,
+    borderWidth: 2, borderStyle: 'solid', borderColor: '#d1d5db',
     backgroundColor: '#fff', flexShrink: 0, display: 'flex',
     alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s',
   },
@@ -89,7 +97,8 @@ const S = {
     backgroundColor: '#2563eb', borderColor: '#2563eb',
   },
   radioCircle: {
-    width: 20, height: 20, borderRadius: '50%', border: '2px solid #d1d5db',
+    width: 20, height: 20, borderRadius: '50%',
+    borderWidth: 2, borderStyle: 'solid', borderColor: '#d1d5db',
     backgroundColor: '#fff', flexShrink: 0, display: 'flex',
     alignItems: 'center', justifyContent: 'center',
   },
@@ -110,9 +119,9 @@ const S = {
   },
   searchInput: {
     width: '100%', padding: '10px 14px', fontSize: 15,
-    border: '1.5px solid #e5e7eb', borderRadius: 10,
-    outline: 'none', boxSizing: 'border-box', color: '#111827',
-    backgroundColor: '#f9fafb',
+    borderWidth: 1.5, borderStyle: 'solid', borderColor: '#e5e7eb',
+    borderRadius: 10, outline: 'none', boxSizing: 'border-box',
+    color: '#111827', backgroundColor: '#f9fafb',
   },
   rangeRow: {
     display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 10,
@@ -120,20 +129,22 @@ const S = {
   },
   rangeInput: {
     flex: 1, padding: '10px 12px', fontSize: 15,
-    border: '1.5px solid #e5e7eb', borderRadius: 10,
-    outline: 'none', boxSizing: 'border-box', color: '#111827',
-    backgroundColor: '#f9fafb', minWidth: 0,
+    borderWidth: 1.5, borderStyle: 'solid', borderColor: '#e5e7eb',
+    borderRadius: 10, outline: 'none', boxSizing: 'border-box',
+    color: '#111827', backgroundColor: '#f9fafb', minWidth: 0,
   },
   rangeSep: {
     fontSize: 14, color: '#9ca3af', flexShrink: 0,
   },
   footer: {
-    padding: '12px 20px 20px', borderTop: '1px solid #f3f4f6',
+    padding: '12px 20px 20px',
+    borderTopWidth: 1, borderTopStyle: 'solid', borderTopColor: '#f3f4f6',
     flexShrink: 0, backgroundColor: '#fff',
   },
   applyBtn: {
     width: '100%', padding: '14px', fontSize: 16, fontWeight: 700,
-    backgroundColor: '#2563eb', color: '#fff', border: 'none',
+    backgroundColor: '#2563eb', color: '#fff',
+    borderWidth: 0, borderStyle: 'solid', borderColor: 'transparent',
     borderRadius: 12, cursor: 'pointer', letterSpacing: 0.2,
   },
 };
