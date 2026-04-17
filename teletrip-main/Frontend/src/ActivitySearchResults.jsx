@@ -584,13 +584,13 @@ const ActivitySearchResults = () => {
           onClick={() => setShowMobileFilters(true)}
           style={{
             position: 'fixed', bottom: 80, right: 16, zIndex: 115,
-            display: 'flex', alignItems: 'center', gap: 8,
+            alignItems: 'center', gap: 8,
             backgroundColor: '#2563eb', color: '#fff',
             padding: '10px 18px', borderRadius: 99,
             boxShadow: '0 4px 16px rgba(37,99,235,0.4)',
             border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 14,
           }}
-          className="lg:hidden"
+          className="lg:hidden flex"
         >
           <Filter className="w-4 h-4" />
           <span>Filters</span>
@@ -747,25 +747,34 @@ const ActivitySearchResults = () => {
         <div className="fixed inset-0 z-[150] flex items-end sm:items-center justify-center" onClick={() => setSelectedActivity(null)}>
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
           <div className="relative bg-white w-full sm:max-w-3xl sm:rounded-2xl max-h-[92vh] overflow-hidden flex flex-col shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            {/* Image */}
-            <div className="relative h-48 sm:h-56 flex-shrink-0 bg-gray-200 overflow-hidden">
+            {/* Image collage — same layout as hotel modal */}
+            <div className="relative flex-shrink-0 bg-gray-200 overflow-hidden">
               {selectedActivity.images && selectedActivity.images.length >= 3 ? (
-                <div className="grid grid-cols-3 gap-0.5 h-full">
-                  <div className="col-span-2 cursor-pointer overflow-hidden" onClick={() => { setGalleryImages(selectedActivity.images); setGalleryIndex(0); setGalleryOpen(true); }}><img src={selectedActivity.images[0]} alt="" className="w-full h-full object-cover hover:brightness-90 transition-all" onError={(e) => e.target.src = 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} /></div>
-                  <div className="flex flex-col gap-0.5 overflow-hidden">
-                    <div className="flex-1 cursor-pointer overflow-hidden" onClick={() => { setGalleryImages(selectedActivity.images); setGalleryIndex(1); setGalleryOpen(true); }}><img src={selectedActivity.images[1]} alt="" className="w-full h-full object-cover hover:brightness-90 transition-all" onError={(e) => e.target.src = 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} /></div>
-                    <div className="relative flex-1 cursor-pointer overflow-hidden" onClick={() => { setGalleryImages(selectedActivity.images); setGalleryIndex(2); setGalleryOpen(true); }}>
-                      <img src={selectedActivity.images[2]} alt="" className="w-full h-full object-cover hover:brightness-90 transition-all" onError={(e) => e.target.src = 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} />
-                      {selectedActivity.images.length > 3 && <div className="absolute inset-0 bg-black/50 hover:bg-black/40 flex items-center justify-center text-white text-sm font-medium transition-colors">+{selectedActivity.images.length - 3}</div>}
-                    </div>
+                <div style={{display:'grid', gridTemplateColumns:'2fr 1fr', gridTemplateRows:'1fr 1fr', gap:2, height:200, width:'100%'}}>
+                  {/* Large left — spans 2 rows */}
+                  <div style={{gridRow:'1/3', overflow:'hidden', cursor:'pointer'}} onClick={() => { setGalleryImages(selectedActivity.images); setGalleryIndex(0); setGalleryOpen(true); }}>
+                    <img src={selectedActivity.images[0]} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}} onError={(e) => e.target.src='https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} />
+                  </div>
+                  {/* Top right */}
+                  <div style={{overflow:'hidden', cursor:'pointer'}} onClick={() => { setGalleryImages(selectedActivity.images); setGalleryIndex(1); setGalleryOpen(true); }}>
+                    <img src={selectedActivity.images[1]} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}} onError={(e) => e.target.src='https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} />
+                  </div>
+                  {/* Bottom right — with count overlay */}
+                  <div style={{overflow:'hidden', cursor:'pointer', position:'relative'}} onClick={() => { setGalleryImages(selectedActivity.images); setGalleryIndex(2); setGalleryOpen(true); }}>
+                    <img src={selectedActivity.images[2]} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}} onError={(e) => e.target.src='https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} />
+                    {selectedActivity.images.length > 3 && (
+                      <div style={{position:'absolute',inset:0,backgroundColor:'rgba(0,0,0,0.5)',display:'flex',alignItems:'center',justifyContent:'center'}}>
+                        <span style={{color:'#fff',fontSize:13,fontWeight:600}}>+{selectedActivity.images.length - 3} photos</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               ) : (
-                <div className="h-full cursor-pointer overflow-hidden" onClick={() => { setGalleryImages(selectedActivity.images || []); setGalleryIndex(0); setGalleryOpen(true); }}>
-                  <img src={selectedActivity.images?.[0] || 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} alt="" className="w-full h-full object-cover hover:brightness-90 transition-all" />
+                <div style={{height:180, width:'100%', overflow:'hidden', cursor:'pointer'}} onClick={() => { setGalleryImages(selectedActivity.images || []); setGalleryIndex(0); setGalleryOpen(true); }}>
+                  <img src={selectedActivity.images?.[0] || 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}} />
                 </div>
               )}
-              <button onClick={() => setSelectedActivity(null)} className="absolute top-3 right-3 p-1.5 bg-black/40 hover:bg-black/60 rounded-full transition-colors"><X className="w-4 h-4 text-white" /></button>
+              <button onClick={() => setSelectedActivity(null)} className="absolute top-3 right-3 w-8 h-8 bg-black/40 hover:bg-black/60 rounded-full flex items-center justify-center transition-colors z-10"><X className="w-4 h-4 text-white" /></button>
               {selectedActivity.activityFactsheetType && (
                 <div className="absolute bottom-3 left-3 bg-blue-600/90 text-white px-2.5 py-1 rounded-lg text-[12px] font-medium">{selectedActivity.activityFactsheetType}</div>
               )}

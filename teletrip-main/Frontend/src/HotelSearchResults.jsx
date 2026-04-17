@@ -1523,13 +1523,13 @@ if (children > 0 && childAges.length > 0) {
           onClick={() => setShowMobileFilters(true)}
           style={{
             position: 'fixed', bottom: 80, right: 16, zIndex: 115,
-            display: 'flex', alignItems: 'center', gap: 8,
+            alignItems: 'center', gap: 8,
             backgroundColor: '#2563eb', color: '#fff',
             padding: '10px 18px', borderRadius: 99,
             boxShadow: '0 4px 16px rgba(37,99,235,0.4)',
             border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 14,
           }}
-          className="lg:hidden"
+          className="lg:hidden flex"
         >
           <Filter className="w-4 h-4" />
           <span>Filters</span>

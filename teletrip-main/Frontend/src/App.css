@@ -22,9 +22,8 @@ body {
   line-height: 1.4 !important;
 }
 
+/* Prevent iOS zoom on focus for non-search inputs only */
 @media (max-width: 767px) {
-  /* Prevent iOS zoom on focus — use 16px only for non-search inputs */
-  input:not([type="checkbox"]):not([type="radio"]):not(.search-form-input),
   textarea {
     font-size: 16px !important;
   }
@@ -33,6 +32,13 @@ body {
 /* Fix filter labels — no min-height, no centering */
 label {
   min-height: unset !important;
+}
+
+/* Radio and checkbox inputs — never apply min-height */
+input[type="radio"],
+input[type="checkbox"] {
+  min-height: unset !important;
+  height: auto !important;
 }
 
 /* Filter labels with checkboxes/radios: force correct layout */

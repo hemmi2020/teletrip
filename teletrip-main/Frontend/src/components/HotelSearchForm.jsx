@@ -201,13 +201,13 @@ const TransfersTab = ({ variant = 'dark' }) => {
       )}
 
       {/* Trip Type Radio Buttons */}
-      <div className="flex items-center gap-6">
-        <label className="flex items-center gap-2 cursor-pointer">
-          <input type="radio" name="tripType" value="one_way" checked={tripType === 'one_way'} onChange={() => setTripType('one_way')} className="w-4 h-4 text-blue-600 cursor-pointer" />
+      <div className="flex items-center gap-4 flex-wrap">
+        <label className="flex items-center gap-2 cursor-pointer min-h-[36px]">
+          <input type="radio" name="tripType" value="one_way" checked={tripType === 'one_way'} onChange={() => setTripType('one_way')} className="w-4 h-4 text-blue-600 cursor-pointer flex-shrink-0" style={{minHeight:'unset'}} />
           <span className={`text-sm font-medium ${lbl}`}>One Way</span>
         </label>
-        <label className="flex items-center gap-2 cursor-pointer">
-          <input type="radio" name="tripType" value="round_trip" checked={tripType === 'round_trip'} onChange={() => setTripType('round_trip')} className="w-4 h-4 text-blue-600 cursor-pointer" />
+        <label className="flex items-center gap-2 cursor-pointer min-h-[36px]">
+          <input type="radio" name="tripType" value="round_trip" checked={tripType === 'round_trip'} onChange={() => setTripType('round_trip')} className="w-4 h-4 text-blue-600 cursor-pointer flex-shrink-0" style={{minHeight:'unset'}} />
           <span className={`text-sm font-medium ${lbl}`}>Round Trip</span>
         </label>
       </div>
