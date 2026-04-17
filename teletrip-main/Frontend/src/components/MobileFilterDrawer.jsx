@@ -13,15 +13,21 @@ import { X } from 'lucide-react';
  *   children {ReactNode} — filter section content
  */
 const MobileFilterDrawer = ({ isOpen, onClose, onApply, onReset, title = 'Filters', children }) => {
-  // Scroll lock
+  // Scroll lock + overflow fix
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
+      document.body.style.overflowX = 'visible';
+      document.documentElement.style.overflowX = 'visible';
     } else {
       document.body.style.overflow = '';
+      document.body.style.overflowX = '';
+      document.documentElement.style.overflowX = '';
     }
     return () => {
       document.body.style.overflow = '';
+      document.body.style.overflowX = '';
+      document.documentElement.style.overflowX = '';
     };
   }, [isOpen]);
 
@@ -38,10 +44,20 @@ const MobileFilterDrawer = ({ isOpen, onClose, onApply, onReset, title = 'Filter
 
       {/* Drawer */}
       <div
-        className={`fixed bottom-0 left-0 right-0 z-[131] bg-white rounded-t-2xl max-h-[85vh]
+        className={`z-[131] bg-white rounded-t-2xl max-h-[85vh]
           transform transition-transform duration-300 ease-out
           ${isOpen ? 'translate-y-0' : 'translate-y-full'}`}
-        style={{ width: '100vw', display: 'flex', flexDirection: 'column' }}
+        style={{ 
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          width: '100%',
+          maxWidth: '100%',
+          display: 'flex', 
+          flexDirection: 'column',
+          boxSizing: 'border-box'
+        }}
         role="dialog"
         aria-modal="true"
         aria-label={title}
