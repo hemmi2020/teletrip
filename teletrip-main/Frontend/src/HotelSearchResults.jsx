@@ -1510,7 +1510,7 @@ if (children > 0 && childAges.length > 0) {
         {/* Mobile Filter FAB */}
         <button
           onClick={() => setShowMobileFilters(true)}
-          className="fixed bottom-20 right-4 z-50 lg:hidden flex items-center gap-2 bg-blue-600 text-white px-4 py-2.5 rounded-full shadow-lg hover:bg-blue-700 transition-colors"
+          className="fixed bottom-[80px] right-4 z-[115] lg:hidden flex items-center gap-2 bg-blue-600 text-white px-4 py-2.5 rounded-full shadow-lg hover:bg-blue-700 transition-colors"
         >
           <Filter className="w-4 h-4" />
           <span className="text-sm font-medium">Filters</span>
@@ -1530,7 +1530,7 @@ if (children > 0 && childAges.length > 0) {
           title="Hotel Filters"
         >
           {/* Hotel Name */}
-          <div className="py-3 border-b border-gray-50">
+          <div className="w-full py-3 border-b border-gray-50">
             <button onClick={() => toggleSection('hotelName')} className="flex items-center justify-between w-full cursor-pointer">
               <span className="text-[13px] font-semibold text-gray-800">Hotel Name</span>
               <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-200 ${expandedSections.hotelName ? 'rotate-180' : ''}`} />
@@ -1541,18 +1541,18 @@ if (children > 0 && childAges.length > 0) {
           </div>
           {/* Board */}
           {dynamicBoards.length > 0 && (
-            <div className="py-3 border-b border-gray-50">
+            <div className="w-full py-3 border-b border-gray-50">
               <button onClick={() => toggleSection('board')} className="flex items-center justify-between w-full cursor-pointer">
                 <span className="text-[13px] font-semibold text-gray-800">Board</span>
                 <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-200 ${expandedSections.board ? 'rotate-180' : ''}`} />
               </button>
               {expandedSections.board && (
-                <div className="space-y-1.5 mt-2">
+                <div className="w-full mt-2 space-y-1.5">
                   {dynamicBoards.map(board => (
-                    <label key={board} className="flex items-center gap-2.5 py-0.5 cursor-pointer group">
-                      <input type="checkbox" checked={selectedBoards.includes(board)} onChange={() => setSelectedBoards(prev => prev.includes(board) ? prev.filter(b => b !== board) : [...prev, board])} className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer" />
-                      <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1">{board}</span>
-                      <span className="text-[11px] text-gray-400">{filterCounts.boards[board] || 0}</span>
+                    <label key={board} className="w-full flex items-center gap-2.5 py-0.5 cursor-pointer group">
+                      <input type="checkbox" checked={selectedBoards.includes(board)} onChange={() => setSelectedBoards(prev => prev.includes(board) ? prev.filter(b => b !== board) : [...prev, board])} className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer flex-shrink-0" />
+                      <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1 min-w-0">{board}</span>
+                      <span className="text-[11px] text-gray-400 flex-shrink-0">{filterCounts.boards[board] || 0}</span>
                     </label>
                   ))}
                 </div>
@@ -1561,18 +1561,18 @@ if (children > 0 && childAges.length > 0) {
           )}
           {/* Category */}
           {dynamicCategories.length > 0 && (
-            <div className="py-3 border-b border-gray-50">
+            <div className="w-full py-3 border-b border-gray-50">
               <button onClick={() => toggleSection('category')} className="flex items-center justify-between w-full cursor-pointer">
                 <span className="text-[13px] font-semibold text-gray-800">Category</span>
                 <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-200 ${expandedSections.category ? 'rotate-180' : ''}`} />
               </button>
               {expandedSections.category && (
-                <div className="space-y-1.5 mt-2">
+                <div className="w-full mt-2 space-y-1.5">
                   {dynamicCategories.map(cat => (
-                    <label key={cat} className="flex items-center gap-2.5 py-0.5 cursor-pointer group">
-                      <input type="checkbox" checked={selectedCategories.includes(cat)} onChange={() => setSelectedCategories(prev => prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat])} className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer" />
-                      <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1">{cat}</span>
-                      <span className="text-[11px] text-gray-400">{filterCounts.categories[cat] || 0}</span>
+                    <label key={cat} className="w-full flex items-center gap-2.5 py-0.5 cursor-pointer group">
+                      <input type="checkbox" checked={selectedCategories.includes(cat)} onChange={() => setSelectedCategories(prev => prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat])} className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer flex-shrink-0" />
+                      <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1 min-w-0">{cat}</span>
+                      <span className="text-[11px] text-gray-400 flex-shrink-0">{filterCounts.categories[cat] || 0}</span>
                     </label>
                   ))}
                 </div>
@@ -1580,13 +1580,13 @@ if (children > 0 && childAges.length > 0) {
             </div>
           )}
           {/* Price Range */}
-          <div className="py-3 border-b border-gray-50">
+          <div className="w-full py-3 border-b border-gray-50">
             <button onClick={() => toggleSection('price')} className="flex items-center justify-between w-full cursor-pointer">
               <span className="text-[13px] font-semibold text-gray-800">Price Range (PKR)</span>
               <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-200 ${expandedSections.price ? 'rotate-180' : ''}`} />
             </button>
             {expandedSections.price && (
-              <div className="mt-2 space-y-2">
+              <div className="mt-2 space-y-2 w-full">
                 <div className="flex items-center gap-2">
                   <input type="number" value={priceMin} onChange={(e) => setPriceMin(e.target.value)} placeholder={String(priceBounds.min)} className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 rounded-md bg-gray-50/50 focus:bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none" />
                   <span className="text-gray-300 text-xs">–</span>
@@ -1601,18 +1601,18 @@ if (children > 0 && childAges.length > 0) {
           </div>
           {/* Zone */}
           {dynamicZones.length > 0 && (
-            <div className="py-3 border-b border-gray-50">
+            <div className="w-full py-3 border-b border-gray-50">
               <button onClick={() => toggleSection('zone')} className="flex items-center justify-between w-full cursor-pointer">
                 <span className="text-[13px] font-semibold text-gray-800">Zone</span>
                 <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-200 ${expandedSections.zone ? 'rotate-180' : ''}`} />
               </button>
               {expandedSections.zone && (
-                <div className="space-y-1.5 max-h-44 overflow-y-auto mt-2">
+                <div className="w-full mt-2 space-y-1.5 max-h-44 overflow-y-auto">
                   {dynamicZones.map(zone => (
-                    <label key={zone} className="flex items-center gap-2.5 py-0.5 cursor-pointer group">
-                      <input type="checkbox" checked={selectedZones.includes(zone)} onChange={() => setSelectedZones(prev => prev.includes(zone) ? prev.filter(z => z !== zone) : [...prev, zone])} className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer" />
-                      <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1">{zone}</span>
-                      <span className="text-[11px] text-gray-400">{filterCounts.zones[zone] || 0}</span>
+                    <label key={zone} className="w-full flex items-center gap-2.5 py-0.5 cursor-pointer group">
+                      <input type="checkbox" checked={selectedZones.includes(zone)} onChange={() => setSelectedZones(prev => prev.includes(zone) ? prev.filter(z => z !== zone) : [...prev, zone])} className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer flex-shrink-0" />
+                      <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1 min-w-0">{zone}</span>
+                      <span className="text-[11px] text-gray-400 flex-shrink-0">{filterCounts.zones[zone] || 0}</span>
                     </label>
                   ))}
                 </div>
@@ -1620,32 +1620,32 @@ if (children > 0 && childAges.length > 0) {
             </div>
           )}
           {/* Amenities */}
-          <div className="py-3 border-b border-gray-50">
+          <div className="w-full py-3 border-b border-gray-50">
             <button onClick={() => toggleSection('amenities')} className="flex items-center justify-between w-full cursor-pointer">
               <span className="text-[13px] font-semibold text-gray-800">Amenities</span>
               <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-200 ${expandedSections.amenities ? 'rotate-180' : ''}`} />
             </button>
             {expandedSections.amenities && (
-              <div className="space-y-1.5 mt-2">
+              <div className="w-full mt-2 space-y-1.5">
                 {availableAmenities.map(amenity => (
-                  <label key={amenity.id} className="flex items-center gap-2.5 py-0.5 cursor-pointer group">
-                    <input type="checkbox" checked={selectedAmenities.includes(amenity.id)} onChange={() => handleAmenityChange(amenity.id)} className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer" />
-                    <amenity.icon className="w-3.5 h-3.5 text-gray-400 group-hover:text-gray-600" />
-                    <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1">{amenity.name}</span>
-                    <span className="text-[11px] text-gray-400">{filterCounts.amenities[amenity.id] || 0}</span>
+                  <label key={amenity.id} className="w-full flex items-center gap-2.5 py-0.5 cursor-pointer group">
+                    <input type="checkbox" checked={selectedAmenities.includes(amenity.id)} onChange={() => handleAmenityChange(amenity.id)} className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer flex-shrink-0" />
+                    <amenity.icon className="w-3.5 h-3.5 text-gray-400 group-hover:text-gray-600 flex-shrink-0" />
+                    <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1 min-w-0">{amenity.name}</span>
+                    <span className="text-[11px] text-gray-400 flex-shrink-0">{filterCounts.amenities[amenity.id] || 0}</span>
                   </label>
                 ))}
               </div>
             )}
           </div>
           {/* Cancellation */}
-          <div className="py-3">
+          <div className="w-full py-3">
             <button onClick={() => toggleSection('cancellation')} className="flex items-center justify-between w-full cursor-pointer">
               <span className="text-[13px] font-semibold text-gray-800">Cancellation Fees</span>
               <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform duration-200 ${expandedSections.cancellation ? 'rotate-180' : ''}`} />
             </button>
             {expandedSections.cancellation && (
-              <div className="space-y-1.5 mt-2">
+              <div className="w-full mt-2 space-y-1.5">
                 {[
                   { value: "", label: "All", count: hotels.length },
                   { value: "free", label: "Free cancellation", count: filterCounts.freeCancellation },
@@ -1653,10 +1653,10 @@ if (children > 0 && childAges.length > 0) {
                   { value: "nonrefundable", label: "Non refundable", count: filterCounts.nonRefundable },
                   { value: "notavailable", label: "Fees not available", count: filterCounts.noCancellationInfo },
                 ].map(opt => (
-                  <label key={opt.value} className="flex items-center gap-2.5 py-0.5 cursor-pointer group">
-                    <input type="radio" name="cancellationMobile" value={opt.value} checked={selectedCancellation === opt.value} onChange={(e) => setSelectedCancellation(e.target.value)} className="h-3.5 w-3.5 border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer" />
-                    <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1">{opt.label}</span>
-                    <span className="text-[11px] text-gray-400">{opt.count}</span>
+                  <label key={opt.value} className="w-full flex items-center gap-2.5 py-0.5 cursor-pointer group">
+                    <input type="radio" name="cancellationMobile" value={opt.value} checked={selectedCancellation === opt.value} onChange={(e) => setSelectedCancellation(e.target.value)} className="h-3.5 w-3.5 border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer flex-shrink-0" />
+                    <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1 min-w-0">{opt.label}</span>
+                    <span className="text-[11px] text-gray-400 flex-shrink-0">{opt.count}</span>
                   </label>
                 ))}
               </div>

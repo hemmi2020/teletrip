@@ -182,7 +182,7 @@ const TransferSearch = () => {
         {/* Mobile Filter FAB */}
         <button
           onClick={() => setShowMobileFilters(true)}
-          className="fixed bottom-20 right-4 z-50 lg:hidden flex items-center gap-2 bg-blue-600 text-white px-4 py-2.5 rounded-full shadow-lg hover:bg-blue-700 transition-colors"
+          className="fixed bottom-[80px] right-4 z-[115] lg:hidden flex items-center gap-2 bg-blue-600 text-white px-4 py-2.5 rounded-full shadow-lg hover:bg-blue-700 transition-colors"
         >
           <Filter className="w-4 h-4" />
           <span className="text-sm font-medium">Filters</span>

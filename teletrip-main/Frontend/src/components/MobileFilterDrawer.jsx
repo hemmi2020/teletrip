@@ -62,8 +62,8 @@ const MobileFilterDrawer = ({ isOpen, onClose, onApply, onReset, title = 'Filter
         </div>
 
         {/* Scrollable content */}
-        <div style={{ flex: '1 1 auto', overflowY: 'auto', width: '100%' }}>
-          <div style={{ padding: '8px 16px', width: '100%', boxSizing: 'border-box' }}>
+        <div style={{ flex: '1 1 auto', overflowY: 'auto', width: '100%', minWidth: 0 }}>
+          <div style={{ padding: '8px 16px', width: '100%', boxSizing: 'border-box', display: 'block' }}>
             {children}
           </div>
         </div>
