@@ -90,9 +90,10 @@ label:has(input[type="radio"]) span {
   text-align: left !important;
 }
 
-/* Filter FAB — above bottom navbar */
-.filter-fab {
-  bottom: 72px !important;
+/* Trip type radio labels in search form — don't force full width */
+.search-form-radio label {
+  width: auto !important;
+  display: inline-flex !important;
 }
 
 /* ─── Global font size scale-up for search pages ─── */

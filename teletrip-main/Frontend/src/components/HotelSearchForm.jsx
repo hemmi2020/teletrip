@@ -201,13 +201,13 @@ const TransfersTab = ({ variant = 'dark' }) => {
       )}
 
       {/* Trip Type Radio Buttons */}
-      <div className="flex items-center gap-4 flex-wrap">
-        <label className="flex items-center gap-2 cursor-pointer min-h-[36px]">
-          <input type="radio" name="tripType" value="one_way" checked={tripType === 'one_way'} onChange={() => setTripType('one_way')} className="w-4 h-4 text-blue-600 cursor-pointer flex-shrink-0" style={{minHeight:'unset'}} />
+      <div className="search-form-radio flex items-center gap-4 flex-wrap">
+        <label className="inline-flex items-center gap-2 cursor-pointer" style={{minHeight:'unset', width:'auto', display:'inline-flex'}}>
+          <input type="radio" name="tripType" value="one_way" checked={tripType === 'one_way'} onChange={() => setTripType('one_way')} style={{width:16, height:16, minHeight:'unset', flexShrink:0}} />
           <span className={`text-sm font-medium ${lbl}`}>One Way</span>
         </label>
-        <label className="flex items-center gap-2 cursor-pointer min-h-[36px]">
-          <input type="radio" name="tripType" value="round_trip" checked={tripType === 'round_trip'} onChange={() => setTripType('round_trip')} className="w-4 h-4 text-blue-600 cursor-pointer flex-shrink-0" style={{minHeight:'unset'}} />
+        <label className="inline-flex items-center gap-2 cursor-pointer" style={{minHeight:'unset', width:'auto', display:'inline-flex'}}>
+          <input type="radio" name="tripType" value="round_trip" checked={tripType === 'round_trip'} onChange={() => setTripType('round_trip')} style={{width:16, height:16, minHeight:'unset', flexShrink:0}} />
           <span className={`text-sm font-medium ${lbl}`}>Round Trip</span>
         </label>
       </div>
@@ -216,8 +216,8 @@ const TransfersTab = ({ variant = 'dark' }) => {
           <label className={`block text-xs sm:text-sm font-medium ${lbl} mb-1.5 sm:mb-2 px-1`}>
             Pickup Location <span className="text-red-500">*</span>
           </label>
-          <div className="relative">
-            <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+          <div className="flex items-center w-full border border-gray-300 bg-white rounded-lg focus-within:ring-2 focus-within:ring-blue-500 px-3 py-2.5 sm:py-3 gap-2">
+            <MapPin className="text-gray-400 flex-shrink-0" size={18} />
             <input
               type="text"
               value={pickupQuery}
@@ -229,20 +229,10 @@ const TransfersTab = ({ variant = 'dark' }) => {
               onFocus={() => setShowPickupDropdown(true)}
               placeholder="Airport, hotel or area, e.g. DXB, Hilton Dubai"
               required
-              className="search-form-input w-full pl-10 pr-10 py-2.5 sm:py-3 border border-gray-300 bg-white rounded-lg focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
+              className="flex-1 min-w-0 outline-none bg-transparent text-gray-700 text-sm sm:text-base placeholder-gray-400"
             />
             {pickupQuery && (
-              <button
-                type="button"
-                onClick={() => {
-                  setPickupQuery('');
-                  setSelectedPickup(null);
-                  setFilteredPickupLocations([]);
-                }}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-              >
-                <X size={18} />
-              </button>
+              <button type="button" onClick={() => { setPickupQuery(''); setSelectedPickup(null); setFilteredPickupLocations([]); }} className="text-gray-400 hover:text-gray-600 flex-shrink-0"><X size={16} /></button>
             )}
           </div>
           {showPickupDropdown && pickupQuery.trim() !== '' && (
@@ -296,8 +286,8 @@ const TransfersTab = ({ variant = 'dark' }) => {
           <label className={`block text-xs sm:text-sm font-medium ${lbl} mb-1.5 sm:mb-2 px-1`}>
             Dropoff Location <span className="text-red-500">*</span>
           </label>
-          <div className="relative">
-            <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+          <div className="flex items-center w-full border border-gray-300 bg-white rounded-lg focus-within:ring-2 focus-within:ring-blue-500 px-3 py-2.5 sm:py-3 gap-2">
+            <MapPin className="text-gray-400 flex-shrink-0" size={18} />
             <input
               type="text"
               value={dropoffQuery}
@@ -309,20 +299,10 @@ const TransfersTab = ({ variant = 'dark' }) => {
               onFocus={() => setShowDropoffDropdown(true)}
               placeholder="Airport, hotel or area, e.g. DXB, DAMAC Maison"
               required
-              className="search-form-input w-full pl-10 pr-10 py-2.5 sm:py-3 border border-gray-300 bg-white rounded-lg focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
+              className="flex-1 min-w-0 outline-none bg-transparent text-gray-700 text-sm sm:text-base placeholder-gray-400"
             />
             {dropoffQuery && (
-              <button
-                type="button"
-                onClick={() => {
-                  setDropoffQuery('');
-                  setSelectedDropoff(null);
-                  setFilteredDropoffLocations([]);
-                }}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-              >
-                <X size={18} />
-              </button>
+              <button type="button" onClick={() => { setDropoffQuery(''); setSelectedDropoff(null); setFilteredDropoffLocations([]); }} className="text-gray-400 hover:text-gray-600 flex-shrink-0"><X size={16} /></button>
             )}
           </div>
           {showDropoffDropdown && dropoffQuery.trim() !== '' && (
@@ -586,8 +566,8 @@ const ExperiencesTab = ({ variant = 'dark' }) => {
         <label className={`block text-xs sm:text-sm font-medium ${lbl} mb-1.5 sm:mb-2 px-1`}>
           Destination <span className="text-red-500">*</span>
         </label>
-        <div className="relative">
-          <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+        <div className="flex items-center w-full border border-gray-300 bg-white rounded-lg focus-within:ring-2 focus-within:ring-blue-500 px-3 py-2.5 sm:py-3 gap-2">
+          <MapPin className="text-gray-400 flex-shrink-0" size={18} />
           <input
             type="text"
             value={searchQuery}
@@ -598,21 +578,11 @@ const ExperiencesTab = ({ variant = 'dark' }) => {
             }}
             onFocus={() => setShowLocationDropdown(true)}
             placeholder="Where are you going? e.g: Dubai"
-            className="search-form-input w-full pl-10 pr-10 py-2.5 sm:py-3 border border-gray-300 bg-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
+            className="flex-1 min-w-0 outline-none bg-transparent text-gray-700 text-sm sm:text-base placeholder-gray-400"
             required
           />
           {searchQuery && (
-            <button
-              type="button"
-              onClick={() => {
-                setSearchQuery('');
-                setSelectedLocation(null);
-                setFilteredLocations([]);
-              }}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-            >
-              <X size={18} />
-            </button>
+            <button type="button" onClick={() => { setSearchQuery(''); setSelectedLocation(null); setFilteredLocations([]); }} className="text-gray-400 hover:text-gray-600 flex-shrink-0"><X size={16} /></button>
           )}
         </div>
 
@@ -1024,18 +994,18 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
                   <label className={`block text-xs sm:text-sm font-medium ${lbl} mb-1.5 sm:mb-2 px-1`}>
                     Destination <span className="text-red-500">*</span>
                   </label>
-                  <div className="relative">
-                    <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                  <div className="flex items-center w-full border border-gray-300 bg-white rounded-lg focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent px-3 py-2.5 sm:py-3 gap-2">
+                    <MapPin className="text-gray-400 flex-shrink-0" size={18} />
                     <input
                       type="text"
                       value={searchQuery}
                       onChange={handleSearchInputChange}
                       onFocus={() => setShowLocationDropdown(true)}
                       placeholder="City or country, e.g: London"
-                      className="search-form-input w-full pl-10 pr-10 py-2.5 sm:py-3 border border-gray-300 bg-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-700 text-sm sm:text-base"
+                      className="flex-1 min-w-0 outline-none bg-transparent text-gray-700 text-sm sm:text-base placeholder-gray-400"
                     />
                     {searchQuery && (
-                      <button type="button" onClick={() => { setSearchQuery(''); setSelectedLocation(null); setFilteredLocations([]); }} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"><X size={18} /></button>
+                      <button type="button" onClick={() => { setSearchQuery(''); setSelectedLocation(null); setFilteredLocations([]); }} className="text-gray-400 hover:text-gray-600 flex-shrink-0"><X size={16} /></button>
                     )}
                   </div>
                   {showLocationDropdown && searchQuery.trim() !== '' && (
@@ -1067,17 +1037,17 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
                   <label className={`block text-xs sm:text-sm font-medium ${lbl} mb-1.5 sm:mb-2 px-1`}>
                     Hotel Name <span className="text-gray-400 text-xs font-normal">(filter)</span>
                   </label>
-                  <div className="relative">
-                    <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                  <div className="flex items-center w-full border border-gray-300 bg-white rounded-lg focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent px-3 py-2.5 sm:py-3 gap-2">
+                    <Building2 className="text-gray-400 flex-shrink-0" size={18} />
                     <input
                       type="text"
                       value={hotelNameQuery}
                       onChange={(e) => setHotelNameQuery(e.target.value)}
                       placeholder="e.g. Hilton, Marriott..."
-                      className="search-form-input w-full pl-10 pr-10 py-2.5 sm:py-3 border border-gray-300 bg-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-700 text-sm sm:text-base"
+                      className="flex-1 min-w-0 outline-none bg-transparent text-gray-700 text-sm sm:text-base placeholder-gray-400"
                     />
                     {hotelNameQuery && (
-                      <button type="button" onClick={() => setHotelNameQuery('')} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"><X size={18} /></button>
+                      <button type="button" onClick={() => setHotelNameQuery('')} className="text-gray-400 hover:text-gray-600 flex-shrink-0"><X size={16} /></button>
                     )}
                   </div>
                   {hotelNameQuery.trim().length > 0 && (
