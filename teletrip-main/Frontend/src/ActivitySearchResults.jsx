@@ -360,14 +360,14 @@ const ActivitySearchResults = () => {
                   {expandedSections.categories && (
                     <div className="space-y-1.5 max-h-44 overflow-y-auto">
                       {dynamicCategories.map(cat => (
-                        <label key={cat} className="flex items-center gap-2.5 py-0.5 cursor-pointer group">
+                        <label key={cat} className="flex flex-row items-center justify-start gap-2.5 py-0.5 cursor-pointer group">
                           <input
                             type="checkbox"
                             checked={selectedCategories.includes(cat)}
                             onChange={() => setSelectedCategories(prev => prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat])}
                             className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
                           />
-                          <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1">{cat}</span><span className="text-[11px] text-gray-400">{countCat(cat)}</span>
+                          <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1 text-left">{cat}</span><span className="text-[11px] text-gray-400">{countCat(cat)}</span>
                         </label>
                       ))}
                     </div>
@@ -384,14 +384,14 @@ const ActivitySearchResults = () => {
                 {expandedSections.daytime && (
                   <div className="space-y-1.5">
                     {daytimeOptions.map(time => (
-                      <label key={time} className="flex items-center gap-2.5 py-0.5 cursor-pointer group">
+                      <label key={time} className="flex flex-row items-center justify-start gap-2.5 py-0.5 cursor-pointer group">
                         <input
                           type="checkbox"
                           checked={selectedDaytimes.includes(time)}
                           onChange={() => setSelectedDaytimes(prev => prev.includes(time) ? prev.filter(t => t !== time) : [...prev, time])}
                           className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
                         />
-                        <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1">{time}</span><span className="text-[11px] text-gray-400">{countDaytime(time)}</span>
+                        <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1 text-left">{time}</span><span className="text-[11px] text-gray-400">{countDaytime(time)}</span>
                       </label>
                     ))}
                   </div>
@@ -408,14 +408,14 @@ const ActivitySearchResults = () => {
                   {expandedSections.recommended && (
                     <div className="space-y-1.5">
                       {dynamicRecommended.map(rec => (
-                        <label key={rec} className="flex items-center gap-2.5 py-0.5 cursor-pointer group">
+                        <label key={rec} className="flex flex-row items-center justify-start gap-2.5 py-0.5 cursor-pointer group">
                           <input
                             type="checkbox"
                             checked={selectedRecommended.includes(rec)}
                             onChange={() => setSelectedRecommended(prev => prev.includes(rec) ? prev.filter(r => r !== rec) : [...prev, rec])}
                             className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
                           />
-                          <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1">{rec}</span><span className="text-[11px] text-gray-400">{countRec(rec)}</span>
+                          <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1 text-left">{rec}</span><span className="text-[11px] text-gray-400">{countRec(rec)}</span>
                         </label>
                       ))}
                     </div>
@@ -433,14 +433,14 @@ const ActivitySearchResults = () => {
                   {expandedSections.supplier && (
                     <div className="space-y-1.5 max-h-44 overflow-y-auto">
                       {dynamicSuppliers.map(sup => (
-                        <label key={sup} className="flex items-center gap-2.5 py-0.5 cursor-pointer group">
+                        <label key={sup} className="flex flex-row items-center justify-start gap-2.5 py-0.5 cursor-pointer group">
                           <input
                             type="checkbox"
                             checked={selectedSuppliers.includes(sup)}
                             onChange={() => setSelectedSuppliers(prev => prev.includes(sup) ? prev.filter(s => s !== sup) : [...prev, sup])}
                             className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
                           />
-                          <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1">{sup}</span><span className="text-[11px] text-gray-400">{countSupplier(sup)}</span>
+                          <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1 text-left">{sup}</span><span className="text-[11px] text-gray-400">{countSupplier(sup)}</span>
                         </label>
                       ))}
                     </div>
@@ -458,14 +458,14 @@ const ActivitySearchResults = () => {
                   {expandedSections.voucherValidity && (
                     <div className="space-y-1.5">
                       {dynamicVoucherTypes.map(vt => (
-                        <label key={vt} className="flex items-center gap-2.5 py-0.5 cursor-pointer group">
+                        <label key={vt} className="flex flex-row items-center justify-start gap-2.5 py-0.5 cursor-pointer group">
                           <input
                             type="checkbox"
                             checked={selectedVoucherTypes.includes(vt)}
                             onChange={() => setSelectedVoucherTypes(prev => prev.includes(vt) ? prev.filter(v => v !== vt) : [...prev, vt])}
                             className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
                           />
-                          <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1">{vt}</span><span className="text-[11px] text-gray-400">{countVoucher(vt)}</span>
+                          <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1 text-left">{vt}</span><span className="text-[11px] text-gray-400">{countVoucher(vt)}</span>
                         </label>
                       ))}
                     </div>
@@ -483,14 +483,14 @@ const ActivitySearchResults = () => {
                   {expandedSections.services && (
                     <div className="space-y-1.5">
                       {dynamicServices.map(svc => (
-                        <label key={svc} className="flex items-center gap-2.5 py-0.5 cursor-pointer group">
+                        <label key={svc} className="flex flex-row items-center justify-start gap-2.5 py-0.5 cursor-pointer group">
                           <input
                             type="checkbox"
                             checked={selectedServices.includes(svc)}
                             onChange={() => setSelectedServices(prev => prev.includes(svc) ? prev.filter(s => s !== svc) : [...prev, svc])}
                             className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
                           />
-                          <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1">{svc}</span><span className="text-[11px] text-gray-400">{countService(svc)}</span>
+                          <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1 text-left">{svc}</span><span className="text-[11px] text-gray-400">{countService(svc)}</span>
                         </label>
                       ))}
                     </div>

@@ -1121,9 +1121,9 @@ if (children > 0 && childAges.length > 0) {
                 {expandedSections.board && (
                   <div className="space-y-1.5">
                     {dynamicBoards.map(board => (
-                      <label key={board} className="w-full flex items-center gap-2.5 py-0.5 cursor-pointer group">
+                      <label key={board} className="w-full flex flex-row items-center justify-start gap-2.5 py-0.5 cursor-pointer group">
                         <input type="checkbox" checked={selectedBoards.includes(board)} onChange={() => setSelectedBoards(prev => prev.includes(board) ? prev.filter(b => b !== board) : [...prev, board])} className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer" />
-                        <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1">{board}</span>
+                        <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1 text-left">{board}</span>
                         <span className="text-[11px] text-gray-400">{filterCounts.boards[board] || 0}</span>
                       </label>
                     ))}
@@ -1145,9 +1145,9 @@ if (children > 0 && childAges.length > 0) {
                 {expandedSections.category && (
                   <div className="space-y-1.5">
                     {dynamicCategories.map(cat => (
-                      <label key={cat} className="flex items-center gap-2.5 py-0.5 cursor-pointer group">
+                      <label key={cat} className="flex flex-row items-center justify-start gap-2.5 py-0.5 cursor-pointer group">
                         <input type="checkbox" checked={selectedCategories.includes(cat)} onChange={() => setSelectedCategories(prev => prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat])} className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer" />
-                        <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1">{cat}</span>
+                        <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1 text-left">{cat}</span>
                         <span className="text-[11px] text-gray-400">{filterCounts.categories[cat] || 0}</span>
                       </label>
                     ))}
@@ -1173,9 +1173,9 @@ if (children > 0 && childAges.length > 0) {
                     { value: 3.5, label: "Good 3.5+" },
                     { value: 3, label: "Nice 3+" },
                   ].map(opt => (
-                    <label key={opt.value} className="flex items-center gap-2.5 py-0.5 cursor-pointer group">
+                    <label key={opt.value} className="flex flex-row items-center justify-start gap-2.5 py-0.5 cursor-pointer group">
                       <input type="radio" name="reviewRating" value={opt.value} checked={selectedReviewRatings.includes(opt.value)} onChange={() => setSelectedReviewRatings([opt.value])} className="h-3.5 w-3.5 border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer" />
-                      <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1">{opt.label}</span>
+                      <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1 text-left">{opt.label}</span>
                       <span className="text-[11px] text-gray-400">{countReview(opt.value)}</span>
                     </label>
                   ))}
@@ -1274,14 +1274,14 @@ if (children > 0 && childAges.length > 0) {
                 {expandedSections.zone && (
                   <div className="space-y-1.5 max-h-44 overflow-y-auto">
                     {dynamicZones.map(zone => (
-                      <label key={zone} className="flex items-center gap-2.5 py-0.5 cursor-pointer group">
+                      <label key={zone} className="flex flex-row items-center justify-start gap-2.5 py-0.5 cursor-pointer group">
                         <input
                           type="checkbox"
                           checked={selectedZones.includes(zone)}
                           onChange={() => setSelectedZones(prev => prev.includes(zone) ? prev.filter(z => z !== zone) : [...prev, zone])}
                           className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
                         />
-                        <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1">{zone}</span>
+                        <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1 text-left">{zone}</span>
                         <span className="text-[11px] text-gray-400">{filterCounts.zones[zone] || 0}</span>
                       </label>
                     ))}
@@ -1302,9 +1302,9 @@ if (children > 0 && childAges.length > 0) {
               {expandedSections.accommodationType && (
                 <div className="space-y-1.5">
                   {accommodationTypes.map(type => (
-                    <label key={type.id} className="flex items-center gap-2.5 py-0.5 cursor-pointer group">
+                    <label key={type.id} className="flex flex-row items-center justify-start gap-2.5 py-0.5 cursor-pointer group">
                         <input type="checkbox" checked={selectedAccommodationTypes.includes(type.id)} onChange={() => handleAccommodationTypeChange(type.id)} className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer" />
-                        <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1">{type.name}</span>
+                        <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1 text-left">{type.name}</span>
                         <span className="text-[11px] text-gray-400">{filterCounts.accommodationTypes[type.id] || 0}</span>
                     </label>
                   ))}
@@ -1324,7 +1324,7 @@ if (children > 0 && childAges.length > 0) {
               {expandedSections.amenities && (
                 <div className="space-y-1.5">
                   {availableAmenities.map(amenity => (
-                    <label key={amenity.id} className="flex items-center gap-2.5 py-0.5 cursor-pointer group">
+                    <label key={amenity.id} className="flex flex-row items-center justify-start gap-2.5 py-0.5 cursor-pointer group">
                       <input
                         type="checkbox"
                         checked={selectedAmenities.includes(amenity.id)}
@@ -1332,7 +1332,7 @@ if (children > 0 && childAges.length > 0) {
                         className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
                       />
                       <amenity.icon className="w-3.5 h-3.5 text-gray-400 group-hover:text-gray-600" />
-                      <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1">{amenity.name}</span>
+                      <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1 text-left">{amenity.name}</span>
                       <span className="text-[11px] text-gray-400">{filterCounts.amenities[amenity.id] || 0}</span>
                     </label>
                   ))}
@@ -1353,14 +1353,14 @@ if (children > 0 && childAges.length > 0) {
                 {expandedSections.promos && (
                   <div className="space-y-1.5">
                     {dynamicPromos.map(promo => (
-                      <label key={promo} className="flex items-center gap-2.5 py-0.5 cursor-pointer group">
+                      <label key={promo} className="flex flex-row items-center justify-start gap-2.5 py-0.5 cursor-pointer group">
                         <input
                           type="checkbox"
                           checked={selectedPromos.includes(promo)}
                           onChange={() => setSelectedPromos(prev => prev.includes(promo) ? prev.filter(p => p !== promo) : [...prev, promo])}
                           className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
                         />
-                        <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1">{promo}</span>
+                        <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1 text-left">{promo}</span>
                         <span className="text-[11px] text-gray-400">{filterCounts.promos[promo] || 0}</span>
                       </label>
                     ))}
@@ -1387,9 +1387,9 @@ if (children > 0 && childAges.length > 0) {
                     { value: "nonrefundable", label: "Non refundable", count: filterCounts.nonRefundable },
                     { value: "notavailable", label: "Fees not available", count: filterCounts.noCancellationInfo },
                   ].map(opt => (
-                    <label key={opt.value} className="flex items-center gap-2.5 py-0.5 cursor-pointer group">
+                    <label key={opt.value} className="flex flex-row items-center justify-start gap-2.5 py-0.5 cursor-pointer group">
                       <input type="radio" name="cancellation" value={opt.value} checked={selectedCancellation === opt.value} onChange={(e) => setSelectedCancellation(e.target.value)} className="h-3.5 w-3.5 border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer" />
-                      <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1">{opt.label}</span>
+                      <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1 text-left">{opt.label}</span>
                       <span className="text-[11px] text-gray-400">{opt.count}</span>
                     </label>
                   ))}
@@ -1410,14 +1410,14 @@ if (children > 0 && childAges.length > 0) {
                 {expandedSections.establishment && (
                   <div className="space-y-1.5 max-h-44 overflow-y-auto">
                     {dynamicEstablishment.map(est => (
-                      <label key={est} className="flex items-center gap-2.5 py-0.5 cursor-pointer group">
+                      <label key={est} className="flex flex-row items-center justify-start gap-2.5 py-0.5 cursor-pointer group">
                         <input
                           type="checkbox"
                           checked={selectedEstablishment.includes(est)}
                           onChange={() => setSelectedEstablishment(prev => prev.includes(est) ? prev.filter(e => e !== est) : [...prev, est])}
                           className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
                         />
-                        <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1">{establishmentLabels[est] || est}</span>
+                        <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1 text-left">{establishmentLabels[est] || est}</span>
                         <span className="text-[11px] text-gray-400">{filterCounts.establishment[est] || 0}</span>
                       </label>
                     ))}
@@ -1439,14 +1439,14 @@ if (children > 0 && childAges.length > 0) {
                 {expandedSections.discounts && (
                   <div className="space-y-1.5">
                     {dynamicDiscounts.map(disc => (
-                      <label key={disc} className="flex items-center gap-2.5 py-0.5 cursor-pointer group">
+                      <label key={disc} className="flex flex-row items-center justify-start gap-2.5 py-0.5 cursor-pointer group">
                         <input
                           type="checkbox"
                           checked={selectedDiscounts.includes(disc)}
                           onChange={() => setSelectedDiscounts(prev => prev.includes(disc) ? prev.filter(d => d !== disc) : [...prev, disc])}
                           className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
                         />
-                        <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1">{disc}</span>
+                        <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1 text-left">{disc}</span>
                         <span className="text-[11px] text-gray-400">{filterCounts.discounts[disc] || 0}</span>
                       </label>
                     ))}
@@ -1468,14 +1468,14 @@ if (children > 0 && childAges.length > 0) {
                 {expandedSections.chain && (
                   <div className="space-y-1.5 max-h-44 overflow-y-auto">
                     {dynamicChains.map(chain => (
-                      <label key={chain} className="flex items-center gap-2.5 py-0.5 cursor-pointer group">
+                      <label key={chain} className="flex flex-row items-center justify-start gap-2.5 py-0.5 cursor-pointer group">
                         <input
                           type="checkbox"
                           checked={selectedChains.includes(chain)}
                           onChange={() => setSelectedChains(prev => prev.includes(chain) ? prev.filter(c => c !== chain) : [...prev, chain])}
                           className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
                         />
-                        <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1">{chain}</span>
+                        <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1 text-left">{chain}</span>
                         <span className="text-[11px] text-gray-400">{filterCounts.chains[chain] || 0}</span>
                       </label>
                     ))}
@@ -1500,9 +1500,9 @@ if (children > 0 && childAges.length > 0) {
                     { value: "without", label: "Without package", count: filterCounts.packagingWithout },
                     { value: "with", label: "With package", count: filterCounts.packagingWith },
                   ].map(opt => (
-                    <label key={opt.value} className="flex items-center gap-2.5 py-0.5 cursor-pointer group">
+                    <label key={opt.value} className="flex flex-row items-center justify-start gap-2.5 py-0.5 cursor-pointer group">
                       <input type="radio" name="packaging" value={opt.value} checked={selectedPackaging === opt.value} onChange={(e) => setSelectedPackaging(e.target.value)} className="h-3.5 w-3.5 border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer" />
-                      <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1">{opt.label}</span>
+                      <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1 text-left">{opt.label}</span>
                       <span className="text-[11px] text-gray-400">{opt.count}</span>
                     </label>
                   ))}
