@@ -32,20 +32,49 @@ router.post('/search', async (req, res) => {
       return res.status(400).json({ success: false, error: 'paxes must be a non-empty array' });
     }
 
-    // Get coordinates using geocoding (same as hotels)
+    // Get coordinates using geocoding directly (avoid self-HTTP call)
     const fetch = (await import('node-fetch')).default;
-    const geocodeUrl = `${process.env.BACKEND_URL || 'http://localhost:3000'}/api/geocode?q=${encodeURIComponent(destination + (country ? ', ' + country : ''))}`;
-    const geoResponse = await fetch(geocodeUrl);
-    
-    if (!geoResponse.ok) {
-      throw new Error('Failed to get location coordinates');
-    }
+    let lat, lon;
 
-    const geoData = await geoResponse.json();
-    const { lat, lon } = geoData?.data?.[0] || {};
+    // Try OpenCage first
+    try {
+      const opencageKey = process.env.GEOCODING_API_KEY;
+      if (opencageKey) {
+        const q = destination + (country ? ', ' + country : '');
+        const response = await fetch(
+          `https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(q)}&key=${opencageKey}&limit=1`,
+          { headers: { 'User-Agent': 'TeleTrip/1.0' } }
+        );
+        if (response.ok) {
+          const data = await response.json();
+          if (data.results?.[0]) {
+            lat = String(data.results[0].geometry.lat);
+            lon = String(data.results[0].geometry.lng);
+          }
+        }
+      }
+    } catch (err) { console.warn('OpenCage geocode failed:', err.message); }
+
+    // Fallback to Nominatim
+    if (!lat || !lon) {
+      try {
+        const q = destination + (country ? ', ' + country : '');
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 10000);
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1`,
+          { headers: { 'User-Agent': 'TeleTrip/1.0 (telitrip.com)' }, signal: controller.signal }
+        );
+        clearTimeout(timeout);
+        if (response.ok) {
+          const data = await response.json();
+          if (data?.[0]) { lat = data[0].lat; lon = data[0].lon; }
+        }
+      } catch (err) { console.warn('Nominatim geocode failed:', err.message); }
+    }
     
     if (!lat || !lon) {
-      throw new Error('Invalid location coordinates');
+      throw new Error(`Unable to find coordinates for ${destination}`);
     }
 
     const result = await activitiesService.searchActivities({
