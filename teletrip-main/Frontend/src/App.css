@@ -18,7 +18,7 @@ html, body, #root {
 
 /* Mobile touch targets — only actual interactive elements, not labels */
 @media (max-width: 767px) {
-  button:not(.no-min-h),
+  button:not(.no-min-h):not(.filter-toggle),
   [role="button"],
   select,
   input[type="submit"],
@@ -32,15 +32,39 @@ html, body, #root {
   }
 }
 
-/* Fix filter sidebar — labels must NOT have min-height forcing right-alignment */
+/* Fix filter labels — no min-height, always left-aligned flex row */
 label {
   min-height: unset !important;
-  text-align: left !important;
 }
 
-/* Ensure filter drawer content is always left-aligned */
-[role="dialog"] * {
-  text-align: left;
+/* Filter section toggle buttons must NOT stretch their sibling content */
+[role="dialog"] .py-3 > button,
+.overscroll-contain .py-3 > button {
+  min-height: unset !important;
+  display: flex !important;
+  width: 100% !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+}
+
+/* Force filter label rows to be proper left-to-right flex */
+[role="dialog"] label.flex,
+.overscroll-contain label.flex {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  width: 100% !important;
+  min-height: unset !important;
+  gap: 10px !important;
+}
+
+/* The space-y divs containing labels must be block */
+[role="dialog"] .space-y-1\.5,
+[role="dialog"] .space-y-1,
+.overscroll-contain .space-y-1\.5,
+.overscroll-contain .space-y-1 {
+  display: block !important;
 }
 
 /* Filter FAB — above bottom navbar */
