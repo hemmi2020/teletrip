@@ -1036,7 +1036,7 @@ if (children > 0 && childAges.length > 0) {
   return (
     <>
       <Header />
-      <div className="pt-12 sm:pt-16 flex">
+      <div className="pt-[52px] sm:pt-[68px] flex">
 
         {/* Sidebar Filters — desktop only */}
         <div className={`
@@ -1612,7 +1612,7 @@ if (children > 0 && childAges.length > 0) {
 
         <div className="flex-1 min-w-0 flex flex-col">
           {/* Sticky sort bar — outside the padded content, sticks right below header */}
-          <div className="sticky top-12 sm:top-16 z-[99] bg-white/95 backdrop-blur-sm py-2 px-3 border-b border-gray-100 shadow-sm">
+          <div className="fixed top-12 sm:top-16 left-0 right-0 z-[99] bg-white/95 backdrop-blur-sm py-2 px-3 border-b border-gray-100 shadow-sm">
             <div className="max-w-[1280px] mx-auto flex items-center gap-2">
               <h1 className="text-[13px] sm:text-base font-semibold text-gray-900 truncate flex-1 min-w-0">
                 {sortedHotels.length} Hotels{searchParams.get("city") ? ` in ${searchParams.get("city")}` : searchParams.get("hotelName") ? ` · "${searchParams.get("hotelName")}"` : ''}
@@ -1643,7 +1643,7 @@ if (children > 0 && childAges.length > 0) {
             )}
           </div>
 
-          <div className="max-w-[1280px] mx-auto px-4 sm:px-6 w-full">
+          <div className="max-w-[1280px] mx-auto px-4 sm:px-6 w-full pt-10 sm:pt-11">
             {user && (
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4 mb-2">
                 <div className="flex items-center">

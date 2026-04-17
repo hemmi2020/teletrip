@@ -165,7 +165,7 @@ const TransferSearch = () => {
         </div>
       )}
 
-      <div className="pt-12 sm:pt-16 min-h-screen bg-gray-50 flex">
+      <div className="pt-[52px] sm:pt-[68px] min-h-screen bg-gray-50 flex">
         {/* Mobile overlay backdrop */}
         {showMobileFilters && (
           <div className="fixed inset-0 bg-black/40 z-[120] lg:hidden" onClick={() => setShowMobileFilters(false)} />
@@ -255,7 +255,7 @@ const TransferSearch = () => {
         {/* Main content — boxed */}
         <div className="flex-1 min-w-0 flex flex-col">
           {/* Sticky sort bar — outside padded content */}
-          <div className="sticky top-12 sm:top-16 z-[99] bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm">
+          <div className="fixed top-12 sm:top-16 left-0 right-0 z-[99] bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm">
           <div className="max-w-[1280px] mx-auto px-3 py-2 flex items-center gap-2">
             {/* Route summary — mobile compact, desktop full */}
             <div className="flex-1 min-w-0 hidden md:flex items-center gap-2 text-[13px] text-gray-600">
@@ -296,7 +296,7 @@ const TransferSearch = () => {
           )}
         </div>
 
-        <div className="max-w-[1280px] mx-auto px-4 py-4">
+        <div className="max-w-[1280px] mx-auto px-4 py-4 pt-10 sm:pt-11">
           {/* Error / Empty / No search states */}
           {hasSearched && !error && transfers.length === 0 && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-10 text-center">

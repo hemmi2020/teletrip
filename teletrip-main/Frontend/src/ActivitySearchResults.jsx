@@ -316,7 +316,7 @@ const ActivitySearchResults = () => {
   return (
     <>
       <Header />
-      <div className="pt-12 sm:pt-16 flex">
+      <div className="pt-[52px] sm:pt-[68px] flex">
 
         {/* Mobile overlay backdrop */}
         {showMobileFilters && (
@@ -659,7 +659,7 @@ const ActivitySearchResults = () => {
 
         <div className="flex-1 min-w-0 flex flex-col">
           {/* Sticky sort bar — outside padded content */}
-          <div className="sticky top-12 sm:top-16 z-[99] bg-white/95 backdrop-blur-sm py-2 px-3 border-b border-gray-100 shadow-sm">
+          <div className="fixed top-12 sm:top-16 left-0 right-0 z-[99] bg-white/95 backdrop-blur-sm py-2 px-3 border-b border-gray-100 shadow-sm">
             <div className="max-w-[1280px] mx-auto flex items-center gap-2">
               <h1 className="text-[13px] sm:text-base font-semibold text-gray-900 truncate flex-1 min-w-0">{sortedActivities.length} Activities in {destination}</h1>
               <select value={sortOption} onChange={(e) => setSortOption(e.target.value)} className="text-[12px] px-2 py-1 border border-gray-200 rounded-lg bg-white text-gray-600 outline-none flex-shrink-0 max-w-[120px] sm:max-w-none">
@@ -679,7 +679,7 @@ const ActivitySearchResults = () => {
             )}
           </div>
 
-          <div className="max-w-[1280px] mx-auto px-4 sm:px-6 w-full">
+          <div className="max-w-[1280px] mx-auto px-4 sm:px-6 w-full pt-10 sm:pt-11">
             {error && (<div className="bg-red-50 border border-red-200 rounded-lg p-4 mt-4 mb-2"><p className="text-red-800">{error}</p></div>)}
             <div className="flex items-center gap-2 text-[12px] text-gray-500 py-2.5 flex-wrap border-b border-gray-50 mb-1">
               <MapPin className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" />
