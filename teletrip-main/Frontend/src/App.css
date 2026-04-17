@@ -49,6 +49,19 @@ label:has(input[type="radio"]) {
   box-sizing: border-box !important;
 }
 
+/* Force space-y containers in filter areas to be full-width block */
+.space-y-1\.5,
+.space-y-1 {
+  display: block !important;
+  width: 100% !important;
+}
+
+/* Force py-3 filter section containers to be full-width */
+.py-3 {
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
 /* Filter FAB — above bottom navbar */
 .filter-fab {
   bottom: 72px !important;

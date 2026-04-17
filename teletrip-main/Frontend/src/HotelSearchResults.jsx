@@ -1109,7 +1109,7 @@ if (children > 0 && childAges.length > 0) {
                 {expandedSections.board && (
                   <div className="space-y-1.5">
                     {dynamicBoards.map(board => (
-                      <label key={board} className="flex items-center gap-2.5 py-0.5 cursor-pointer group">
+                      <label key={board} className="w-full flex items-center gap-2.5 py-0.5 cursor-pointer group">
                         <input type="checkbox" checked={selectedBoards.includes(board)} onChange={() => setSelectedBoards(prev => prev.includes(board) ? prev.filter(b => b !== board) : [...prev, board])} className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer" />
                         <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1">{board}</span>
                         <span className="text-[11px] text-gray-400">{filterCounts.boards[board] || 0}</span>
