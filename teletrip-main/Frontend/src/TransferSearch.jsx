@@ -253,9 +253,9 @@ const TransferSearch = () => {
         />
 
         {/* Main content — boxed */}
-        <div className="flex-1 min-w-0">
-          <div className="max-w-[1280px] mx-auto">
-        <div className="sticky top-[48px] sm:top-[64px] z-40 bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm">
+        <div className="flex-1 min-w-0 flex flex-col">
+          {/* Sticky sort bar — outside padded content */}
+          <div className="sticky top-12 sm:top-16 z-[99] bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm">
           <div className="max-w-[1280px] mx-auto px-3 py-2 flex items-center gap-2">
             {/* Route summary — mobile compact, desktop full */}
             <div className="flex-1 min-w-0 hidden md:flex items-center gap-2 text-[13px] text-gray-600">
@@ -296,7 +296,7 @@ const TransferSearch = () => {
           )}
         </div>
 
-        <div className="px-4 py-4">
+        <div className="max-w-[1280px] mx-auto px-4 py-4">
           {/* Error / Empty / No search states */}
           {hasSearched && !error && transfers.length === 0 && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-10 text-center">
@@ -390,9 +390,6 @@ const TransferSearch = () => {
           )}
           </div>
         </div>
-      </div>
-
-
       {selectedTransfer && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-end sm:items-center justify-center" onClick={() => setSelectedTransfer(null)}>
           <div className="relative bg-white w-full sm:max-w-2xl sm:rounded-2xl rounded-t-2xl max-h-[92vh] flex flex-col shadow-2xl" onClick={(e) => e.stopPropagation()}>
