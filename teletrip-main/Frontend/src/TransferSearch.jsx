@@ -10,6 +10,7 @@ import {
   Filter, ChevronDown, ChevronRight, X, ShoppingCart, CheckCircle, Plane,
   Briefcase, Shield, Info, ChevronLeft, Eye, Luggage
 } from 'lucide-react';
+import MobileFilters from './components/MobileFilters';
 
 const TransferSearch = () => {
   const navigate = useNavigate();
@@ -194,16 +195,60 @@ const TransferSearch = () => {
         {/* Mobile Filter FAB */}
         <button
           onClick={() => setShowMobileFilters(true)}
-          className="fixed bottom-[80px] right-4 z-[115] lg:hidden flex items-center gap-2 bg-blue-600 text-white px-4 py-2.5 rounded-full shadow-lg hover:bg-blue-700 transition-colors"
+          style={{
+            position: 'fixed', bottom: 80, right: 16, zIndex: 115,
+            display: 'flex', alignItems: 'center', gap: 8,
+            backgroundColor: '#2563eb', color: '#fff',
+            padding: '10px 18px', borderRadius: 99,
+            boxShadow: '0 4px 16px rgba(37,99,235,0.4)',
+            border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 14,
+          }}
+          className="lg:hidden"
         >
           <Filter className="w-4 h-4" />
-          <span className="text-sm font-medium">Filters</span>
+          <span>Filters</span>
           {(selectedTypes.length + selectedCategories.length + (priceMin ? 1 : 0) + (priceMax ? 1 : 0) + (minCapacity ? 1 : 0)) > 0 && (
-            <span className="bg-white text-blue-600 text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+            <span style={{
+              backgroundColor: '#fff', color: '#2563eb', fontSize: 11,
+              fontWeight: 700, borderRadius: 99, width: 20, height: 20,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
               {selectedTypes.length + selectedCategories.length + (priceMin ? 1 : 0) + (priceMax ? 1 : 0) + (minCapacity ? 1 : 0)}
             </span>
           )}
         </button>
+
+        {/* Mobile Filters Sheet */}
+        <MobileFilters
+          isOpen={showMobileFilters}
+          onClose={() => setShowMobileFilters(false)}
+          onReset={clearFilters}
+          activeCount={selectedTypes.length + selectedCategories.length + (priceMin ? 1 : 0) + (priceMax ? 1 : 0) + (minCapacity ? 1 : 0)}
+          sections={[
+            ...(dynamicTypes.length > 0 ? [{
+              key: 'type', label: 'Transfer Type', type: 'checkbox',
+              value: selectedTypes, onChange: setSelectedTypes,
+              options: dynamicTypes.map(([t, c]) => ({ value: t, label: t, count: c })),
+            }] : []),
+            ...(dynamicCategories.length > 0 ? [{
+              key: 'category', label: 'Vehicle Category', type: 'checkbox',
+              value: selectedCategories, onChange: setSelectedCategories,
+              options: dynamicCategories.map(([cat, c]) => ({ value: cat, label: cat, count: c })),
+            }] : []),
+            {
+              key: 'price', label: 'Price Range (PKR)', type: 'range',
+              valueMin: priceMin, onChangeMin: setPriceMin,
+              valueMax: priceMax, onChangeMax: setPriceMax,
+              placeholderMin: String(priceBounds.min),
+              placeholderMax: String(priceBounds.max),
+            },
+            {
+              key: 'capacity', label: 'Min Passengers', type: 'search',
+              placeholder: 'Any',
+              value: minCapacity, onChange: setMinCapacity,
+            },
+          ]}
+        />
 
         {/* Main content — boxed */}
         <div className="flex-1 min-w-0">

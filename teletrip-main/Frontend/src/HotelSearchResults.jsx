@@ -35,7 +35,7 @@ import ReviewsModal from "./components/ReviewsModal";
 import HotelSearchForm from "./components/HotelSearchForm";
 import { useCart } from "./components/CartSystem";
 import { useCurrency } from "./context/CurrencyContext";
-import MobileFilterDrawer from "./components/MobileFilterDrawer";
+import MobileFilters from "./components/MobileFilters";
 
 
 const RatingCircles = ({ rating, size = 'w-5 h-5' }) => {
@@ -1522,16 +1522,94 @@ if (children > 0 && childAges.length > 0) {
         {/* Mobile Filter FAB */}
         <button
           onClick={() => setShowMobileFilters(true)}
-          className="fixed bottom-[80px] right-4 z-[115] lg:hidden flex items-center gap-2 bg-blue-600 text-white px-4 py-2.5 rounded-full shadow-lg hover:bg-blue-700 transition-colors"
+          style={{
+            position: 'fixed', bottom: 80, right: 16, zIndex: 115,
+            display: 'flex', alignItems: 'center', gap: 8,
+            backgroundColor: '#2563eb', color: '#fff',
+            padding: '10px 18px', borderRadius: 99,
+            boxShadow: '0 4px 16px rgba(37,99,235,0.4)',
+            border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 14,
+          }}
+          className="lg:hidden"
         >
           <Filter className="w-4 h-4" />
-          <span className="text-sm font-medium">Filters</span>
+          <span>Filters</span>
           {(selectedAmenities.length + selectedAccommodationTypes.length + selectedBoards.length + selectedCategories.length + selectedZones.length + selectedReviewRatings.length + selectedPromos.length + selectedDiscounts.length + selectedChains.length + selectedEstablishment.length + (hotelNameSearch ? 1 : 0) + (selectedCancellation ? 1 : 0) + (priceMin ? 1 : 0) + (priceMax ? 1 : 0)) > 0 && (
-            <span className="bg-white text-blue-600 text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+            <span style={{
+              backgroundColor: '#fff', color: '#2563eb', fontSize: 11,
+              fontWeight: 700, borderRadius: 99, width: 20, height: 20,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
               {selectedAmenities.length + selectedAccommodationTypes.length + selectedBoards.length + selectedCategories.length + selectedZones.length + selectedReviewRatings.length + selectedPromos.length + selectedDiscounts.length + selectedChains.length + selectedEstablishment.length + (hotelNameSearch ? 1 : 0) + (selectedCancellation ? 1 : 0) + (priceMin ? 1 : 0) + (priceMax ? 1 : 0)}
             </span>
           )}
         </button>
+
+        {/* Mobile Filters Sheet */}
+        <MobileFilters
+          isOpen={showMobileFilters}
+          onClose={() => setShowMobileFilters(false)}
+          onReset={clearFilters}
+          activeCount={selectedAmenities.length + selectedAccommodationTypes.length + selectedBoards.length + selectedCategories.length + selectedZones.length + selectedReviewRatings.length + selectedPromos.length + selectedDiscounts.length + selectedChains.length + selectedEstablishment.length + (hotelNameSearch ? 1 : 0) + (selectedCancellation ? 1 : 0) + (priceMin ? 1 : 0) + (priceMax ? 1 : 0)}
+          sections={[
+            {
+              key: 'hotelName', label: 'Hotel Name', type: 'search',
+              placeholder: 'Search hotel name...',
+              value: hotelNameSearch, onChange: setHotelNameSearch,
+            },
+            ...(dynamicBoards.length > 0 ? [{
+              key: 'board', label: 'Board', type: 'checkbox',
+              value: selectedBoards, onChange: setSelectedBoards,
+              options: dynamicBoards.map(b => ({ value: b, label: b, count: filterCounts.boards[b] || 0 })),
+            }] : []),
+            ...(dynamicCategories.length > 0 ? [{
+              key: 'category', label: 'Category', type: 'checkbox',
+              value: selectedCategories, onChange: setSelectedCategories,
+              options: dynamicCategories.map(c => ({ value: c, label: c, count: filterCounts.categories[c] || 0 })),
+            }] : []),
+            {
+              key: 'cancellation', label: 'Cancellation', type: 'radio',
+              value: selectedCancellation, onChange: setSelectedCancellation,
+              options: [
+                { value: 'free', label: 'Free cancellation', count: filterCounts.freeCancellation },
+                { value: 'partial', label: 'Partial refund', count: filterCounts.partialCancellation },
+                { value: 'nonrefundable', label: 'Non-refundable', count: filterCounts.nonRefundable },
+              ],
+            },
+            {
+              key: 'price', label: 'Price Range (PKR)', type: 'range',
+              valueMin: priceMin, onChangeMin: setPriceMin,
+              valueMax: priceMax, onChangeMax: setPriceMax,
+              placeholderMin: String(priceBounds.min),
+              placeholderMax: String(priceBounds.max),
+            },
+            ...(dynamicZones.length > 0 ? [{
+              key: 'zone', label: 'Zone', type: 'checkbox',
+              value: selectedZones, onChange: setSelectedZones,
+              options: dynamicZones.map(z => ({ value: z, label: z, count: filterCounts.zones[z] || 0 })),
+            }] : []),
+            {
+              key: 'accommodationType', label: 'Accommodation Type', type: 'checkbox',
+              value: selectedAccommodationTypes, onChange: setSelectedAccommodationTypes,
+              options: accommodationTypes.map(t => ({ value: t.id, label: t.name, count: filterCounts.accommodationTypes[t.id] || 0 })),
+            },
+            {
+              key: 'amenities', label: 'Amenities', type: 'checkbox',
+              value: selectedAmenities, onChange: setSelectedAmenities,
+              options: availableAmenities.map(a => ({ value: a.id, label: a.name, count: filterCounts.amenities[a.id] || 0 })),
+            },
+            ...(dynamicPromos.length > 0 ? [{
+              key: 'promos', label: 'Promotions', type: 'checkbox',
+              value: selectedPromos, onChange: setSelectedPromos,
+              options: dynamicPromos.map(p => ({ value: p, label: p, count: filterCounts.promos[p] || 0 })),
+            }] : []),
+            ...(dynamicChains.length > 0 ? [{
+              key: 'chain', label: 'Hotel Chain', type: 'checkbox',
+              value: selectedChains, onChange: setSelectedChains,
+              options: dynamicChains.map(c => ({ value: c, label: c, count: filterCounts.chains[c] || 0 })),
+            }] : []),
+          ]}
+        />
 
         <div className="flex-1 min-w-0">
           <div className="max-w-[1280px] mx-auto px-4 sm:px-6 py-6">

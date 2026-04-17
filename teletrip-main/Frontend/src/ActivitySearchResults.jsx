@@ -6,7 +6,7 @@ import Footer from './components/Footer';
 import { useCart } from './components/CartSystem';
 import { useCurrency } from './context/CurrencyContext';
 import HotelSearchForm from './components/HotelSearchForm';
-
+import MobileFilters from './components/MobileFilters';
 const ActivitySearchResults = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -579,16 +579,80 @@ const ActivitySearchResults = () => {
         {/* Mobile Filter FAB */}
         <button
           onClick={() => setShowMobileFilters(true)}
-          className="fixed bottom-[80px] right-4 z-[115] lg:hidden flex items-center gap-2 bg-blue-600 text-white px-4 py-2.5 rounded-full shadow-lg hover:bg-blue-700 transition-colors"
+          style={{
+            position: 'fixed', bottom: 80, right: 16, zIndex: 115,
+            display: 'flex', alignItems: 'center', gap: 8,
+            backgroundColor: '#2563eb', color: '#fff',
+            padding: '10px 18px', borderRadius: 99,
+            boxShadow: '0 4px 16px rgba(37,99,235,0.4)',
+            border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 14,
+          }}
+          className="lg:hidden"
         >
           <Filter className="w-4 h-4" />
-          <span className="text-sm font-medium">Filters</span>
+          <span>Filters</span>
           {(selectedCategories.length + selectedDaytimes.length + selectedRecommended.length + selectedSuppliers.length + selectedVoucherTypes.length + selectedServices.length + (priceMin ? 1 : 0) + (priceMax ? 1 : 0) + (nameSearch ? 1 : 0)) > 0 && (
-            <span className="bg-white text-blue-600 text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+            <span style={{
+              backgroundColor: '#fff', color: '#2563eb', fontSize: 11,
+              fontWeight: 700, borderRadius: 99, width: 20, height: 20,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
               {selectedCategories.length + selectedDaytimes.length + selectedRecommended.length + selectedSuppliers.length + selectedVoucherTypes.length + selectedServices.length + (priceMin ? 1 : 0) + (priceMax ? 1 : 0) + (nameSearch ? 1 : 0)}
             </span>
           )}
         </button>
+
+        {/* Mobile Filters Sheet */}
+        <MobileFilters
+          isOpen={showMobileFilters}
+          onClose={() => setShowMobileFilters(false)}
+          onReset={clearFilters}
+          activeCount={selectedCategories.length + selectedDaytimes.length + selectedRecommended.length + selectedSuppliers.length + selectedVoucherTypes.length + selectedServices.length + (priceMin ? 1 : 0) + (priceMax ? 1 : 0) + (nameSearch ? 1 : 0)}
+          sections={[
+            {
+              key: 'name', label: 'Activity Name', type: 'search',
+              placeholder: 'Search activity...',
+              value: nameSearch, onChange: setNameSearch,
+            },
+            ...(dynamicCategories.length > 0 ? [{
+              key: 'categories', label: 'Categories', type: 'checkbox',
+              value: selectedCategories, onChange: setSelectedCategories,
+              options: dynamicCategories.map(c => ({ value: c, label: c, count: countCat(c) })),
+            }] : []),
+            {
+              key: 'daytime', label: 'Daytime', type: 'checkbox',
+              value: selectedDaytimes, onChange: setSelectedDaytimes,
+              options: daytimeOptions.map(d => ({ value: d, label: d, count: countDaytime(d) })),
+            },
+            ...(dynamicRecommended.length > 0 ? [{
+              key: 'recommended', label: 'Recommended For', type: 'checkbox',
+              value: selectedRecommended, onChange: setSelectedRecommended,
+              options: dynamicRecommended.map(r => ({ value: r, label: r, count: countRec(r) })),
+            }] : []),
+            ...(dynamicSuppliers.length > 0 ? [{
+              key: 'supplier', label: 'Supplier', type: 'checkbox',
+              value: selectedSuppliers, onChange: setSelectedSuppliers,
+              options: dynamicSuppliers.map(s => ({ value: s, label: s, count: countSupplier(s) })),
+            }] : []),
+            ...(dynamicVoucherTypes.length > 0 ? [{
+              key: 'voucher', label: 'Voucher Validity', type: 'checkbox',
+              value: selectedVoucherTypes, onChange: setSelectedVoucherTypes,
+              options: dynamicVoucherTypes.map(v => ({ value: v, label: v, count: countVoucher(v) })),
+            }] : []),
+            ...(dynamicServices.length > 0 ? [{
+              key: 'services', label: 'Services', type: 'checkbox',
+              value: selectedServices, onChange: setSelectedServices,
+              options: dynamicServices.map(s => ({ value: s, label: s, count: countService(s) })),
+            }] : []),
+            {
+              key: 'price', label: 'Price Range (PKR)', type: 'range',
+              valueMin: priceMin, onChangeMin: setPriceMin,
+              valueMax: priceMax, onChangeMax: setPriceMax,
+              placeholderMin: String(priceBounds.min),
+              placeholderMax: String(priceBounds.max),
+            },
+          ]}
+        />
 
         <div className="flex-1 min-w-0">
           <div className="max-w-[1280px] mx-auto px-4 sm:px-6 py-6">
