@@ -35,6 +35,12 @@ html, body, #root {
 /* Fix filter sidebar — labels must NOT have min-height forcing right-alignment */
 label {
   min-height: unset !important;
+  text-align: left !important;
+}
+
+/* Ensure filter drawer content is always left-aligned */
+[role="dialog"] * {
+  text-align: left;
 }
 
 /* Filter FAB — above bottom navbar */
