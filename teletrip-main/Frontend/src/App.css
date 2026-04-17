@@ -10,6 +10,14 @@ body {
   min-height: 100vh;
 }
 
+/* ─── Global font size scale-up for search pages ─── */
+/* Bump all the tiny custom pixel sizes up by ~2px */
+.text-\[10px\] { font-size: 12px !important; }
+.text-\[11px\] { font-size: 13px !important; }
+.text-\[12px\] { font-size: 14px !important; }
+.text-\[13px\] { font-size: 14px !important; }
+.text-\[14px\] { font-size: 15px !important; }
+
 /* Cursor pointer for interactive elements */
 button,
 [role="button"],
