@@ -32,10 +32,8 @@ html, body, #root {
   }
 }
 
-/* Fix filter sidebar text alignment — prevent flex stretch from right-aligning text */
-.filter-label,
-label.flex {
-  align-items: center !important;
+/* Fix filter sidebar — labels must NOT have min-height forcing right-alignment */
+label {
   min-height: unset !important;
 }
 
