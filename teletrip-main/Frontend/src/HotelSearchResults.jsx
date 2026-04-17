@@ -1776,98 +1776,113 @@ if (children > 0 && childAges.length > 0) {
         return (
         <div className="fixed inset-0 z-[150] flex items-end sm:items-center justify-center" onClick={() => setSelectedHotel(null)}>
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
-          <div className="relative bg-white w-full sm:max-w-4xl sm:rounded-2xl max-h-[92vh] overflow-hidden flex flex-col shadow-2xl" onClick={(e) => e.stopPropagation()}>
+          <div className="relative bg-white w-full sm:max-w-4xl sm:rounded-2xl rounded-t-2xl max-h-[92vh] overflow-hidden flex flex-col shadow-2xl" onClick={(e) => e.stopPropagation()}>
 
-            {/* Sticky Header: Title + Price + Room Types */}
-            <div className="flex-shrink-0 border-b border-gray-100 bg-white px-5 py-3">
-              <div className="flex justify-between items-start gap-4 mb-2">
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between">
-                    <h2 className="text-[16px] font-semibold text-gray-900 truncate">{selectedHotel.name}</h2>
-                    <button onClick={() => setSelectedHotel(null)} className="ml-3 p-1.5 hover:bg-gray-100 rounded-full flex-shrink-0"><X className="w-4 h-4 text-gray-400" /></button>
-                  </div>
-                  <div className="flex items-center gap-2 mt-0.5">
+            {/* ── Sticky Header ── */}
+            <div className="flex-shrink-0 bg-white border-b border-gray-100 px-4 py-3">
+              <div className="flex items-start gap-3">
+                {/* Title + meta */}
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-[15px] font-bold text-gray-900 leading-tight truncate pr-2">{selectedHotel.name}</h2>
+                  <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
                     <div className="flex">{[...Array(selectedHotel.stars)].map((_, i) => <Star key={i} className="w-3 h-3 text-amber-400 fill-current" />)}</div>
                     <span className="text-[11px] text-gray-400">·</span>
-                    <span className="text-[11px] text-gray-500 flex items-center gap-0.5"><MapPin className="w-3 h-3" />{selectedHotel.address}</span>
+                    <span className="text-[11px] text-gray-500 flex items-center gap-0.5 truncate"><MapPin className="w-3 h-3 flex-shrink-0" />{selectedHotel.address}</span>
+                  </div>
+                  {/* Room type chips */}
+                  <div className="flex items-center gap-1 flex-wrap mt-1.5">
+                    <span className="text-[11px] text-gray-400 flex-shrink-0">{selectedHotel.rooms?.length || 0} types:</span>
+                    {uniqueRoomTypes.slice(0, 6).map((rt, i) => (
+                      <button key={i} onClick={() => { const el = document.getElementById(`room-${selectedHotel.rooms.find(r => r.name === rt)?.code}`); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }} className="text-[10px] px-2 py-0.5 bg-blue-50 text-blue-600 rounded-full font-medium hover:bg-blue-100 transition-colors flex-shrink-0 cursor-pointer">{rt}</button>
+                    ))}
+                    {uniqueRoomTypes.length > 6 && <span className="text-[10px] text-gray-400">+{uniqueRoomTypes.length - 6}</span>}
                   </div>
                 </div>
-                <div className="text-right flex-shrink-0">
-                  <div className="text-[10px] text-gray-400">from</div>
-                  <div className="text-lg font-bold text-blue-600 leading-tight">{formatPKR(parseFloat(selectedHotel.price)) || `${selectedHotel.currency} ${parseFloat(selectedHotel.price).toFixed(2)}`}</div>
-                  <div className="text-[10px] text-gray-400">{nights} {nights === 1 ? 'night' : 'nights'}</div>
+                {/* Price + Close */}
+                <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                  <button
+                    onClick={() => setSelectedHotel(null)}
+                    className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
+                    aria-label="Close"
+                  >
+                    <X className="w-4 h-4 text-gray-600" />
+                  </button>
+                  <div className="text-right">
+                    <div className="text-[10px] text-gray-400">from</div>
+                    <div className="text-base font-bold text-blue-600 leading-tight">{formatPKR(parseFloat(selectedHotel.price)) || `${selectedHotel.currency} ${parseFloat(selectedHotel.price).toFixed(0)}`}</div>
+                    <div className="text-[10px] text-gray-400">{nights} {nights === 1 ? 'night' : 'nights'}</div>
+                  </div>
                 </div>
-              </div>
-              {/* Room type tags */}
-              <div className="flex items-center gap-1.5 flex-wrap overflow-x-auto" style={{scrollbarWidth:'none'}}>
-                <span className="text-[11px] font-semibold text-gray-400 flex-shrink-0">{selectedHotel.rooms?.length || 0} types:</span>
-                {uniqueRoomTypes.slice(0, 8).map((rt, i) => (
-                  <button key={i} onClick={() => { const el = document.getElementById(`room-${selectedHotel.rooms.find(r => r.name === rt)?.code}`); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }} className="text-[10px] px-2 py-0.5 bg-blue-50 text-blue-600 rounded-full font-medium hover:bg-blue-100 transition-colors flex-shrink-0 cursor-pointer">{rt}</button>
-                ))}
-                {uniqueRoomTypes.length > 8 && <span className="text-[10px] text-gray-400">+{uniqueRoomTypes.length - 8}</span>}
-                {(selectedBoards.length > 0 || selectedCancellation || selectedPackaging || selectedPromos.length > 0 || priceMin || priceMax) && (
-                  <span className="text-[10px] px-2 py-0.5 bg-amber-50 text-amber-600 rounded-full font-medium flex-shrink-0">Filters active</span>
-                )}
               </div>
             </div>
 
-            {/* Rooms List — scrollable, starts with image collage */}
-            <div className="overflow-y-auto flex-1 px-5 py-3 space-y-3" style={{scrollbarWidth:'thin'}}>
+            {/* ── Scrollable body ── */}
+            <div className="overflow-y-auto flex-1" style={{scrollbarWidth:'thin'}}>
 
-              {/* Image collage — scrolls away */}
-              <div className="-mx-5 -mt-3 mb-3">
-                {modalImages.length >= 3 ? (
-                  <div className="grid grid-cols-4 grid-rows-2 gap-0.5 h-48 sm:h-56">
-                    <div className="col-span-2 row-span-2 cursor-pointer" onClick={() => openGallery(0)}>
-                      <img src={modalImages[0]} alt="" className="w-full h-full object-cover hover:brightness-90 transition-all" onError={(e) => e.target.src = 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg'} />
-                    </div>
-                    <div className="col-span-1 row-span-1 cursor-pointer" onClick={() => openGallery(1)}>
-                      <img src={modalImages[1]} alt="" className="w-full h-full object-cover hover:brightness-90 transition-all" onError={(e) => e.target.src = 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg'} />
-                    </div>
-                    <div className="col-span-1 row-span-1 cursor-pointer" onClick={() => openGallery(2)}>
-                      <img src={modalImages[2]} alt="" className="w-full h-full object-cover hover:brightness-90 transition-all" onError={(e) => e.target.src = 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg'} />
-                    </div>
-                    <div className="col-span-1 row-span-1 cursor-pointer" onClick={() => openGallery(3)}>
-                      <img src={modalImages[3] || modalImages[0]} alt="" className="w-full h-full object-cover hover:brightness-90 transition-all" onError={(e) => e.target.src = 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg'} />
-                    </div>
-                    <div className="col-span-1 row-span-1 relative cursor-pointer" onClick={() => openGallery(4)}>
-                      <img src={modalImages[4] || modalImages[1]} alt="" className="w-full h-full object-cover hover:brightness-90 transition-all" onError={(e) => e.target.src = 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg'} />
-                      {allImages.length > 5 && (
-                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center hover:bg-black/60 transition-colors"><span className="text-white text-sm font-medium">+{allImages.length - 5} photos</span></div>
-                      )}
-                    </div>
+              {/* Image collage — full width, no negative margins */}
+              {modalImages.length >= 3 ? (
+                <div className="grid grid-cols-4 grid-rows-2 gap-0.5 h-44 sm:h-56 w-full">
+                  <div className="col-span-2 row-span-2 cursor-pointer overflow-hidden" onClick={() => openGallery(0)}>
+                    <img src={modalImages[0]} alt="" className="w-full h-full object-cover hover:brightness-90 transition-all" onError={(e) => e.target.src = 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg'} />
                   </div>
-                ) : (
-                  <div className="h-48 sm:h-56 cursor-pointer" onClick={() => openGallery(0)}>
-                    <img src={modalImages[0] || 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg'} alt="" className="w-full h-full object-cover hover:brightness-90 transition-all" />
+                  <div className="col-span-1 row-span-1 cursor-pointer overflow-hidden" onClick={() => openGallery(1)}>
+                    <img src={modalImages[1]} alt="" className="w-full h-full object-cover hover:brightness-90 transition-all" onError={(e) => e.target.src = 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg'} />
+                  </div>
+                  <div className="col-span-1 row-span-1 cursor-pointer overflow-hidden" onClick={() => openGallery(2)}>
+                    <img src={modalImages[2]} alt="" className="w-full h-full object-cover hover:brightness-90 transition-all" onError={(e) => e.target.src = 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg'} />
+                  </div>
+                  <div className="col-span-1 row-span-1 cursor-pointer overflow-hidden" onClick={() => openGallery(3)}>
+                    <img src={modalImages[3] || modalImages[0]} alt="" className="w-full h-full object-cover hover:brightness-90 transition-all" onError={(e) => e.target.src = 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg'} />
+                  </div>
+                  <div className="col-span-1 row-span-1 relative cursor-pointer overflow-hidden" onClick={() => openGallery(4)}>
+                    <img src={modalImages[4] || modalImages[1]} alt="" className="w-full h-full object-cover hover:brightness-90 transition-all" onError={(e) => e.target.src = 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg'} />
+                    {allImages.length > 5 && (
+                      <div className="absolute inset-0 bg-black/50 flex items-center justify-center hover:bg-black/60 transition-colors">
+                        <span className="text-white text-sm font-semibold">+{allImages.length - 5} photos</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="h-44 sm:h-56 w-full cursor-pointer overflow-hidden" onClick={() => openGallery(0)}>
+                  <img src={modalImages[0] || 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg'} alt="" className="w-full h-full object-cover hover:brightness-90 transition-all" />
+                </div>
+              )}
+
+              {/* Hotel details */}
+              <div className="px-4 py-3 border-b border-gray-100 space-y-2">
+                {/* Amenities — clearly below image */}
+                {[...new Set(selectedHotel.amenities)].length > 0 && (
+                  <div className="flex gap-1.5 flex-wrap">
+                    {[...new Set(selectedHotel.amenities)].map((amenity, i) => {
+                      const ad = availableAmenities.find(a => a.id === amenity);
+                      if (!ad) return null;
+                      const Ic = ad.icon;
+                      return (
+                        <span key={i} className="inline-flex items-center gap-1 text-[11px] text-gray-600 bg-gray-100 px-2.5 py-1 rounded-full">
+                          <Ic className="w-3 h-3 text-blue-500" />{ad.name}
+                        </span>
+                      );
+                    })}
                   </div>
                 )}
-              </div>
-
-              {/* Hotel details — scrolls away */}
-              <div className="pb-3 border-b border-gray-100 space-y-2">
-                <div className="flex gap-2 flex-wrap">
-                  {[...new Set(selectedHotel.amenities)].map((amenity, i) => {
-                    const ad = availableAmenities.find(a => a.id === amenity);
-                    if (!ad) return null;
-                    const Ic = ad.icon;
-                    return <span key={i} className="inline-flex items-center gap-1 text-[11px] text-gray-500 bg-gray-50 px-2 py-0.5 rounded-full"><Ic className="w-3 h-3" />{ad.name}</span>;
-                  })}
-                </div>
-                <div className="flex items-center gap-3 text-[11px] text-gray-400 flex-wrap">
+                <div className="flex items-center gap-2 text-[11px] text-gray-400 flex-wrap">
                   <span>{searchParams.get("checkIn")} → {searchParams.get("checkOut")}</span>
                   <span>·</span>
                   <span>{searchParams.get("adults")} adults{searchParams.get("children") && searchParams.get("children") !== "0" ? `, ${searchParams.get("children")} children` : ''}</span>
                   <span>·</span>
                   <span>{searchParams.get("rooms")} room(s)</span>
                 </div>
-                <div className="text-[12px] text-gray-500 leading-relaxed">
+                <div className="text-[12px] text-gray-500">
                   {selectedHotel.category} · {selectedHotel.zone}
                   {selectedHotel.boards.length > 0 && <> · {selectedHotel.boards.join(', ')}</>}
                   {selectedHotel.hasFreeCancellation && <span className="text-green-600"> · Free cancellation available</span>}
                 </div>
               </div>
-              {selectedHotel.rooms && selectedHotel.rooms.length > 0 ? (
+
+              {/* Rooms list */}
+              <div className="px-4 py-3 space-y-3">
+                {selectedHotel.rooms && selectedHotel.rooms.length > 0 ? (
                 selectedHotel.rooms.map((room) => {
                   const filteredRates = (room.rates || []).filter(rate => {
                     if (selectedBoards.length > 0 && !selectedBoards.includes(rate.boardName)) return false;
@@ -1963,6 +1978,7 @@ if (children > 0 && childAges.length > 0) {
                 <div className="text-center py-8 text-gray-500 text-sm">No rooms available</div>
               )}
             </div>
+            </div>{/* end scrollable body */}
           </div>
         </div>
         );
