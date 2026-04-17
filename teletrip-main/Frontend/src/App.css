@@ -37,14 +37,16 @@ label {
   min-height: unset !important;
 }
 
-/* Filter labels with checkboxes must be full-width flex rows */
+/* Filter labels with checkboxes/radios: force correct layout */
 label:has(input[type="checkbox"]),
 label:has(input[type="radio"]) {
   display: flex !important;
   flex-direction: row !important;
   align-items: center !important;
+  justify-content: flex-start !important;
   width: 100% !important;
   min-height: unset !important;
+  box-sizing: border-box !important;
 }
 
 /* Filter FAB — above bottom navbar */

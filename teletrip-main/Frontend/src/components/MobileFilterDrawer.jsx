@@ -37,16 +37,16 @@ const MobileFilterDrawer = ({ isOpen, onClose, onApply, onReset, title = 'Filter
 
       {/* Drawer */}
       <div
-        className={`fixed bottom-0 left-0 right-0 z-[131] bg-white rounded-t-2xl max-h-[85vh] flex flex-col
+        className={`fixed bottom-0 left-0 right-0 z-[131] bg-white rounded-t-2xl max-h-[85vh]
           transform transition-transform duration-300 ease-out
           ${isOpen ? 'translate-y-0' : 'translate-y-full'}`}
-        style={{ width: '100%' }}
+        style={{ width: '100%', display: 'flex', flexDirection: 'column' }}
         role="dialog"
         aria-modal="true"
         aria-label={title}
       >
         {/* Sticky header */}
-        <div className="flex-shrink-0 px-4 pt-3 pb-2 border-b border-gray-100">
+        <div style={{ flexShrink: 0 }} className="px-4 pt-3 pb-2 border-b border-gray-100">
           {/* Drag handle */}
           <div className="w-10 h-1 bg-gray-300 rounded-full mx-auto mb-3" />
           <div className="flex items-center justify-between">
@@ -62,14 +62,14 @@ const MobileFilterDrawer = ({ isOpen, onClose, onApply, onReset, title = 'Filter
         </div>
 
         {/* Scrollable content */}
-        <div className="flex-1 overflow-y-auto min-w-0" style={{ width: '100%' }}>
-          <div className="px-4 py-2" style={{ width: '100%' }}>
+        <div style={{ flex: '1 1 auto', overflowY: 'auto', width: '100%' }}>
+          <div style={{ padding: '8px 16px', width: '100%', boxSizing: 'border-box' }}>
             {children}
           </div>
         </div>
 
         {/* Sticky footer */}
-        <div className="flex-shrink-0 border-t border-gray-100 px-4 py-3 flex gap-3">
+        <div style={{ flexShrink: 0 }} className="border-t border-gray-100 px-4 py-3 flex gap-3">
           <button
             onClick={onReset}
             className="flex-1 border border-gray-300 text-gray-700 rounded-lg py-2.5 font-medium text-sm hover:bg-gray-50 transition-colors"
