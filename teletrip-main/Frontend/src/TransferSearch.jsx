@@ -338,48 +338,49 @@ const TransferSearch = () => {
                     const durationInfo = details.find(d => /duration|journey|time|min/i.test(d.name || d.description || ''));
 
                     return (
-                      <div key={idx} className="bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-lg hover:border-gray-200 transition-all duration-200 flex flex-col sm:flex-row group">
-                        {/* Image */}
-                        <div className="sm:w-48 lg:w-56 relative overflow-hidden flex-shrink-0 bg-gradient-to-br from-blue-50 to-blue-100 h-36 sm:h-auto">
-                          {t.images?.[0] ? (
-                            <img src={t.images[0]} alt={t.vehicle} className="w-full h-full object-cover" onError={(e) => { e.target.style.display='none'; }} />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center"><Car className="w-10 h-10 text-blue-200" /></div>
-                          )}
-                          <span className={`absolute top-2 left-2 text-[10px] px-2 py-0.5 rounded font-medium ${t.transferType === 'PRIVATE' ? 'bg-blue-600/90 text-white' : 'bg-amber-500/90 text-white'}`}>{typeLabel}</span>
-                        </div>
-                        {/* Content */}
-                        <div className="flex-1 p-3 flex flex-col justify-between min-w-0">
-                          <div>
-                            <div className="flex justify-between items-start gap-2 mb-1.5">
+                      <div key={idx} className="bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-md transition-all duration-200">
+                        {/* Card: horizontal on all sizes */}
+                        <div className="flex gap-0">
+                          {/* Image — fixed width */}
+                          <div className="w-28 sm:w-40 relative flex-shrink-0 bg-gradient-to-br from-blue-50 to-blue-100">
+                            {t.images?.[0] ? (
+                              <img src={t.images[0]} alt={t.vehicle} className="w-full h-full object-cover" style={{minHeight:100}} onError={(e) => { e.target.style.display='none'; }} />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center" style={{minHeight:100}}><Car className="w-8 h-8 text-blue-200" /></div>
+                            )}
+                            <span className={`absolute top-2 left-2 text-[9px] px-1.5 py-0.5 rounded font-semibold ${t.transferType === 'PRIVATE' ? 'bg-blue-600 text-white' : 'bg-amber-500 text-white'}`}>{typeLabel}</span>
+                          </div>
+                          {/* Content */}
+                          <div className="flex-1 p-2.5 min-w-0 flex flex-col justify-between">
+                            {/* Top: name + price */}
+                            <div className="flex items-start justify-between gap-1 mb-1">
                               <div className="min-w-0 flex-1">
-                                <h3 className="text-[14px] font-semibold text-gray-900 leading-tight">{t.vehicle || 'Transfer Vehicle'}</h3>
-                                <p className="text-[12px] text-gray-500">{t.category || 'Standard'}</p>
+                                <h3 className="text-[13px] font-semibold text-gray-900 leading-tight truncate">{t.vehicle || 'Transfer'}</h3>
+                                <p className="text-[11px] text-gray-400">{t.category}</p>
                               </div>
-                              <div className="text-right flex-shrink-0">
-                                <div className="text-base font-bold text-blue-600 leading-tight">{pkrPrice || '...'}</div>
-                                <div className="text-[10px] text-gray-400">total</div>
+                              <div className="text-right flex-shrink-0 ml-1">
+                                <div className="text-[13px] font-bold text-blue-600 leading-tight whitespace-nowrap">{pkrPrice || '...'}</div>
+                                <div className="text-[9px] text-gray-400">total</div>
                               </div>
                             </div>
+                            {/* Route */}
                             {searchInfo && (
-                              <div className="flex items-center text-gray-400 text-[11px] mb-1.5">
-                                <MapPin className="w-3 h-3 mr-0.5 flex-shrink-0" />
-                                <span className="truncate">{searchInfo.pickupName || searchInfo.fromCode} → {searchInfo.dropoffName || searchInfo.toCode}</span>
+                              <div className="text-[10px] text-gray-400 mb-1 truncate">
+                                {searchInfo.pickupName || searchInfo.fromCode} → {searchInfo.dropoffName || searchInfo.toCode}
                               </div>
                             )}
-                            <div className="flex gap-1 flex-wrap">
-                              <span className="text-[10px] px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded font-medium">{t.minPaxCapacity || 1}–{t.maxPaxCapacity || '?'} pax</span>
-                              {durationInfo && <span className="text-[10px] px-1.5 py-0.5 bg-gray-50 text-gray-500 rounded">{durationInfo.name || durationInfo.description}</span>}
+                            {/* Tags */}
+                            <div className="flex gap-1 flex-wrap mb-1.5">
+                              <span className="text-[9px] px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded font-medium whitespace-nowrap">{t.minPaxCapacity || 1}–{t.maxPaxCapacity || '?'} pax</span>
                               {t.cancellationPolicies?.length > 0 && (
-                                <span className={`text-[10px] px-1.5 py-0.5 rounded ${t.cancellationPolicies[0]?.amount === 0 ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-500'}`}>
+                                <span className={`text-[9px] px-1.5 py-0.5 rounded whitespace-nowrap ${t.cancellationPolicies[0]?.amount === 0 ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-500'}`}>
                                   {t.cancellationPolicies[0]?.amount === 0 ? 'Free cancel' : 'Cancel fee'}
                                 </span>
                               )}
                             </div>
-                          </div>
-                          <div className="flex items-center justify-end mt-2 pt-2 border-t border-gray-50">
-                            <button onClick={() => setSelectedTransfer(t)} className="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-[13px] font-medium inline-flex items-center justify-center gap-1.5 cursor-pointer">
-                              <Eye className="w-3.5 h-3.5" /> View Details
+                            {/* CTA */}
+                            <button onClick={() => setSelectedTransfer(t)} className="w-full py-1.5 bg-blue-600 text-white rounded-lg text-[11px] font-semibold inline-flex items-center justify-center gap-1 cursor-pointer hover:bg-blue-700 transition-colors" style={{minHeight:'unset'}}>
+                              <Eye className="w-3 h-3" /> View Details
                             </button>
                           </div>
                         </div>
@@ -392,7 +393,7 @@ const TransferSearch = () => {
         </div>
       {selectedTransfer && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-end sm:items-center justify-center" onClick={() => setSelectedTransfer(null)}>
-          <div className="relative bg-white w-full sm:max-w-2xl sm:rounded-2xl rounded-t-2xl max-h-[92vh] flex flex-col shadow-2xl" onClick={(e) => e.stopPropagation()}>
+          <div className="relative bg-white w-full sm:max-w-2xl sm:rounded-2xl rounded-t-2xl flex flex-col shadow-2xl" style={{maxHeight:'92vh'}} onClick={(e) => e.stopPropagation()}>
 
             {/* ── Sticky Header ── */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 flex-shrink-0">
@@ -404,18 +405,18 @@ const TransferSearch = () => {
             </div>
 
             {/* ── Scrollable body ── */}
-            <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3" style={{scrollbarWidth:'thin'}}>
+            <div className="overflow-y-auto px-4 py-3 space-y-3" style={{flex:'1 1 auto', minHeight:0, scrollbarWidth:'thin'}}>
 
               {/* Route */}
               {searchInfo && (
                 <div className="bg-blue-50 rounded-xl p-3">
-                  <div className="flex items-center gap-2 mb-2">
+                  <div className="flex items-center gap-2 mb-1.5">
                     <span className="text-[11px] text-blue-600 font-semibold">Transfer Route</span>
                     <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${searchInfo.tripType === 'round_trip' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-600'}`}>
                       {searchInfo.tripType === 'round_trip' ? 'Round Trip' : 'One Way'}
                     </span>
                   </div>
-                  <div className="flex items-start gap-2 text-[13px] text-gray-800 font-medium mb-1.5">
+                  <div className="flex items-start gap-2 text-[13px] text-gray-800 font-medium mb-1">
                     <span className="flex-1 min-w-0">{searchInfo.pickupName || searchInfo.fromCode}</span>
                     <ArrowRight className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" />
                     <span className="flex-1 min-w-0 text-right">{searchInfo.dropoffName || searchInfo.toCode}</span>
@@ -428,31 +429,27 @@ const TransferSearch = () => {
                 </div>
               )}
 
-              {/* Stats — 2x2 grid on mobile */}
-              <div className="grid grid-cols-2 gap-2">
-                <div className="bg-gray-50 rounded-xl p-3 flex items-center gap-3">
-                  <Users className="w-5 h-5 text-blue-500 flex-shrink-0" />
-                  <div><div className="text-[13px] font-semibold text-gray-800">{selectedTransfer.minPaxCapacity || 1}–{selectedTransfer.maxPaxCapacity || '?'}</div><div className="text-[10px] text-gray-400">Passengers</div></div>
-                </div>
-                <div className="bg-gray-50 rounded-xl p-3 flex items-center gap-3">
-                  <Car className="w-5 h-5 text-green-500 flex-shrink-0" />
-                  <div><div className="text-[13px] font-semibold text-gray-800">{selectedTransfer.transferType}</div><div className="text-[10px] text-gray-400">Type</div></div>
-                </div>
-                <div className="bg-gray-50 rounded-xl p-3 flex items-center gap-3">
-                  <Shield className="w-5 h-5 text-purple-500 flex-shrink-0" />
-                  <div><div className="text-[13px] font-semibold text-gray-800">{selectedTransfer.cancellationPolicies?.[0]?.amount === 0 ? 'Free' : 'Fee'}</div><div className="text-[10px] text-gray-400">Cancellation</div></div>
-                </div>
-                <div className="bg-gray-50 rounded-xl p-3 flex items-center gap-3">
-                  <Briefcase className="w-5 h-5 text-amber-500 flex-shrink-0" />
-                  <div><div className="text-[13px] font-semibold text-gray-800">{selectedTransfer.direction || 'ONE WAY'}</div><div className="text-[10px] text-gray-400">Direction</div></div>
-                </div>
+              {/* Stats — minimalist 4-item row */}
+              <div className="grid grid-cols-4 gap-2">
+                {[
+                  { icon: Users, color: '#3b82f6', value: `${selectedTransfer.minPaxCapacity || 1}–${selectedTransfer.maxPaxCapacity || '?'}`, label: 'Passengers' },
+                  { icon: Car, color: '#22c55e', value: selectedTransfer.transferType || '—', label: 'Type' },
+                  { icon: Shield, color: '#a855f7', value: selectedTransfer.cancellationPolicies?.[0]?.amount === 0 ? 'Free' : 'Fee', label: 'Cancellation' },
+                  { icon: Briefcase, color: '#f59e0b', value: selectedTransfer.direction || 'ONE WAY', label: 'Direction' },
+                ].map(({ icon: Icon, color, value, label }) => (
+                  <div key={label} className="bg-gray-50 rounded-xl p-2.5 flex flex-col items-center text-center gap-1">
+                    <Icon size={16} style={{color, flexShrink:0}} />
+                    <div className="text-[11px] font-semibold text-gray-800 leading-tight">{value}</div>
+                    <div className="text-[9px] text-gray-400 leading-tight">{label}</div>
+                  </div>
+                ))}
               </div>
 
               {/* Service Details */}
               {selectedTransfer.transferDetails?.length > 0 && (
                 <div>
-                  <h4 className="text-[13px] font-semibold text-gray-800 mb-2">Service Details</h4>
-                  <div className="space-y-1.5">
+                  <p className="text-[12px] font-semibold text-gray-700 mb-1.5">Service Details</p>
+                  <div className="space-y-1">
                     {selectedTransfer.transferDetails.map((d, i) => (
                       <div key={i} className="flex items-start gap-2 text-[12px]">
                         <CheckCircle className="w-3.5 h-3.5 text-green-500 mt-0.5 flex-shrink-0" />
@@ -466,12 +463,12 @@ const TransferSearch = () => {
               {/* Remarks */}
               {selectedTransfer.remarks?.length > 0 && (
                 <div>
-                  <h4 className="text-[13px] font-semibold text-gray-800 mb-2">Important Information</h4>
-                  <div className="space-y-1.5">
+                  <p className="text-[12px] font-semibold text-gray-700 mb-1.5">Important Notes</p>
+                  <div className="space-y-1">
                     {selectedTransfer.remarks.map((r, i) => (
-                      <div key={i} className={`flex items-start gap-2 text-[12px] ${r.mandatory ? 'text-red-600' : 'text-gray-600'}`}>
-                        <Info className={`w-3.5 h-3.5 mt-0.5 flex-shrink-0 ${r.mandatory ? 'text-red-400' : 'text-gray-400'}`} />
-                        <span>{r.description}{r.mandatory && <span className="text-[10px] ml-1 text-red-400">(required)</span>}</span>
+                      <div key={i} className={`flex items-start gap-2 text-[11px] ${r.mandatory ? 'text-red-600' : 'text-gray-500'}`}>
+                        <Info className={`w-3 h-3 mt-0.5 flex-shrink-0 ${r.mandatory ? 'text-red-400' : 'text-gray-400'}`} />
+                        <span>{r.description}</span>
                       </div>
                     ))}
                   </div>
@@ -480,56 +477,46 @@ const TransferSearch = () => {
 
               {/* Cancellation Policy */}
               {selectedTransfer.cancellationPolicies?.length > 0 && (
-                <div>
-                  <h4 className="text-[13px] font-semibold text-gray-800 mb-2">Cancellation Policy</h4>
-                  <div className="space-y-1.5">
-                    {selectedTransfer.cancellationPolicies.map((p, i) => (
-                      <div key={i} className="text-[12px] text-gray-600 flex items-center gap-2">
-                        <span className={`w-2 h-2 rounded-full flex-shrink-0 ${parseFloat(p.amount) === 0 ? 'bg-green-500' : 'bg-red-500'}`} />
-                        <span className="font-medium">{parseFloat(p.amount) === 0 ? 'Free cancellation' : `${formatPKR(parseFloat(p.amount)) || '...'} fee`}</span>
-                        {(p.from || p.dateFrom) && <span className="text-gray-400 text-[11px]">from {new Date(p.from || p.dateFrom).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}</span>}
-                      </div>
-                    ))}
-                  </div>
+                <div className="flex items-center gap-2 text-[12px]">
+                  <span className={`w-2 h-2 rounded-full flex-shrink-0 ${parseFloat(selectedTransfer.cancellationPolicies[0]?.amount) === 0 ? 'bg-green-500' : 'bg-red-500'}`} />
+                  <span className="text-gray-600 font-medium">
+                    {parseFloat(selectedTransfer.cancellationPolicies[0]?.amount) === 0 ? 'Free cancellation available' : `Cancellation fee applies`}
+                  </span>
                 </div>
               )}
 
               {/* Flight Details */}
               {isAirportRoute && (
                 <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 space-y-3">
-                  <div className="flex items-start gap-2">
-                    <Plane className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <h4 className="text-[13px] font-semibold text-amber-800">Flight Details Required</h4>
-                      <p className="text-[11px] text-amber-700 mt-0.5">Required to confirm your transfer. Inaccurate info may result in cancellation fees.</p>
-                    </div>
+                  <div className="flex items-center gap-2">
+                    <Plane className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                    <p className="text-[12px] font-semibold text-amber-800">Flight Details Required</p>
                   </div>
                   {/* Outbound */}
-                  <div className="border-t border-amber-200 pt-3">
-                    <p className="text-[11px] font-semibold text-gray-700 mb-2">{searchInfo?.pickupName || searchInfo?.fromCode} → {searchInfo?.dropoffName || searchInfo?.toCode}</p>
+                  <div className="border-t border-amber-200 pt-2.5">
+                    <p className="text-[11px] font-medium text-gray-600 mb-2">{searchInfo?.pickupName || searchInfo?.fromCode} → {searchInfo?.dropoffName || searchInfo?.toCode}</p>
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <label className="block text-[11px] font-medium text-gray-700 mb-1">Flight Code *</label>
-                        <input type="text" value={flightCode} onChange={(e) => setFlightCode(e.target.value.toUpperCase().slice(0, 7))} placeholder="e.g. EK203" maxLength={7} className="w-full px-3 py-2 text-[13px] border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+                        <label className="block text-[10px] font-medium text-gray-600 mb-1">Flight Code *</label>
+                        <input type="text" value={flightCode} onChange={(e) => setFlightCode(e.target.value.toUpperCase().slice(0, 7))} placeholder="e.g. EK203" maxLength={7} className="w-full px-2.5 py-2 text-[12px] border border-gray-300 rounded-lg outline-none focus:ring-1 focus:ring-blue-500" />
                       </div>
                       <div>
-                        <label className="block text-[11px] font-medium text-gray-700 mb-1">{isDeparture ? 'Departure' : 'Arrival'} Time *</label>
-                        <input type="time" value={flightTime} onChange={(e) => setFlightTime(e.target.value)} className="w-full px-3 py-2 text-[13px] border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+                        <label className="block text-[10px] font-medium text-gray-600 mb-1">{isDeparture ? 'Departure' : 'Arrival'} Time *</label>
+                        <input type="time" value={flightTime} onChange={(e) => setFlightTime(e.target.value)} className="w-full px-2.5 py-2 text-[12px] border border-gray-300 rounded-lg outline-none focus:ring-1 focus:ring-blue-500" />
                       </div>
                     </div>
                   </div>
-                  {/* Return */}
                   {searchInfo?.tripType === 'round_trip' && (
-                    <div className="border-t border-amber-200 pt-3">
-                      <p className="text-[11px] font-semibold text-gray-700 mb-2">{searchInfo?.dropoffName || searchInfo?.toCode} → {searchInfo?.pickupName || searchInfo?.fromCode}</p>
+                    <div className="border-t border-amber-200 pt-2.5">
+                      <p className="text-[11px] font-medium text-gray-600 mb-2">{searchInfo?.dropoffName || searchInfo?.toCode} → {searchInfo?.pickupName || searchInfo?.fromCode}</p>
                       <div className="grid grid-cols-2 gap-2">
                         <div>
-                          <label className="block text-[11px] font-medium text-gray-700 mb-1">Flight Code *</label>
-                          <input type="text" value={returnFlightCode} onChange={(e) => setReturnFlightCode(e.target.value.toUpperCase().slice(0, 7))} placeholder="e.g. EK204" maxLength={7} className="w-full px-3 py-2 text-[13px] border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+                          <label className="block text-[10px] font-medium text-gray-600 mb-1">Flight Code *</label>
+                          <input type="text" value={returnFlightCode} onChange={(e) => setReturnFlightCode(e.target.value.toUpperCase().slice(0, 7))} placeholder="e.g. EK204" maxLength={7} className="w-full px-2.5 py-2 text-[12px] border border-gray-300 rounded-lg outline-none focus:ring-1 focus:ring-blue-500" />
                         </div>
                         <div>
-                          <label className="block text-[11px] font-medium text-gray-700 mb-1">Departure Time *</label>
-                          <input type="time" value={returnFlightTime} onChange={(e) => setReturnFlightTime(e.target.value)} className="w-full px-3 py-2 text-[13px] border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
+                          <label className="block text-[10px] font-medium text-gray-600 mb-1">Departure Time *</label>
+                          <input type="time" value={returnFlightTime} onChange={(e) => setReturnFlightTime(e.target.value)} className="w-full px-2.5 py-2 text-[12px] border border-gray-300 rounded-lg outline-none focus:ring-1 focus:ring-blue-500" />
                         </div>
                       </div>
                     </div>
@@ -539,15 +526,16 @@ const TransferSearch = () => {
             </div>
 
             {/* ── Sticky Footer: Price + Add to Cart ── */}
-            <div className="flex-shrink-0 border-t border-gray-100 px-4 py-3 bg-white flex items-center justify-between gap-3">
+            <div style={{flexShrink:0}} className="border-t border-gray-100 px-4 py-3 bg-white flex items-center justify-between gap-3">
               <div>
-                <div className="text-[11px] text-gray-400">Total price</div>
-                <div className="text-[18px] font-bold text-blue-600 leading-tight">{formatPKR(parseFloat(selectedTransfer.price?.amount || 0)) || '...'}</div>
+                <div className="text-[10px] text-gray-400 uppercase tracking-wide">Total</div>
+                <div className="text-[17px] font-bold text-blue-600 leading-tight">{formatPKR(parseFloat(selectedTransfer.price?.amount || 0)) || '...'}</div>
               </div>
               <button
                 onClick={() => handleAddToCart(selectedTransfer)}
                 disabled={!flightCode.trim() || !flightTime || (searchInfo?.tripType === 'round_trip' && (!returnFlightCode.trim() || !returnFlightTime))}
-                className="flex-1 max-w-[200px] inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-semibold text-[14px] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{minHeight:'unset'}}
+                className="no-min-h flex-1 max-w-[180px] inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-semibold text-[13px] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <ShoppingCart className="w-4 h-4" /> Add to Cart
               </button>
