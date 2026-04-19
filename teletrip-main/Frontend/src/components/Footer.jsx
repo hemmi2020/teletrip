@@ -40,13 +40,13 @@ const Footer = () => {
             </h5>
             <ul className="space-y-3">
               {[
-                { text: 'Home', href: '#home' },
-                { text: 'Contact Us', href: '#contact' },
-                { text: 'Reviews', href: '#reviews' },
-                { text: 'FAQs', href: '#faqs' },
-                { text: 'About Us', href: '#about' },
-                { text: 'Privacy Policy', href: '#privacy' },
-                { text: 'Terms & Conditions', href: '#terms' }
+                { text: 'Home', href: '/home' },
+                { text: 'Contact Us', href: '/contact' },
+                { text: 'About Us', href: '/about' },
+                { text: 'FAQs', href: '/faqs' },
+                { text: 'Privacy Policy', href: '/privacy-policy' },
+                { text: 'Terms & Conditions', href: '/terms' },
+                { text: 'Cancellation Policy', href: '/cancellation-policy' }
               ].map((link, index) => (
                 <li key={index} className="group">
                   <a 
