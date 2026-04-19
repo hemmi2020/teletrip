@@ -156,19 +156,15 @@ const Header = () => {
         </div>
       </header>
 
-      {/* Mobile Menu */}
-      <div className={`fixed inset-0 z-[99] flex flex-col transition-all duration-300 md:hidden ${isMobileMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`} style={{ background: 'rgba(15,23,42,0.97)', backdropFilter: 'blur(20px)' }}>
-        <div className="flex items-center justify-between px-3 pt-3 flex-shrink-0">
-          <div className="flex items-center justify-between w-full px-4 py-2" style={{ background: '#ffffff', borderRadius: 50, border: '1px solid rgba(0,0,0,0.08)' }}>
-            <NavLink to="/home" className="flex-shrink-0 pl-1">
-              <img src={logo} alt="Telitrip" className="h-10 w-auto object-contain" />
-            </NavLink>
-            <button onClick={() => setIsMobileMenuOpen(false)} className="flex items-center justify-center rounded-full" style={{ width: 38, height: 38, minHeight: 'unset', border: '2px solid #f59e0b', background: 'rgba(245,158,11,0.08)' }}>
-              <X className="w-4 h-4 text-gray-800" />
-            </button>
-          </div>
+      {/* Mobile Menu — z-[101] to sit above header pill */}
+      <div className={`fixed inset-0 z-[101] flex flex-col transition-all duration-300 md:hidden ${isMobileMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`} style={{ background: 'rgba(15,23,42,0.97)', backdropFilter: 'blur(20px)' }}>
+        {/* Close button — top right, no duplicate pill */}
+        <div className="flex justify-end px-5 pt-5 flex-shrink-0">
+          <button onClick={() => setIsMobileMenuOpen(false)} className="flex items-center justify-center rounded-full" style={{ width: 40, height: 40, minHeight: 'unset', border: '2px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.08)' }}>
+            <X className="w-4.5 h-4.5 text-white" />
+          </button>
         </div>
-        <nav className="flex-1 overflow-y-auto px-6 py-8 space-y-1">
+        <nav className="flex-1 overflow-y-auto px-6 pt-6 pb-4 space-y-1">
           {navLinks.map(({ label, to }) => (
             <NavLink key={to} to={to} onClick={() => setIsMobileMenuOpen(false)}
               className={({ isActive }) => `flex items-center px-5 py-4 rounded-2xl text-[15px] font-semibold tracking-wide uppercase transition-all ${isActive ? 'bg-white/15 text-white' : 'text-white/70 hover:text-white hover:bg-white/10'}`}
