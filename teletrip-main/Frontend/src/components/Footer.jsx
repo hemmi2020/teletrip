@@ -6,18 +6,15 @@ import logo from '../images/Telitrip-Logo-1.png';
 const Footer = () => {
   const quickLinks = [
     { text: 'Home', href: '/home' },
-    { text: 'Hotels', href: '/hotel-search-results' },
-    { text: 'Transfers', href: '/transfers' },
-    { text: 'Experiences', href: '/activity-search-results' },
     { text: 'About Us', href: '/about' },
     { text: 'Contact', href: '/contact' },
+    { text: 'FAQs', href: '/faqs' },
   ];
 
   const legalLinks = [
     { text: 'Privacy Policy', href: '/privacy-policy' },
     { text: 'Terms & Conditions', href: '/terms' },
     { text: 'Cancellation Policy', href: '/cancellation-policy' },
-    { text: 'FAQs', href: '/faqs' },
   ];
 
   return (
@@ -38,17 +35,20 @@ const Footer = () => {
             <p className="text-gray-500 text-sm leading-relaxed mb-5 max-w-xs">
               Compare hotels, transfers and experiences across the globe. Best rates, guaranteed.
             </p>
+            {/* Social — Facebook + Instagram only */}
             <div className="flex items-center gap-3">
-              {['facebook', 'twitter', 'instagram', 'linkedin'].map((s) => (
-                <a key={s} href={`#${s}`} className="w-9 h-9 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-400 hover:text-blue-600 hover:border-blue-200 hover:shadow-sm transition-all duration-200" style={{ minHeight: 'unset' }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                    {s === 'facebook' && <path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z" />}
-                    {s === 'twitter' && <path d="M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z" />}
-                    {s === 'instagram' && <><rect x="2" y="2" width="20" height="20" rx="5" ry="5" fill="none" stroke="currentColor" strokeWidth="2" /><circle cx="12" cy="12" r="5" fill="none" stroke="currentColor" strokeWidth="2" /><circle cx="17.5" cy="6.5" r="1.5" /></>}
-                    {s === 'linkedin' && <path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2zM4 2a2 2 0 110 4 2 2 0 010-4z" />}
-                  </svg>
-                </a>
-              ))}
+              <a href="#facebook" className="w-9 h-9 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-400 hover:text-blue-600 hover:border-blue-200 hover:shadow-sm transition-all duration-200" style={{ minHeight: 'unset' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z" />
+                </svg>
+              </a>
+              <a href="#instagram" className="w-9 h-9 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-400 hover:text-pink-500 hover:border-pink-200 hover:shadow-sm transition-all duration-200" style={{ minHeight: 'unset' }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+                  <circle cx="12" cy="12" r="5" />
+                  <circle cx="17.5" cy="6.5" r="1.5" fill="currentColor" stroke="none" />
+                </svg>
+              </a>
             </div>
           </div>
 
@@ -99,10 +99,10 @@ const Footer = () => {
         {/* Divider */}
         <div className="w-full h-px bg-gray-200 mb-6" />
 
-        {/* Copyright — pill style */}
+        {/* Copyright — pill style, Team Rhino on same line */}
         <div className="flex justify-center">
           <div
-            className="inline-flex items-center gap-2 px-6 py-2.5 text-[12px] text-gray-500"
+            className="inline-flex items-center gap-1.5 px-6 py-2.5 text-[12px] text-gray-500 flex-wrap justify-center"
             style={{
               background: '#ffffff',
               borderRadius: 50,
@@ -116,9 +116,7 @@ const Footer = () => {
             <span>All rights reserved</span>
             <span className="text-gray-300">|</span>
             <span>Developed by</span>
-            <a href="https://www.tmrhino.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-700 font-medium transition-colors">
-              Team Rhino
-            </a>
+            <a href="https://www.tmrhino.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-700 font-medium transition-colors">Team Rhino</a>
           </div>
         </div>
       </div>

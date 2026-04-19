@@ -59,11 +59,9 @@ const Header = () => {
 
   const navLinks = [
     { label: 'Home', to: '/home' },
-    { label: 'Hotels', to: '/hotel-search-results' },
-    { label: 'Transfers', to: '/transfers' },
-    { label: 'Experiences', to: '/activity-search-results' },
     { label: 'About', to: '/about' },
     { label: 'Contact', to: '/contact' },
+    { label: 'FAQs', to: '/faqs' },
   ];
 
   // Pill style: solid white at top, frosted glass when scrolled
@@ -120,13 +118,11 @@ const Header = () => {
 
           {/* Desktop Right */}
           <div className="hidden md:flex items-center gap-2 flex-shrink-0">
-            {user?.email ? (
+            {user?.email && (
               <>
                 <button onClick={handleAccountClick} className="px-4 py-1.5 text-[11px] font-semibold tracking-widest uppercase text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-all" style={{ minHeight: 'unset', letterSpacing: '0.08em' }}>Account</button>
                 <button onClick={handleLogout} className="px-4 py-1.5 text-[11px] font-semibold tracking-widest uppercase text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-all" style={{ minHeight: 'unset', letterSpacing: '0.08em' }}>Logout</button>
               </>
-            ) : (
-              <button onClick={handleAccountClick} className="px-4 py-1.5 text-[11px] font-semibold tracking-widest uppercase text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-all" style={{ minHeight: 'unset', letterSpacing: '0.08em' }}>Contact</button>
             )}
             <button onClick={() => setIsCartOpen(true)} className="relative flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 transition-all" style={{ width: 36, height: 36, minHeight: 'unset' }}>
               <ShoppingCart className="w-4 h-4 text-gray-700" />
