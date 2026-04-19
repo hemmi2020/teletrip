@@ -8,9 +8,9 @@ import { useCurrency } from './context/CurrencyContext';
 import {
   MapPin, Calendar, Users, ArrowRight, AlertTriangle, SearchX, Car, Clock,
   Filter, ChevronDown, ChevronRight, X, ShoppingCart, CheckCircle, Plane,
-  Briefcase, Shield, Info, ChevronLeft, Eye, Luggage
+  Briefcase, Shield, Info, ChevronLeft, Eye, Luggage, SlidersHorizontal
 } from 'lucide-react';
-import MobileFilters from './components/MobileFilters';
+import MobileFilterDrawer from './components/MobileFilterDrawer';
 
 const TransferSearch = () => {
   const navigate = useNavigate();
@@ -166,10 +166,6 @@ const TransferSearch = () => {
       )}
 
       <div className="pt-16 sm:pt-20 min-h-screen bg-gray-50 flex">
-        {/* Mobile overlay backdrop */}
-        {showMobileFilters && (
-          <div className="fixed inset-0 bg-black/40 z-[120] lg:hidden" onClick={() => setShowMobileFilters(false)} />
-        )}
 
         {/* Sidebar — desktop only */}
         <div className={`
@@ -197,60 +193,71 @@ const TransferSearch = () => {
         {/* Mobile Filter FAB */}
         <button
           onClick={() => setShowMobileFilters(true)}
-          style={{
-            position: 'fixed', bottom: 80, right: 16, zIndex: 115,
-            alignItems: 'center', gap: 8,
-            backgroundColor: '#2563eb', color: '#fff',
-            padding: '10px 18px', borderRadius: 99,
-            boxShadow: '0 4px 16px rgba(37,99,235,0.4)',
-            border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 14,
-          }}
-          className="lg:hidden flex"
+          className="fixed bottom-20 right-4 z-50 lg:hidden flex items-center gap-2 bg-blue-600 text-white px-4 py-2.5 rounded-full shadow-lg hover:bg-blue-700 transition-colors font-semibold text-sm"
+          aria-label="Open filters"
         >
-          <Filter className="w-4 h-4" />
+          <SlidersHorizontal className="w-4 h-4" />
           <span>Filters</span>
           {(selectedTypes.length + selectedCategories.length + (priceMin ? 1 : 0) + (priceMax ? 1 : 0) + (minCapacity ? 1 : 0)) > 0 && (
-            <span style={{
-              backgroundColor: '#fff', color: '#2563eb', fontSize: 11,
-              fontWeight: 700, borderRadius: 99, width: 20, height: 20,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
+            <span className="bg-white text-blue-600 text-[11px] font-bold rounded-full w-5 h-5 flex items-center justify-center">
               {selectedTypes.length + selectedCategories.length + (priceMin ? 1 : 0) + (priceMax ? 1 : 0) + (minCapacity ? 1 : 0)}
             </span>
           )}
         </button>
 
-        {/* Mobile Filters Sheet */}
-        <MobileFilters
+        {/* Mobile Filter Drawer */}
+        <MobileFilterDrawer
           isOpen={showMobileFilters}
           onClose={() => setShowMobileFilters(false)}
-          onReset={clearFilters}
-          activeCount={selectedTypes.length + selectedCategories.length + (priceMin ? 1 : 0) + (priceMax ? 1 : 0) + (minCapacity ? 1 : 0)}
-          sections={[
-            ...(dynamicTypes.length > 0 ? [{
-              key: 'type', label: 'Transfer Type', type: 'checkbox',
-              value: selectedTypes, onChange: setSelectedTypes,
-              options: dynamicTypes.map(([t, c]) => ({ value: t, label: t, count: c })),
-            }] : []),
-            ...(dynamicCategories.length > 0 ? [{
-              key: 'category', label: 'Vehicle Category', type: 'checkbox',
-              value: selectedCategories, onChange: setSelectedCategories,
-              options: dynamicCategories.map(([cat, c]) => ({ value: cat, label: cat, count: c })),
-            }] : []),
-            {
-              key: 'price', label: 'Price Range (PKR)', type: 'range',
-              valueMin: priceMin, onChangeMin: setPriceMin,
-              valueMax: priceMax, onChangeMax: setPriceMax,
-              placeholderMin: String(priceBounds.min),
-              placeholderMax: String(priceBounds.max),
-            },
-            {
-              key: 'capacity', label: 'Min Passengers', type: 'search',
-              placeholder: 'Any',
-              value: minCapacity, onChange: setMinCapacity,
-            },
-          ]}
-        />
+          onApply={() => setShowMobileFilters(false)}
+          onReset={() => { clearFilters(); setShowMobileFilters(false); }}
+          title="Filters"
+        >
+          {/* Transfer Type */}
+          {dynamicTypes.length > 0 && (
+            <div className="py-3 border-b border-gray-50">
+              <span className="text-[13px] font-semibold text-gray-800 block mb-2">Transfer Type</span>
+              <div className="space-y-1.5">
+                {dynamicTypes.map(([type, count]) => (
+                  <label key={type} className="flex items-center gap-2.5 py-0.5 cursor-pointer group">
+                    <input type="checkbox" checked={selectedTypes.includes(type)} onChange={() => toggleFilter(selectedTypes, setSelectedTypes, type)} className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                    <span className="text-sm text-gray-600 flex-1">{type}</span>
+                    <span className="text-[11px] text-gray-400">{count}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+          {/* Vehicle Category */}
+          {dynamicCategories.length > 0 && (
+            <div className="py-3 border-b border-gray-50">
+              <span className="text-[13px] font-semibold text-gray-800 block mb-2">Vehicle Category</span>
+              <div className="space-y-1.5">
+                {dynamicCategories.map(([cat, count]) => (
+                  <label key={cat} className="flex items-center gap-2.5 py-0.5 cursor-pointer group">
+                    <input type="checkbox" checked={selectedCategories.includes(cat)} onChange={() => toggleFilter(selectedCategories, setSelectedCategories, cat)} className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                    <span className="text-sm text-gray-600 flex-1">{cat}</span>
+                    <span className="text-[11px] text-gray-400">{count}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+          {/* Price Range */}
+          <div className="py-3 border-b border-gray-50">
+            <span className="text-[13px] font-semibold text-gray-800 block mb-2">Price Range (PKR)</span>
+            <div className="flex items-center gap-2">
+              <input type="number" value={priceMin} onChange={(e) => setPriceMin(e.target.value)} placeholder={String(priceBounds.min)} className="w-full px-2.5 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50/50 focus:bg-white focus:ring-1 focus:ring-blue-500 outline-none" />
+              <span className="text-gray-300 text-xs">–</span>
+              <input type="number" value={priceMax} onChange={(e) => setPriceMax(e.target.value)} placeholder={String(priceBounds.max)} className="w-full px-2.5 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50/50 focus:bg-white focus:ring-1 focus:ring-blue-500 outline-none" />
+            </div>
+          </div>
+          {/* Min Passengers */}
+          <div className="py-3 border-b border-gray-50">
+            <span className="text-[13px] font-semibold text-gray-800 block mb-2">Min Passengers</span>
+            <input type="number" value={minCapacity} onChange={(e) => setMinCapacity(e.target.value)} placeholder="Any" className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50/50 focus:bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none" />
+          </div>
+        </MobileFilterDrawer>
 
         {/* Main content — boxed */}
         <div className="flex-1 min-w-0 flex flex-col">
@@ -391,7 +398,7 @@ const TransferSearch = () => {
 
                           {/* CTA — same as hotel card */}
                           <div className="flex items-center justify-end mt-2 pt-2 border-t border-gray-50">
-                            <button onClick={() => setSelectedTransfer(t)} className="w-full sm:w-auto px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-[12px] font-medium inline-flex items-center justify-center gap-1 cursor-pointer" style={{minHeight:'40px'}}>
+                            <button onClick={() => setSelectedTransfer(t)} className="w-full sm:w-auto px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-[12px] font-medium inline-flex items-center justify-center gap-1 cursor-pointer min-h-[44px]">
                               <Eye className="w-3 h-3" /> View Details
                             </button>
                           </div>

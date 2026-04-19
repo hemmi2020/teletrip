@@ -15,25 +15,25 @@
   - [x] 2.2 Show only logo and cart icon on mobile; keep full desktop nav on `md+`
   - [x] 2.3 Ensure cart badge in header stays in sync with cart state
 
-- [~] 3. Mobile-optimise HotelSearchForm
-  - [ ] 3.1 Make tab bar horizontally scrollable (`overflow-x-auto flex-nowrap`) on mobile
-  - [ ] 3.2 Set all input fields to `w-full min-h-[44px] text-base` on mobile
-  - [ ] 3.3 Render date picker inside `BottomSheet` on mobile (detect via `window.innerWidth < 768` or CSS media query state)
-  - [ ] 3.4 Render guest/traveller picker inside `BottomSheet` on mobile
-  - [ ] 3.5 Make location autocomplete dropdown full-width with `max-h-60 overflow-y-auto`
-  - [ ] 3.6 Make search submit button full-width on mobile
+- [x] 3. Mobile-optimise HotelSearchForm
+  - [x] 3.1 Make tab bar horizontally scrollable (`overflow-x-auto flex-nowrap`) on mobile
+  - [x] 3.2 Set all input fields to `w-full min-h-[44px] text-base` on mobile
+  - [x] 3.3 Render date picker inside `BottomSheet` on mobile (detect via `window.innerWidth < 768` or CSS media query state)
+  - [x] 3.4 Render guest/traveller picker inside `BottomSheet` on mobile
+  - [x] 3.5 Make location autocomplete dropdown full-width with `max-h-60 overflow-y-auto`
+  - [x] 3.6 Make search submit button full-width on mobile
 
-- [-] 4. Build MobileFilterDrawer component
-  - [ ] 4.1 Create `src/components/MobileFilterDrawer.jsx` extending `BottomSheet.jsx` with sticky header and footer
-  - [ ] 4.2 Add "Reset" and "Apply Filters" buttons in sticky footer
-  - [ ] 4.3 Set `max-h-[85vh]` and internal scroll on the content area
-  - [ ] 4.4 Close drawer on backdrop tap without applying changes
+- [x] 4. Build MobileFilterDrawer component
+  - [x] 4.1 Create `src/components/MobileFilterDrawer.jsx` extending `BottomSheet.jsx` with sticky header and footer
+  - [x] 4.2 Add "Reset" and "Apply Filters" buttons in sticky footer
+  - [x] 4.3 Set `max-h-[85vh]` and internal scroll on the content area
+  - [x] 4.4 Close drawer on backdrop tap without applying changes
 
-- [~] 5. Integrate MobileFilterDrawer into search results pages
-  - [ ] 5.1 In `HotelSearchResults.jsx`: hide sidebar on `< lg`, add Filter FAB, wire `MobileFilterDrawer`
-  - [ ] 5.2 In `ActivitySearchResults.jsx`: hide sidebar on `< lg`, add Filter FAB, wire `MobileFilterDrawer`
-  - [ ] 5.3 In `TransferSearch.jsx`: hide sidebar on `< lg`, add Filter FAB, wire `MobileFilterDrawer`
-  - [ ] 5.4 Position Filter FAB sticky at bottom-right (`fixed bottom-20 right-4 z-50 md:hidden`)
+- [x] 5. Integrate MobileFilterDrawer into search results pages
+  - [x] 5.1 In `HotelSearchResults.jsx`: hide sidebar on `< lg`, add Filter FAB, wire `MobileFilterDrawer`
+  - [x] 5.2 In `ActivitySearchResults.jsx`: hide sidebar on `< lg`, add Filter FAB, wire `MobileFilterDrawer`
+  - [x] 5.3 In `TransferSearch.jsx`: hide sidebar on `< lg`, add Filter FAB, wire `MobileFilterDrawer`
+  - [x] 5.4 Position Filter FAB sticky at bottom-right (`fixed bottom-20 right-4 z-50 md:hidden`)
 
 - [x] 6. Reflow search result cards for mobile
   - [x] 6.1 Update hotel result cards in `HotelSearchResults.jsx` to stacked layout on mobile
@@ -58,22 +58,22 @@
   - [x] 9.3 Ensure remove button has `p-3` (44 px touch target)
   - [x] 9.4 Make cart footer sticky with full-width "Proceed to Checkout" button on mobile
 
-- [~] 10. Update Checkout page for mobile
-  - [ ] 10.1 Change billing form grid to `grid-cols-1 md:grid-cols-2`
-  - [ ] 10.2 Set all inputs to `w-full min-h-[44px] text-base`
-  - [ ] 10.3 Wrap order summary in a collapsible accordion component on mobile
-  - [ ] 10.4 Make payment method selector cards full-width on mobile
-  - [ ] 10.5 Make "Place Order" button `w-full min-h-[52px]` and sticky at bottom on mobile
+- [x] 10. Update Checkout page for mobile
+  - [x] 10.1 Change billing form grid to `grid-cols-1 md:grid-cols-2`
+  - [x] 10.2 Set all inputs to `w-full min-h-[44px] text-base`
+  - [x] 10.3 Wrap order summary in a collapsible accordion component on mobile
+  - [x] 10.4 Make payment method selector cards full-width on mobile
+  - [x] 10.5 Make "Place Order" button `w-full min-h-[52px]` and sticky at bottom on mobile
 
-- [~] 11. Update AccountDashboard for mobile
-  - [ ] 11.1 Hide sidebar tab navigation on `< lg` (`hidden lg:flex`)
-  - [ ] 11.2 Add horizontal scrollable tab bar visible on `< lg` (`flex lg:hidden overflow-x-auto`)
-  - [ ] 11.3 Set each mobile tab to `min-w-[80px] min-h-[44px]`
-  - [ ] 11.4 Change stats cards grid to `grid-cols-2 lg:grid-cols-4`
-  - [ ] 11.5 Remove sidebar gutter from content area on mobile
+- [x] 11. Update AccountDashboard for mobile
+  - [x] 11.1 Hide sidebar tab navigation on `< lg` (`hidden lg:flex`)
+  - [x] 11.2 Add horizontal scrollable tab bar visible on `< lg` (`flex lg:hidden overflow-x-auto`)
+  - [x] 11.3 Set each mobile tab to `min-w-[80px] min-h-[44px]`
+  - [x] 11.4 Change stats cards grid to `grid-cols-2 lg:grid-cols-4`
+  - [x] 11.5 Remove sidebar gutter from content area on mobile
 
-- [~] 12. Global touch target and overflow audit
-  - [ ] 12.1 Audit all interactive elements across all pages and apply `min-h-[44px]` where missing
-  - [ ] 12.2 Audit all text inputs and apply `text-base` (16 px) where missing
-  - [ ] 12.3 Test all pages at 320 px, 375 px, and 414 px viewport widths for horizontal overflow and fix any issues found
-  - [ ] 12.4 Verify all modal/drawer/cart animations use CSS transforms and complete within 300 ms
+- [x] 12. Global touch target and overflow audit
+  - [x] 12.1 Audit all interactive elements across all pages and apply `min-h-[44px]` where missing
+  - [x] 12.2 Audit all text inputs and apply `text-base` (16 px) where missing
+  - [x] 12.3 Test all pages at 320 px, 375 px, and 414 px viewport widths for horizontal overflow and fix any issues found
+  - [x] 12.4 Verify all modal/drawer/cart animations use CSS transforms and complete within 300 ms

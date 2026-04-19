@@ -41,7 +41,7 @@ const Footer = () => {
           <div className="flex items-center justify-center flex-wrap gap-x-1.5 gap-y-1 mb-6">
             {[...quickLinks, ...legalLinks].map((link, i, arr) => (
               <span key={i} className="flex items-center">
-                <Link to={link.href} className="text-white/40 text-[11px] hover:text-white/70 transition-colors">{link.text}</Link>
+                <Link to={link.href} className="text-white/40 text-[11px] hover:text-white/70 transition-colors min-h-[44px] inline-flex items-center">{link.text}</Link>
                 {i < arr.length - 1 && <span className="text-white/15 mx-1.5">·</span>}
               </span>
             ))}
@@ -49,16 +49,16 @@ const Footer = () => {
 
           {/* Contact + Social — single row */}
           <div className="flex items-center justify-center gap-4 mb-7">
-            <a href="mailto:support@telitrip.com" className="text-white/35 hover:text-white/60 transition-colors" style={{ minHeight: 'unset' }}>
+            <a href="mailto:support@telitrip.com" className="text-white/35 hover:text-white/60 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center" style={{ minHeight: '44px' }}>
               <Mail className="w-4 h-4" style={{ strokeWidth: 1.5 }} />
             </a>
-            <a href="tel:+923001234567" className="text-white/35 hover:text-white/60 transition-colors" style={{ minHeight: 'unset' }}>
+            <a href="tel:+923001234567" className="text-white/35 hover:text-white/60 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center" style={{ minHeight: '44px' }}>
               <Phone className="w-4 h-4" style={{ strokeWidth: 1.5 }} />
             </a>
-            <a href="#facebook" className="text-white/35 hover:text-white/60 transition-colors" style={{ minHeight: 'unset' }}>
+            <a href="#facebook" className="text-white/35 hover:text-white/60 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center" style={{ minHeight: '44px' }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z" /></svg>
             </a>
-            <a href="#instagram" className="text-white/35 hover:text-white/60 transition-colors" style={{ minHeight: 'unset' }}>
+            <a href="#instagram" className="text-white/35 hover:text-white/60 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center" style={{ minHeight: '44px' }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="2" width="20" height="20" rx="5" ry="5" /><circle cx="12" cy="12" r="5" /><circle cx="17.5" cy="6.5" r="1.5" fill="currentColor" stroke="none" /></svg>
             </a>
           </div>

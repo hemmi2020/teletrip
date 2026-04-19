@@ -76,26 +76,26 @@ const Contact = () => {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">Your Name</label>
                   <input type="text" required value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm md:text-sm text-base outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all min-h-[44px]"
                     placeholder="John Doe" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">Email Address</label>
                   <input type="email" required value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm md:text-sm text-base outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all min-h-[44px]"
                     placeholder="john@example.com" />
                 </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Subject</label>
                 <input type="text" required value={form.subject} onChange={e => setForm(f => ({ ...f, subject: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm md:text-sm text-base outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all min-h-[44px]"
                   placeholder="How can we help?" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Message</label>
                 <textarea required rows={5} value={form.message} onChange={e => setForm(f => ({ ...f, message: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all resize-none"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm md:text-sm text-base outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all resize-none"
                   placeholder="Tell us more about your inquiry..." />
               </div>
               <button type="submit"

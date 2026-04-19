@@ -137,13 +137,13 @@ const Header = () => {
 
           {/* Mobile */}
           <div className="flex md:hidden items-center gap-2 flex-shrink-0">
-            <button onClick={() => setIsCartOpen(true)} className="relative flex items-center justify-center rounded-full bg-gray-100" style={{ width: 38, height: 38, minHeight: 'unset' }}>
+            <button onClick={() => setIsCartOpen(true)} className="relative flex items-center justify-center rounded-full bg-gray-100" style={{ width: 44, height: 44 }}>
               <ShoppingCart className="w-4 h-4 text-gray-700" />
               {getTotalItems() > 0 && (
                 <span className="absolute -top-0.5 -right-0.5 bg-blue-600 text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center leading-none">{getTotalItems()}</span>
               )}
             </button>
-            <button onClick={() => setIsMobileMenuOpen(o => !o)} className="flex items-center justify-center rounded-full transition-all" style={{ width: 38, height: 38, minHeight: 'unset', border: '2px solid #f59e0b', background: 'rgba(245,158,11,0.08)' }} aria-label="Toggle menu">
+            <button onClick={() => setIsMobileMenuOpen(o => !o)} className="flex items-center justify-center rounded-full transition-all" style={{ width: 44, height: 44, border: '2px solid #f59e0b', background: 'rgba(245,158,11,0.08)' }} aria-label="Toggle menu">
               {isMobileMenuOpen ? <X className="w-4 h-4 text-gray-800" /> : (
                 <svg width="16" height="11" viewBox="0 0 16 11" fill="none">
                   <rect y="0" width="16" height="2" rx="1" fill="#1a1a2e" />
@@ -160,7 +160,7 @@ const Header = () => {
       <div className={`fixed inset-0 z-[101] flex flex-col transition-all duration-300 md:hidden ${isMobileMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`} style={{ background: 'rgba(15,23,42,0.97)', backdropFilter: 'blur(20px)' }}>
         {/* Close button — top right, no duplicate pill */}
         <div className="flex justify-end px-5 pt-5 flex-shrink-0">
-          <button onClick={() => setIsMobileMenuOpen(false)} className="flex items-center justify-center rounded-full" style={{ width: 40, height: 40, minHeight: 'unset', border: '2px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.08)' }}>
+          <button onClick={() => setIsMobileMenuOpen(false)} className="flex items-center justify-center rounded-full" style={{ width: 44, height: 44, border: '2px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.08)' }}>
             <X className="w-4.5 h-4.5 text-white" />
           </button>
         </div>

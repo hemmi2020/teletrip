@@ -775,14 +775,14 @@ const _InlineAuthForm = () => {
         {tab === 'signup' && (
           <input type="text" placeholder="Full name" required value={form.name}
             onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-            className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" />
+            className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-base outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 min-h-[44px]" />
         )}
         <input type="email" placeholder="Email address" required value={form.email}
           onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-          className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" />
+          className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-base outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 min-h-[44px]" />
         <input type="password" placeholder="Password" required value={form.password}
           onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
-          className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" />
+          className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-base outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 min-h-[44px]" />
         <button type="submit" disabled={loading}
           className="w-full py-2.5 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 transition-colors disabled:opacity-60">
           {loading ? 'Please wait...' : tab === 'login' ? 'Sign In' : 'Create Account'}
@@ -1254,7 +1254,7 @@ const AccountDashboard = () => {
             </div>
 
             {/* Desktop Tab Navigation */}
-            <div className="hidden lg:block border-b border-gray-200">
+            <div className="hidden lg:flex border-b border-gray-200">
               <nav className="flex space-x-8 px-6 overflow-x-auto">
                 {tabs.map(({ id, label, icon: Icon }) => (
                   <button

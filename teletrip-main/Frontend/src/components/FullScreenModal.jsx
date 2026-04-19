@@ -66,7 +66,7 @@ const FullScreenModal = ({ isOpen, onClose, title, children, footer }) => {
       <div className="flex-shrink-0 flex items-center gap-3 px-4 py-3 border-b border-gray-100">
         <button
           onClick={onClose}
-          className="p-2 -ml-2 rounded-full hover:bg-gray-100 transition-colors"
+          className="p-2 -ml-2 rounded-full hover:bg-gray-100 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
           aria-label="Close"
         >
           <ChevronLeft className="w-5 h-5 text-gray-600" />
@@ -74,7 +74,7 @@ const FullScreenModal = ({ isOpen, onClose, title, children, footer }) => {
         <h2 className="flex-1 text-[15px] font-semibold text-gray-900 truncate">{title}</h2>
         <button
           onClick={onClose}
-          className="p-2 -mr-2 rounded-full hover:bg-gray-100 transition-colors"
+          className="p-2 -mr-2 rounded-full hover:bg-gray-100 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
           aria-label="Close"
         >
           <X className="w-4 h-4 text-gray-400" />

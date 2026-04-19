@@ -19,7 +19,9 @@ import {
   Building2,
   Wallet,
   Loader2,
-  Users
+  Users,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 
 const Checkout = () => {
@@ -43,7 +45,9 @@ const Checkout = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('hblpay'); // 'hblpay' or 'pay_on_site'
-  const [showOrderSummary, setShowOrderSummary] = useState(true);
+  const [showOrderSummary, setShowOrderSummary] = useState(
+    typeof window !== 'undefined' ? window.innerWidth >= 768 : true
+  );
 
 
   // Form data matching your backend validation
@@ -678,7 +682,7 @@ const handlePaymentSubmit = () => {
       
       <div className="space-y-4">
         {/* Name Fields */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               First Name *
@@ -689,7 +693,7 @@ const handlePaymentSubmit = () => {
                 type="text"
                 value={billingInfo.firstName}
                 onChange={(e) => handleInputChange('firstName', e.target.value)}
-                className="w-full pl-10 pr-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full min-h-[44px] pl-10 pr-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Enter first name"
                 required
               />
@@ -706,7 +710,7 @@ const handlePaymentSubmit = () => {
                 type="text"
                 value={billingInfo.lastName}
                 onChange={(e) => handleInputChange('lastName', e.target.value)}
-                className="w-full pl-10 pr-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full min-h-[44px] pl-10 pr-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Enter last name"
                 required
               />
@@ -715,7 +719,7 @@ const handlePaymentSubmit = () => {
         </div>
 
         {/* Contact Fields */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Email Address *
@@ -726,7 +730,7 @@ const handlePaymentSubmit = () => {
                 type="email"
                 value={billingInfo.email}
                 onChange={(e) => handleInputChange('email', e.target.value)}
-                className="w-full pl-10 pr-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full min-h-[44px] pl-10 pr-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Enter email address"
                 required
               />
@@ -743,7 +747,7 @@ const handlePaymentSubmit = () => {
                 type="tel"
                 value={billingInfo.phone}
                 onChange={(e) => handleInputChange('phone', e.target.value)}
-                className="w-full pl-10 pr-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full min-h-[44px] pl-10 pr-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="03001234567"
                 required
               />
@@ -762,7 +766,7 @@ const handlePaymentSubmit = () => {
               type="text"
               value={billingInfo.address}
               onChange={(e) => handleInputChange('address', e.target.value)}
-              className="w-full pl-10 pr-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full min-h-[44px] pl-10 pr-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="Enter full address"
               required
             />
@@ -770,7 +774,7 @@ const handlePaymentSubmit = () => {
         </div>
 
         {/* City and State */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               City *
@@ -779,7 +783,7 @@ const handlePaymentSubmit = () => {
               type="text"
               value={billingInfo.city}
               onChange={(e) => handleInputChange('city', e.target.value)}
-              className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full min-h-[44px] px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="Enter city"
               required
             />
@@ -792,7 +796,7 @@ const handlePaymentSubmit = () => {
             <select
               value={billingInfo.state}
               onChange={(e) => handleInputChange('state', e.target.value)}
-              className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full min-h-[44px] px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               required
             >
               <option value="">Select State</option>
@@ -809,11 +813,11 @@ const handlePaymentSubmit = () => {
   );
 
   const renderPaymentMethodSelector = () => (
-    <div className="mb-6 space-y-3">
+    <div className="mb-6 space-y-3 w-full">
       {/* HBLPay Option */}
       <div
         onClick={() => setPaymentMethod('hblpay')}
-        className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
+        className={`w-full border-2 rounded-lg p-4 cursor-pointer transition-all ${
           paymentMethod === 'hblpay'
             ? 'border-blue-600 bg-blue-50 shadow-md'
             : 'border-gray-200 hover:border-blue-300'
@@ -846,7 +850,7 @@ const handlePaymentSubmit = () => {
       {/* Pay on Site Option */}
       <div
         onClick={() => setPaymentMethod('pay_on_site')}
-        className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
+        className={`w-full border-2 rounded-lg p-4 cursor-pointer transition-all ${
           paymentMethod === 'pay_on_site'
             ? 'border-green-600 bg-green-50 shadow-md'
             : 'border-gray-200 hover:border-green-300'
@@ -898,17 +902,19 @@ const handlePaymentSubmit = () => {
 
   const renderOrderSummary = () => (
     <div className="bg-white rounded-lg shadow-sm p-6 sticky top-24">
-      <div className="flex items-center justify-between mb-4">
+      {/* Accordion header for mobile, static header for desktop */}
+      <button
+        onClick={() => setShowOrderSummary(v => !v)}
+        className="w-full flex items-center justify-between mb-4 md:cursor-default"
+        aria-expanded={showOrderSummary}
+      >
         <h2 className="text-xl font-semibold text-gray-900">Order Summary</h2>
-        <button
-          onClick={() => setShowOrderSummary(v => !v)}
-          className="lg:hidden text-sm text-blue-600 font-medium"
-        >
-          {showOrderSummary ? 'Hide' : 'Show'}
-        </button>
-      </div>
+        <span className="md:hidden text-gray-500 transition-transform duration-200">
+          {showOrderSummary ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+        </span>
+      </button>
       
-      <div className={`space-y-4 mb-6 ${showOrderSummary ? '' : 'hidden lg:block'}`}>
+      <div className={`space-y-4 mb-6 ${showOrderSummary ? '' : 'hidden'} md:!block`}>
         {checkoutItems.map((item, index) => (
           <div key={index} className="flex gap-4 border-b pb-4">
             {item.image && (
@@ -1010,40 +1016,42 @@ const handlePaymentSubmit = () => {
       {renderPaymentMethodSelector()}
 
       {/* Payment Button */}
-      <button
-        onClick={handlePaymentSubmit}
-        disabled={isProcessing || checkoutItems.length === 0}
-        className={`w-full min-h-[52px] py-3 px-4 rounded-lg font-medium flex items-center justify-center space-x-2 transition-all ${
-          paymentMethod === 'hblpay'
-            ? 'bg-blue-600 hover:bg-blue-700 text-white'
-            : 'bg-green-600 hover:bg-green-700 text-white'
-        } disabled:opacity-50 disabled:cursor-not-allowed`}
-      >
-        {isProcessing ? (
-          <>
-            <Loader2 className="w-4 h-4 animate-spin" />
-            <span>Processing...</span>
-          </>
-        ) : (
-          <>
-            {paymentMethod === 'hblpay' ? (
-              <>
-                <Lock className="w-4 h-4" />
-                <span>Pay with HBLPay - {formatPKR(totalAmount) || (currencyConversion ? `PKR ${currencyConversion.totalPKR.toFixed(0)}` : `PKR ${parseFloat(totalAmount).toFixed(0)}`)}</span>
-              </>
-            ) : (
-              <>
-                <Wallet className="w-4 h-4" />
-                <span>Confirm Booking - Pay on Site</span>
-              </>
-            )}
-          </>
-        )}
-      </button>
+      <div className="hidden md:block">
+        <button
+          onClick={handlePaymentSubmit}
+          disabled={isProcessing || checkoutItems.length === 0}
+          className={`w-full min-h-[52px] py-3 px-4 rounded-lg font-medium flex items-center justify-center space-x-2 transition-all ${
+            paymentMethod === 'hblpay'
+              ? 'bg-blue-600 hover:bg-blue-700 text-white'
+              : 'bg-green-600 hover:bg-green-700 text-white'
+          } disabled:opacity-50 disabled:cursor-not-allowed`}
+        >
+          {isProcessing ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span>Processing...</span>
+            </>
+          ) : (
+            <>
+              {paymentMethod === 'hblpay' ? (
+                <>
+                  <Lock className="w-4 h-4" />
+                  <span>Pay with HBLPay - {formatPKR(totalAmount) || (currencyConversion ? `PKR ${currencyConversion.totalPKR.toFixed(0)}` : `PKR ${parseFloat(totalAmount).toFixed(0)}`)}</span>
+                </>
+              ) : (
+                <>
+                  <Wallet className="w-4 h-4" />
+                  <span>Confirm Booking - Pay on Site</span>
+                </>
+              )}
+            </>
+          )}
+        </button>
 
-      <div className="flex items-center justify-center space-x-2 mt-3 text-xs text-gray-500">
-        <Lock className="w-3 h-3" />
-        <span>Secure payment powered by HBL</span>
+        <div className="flex items-center justify-center space-x-2 mt-3 text-xs text-gray-500">
+          <Lock className="w-3 h-3" />
+          <span>Secure payment powered by HBL</span>
+        </div>
       </div>
     </div>
   );
@@ -1059,7 +1067,7 @@ const handlePaymentSubmit = () => {
               <p className="text-gray-600 mb-6">Add some items to your cart to proceed with checkout.</p>
               <button
                 onClick={() => navigate('/home')}
-                className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700"
+                className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 min-h-[44px]"
               >
                 Continue Shopping
               </button>
@@ -1073,7 +1081,7 @@ const handlePaymentSubmit = () => {
   return (
     <>
       <Header />
-      <div className="pt-20 min-h-screen bg-gray-50">
+      <div className="pt-20 min-h-screen bg-gray-50 pb-24 md:pb-0">
         <div className="max-w-7xl mx-auto px-4 py-8">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900">Secure Checkout</h1>
@@ -1091,7 +1099,7 @@ const handlePaymentSubmit = () => {
                     </div>
                     <button
                       onClick={() => setShowAuthModal(true)}
-                      className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                      className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors min-h-[44px]"
                     >
                       Sign In
                     </button>
@@ -1106,6 +1114,40 @@ const handlePaymentSubmit = () => {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Mobile sticky Place Order button */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 p-4 md:hidden">
+        <button
+          onClick={handlePaymentSubmit}
+          disabled={isProcessing || checkoutItems.length === 0}
+          className={`w-full min-h-[52px] py-3 px-4 rounded-lg font-medium flex items-center justify-center space-x-2 transition-all ${
+            paymentMethod === 'hblpay'
+              ? 'bg-blue-600 hover:bg-blue-700 text-white'
+              : 'bg-green-600 hover:bg-green-700 text-white'
+          } disabled:opacity-50 disabled:cursor-not-allowed`}
+        >
+          {isProcessing ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span>Processing...</span>
+            </>
+          ) : (
+            <>
+              {paymentMethod === 'hblpay' ? (
+                <>
+                  <Lock className="w-4 h-4" />
+                  <span>Pay with HBLPay - {formatPKR(totalAmount) || (currencyConversion ? `PKR ${currencyConversion.totalPKR.toFixed(0)}` : `PKR ${parseFloat(totalAmount).toFixed(0)}`)}</span>
+                </>
+              ) : (
+                <>
+                  <Wallet className="w-4 h-4" />
+                  <span>Confirm Booking - Pay on Site</span>
+                </>
+              )}
+            </>
+          )}
+        </button>
       </div>
 
       <AuthModal

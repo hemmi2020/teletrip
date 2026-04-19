@@ -67,7 +67,7 @@ const MobileFilterDrawer = ({ isOpen, onClose, onApply, onReset, title = 'Filter
           <div className="w-10 h-1 bg-gray-300 rounded-full mx-auto mb-3" />
           <div className="flex items-center justify-between">
             <span className="text-base font-semibold text-gray-900">{title}</span>
-            <button onClick={onClose} className="p-1.5 rounded-full hover:bg-gray-100 transition-colors" aria-label="Close filters">
+            <button onClick={onClose} className="p-1.5 rounded-full hover:bg-gray-100 transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center" aria-label="Close filters">
               <X className="w-5 h-5 text-gray-500" />
             </button>
           </div>
@@ -82,8 +82,8 @@ const MobileFilterDrawer = ({ isOpen, onClose, onApply, onReset, title = 'Filter
 
         {/* Sticky footer */}
         <div style={{ flexShrink: 0 }} className="border-t border-gray-100 px-4 py-3 flex gap-3">
-          <button onClick={onReset} className="flex-1 border border-gray-300 text-gray-700 rounded-lg py-2.5 font-medium text-sm hover:bg-gray-50 transition-colors">Reset</button>
-          <button onClick={onApply} className="flex-1 bg-blue-600 text-white rounded-lg py-2.5 font-medium text-sm hover:bg-blue-700 transition-colors">Apply Filters</button>
+          <button onClick={onReset} className="flex-1 border border-gray-300 text-gray-700 rounded-lg py-2.5 font-medium text-sm hover:bg-gray-50 transition-colors min-h-[44px]">Reset</button>
+          <button onClick={onApply} className="flex-1 bg-blue-600 text-white rounded-lg py-2.5 font-medium text-sm hover:bg-blue-700 transition-colors min-h-[44px]">Apply Filters</button>
         </div>
       </div>
     </div>,

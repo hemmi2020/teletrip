@@ -20,10 +20,10 @@ const useCarousel = () => {
 
 const CarouselArrows = ({ onLeft, onRight }) => (
   <div className="flex items-center gap-1.5">
-    <button onClick={onLeft} className="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-500 active:scale-90 transition-transform" style={{ minHeight: 'unset', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
+    <button onClick={onLeft} className="w-11 h-11 md:w-8 md:h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-500 active:scale-90 transition-transform" style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
       <ChevronLeft className="w-4 h-4" />
     </button>
-    <button onClick={onRight} className="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-500 active:scale-90 transition-transform" style={{ minHeight: 'unset', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
+    <button onClick={onRight} className="w-11 h-11 md:w-8 md:h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-500 active:scale-90 transition-transform" style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
       <ChevronRight className="w-4 h-4" />
     </button>
   </div>
@@ -94,7 +94,7 @@ const Home = () => {
               <h2 className="text-lg font-bold text-gray-900" style={{ letterSpacing: '-0.02em' }}>Top Destinations</h2>
               <CarouselArrows onLeft={() => destCarousel.scroll('left')} onRight={() => destCarousel.scroll('right')} />
             </div>
-            <div ref={destCarousel.ref} className="flex gap-3 overflow-x-auto pl-4 pr-4 pb-2 snap-x snap-mandatory" style={{ scrollbarWidth: 'none' }}>
+            <div ref={destCarousel.ref} className="flex gap-3 overflow-x-auto pr-4 pb-2 snap-x snap-mandatory" style={{ scrollbarWidth: 'none' }}>
               {(destinations.length ? destinations : fallbackDestinations).map((dest) => (
                 <div key={dest._id} className="flex-shrink-0 w-[60vw] snap-start relative overflow-hidden rounded-2xl" style={{ aspectRatio: '3/4' }}>
                   <img src={dest.image} alt={dest.name} className="w-full h-full object-cover" />
@@ -152,7 +152,7 @@ const Home = () => {
               <h2 className="text-lg font-bold text-gray-900" style={{ letterSpacing: '-0.02em' }}>Loved by travellers</h2>
               <CarouselArrows onLeft={() => reviewCarousel.scroll('left')} onRight={() => reviewCarousel.scroll('right')} />
             </div>
-            <div ref={reviewCarousel.ref} className="flex gap-3 overflow-x-auto pl-4 pr-4 pb-3 snap-x snap-mandatory" style={{ scrollbarWidth: 'none' }}>
+            <div ref={reviewCarousel.ref} className="flex gap-3 overflow-x-auto pr-4 pb-3 snap-x snap-mandatory" style={{ scrollbarWidth: 'none' }}>
               {testimonials.map((t) => (
                 <div key={t.id} className="flex-shrink-0 w-[72vw] snap-start p-4 rounded-2xl bg-white border border-gray-100/80 shadow-sm">
                   <div className="flex items-center gap-0.5 mb-2.5">
@@ -179,8 +179,8 @@ const Home = () => {
               <p className="text-white/45 text-[12px] mb-5 relative">Find your perfect stay, anywhere in the world.</p>
               <button
                 onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                className="relative px-6 py-2.5 rounded-full text-[11px] font-bold tracking-widest uppercase text-white active:scale-95 transition-transform"
-                style={{ background: 'linear-gradient(135deg, #3b82f6, #2563eb)', letterSpacing: '0.08em', minHeight: 'unset', boxShadow: '0 4px 16px rgba(37,99,235,0.35)' }}
+                className="relative px-6 py-2.5 rounded-full text-[11px] font-bold tracking-widest uppercase text-white active:scale-95 transition-transform min-h-[44px]"
+                style={{ background: 'linear-gradient(135deg, #3b82f6, #2563eb)', letterSpacing: '0.08em', boxShadow: '0 4px 16px rgba(37,99,235,0.35)' }}
               >
                 Start Searching
               </button>

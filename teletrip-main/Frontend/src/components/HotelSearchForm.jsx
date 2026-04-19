@@ -6,6 +6,8 @@ import { searchTransfers } from '../services/transfersApi';
 import axios from 'axios';
 import 'react-date-range/dist/styles.css';
 import 'react-date-range/dist/theme/default.css';
+import BottomSheet from './BottomSheet';
+import useIsMobile from '../hooks/useIsMobile';
 
 // Lazy-load DateRange to avoid TDZ error with React 19
 const LazyDateRange = lazy(() =>
@@ -14,6 +16,7 @@ const LazyDateRange = lazy(() =>
 
 // Transfers Tab Component
 const TransfersTab = ({ variant = 'dark' }) => {
+  const isMobile = useIsMobile();
   const lbl = variant === 'light' ? 'text-gray-700' : 'text-white/80';
   const [tripType, setTripType] = useState('one_way');
   const [pickupQuery, setPickupQuery] = useState('');
@@ -239,7 +242,7 @@ const TransfersTab = ({ variant = 'dark' }) => {
           <label className={`block text-xs sm:text-sm font-medium ${lbl} mb-1.5 sm:mb-2 text-left`}>
             Pickup Location <span className="text-red-500">*</span>
           </label>
-          <div className="flex items-center w-full border border-gray-300 bg-white rounded-lg focus-within:ring-2 focus-within:ring-blue-500 px-3 py-2.5 sm:py-3 gap-2">
+          <div className="flex items-center w-full min-h-[44px] border border-gray-300 bg-white rounded-lg focus-within:ring-2 focus-within:ring-blue-500 px-3 py-2.5 sm:py-3 gap-2">
             <MapPin className="text-gray-400 flex-shrink-0" size={18} />
             <input
               type="text"
@@ -252,7 +255,7 @@ const TransfersTab = ({ variant = 'dark' }) => {
               onFocus={() => setShowPickupDropdown(true)}
               placeholder="Airport, hotel or area, e.g. DXB, Hilton Dubai"
               required
-              className="flex-1 min-w-0 outline-none bg-transparent text-gray-700 text-sm sm:text-base placeholder-gray-400"
+              className="flex-1 min-w-0 outline-none bg-transparent text-gray-700 text-base placeholder-gray-400"
             />
             {pickupQuery && (
               <button type="button" onClick={() => { setPickupQuery(''); setSelectedPickup(null); setFilteredPickupLocations([]); }} className="text-gray-400 hover:text-gray-600 flex-shrink-0"><X size={16} /></button>
@@ -261,7 +264,7 @@ const TransfersTab = ({ variant = 'dark' }) => {
           {showPickupDropdown && pickupQuery.trim() !== '' && (
             <>
             <div className="fixed inset-0 bg-black/30 z-[209] sm:hidden" onClick={() => setShowPickupDropdown(false)} />
-            <div className="fixed sm:absolute inset-x-0 sm:inset-x-auto bottom-0 sm:bottom-auto sm:top-full z-[210] sm:z-50 sm:w-full sm:mt-2 bg-white border border-gray-200 rounded-t-2xl sm:rounded-xl shadow-2xl max-h-[55vh] sm:max-h-[60vh] overflow-y-auto" style={{scrollbarWidth:'thin'}}>
+            <div className="fixed sm:absolute inset-x-0 sm:inset-x-auto bottom-0 sm:bottom-auto sm:top-full z-[210] sm:z-50 w-full sm:mt-2 bg-white border border-gray-200 rounded-t-2xl sm:rounded-xl shadow-2xl max-h-60 overflow-y-auto" style={{scrollbarWidth:'thin'}}>
               <div className="w-10 h-1 bg-gray-300 rounded-full mx-auto mt-2 mb-1 sm:hidden" />
               {isLoadingLocations ? (
                 <div className="p-3 text-center text-gray-500 text-sm">Searching locations...</div>
@@ -313,7 +316,7 @@ const TransfersTab = ({ variant = 'dark' }) => {
           <label className={`block text-xs sm:text-sm font-medium ${lbl} mb-1.5 sm:mb-2 text-left`}>
             Dropoff Location <span className="text-red-500">*</span>
           </label>
-          <div className="flex items-center w-full border border-gray-300 bg-white rounded-lg focus-within:ring-2 focus-within:ring-blue-500 px-3 py-2.5 sm:py-3 gap-2">
+          <div className="flex items-center w-full min-h-[44px] border border-gray-300 bg-white rounded-lg focus-within:ring-2 focus-within:ring-blue-500 px-3 py-2.5 sm:py-3 gap-2">
             <MapPin className="text-gray-400 flex-shrink-0" size={18} />
             <input
               type="text"
@@ -326,7 +329,7 @@ const TransfersTab = ({ variant = 'dark' }) => {
               onFocus={() => setShowDropoffDropdown(true)}
               placeholder="Airport, hotel or area, e.g. DXB, DAMAC Maison"
               required
-              className="flex-1 min-w-0 outline-none bg-transparent text-gray-700 text-sm sm:text-base placeholder-gray-400"
+              className="flex-1 min-w-0 outline-none bg-transparent text-gray-700 text-base placeholder-gray-400"
             />
             {dropoffQuery && (
               <button type="button" onClick={() => { setDropoffQuery(''); setSelectedDropoff(null); setFilteredDropoffLocations([]); }} className="text-gray-400 hover:text-gray-600 flex-shrink-0"><X size={16} /></button>
@@ -335,7 +338,7 @@ const TransfersTab = ({ variant = 'dark' }) => {
           {showDropoffDropdown && dropoffQuery.trim() !== '' && (
             <>
             <div className="fixed inset-0 bg-black/30 z-[209] sm:hidden" onClick={() => setShowDropoffDropdown(false)} />
-            <div className="fixed sm:absolute inset-x-0 sm:inset-x-auto bottom-0 sm:bottom-auto sm:top-full z-[210] sm:z-50 sm:w-full sm:mt-2 bg-white border border-gray-200 rounded-t-2xl sm:rounded-xl shadow-2xl max-h-[55vh] sm:max-h-[60vh] overflow-y-auto" style={{scrollbarWidth:'thin'}}>
+            <div className="fixed sm:absolute inset-x-0 sm:inset-x-auto bottom-0 sm:bottom-auto sm:top-full z-[210] sm:z-50 w-full sm:mt-2 bg-white border border-gray-200 rounded-t-2xl sm:rounded-xl shadow-2xl max-h-60 overflow-y-auto" style={{scrollbarWidth:'thin'}}>
               <div className="w-10 h-1 bg-gray-300 rounded-full mx-auto mt-2 mb-1 sm:hidden" />
               {isLoadingLocations ? (
                 <div className="p-3 text-center text-gray-500 text-sm">Searching locations...</div>
@@ -392,16 +395,16 @@ const TransfersTab = ({ variant = 'dark' }) => {
           </label>
         <div
           onClick={() => setShowCalendar(!showCalendar)}
-          className="flex items-center w-full px-3 py-2.5 sm:py-3 border border-gray-300 bg-white rounded-lg cursor-pointer hover:border-blue-500 transition-all"
+          className="flex items-center w-full min-h-[44px] px-3 py-2.5 sm:py-3 border border-gray-300 bg-white rounded-lg cursor-pointer hover:border-blue-500 transition-all"
         >
           <Calendar className="text-gray-400 mr-2 flex-shrink-0" size={18} />
-          <span className="text-gray-700 flex-1 text-sm sm:text-base truncate">
+          <span className="text-gray-700 flex-1 text-base truncate">
             {tripType === 'round_trip'
               ? `${format(transferDateRange[0].startDate, 'MMM dd, yyyy')} – ${format(transferDateRange[0].endDate, 'MMM dd, yyyy')}`
               : format(transferDateRange[0].startDate, 'MMM dd, yyyy')}
           </span>
         </div>
-        {showCalendar && createPortal(
+        {showCalendar && !isMobile && createPortal(
           <div data-calendar-portal style={{position:"fixed",inset:0,zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.3)"}} onClick={(e) => { if (e.target === e.currentTarget) setShowCalendar(false); }}><div className="bg-white border border-gray-200 rounded-2xl shadow-2xl overflow-auto max-h-[80vh]" style={{maxWidth:"95vw",margin:"16px"}}>
             <Suspense fallback={<div className="p-8 text-center text-gray-400">Loading calendar...</div>}>
               <LazyDateRange
@@ -426,6 +429,30 @@ const TransfersTab = ({ variant = 'dark' }) => {
           </div>
           </div>
         , document.body)}
+        {isMobile && (
+          <BottomSheet isOpen={showCalendar} onClose={() => setShowCalendar(false)} title={tripType === 'round_trip' ? 'Select Travel Dates' : 'Select Travel Date'}>
+            <Suspense fallback={<div className="p-8 text-center text-gray-400">Loading calendar...</div>}>
+              <LazyDateRange
+                ranges={transferDateRange}
+                onChange={(item) => {
+                  setTransferDateRange([item.selection]);
+                  if (tripType === 'one_way') setShowCalendar(false);
+                }}
+                minDate={new Date()}
+                moveRangeOnFirstSelection={false}
+                preventSnapRefocus={true}
+                months={1}
+                direction="horizontal"
+                rangeColors={['#2563eb']}
+                showDateDisplay={false}
+                selectsRange={tripType === 'round_trip'}
+              />
+            </Suspense>
+            <div className="px-4 pb-3 flex justify-end">
+              <button type="button" onClick={() => setShowCalendar(false)} className="w-full px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm">Done</button>
+            </div>
+          </BottomSheet>
+        )}
         </div>
 
         <div className="relative" ref={travellerRef}>
@@ -434,16 +461,16 @@ const TransfersTab = ({ variant = 'dark' }) => {
           </label>
           <div
             onClick={() => setShowTravellerDropdown(!showTravellerDropdown)}
-            className="flex items-center w-full px-3 py-2.5 sm:py-3 border border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 transition-all bg-white"
+            className="flex items-center w-full min-h-[44px] px-3 py-2.5 sm:py-3 border border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 transition-all bg-white"
           >
             <Users className="text-gray-400 mr-2 flex-shrink-0" size={18} />
-            <span className="text-gray-700 flex-1 text-sm sm:text-base truncate">
+            <span className="text-gray-700 flex-1 text-base truncate">
               {adults} Adult{adults > 1 ? 's' : ''}{children > 0 ? `, ${children} Child${children > 1 ? 'ren' : ''}` : ''}{infants > 0 ? `, ${infants} Infant${infants > 1 ? 's' : ''}` : ''}
             </span>
             <ChevronDown className="text-gray-400 flex-shrink-0" size={18} />
           </div>
-          {showTravellerDropdown && (
-            <div className="fixed sm:absolute inset-x-0 sm:inset-x-auto bottom-0 sm:bottom-auto sm:top-full sm:mt-2 z-[200] bg-white border border-gray-300 rounded-t-2xl sm:rounded-xl shadow-2xl p-4 space-y-3 max-h-[70vh] overflow-y-auto">
+          {showTravellerDropdown && !isMobile && (
+            <div className="absolute inset-x-auto top-full mt-2 z-[200] bg-white border border-gray-300 rounded-xl shadow-2xl p-4 space-y-3 max-h-[70vh] overflow-y-auto">
               <div className="flex items-center justify-between">
                 <span className="text-gray-700 font-medium text-sm sm:text-base">Adults</span>
                 <div className="flex items-center space-x-2 sm:space-x-3">
@@ -471,6 +498,37 @@ const TransfersTab = ({ variant = 'dark' }) => {
               <button type="button" onClick={() => setShowTravellerDropdown(false)} className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm sm:text-base">Done</button>
             </div>
           )}
+          {isMobile && (
+            <BottomSheet isOpen={showTravellerDropdown} onClose={() => setShowTravellerDropdown(false)} title="Travellers">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-700 font-medium text-base">Adults</span>
+                  <div className="flex items-center space-x-3">
+                    <button type="button" onClick={() => setAdults(Math.max(1, adults - 1))} className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Minus size={14} /></button>
+                    <span className="w-8 text-center font-medium text-base">{adults}</span>
+                    <button type="button" onClick={() => setAdults(Math.min(20, adults + 1))} className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Plus size={14} /></button>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-700 font-medium text-base">Children</span>
+                  <div className="flex items-center space-x-3">
+                    <button type="button" onClick={() => setChildren(Math.max(0, children - 1))} className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Minus size={14} /></button>
+                    <span className="w-8 text-center font-medium text-base">{children}</span>
+                    <button type="button" onClick={() => setChildren(Math.min(10, children + 1))} className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Plus size={14} /></button>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-700 font-medium text-base">Infants</span>
+                  <div className="flex items-center space-x-3">
+                    <button type="button" onClick={() => setInfants(Math.max(0, infants - 1))} className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Minus size={14} /></button>
+                    <span className="w-8 text-center font-medium text-base">{infants}</span>
+                    <button type="button" onClick={() => setInfants(Math.min(5, infants + 1))} className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Plus size={14} /></button>
+                  </div>
+                </div>
+                <button type="button" onClick={() => setShowTravellerDropdown(false)} className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-base">Done</button>
+              </div>
+            </BottomSheet>
+          )}
         </div>
       </div>
 
@@ -478,7 +536,7 @@ const TransfersTab = ({ variant = 'dark' }) => {
         <button
           type="submit"
           disabled={loading}
-          className="w-full md:w-auto px-6 sm:px-8 py-2.5 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition-colors font-medium flex items-center justify-center space-x-2 text-sm sm:text-base"
+          className="w-full md:w-auto min-h-[44px] px-6 sm:px-8 py-2.5 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition-colors font-medium flex items-center justify-center space-x-2 text-base"
         >
           <Search size={18} />
           <span>{loading ? 'Searching...' : 'Search Transfers'}</span>
@@ -490,6 +548,7 @@ const TransfersTab = ({ variant = 'dark' }) => {
 
 // Experiences Tab Component
 const ExperiencesTab = ({ variant = 'dark' }) => {
+  const isMobile = useIsMobile();
   const lbl = variant === 'light' ? 'text-gray-700' : 'text-white/80';
   const [searchQuery, setSearchQuery] = useState('');
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
@@ -601,7 +660,7 @@ const ExperiencesTab = ({ variant = 'dark' }) => {
         <label className={`block text-xs sm:text-sm font-medium ${lbl} mb-1.5 sm:mb-2 text-left`}>
           Destination <span className="text-red-500">*</span>
         </label>
-        <div className="flex items-center w-full border border-gray-300 bg-white rounded-lg focus-within:ring-2 focus-within:ring-blue-500 px-3 py-2.5 sm:py-3 gap-2">
+        <div className="flex items-center w-full min-h-[44px] border border-gray-300 bg-white rounded-lg focus-within:ring-2 focus-within:ring-blue-500 px-3 py-2.5 sm:py-3 gap-2">
           <MapPin className="text-gray-400 flex-shrink-0" size={18} />
           <input
             type="text"
@@ -613,7 +672,7 @@ const ExperiencesTab = ({ variant = 'dark' }) => {
             }}
             onFocus={() => setShowLocationDropdown(true)}
             placeholder="Where are you going? e.g: Dubai"
-            className="flex-1 min-w-0 outline-none bg-transparent text-gray-700 text-sm sm:text-base placeholder-gray-400"
+            className="flex-1 min-w-0 outline-none bg-transparent text-gray-700 text-base placeholder-gray-400"
             required
           />
           {searchQuery && (
@@ -624,7 +683,7 @@ const ExperiencesTab = ({ variant = 'dark' }) => {
         {showLocationDropdown && (searchQuery.trim() !== '' || isLoadingLocations) && (
           <>
           <div className="fixed inset-0 bg-black/30 z-[209] sm:hidden" onClick={() => setShowLocationDropdown(false)} />
-          <div className="fixed sm:absolute inset-x-0 sm:inset-x-auto bottom-0 sm:bottom-auto sm:top-full z-[210] sm:z-50 sm:w-full sm:mt-2 bg-white border border-gray-200 rounded-t-2xl sm:rounded-xl shadow-2xl max-h-[55vh] sm:max-h-[60vh] overflow-y-auto">
+          <div className="fixed sm:absolute inset-x-0 sm:inset-x-auto bottom-0 sm:bottom-auto sm:top-full z-[210] sm:z-50 w-full sm:mt-2 bg-white border border-gray-200 rounded-t-2xl sm:rounded-xl shadow-2xl max-h-60 overflow-y-auto">
             <div className="w-10 h-1 bg-gray-300 rounded-full mx-auto mt-2 mb-1 sm:hidden" />
             {isLoadingLocations ? (
               <div className="p-3 sm:p-4 text-center text-gray-500 text-sm sm:text-base">Loading locations...</div>
@@ -663,10 +722,10 @@ const ExperiencesTab = ({ variant = 'dark' }) => {
           </label>
           <div
             onClick={() => setShowCalendar(!showCalendar)}
-            className="flex items-center w-full px-3 py-2.5 sm:py-3 border border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 bg-white"
+            className="flex items-center w-full min-h-[44px] px-3 py-2.5 sm:py-3 border border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 bg-white"
           >
             <Calendar className="text-gray-400 mr-2 flex-shrink-0" size={18} />
-            <span className="text-gray-700 flex-1 text-sm sm:text-base truncate">
+            <span className="text-gray-700 flex-1 text-base truncate">
               <span className="hidden sm:inline">{format(dateRange[0].startDate, 'MMM dd, yyyy')} - {format(dateRange[0].endDate, 'MMM dd, yyyy')}</span>
               <span className="sm:hidden">{format(dateRange[0].startDate, 'MMM dd')} - {format(dateRange[0].endDate, 'MMM dd')}</span>
             </span>
@@ -674,7 +733,7 @@ const ExperiencesTab = ({ variant = 'dark' }) => {
               ({calculateNights()}d)
             </span>
           </div>
-          {showCalendar && createPortal(
+          {showCalendar && !isMobile && createPortal(
             <div data-calendar-portal style={{position:"fixed",inset:0,zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.3)"}} onClick={(e) => { if (e.target === e.currentTarget) setShowCalendar(false); }}><div className="bg-white border border-gray-200 rounded-2xl shadow-2xl overflow-auto max-h-[80vh]" style={{maxWidth:"95vw",margin:"16px"}}>
                 <Suspense fallback={<div className="p-8 text-center text-gray-400">Loading calendar...</div>}>
                   <LazyDateRange
@@ -701,6 +760,26 @@ const ExperiencesTab = ({ variant = 'dark' }) => {
             </div>
             </div>
           , document.body)}
+          {isMobile && (
+            <BottomSheet isOpen={showCalendar} onClose={() => setShowCalendar(false)} title="Select Dates">
+              <Suspense fallback={<div className="p-8 text-center text-gray-400">Loading calendar...</div>}>
+                <LazyDateRange
+                  ranges={dateRange}
+                  onChange={(item) => setDateRange([item.selection])}
+                  minDate={new Date()}
+                  moveRangeOnFirstSelection={false}
+                  preventSnapRefocus={true}
+                  months={1}
+                  direction="horizontal"
+                  rangeColors={['#2563eb']}
+                  showDateDisplay={false}
+                />
+              </Suspense>
+              <div className="px-4 pb-3 flex justify-end">
+                <button type="button" onClick={() => setShowCalendar(false)} className="w-full px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm">Done</button>
+              </div>
+            </BottomSheet>
+          )}
         </div>
 
         <div className="relative" ref={travellerRef}>
@@ -709,16 +788,16 @@ const ExperiencesTab = ({ variant = 'dark' }) => {
           </label>
           <div
             onClick={() => setShowTravellerDropdown(!showTravellerDropdown)}
-            className="flex items-center w-full px-3 py-2.5 sm:py-3 border border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 transition-all bg-white"
+            className="flex items-center w-full min-h-[44px] px-3 py-2.5 sm:py-3 border border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 transition-all bg-white"
           >
             <Users className="text-gray-400 mr-2 flex-shrink-0" size={18} />
-            <span className="text-gray-700 flex-1 text-sm sm:text-base truncate">
+            <span className="text-gray-700 flex-1 text-base truncate">
               {adults} Adult{adults > 1 ? 's' : ''}{children > 0 ? `, ${children} Child${children > 1 ? 'ren' : ''}` : ''}{infants > 0 ? `, ${infants} Infant${infants > 1 ? 's' : ''}` : ''}
             </span>
             <ChevronDown className="text-gray-400 flex-shrink-0" size={18} />
           </div>
-          {showTravellerDropdown && (
-            <div className="fixed sm:absolute inset-x-0 sm:inset-x-auto bottom-0 sm:bottom-auto sm:top-full sm:mt-2 z-[200] bg-white border border-gray-300 rounded-t-2xl sm:rounded-xl shadow-2xl p-4 space-y-3 max-h-[70vh] overflow-y-auto">
+          {showTravellerDropdown && !isMobile && (
+            <div className="absolute inset-x-auto top-full mt-2 z-[200] bg-white border border-gray-300 rounded-xl shadow-2xl p-4 space-y-3 max-h-[70vh] overflow-y-auto">
               <div className="flex items-center justify-between">
                 <span className="text-gray-700 font-medium text-sm sm:text-base">Adults</span>
                 <div className="flex items-center space-x-2 sm:space-x-3">
@@ -746,13 +825,44 @@ const ExperiencesTab = ({ variant = 'dark' }) => {
               <button type="button" onClick={() => setShowTravellerDropdown(false)} className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm sm:text-base">Done</button>
             </div>
           )}
+          {isMobile && (
+            <BottomSheet isOpen={showTravellerDropdown} onClose={() => setShowTravellerDropdown(false)} title="Travellers">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-700 font-medium text-base">Adults</span>
+                  <div className="flex items-center space-x-3">
+                    <button type="button" onClick={() => setAdults(Math.max(1, adults - 1))} className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Minus size={14} /></button>
+                    <span className="w-8 text-center font-medium text-base">{adults}</span>
+                    <button type="button" onClick={() => setAdults(Math.min(20, adults + 1))} className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Plus size={14} /></button>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-700 font-medium text-base">Children</span>
+                  <div className="flex items-center space-x-3">
+                    <button type="button" onClick={() => setChildren(Math.max(0, children - 1))} className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Minus size={14} /></button>
+                    <span className="w-8 text-center font-medium text-base">{children}</span>
+                    <button type="button" onClick={() => setChildren(Math.min(10, children + 1))} className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Plus size={14} /></button>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-700 font-medium text-base">Infants</span>
+                  <div className="flex items-center space-x-3">
+                    <button type="button" onClick={() => setInfants(Math.max(0, infants - 1))} className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Minus size={14} /></button>
+                    <span className="w-8 text-center font-medium text-base">{infants}</span>
+                    <button type="button" onClick={() => setInfants(Math.min(5, infants + 1))} className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Plus size={14} /></button>
+                  </div>
+                </div>
+                <button type="button" onClick={() => setShowTravellerDropdown(false)} className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-base">Done</button>
+              </div>
+            </BottomSheet>
+          )}
         </div>
       </div>
 
       <div className="flex justify-end">
         <button
           type="submit"
-          className="w-full md:w-auto px-6 sm:px-8 py-2.5 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center justify-center space-x-2 text-sm sm:text-base"
+          className="w-full md:w-auto min-h-[44px] px-6 sm:px-8 py-2.5 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center justify-center space-x-2 text-base"
         >
           <Search size={18} />
           <span>Search Experiences</span>
@@ -826,6 +936,7 @@ const OldExperiencesResults = ({ experiences }) => {
 };
 
 const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' }) => {
+  const isMobile = useIsMobile();
   // Date range state
   const [dateRange, setDateRange] = useState([
     {
@@ -1009,14 +1120,14 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
     <div className="w-full">
       <div className="bg-white/15 backdrop-blur-xl rounded-2xl border border-white/20 shadow-2xl p-4 sm:p-5 md:p-6 text-left">
         {/* ── Search Tabs ── */}
-        <div className="flex items-center bg-white rounded-full p-1 mb-5 sm:mb-6" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
+        <div className="flex items-center bg-white rounded-full p-1 mb-5 sm:mb-6 overflow-x-auto flex-nowrap" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.06)', scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}>
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className="flex-1 flex items-center justify-center gap-1.5 sm:gap-2 py-2.5 rounded-full transition-all duration-300 relative"
+                className="flex-1 flex-shrink-0 flex items-center justify-center gap-1.5 sm:gap-2 py-2.5 rounded-full transition-all duration-300 relative whitespace-nowrap"
                 style={{
                   minHeight: 'unset',
                   background: isActive ? '#2563eb' : 'transparent',
@@ -1042,7 +1153,7 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
                   <label className={`block text-xs sm:text-sm font-medium ${lbl} mb-1.5 sm:mb-2 text-left`}>
                     Destination <span className="text-red-500">*</span>
                   </label>
-                  <div className="flex items-center w-full border border-gray-300 bg-white rounded-lg focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent px-3 py-2.5 sm:py-3 gap-2">
+                  <div className="flex items-center w-full min-h-[44px] border border-gray-300 bg-white rounded-lg focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent px-3 py-2.5 sm:py-3 gap-2">
                     <MapPin className="text-gray-400 flex-shrink-0" size={18} />
                     <input
                       type="text"
@@ -1050,7 +1161,7 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
                       onChange={handleSearchInputChange}
                       onFocus={() => setShowLocationDropdown(true)}
                       placeholder="City or country, e.g: London"
-                      className="flex-1 min-w-0 outline-none bg-transparent text-gray-700 text-sm sm:text-base placeholder-gray-400"
+                      className="flex-1 min-w-0 outline-none bg-transparent text-gray-700 text-base placeholder-gray-400"
                     />
                     {searchQuery && (
                       <button type="button" onClick={() => { setSearchQuery(''); setSelectedLocation(null); setFilteredLocations([]); }} className="text-gray-400 hover:text-gray-600 flex-shrink-0"><X size={16} /></button>
@@ -1059,7 +1170,7 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
                   {showLocationDropdown && searchQuery.trim() !== '' && (
                     <>
                     <div className="fixed inset-0 bg-black/30 z-[209] sm:hidden" onClick={() => setShowLocationDropdown(false)} />
-                    <div className="fixed sm:absolute inset-x-0 sm:inset-x-auto bottom-0 sm:bottom-auto sm:top-full z-[210] sm:z-50 sm:w-full sm:mt-2 bg-white border border-gray-200 rounded-t-2xl sm:rounded-xl shadow-2xl max-h-[55vh] sm:max-h-[60vh] overflow-y-auto" style={{scrollbarWidth:'thin'}}>
+                    <div className="fixed sm:absolute inset-x-0 sm:inset-x-auto bottom-0 sm:bottom-auto sm:top-full z-[210] sm:z-50 w-full sm:mt-2 bg-white border border-gray-200 rounded-t-2xl sm:rounded-xl shadow-2xl max-h-60 overflow-y-auto" style={{scrollbarWidth:'thin'}}>
                       <div className="w-10 h-1 bg-gray-300 rounded-full mx-auto mt-2 mb-1 sm:hidden" />
                       {isLoadingLocations ? (
                         <div className="p-4 text-center text-gray-400 text-sm">Searching...</div>
@@ -1089,14 +1200,14 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
                   <label className={`block text-xs sm:text-sm font-medium ${lbl} mb-1.5 sm:mb-2 text-left`}>
                     Hotel Name <span className="text-gray-400 text-xs font-normal">(filter)</span>
                   </label>
-                  <div className="flex items-center w-full border border-gray-300 bg-white rounded-lg focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent px-3 py-2.5 sm:py-3 gap-2">
+                  <div className="flex items-center w-full min-h-[44px] border border-gray-300 bg-white rounded-lg focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent px-3 py-2.5 sm:py-3 gap-2">
                     <Building2 className="text-gray-400 flex-shrink-0" size={18} />
                     <input
                       type="text"
                       value={hotelNameQuery}
                       onChange={(e) => setHotelNameQuery(e.target.value)}
                       placeholder="e.g. Hilton, Marriott..."
-                      className="flex-1 min-w-0 outline-none bg-transparent text-gray-700 text-sm sm:text-base placeholder-gray-400"
+                      className="flex-1 min-w-0 outline-none bg-transparent text-gray-700 text-base placeholder-gray-400"
                     />
                     {hotelNameQuery && (
                       <button type="button" onClick={() => setHotelNameQuery('')} className="text-gray-400 hover:text-gray-600 flex-shrink-0"><X size={16} /></button>
@@ -1116,10 +1227,10 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
                   </label>
                   <div
                     onClick={() => setShowCalendar(!showCalendar)}
-                    className="flex items-center w-full px-3 py-2.5 sm:py-3 border border-gray-300 bg-white rounded-lg cursor-pointer hover:border-blue-500 transition-all"
+                    className="flex items-center w-full min-h-[44px] px-3 py-2.5 sm:py-3 border border-gray-300 bg-white rounded-lg cursor-pointer hover:border-blue-500 transition-all"
                   >
                     <Calendar className="text-gray-400 mr-2 flex-shrink-0" size={18} />
-                    <span className="text-gray-700 flex-1 text-sm sm:text-base truncate">
+                    <span className="text-gray-700 flex-1 text-base truncate">
                       <span className="hidden sm:inline">{format(dateRange[0].startDate, 'MMM dd, yyyy')} - {format(dateRange[0].endDate, 'MMM dd, yyyy')}</span>
                       <span className="sm:hidden">{format(dateRange[0].startDate, 'MMM dd')} - {format(dateRange[0].endDate, 'MMM dd')}</span>
                     </span>
@@ -1128,7 +1239,7 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
                     </span>
                   </div>
 
-                  {showCalendar && createPortal(
+                  {showCalendar && !isMobile && createPortal(
                     <div data-calendar-portal style={{position:"fixed",inset:0,zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.3)"}} onClick={(e) => { if (e.target === e.currentTarget) setShowCalendar(false); }}><div className="bg-white border border-gray-200 rounded-2xl shadow-2xl overflow-auto max-h-[80vh]" style={{maxWidth:"95vw",margin:"16px"}}>
                         <Suspense fallback={<div className="p-8 text-center text-gray-400">Loading calendar...</div>}>
                           <LazyDateRange
@@ -1155,6 +1266,26 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
                     </div>
                     </div>
                   , document.body)}
+                  {isMobile && (
+                    <BottomSheet isOpen={showCalendar} onClose={() => setShowCalendar(false)} title="Select Dates">
+                      <Suspense fallback={<div className="p-8 text-center text-gray-400">Loading calendar...</div>}>
+                        <LazyDateRange
+                          ranges={dateRange}
+                          onChange={(item) => setDateRange([item.selection])}
+                          minDate={new Date()}
+                          moveRangeOnFirstSelection={false}
+                          preventSnapRefocus={true}
+                          months={1}
+                          direction="horizontal"
+                          rangeColors={['#2563eb']}
+                          showDateDisplay={false}
+                        />
+                      </Suspense>
+                      <div className="px-4 pb-3 flex justify-end">
+                        <button type="button" onClick={() => setShowCalendar(false)} className="w-full px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm">Done</button>
+                      </div>
+                    </BottomSheet>
+                  )}
                 </div>
 
                 {/* Travellers Dropdown */}
@@ -1164,22 +1295,18 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
                   </label>
                   <div
                     onClick={() => setShowTravellerDropdown(!showTravellerDropdown)}
-                    className="flex items-center w-full px-3 py-2.5 sm:py-3 border border-gray-300 bg-white rounded-lg cursor-pointer hover:border-blue-500 transition-all"
+                    className="flex items-center w-full min-h-[44px] px-3 py-2.5 sm:py-3 border border-gray-300 bg-white rounded-lg cursor-pointer hover:border-blue-500 transition-all"
                   >
                     <Users className="text-gray-400 mr-2 flex-shrink-0" size={18} />
-                    <span className="text-gray-700 flex-1 text-sm sm:text-base truncate">
+                    <span className="text-gray-700 flex-1 text-base truncate">
                       {getTravellerSummary()}
                     </span>
                     <ChevronDown className="text-gray-400 flex-shrink-0" size={18} />
                   </div>
 
-                  {showTravellerDropdown && (
+                  {showTravellerDropdown && !isMobile && (
                     <>
-                      {/* Mobile backdrop — prevents background scroll */}
-                      <div className="fixed inset-0 bg-black/30 z-[199] sm:hidden" onClick={() => setShowTravellerDropdown(false)} />
-                      <div className="fixed sm:absolute inset-x-0 sm:inset-x-auto bottom-0 sm:bottom-auto sm:top-full sm:mt-2 z-[200] bg-white border border-gray-300 rounded-t-2xl sm:rounded-xl shadow-2xl p-4 space-y-3 max-h-[70vh] overflow-y-auto">
-                      {/* Mobile drag handle */}
-                      <div className="w-10 h-1 bg-gray-300 rounded-full mx-auto mb-2 sm:hidden" />
+                      <div className="absolute inset-x-auto top-full mt-2 z-[200] bg-white border border-gray-300 rounded-xl shadow-2xl p-4 space-y-3 max-h-[70vh] overflow-y-auto">
                       {/* Rooms */}
                       <div className="flex items-center justify-between">
                         <span className="text-gray-700 font-medium text-sm sm:text-base">Rooms</span>
@@ -1278,6 +1405,61 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
                     </div>
                   </>
                   )}
+                  {isMobile && (
+                    <BottomSheet isOpen={showTravellerDropdown} onClose={() => setShowTravellerDropdown(false)} title="Travellers & Rooms">
+                      <div className="space-y-3">
+                        {/* Rooms */}
+                        <div className="flex items-center justify-between">
+                          <span className="text-gray-700 font-medium text-base">Rooms</span>
+                          <div className="flex items-center space-x-3">
+                            <button type="button" onClick={() => setRooms(Math.max(1, rooms - 1))} className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Minus size={14} /></button>
+                            <span className="w-8 text-center font-medium text-base">{rooms}</span>
+                            <button type="button" onClick={() => setRooms(Math.min(10, rooms + 1))} className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Plus size={14} /></button>
+                          </div>
+                        </div>
+                        {/* Adults */}
+                        <div className="flex items-center justify-between">
+                          <span className="text-gray-700 font-medium text-base">Adults</span>
+                          <div className="flex items-center space-x-3">
+                            <button type="button" onClick={() => setAdults(Math.max(1, adults - 1))} className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Minus size={14} /></button>
+                            <span className="w-8 text-center font-medium text-base">{adults}</span>
+                            <button type="button" onClick={() => setAdults(Math.min(20, adults + 1))} className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Plus size={14} /></button>
+                          </div>
+                        </div>
+                        {/* Children */}
+                        <div className="flex items-center justify-between">
+                          <span className="text-gray-700 font-medium text-base">Children</span>
+                          <div className="flex items-center space-x-3">
+                            <button type="button" onClick={() => handleChildrenChange(children - 1)} className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Minus size={14} /></button>
+                            <span className="w-8 text-center font-medium text-base">{children}</span>
+                            <button type="button" onClick={() => handleChildrenChange(children + 1)} className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Plus size={14} /></button>
+                          </div>
+                        </div>
+                        {/* Child Ages */}
+                        {children > 0 && (
+                          <div className="pt-3 border-t border-gray-200">
+                            <p className="text-sm text-gray-600 mb-3">Ages of children at check-out</p>
+                            <div className="grid grid-cols-2 gap-2">
+                              {childAges.map((age, index) => (
+                                <select
+                                  key={index}
+                                  value={age}
+                                  onChange={(e) => handleChildAgeChange(index, e.target.value)}
+                                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 min-h-[44px]"
+                                >
+                                  <option value={0}>Under 1</option>
+                                  {[...Array(17)].map((_, i) => (
+                                    <option key={i + 1} value={i + 1}>{i + 1} year{i + 1 > 1 ? 's' : ''}</option>
+                                  ))}
+                                </select>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        <button type="button" onClick={() => setShowTravellerDropdown(false)} className="w-full mt-3 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-base">Done</button>
+                      </div>
+                    </BottomSheet>
+                  )}
                 </div>
               </div>
 
@@ -1286,7 +1468,7 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
                 <button
                   type="submit"
                   style={{ cursor: 'pointer' }}
-                  className="w-full md:w-auto px-6 sm:px-8 py-2.5 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center justify-center space-x-2 cursor-pointer text-sm sm:text-base"
+                  className="w-full md:w-auto min-h-[44px] px-6 sm:px-8 py-2.5 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center justify-center space-x-2 cursor-pointer text-base"
                 >
                   <Search size={18} />
                   <span>Search Hotels</span>

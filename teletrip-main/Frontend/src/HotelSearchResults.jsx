@@ -35,7 +35,8 @@ import ReviewsModal from "./components/ReviewsModal";
 import HotelSearchForm from "./components/HotelSearchForm";
 import { useCart } from "./components/CartSystem";
 import { useCurrency } from "./context/CurrencyContext";
-import MobileFilters from "./components/MobileFilters";
+import MobileFilterDrawer from "./components/MobileFilterDrawer";
+import { SlidersHorizontal } from "lucide-react";
 
 
 const RatingCircles = ({ rating, size = 'w-5 h-5' }) => {
@@ -1013,13 +1014,13 @@ if (children > 0 && childAges.length > 0) {
         <p className="text-red-600 text-lg mb-4">{error}</p>
         <button
           onClick={() => window.location.reload()}
-          className="mr-4 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
+          className="mr-4 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 min-h-[44px]"
         >
           Retry
         </button>
         <button
           onClick={() => (window.location.href = "/home")}
-          className="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700"
+          className="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700 min-h-[44px]"
         >
           Back to Search
         </button>
@@ -1521,94 +1522,154 @@ if (children > 0 && childAges.length > 0) {
         {/* Mobile Filter FAB */}
         <button
           onClick={() => setShowMobileFilters(true)}
-          style={{
-            position: 'fixed', bottom: 80, right: 16, zIndex: 115,
-            alignItems: 'center', gap: 8,
-            backgroundColor: '#2563eb', color: '#fff',
-            padding: '10px 18px', borderRadius: 99,
-            boxShadow: '0 4px 16px rgba(37,99,235,0.4)',
-            border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 14,
-          }}
-          className="lg:hidden flex"
+          className="fixed bottom-20 right-4 z-50 lg:hidden flex items-center gap-2 bg-blue-600 text-white px-4 py-2.5 rounded-full shadow-lg hover:bg-blue-700 transition-colors font-semibold text-sm"
+          aria-label="Open filters"
         >
-          <Filter className="w-4 h-4" />
+          <SlidersHorizontal className="w-4 h-4" />
           <span>Filters</span>
           {(selectedAmenities.length + selectedAccommodationTypes.length + selectedBoards.length + selectedCategories.length + selectedZones.length + selectedReviewRatings.length + selectedPromos.length + selectedDiscounts.length + selectedChains.length + selectedEstablishment.length + (hotelNameSearch ? 1 : 0) + (selectedCancellation ? 1 : 0) + (priceMin ? 1 : 0) + (priceMax ? 1 : 0)) > 0 && (
-            <span style={{
-              backgroundColor: '#fff', color: '#2563eb', fontSize: 11,
-              fontWeight: 700, borderRadius: 99, width: 20, height: 20,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
+            <span className="bg-white text-blue-600 text-[11px] font-bold rounded-full w-5 h-5 flex items-center justify-center">
               {selectedAmenities.length + selectedAccommodationTypes.length + selectedBoards.length + selectedCategories.length + selectedZones.length + selectedReviewRatings.length + selectedPromos.length + selectedDiscounts.length + selectedChains.length + selectedEstablishment.length + (hotelNameSearch ? 1 : 0) + (selectedCancellation ? 1 : 0) + (priceMin ? 1 : 0) + (priceMax ? 1 : 0)}
             </span>
           )}
         </button>
 
-        {/* Mobile Filters Sheet */}
-        <MobileFilters
+        {/* Mobile Filter Drawer */}
+        <MobileFilterDrawer
           isOpen={showMobileFilters}
           onClose={() => setShowMobileFilters(false)}
-          onReset={clearFilters}
-          activeCount={selectedAmenities.length + selectedAccommodationTypes.length + selectedBoards.length + selectedCategories.length + selectedZones.length + selectedReviewRatings.length + selectedPromos.length + selectedDiscounts.length + selectedChains.length + selectedEstablishment.length + (hotelNameSearch ? 1 : 0) + (selectedCancellation ? 1 : 0) + (priceMin ? 1 : 0) + (priceMax ? 1 : 0)}
-          sections={[
-            {
-              key: 'hotelName', label: 'Hotel Name', type: 'search',
-              placeholder: 'Search hotel name...',
-              value: hotelNameSearch, onChange: setHotelNameSearch,
-            },
-            ...(dynamicBoards.length > 0 ? [{
-              key: 'board', label: 'Board', type: 'checkbox',
-              value: selectedBoards, onChange: setSelectedBoards,
-              options: dynamicBoards.map(b => ({ value: b, label: b, count: filterCounts.boards[b] || 0 })),
-            }] : []),
-            ...(dynamicCategories.length > 0 ? [{
-              key: 'category', label: 'Category', type: 'checkbox',
-              value: selectedCategories, onChange: setSelectedCategories,
-              options: dynamicCategories.map(c => ({ value: c, label: c, count: filterCounts.categories[c] || 0 })),
-            }] : []),
-            {
-              key: 'cancellation', label: 'Cancellation', type: 'radio',
-              value: selectedCancellation, onChange: setSelectedCancellation,
-              options: [
-                { value: 'free', label: 'Free cancellation', count: filterCounts.freeCancellation },
-                { value: 'partial', label: 'Partial refund', count: filterCounts.partialCancellation },
-                { value: 'nonrefundable', label: 'Non-refundable', count: filterCounts.nonRefundable },
-              ],
-            },
-            {
-              key: 'price', label: 'Price Range (PKR)', type: 'range',
-              valueMin: priceMin, onChangeMin: setPriceMin,
-              valueMax: priceMax, onChangeMax: setPriceMax,
-              placeholderMin: String(priceBounds.min),
-              placeholderMax: String(priceBounds.max),
-            },
-            ...(dynamicZones.length > 0 ? [{
-              key: 'zone', label: 'Zone', type: 'checkbox',
-              value: selectedZones, onChange: setSelectedZones,
-              options: dynamicZones.map(z => ({ value: z, label: z, count: filterCounts.zones[z] || 0 })),
-            }] : []),
-            {
-              key: 'accommodationType', label: 'Accommodation Type', type: 'checkbox',
-              value: selectedAccommodationTypes, onChange: setSelectedAccommodationTypes,
-              options: accommodationTypes.map(t => ({ value: t.id, label: t.name, count: filterCounts.accommodationTypes[t.id] || 0 })),
-            },
-            {
-              key: 'amenities', label: 'Amenities', type: 'checkbox',
-              value: selectedAmenities, onChange: setSelectedAmenities,
-              options: availableAmenities.map(a => ({ value: a.id, label: a.name, count: filterCounts.amenities[a.id] || 0 })),
-            },
-            ...(dynamicPromos.length > 0 ? [{
-              key: 'promos', label: 'Promotions', type: 'checkbox',
-              value: selectedPromos, onChange: setSelectedPromos,
-              options: dynamicPromos.map(p => ({ value: p, label: p, count: filterCounts.promos[p] || 0 })),
-            }] : []),
-            ...(dynamicChains.length > 0 ? [{
-              key: 'chain', label: 'Hotel Chain', type: 'checkbox',
-              value: selectedChains, onChange: setSelectedChains,
-              options: dynamicChains.map(c => ({ value: c, label: c, count: filterCounts.chains[c] || 0 })),
-            }] : []),
-          ]}
-        />
+          onApply={() => setShowMobileFilters(false)}
+          onReset={() => { clearFilters(); setShowMobileFilters(false); }}
+          title="Filters"
+        >
+          {/* Hotel Name Search */}
+          <div className="py-3 border-b border-gray-50">
+            <span className="text-[13px] font-semibold text-gray-800 block mb-2">Hotel Name</span>
+            <input type="text" value={hotelNameSearch} onChange={(e) => setHotelNameSearch(e.target.value)} placeholder="Search hotel name..." className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50/50 focus:bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none" />
+          </div>
+          {/* Board */}
+          {dynamicBoards.length > 0 && (
+            <div className="py-3 border-b border-gray-50">
+              <span className="text-[13px] font-semibold text-gray-800 block mb-2">Board</span>
+              <div className="space-y-1.5 max-h-44 overflow-y-auto">
+                {dynamicBoards.map(board => (
+                  <label key={board} className="flex items-center gap-2.5 py-0.5 cursor-pointer group">
+                    <input type="checkbox" checked={selectedBoards.includes(board)} onChange={() => setSelectedBoards(prev => prev.includes(board) ? prev.filter(b => b !== board) : [...prev, board])} className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                    <span className="text-sm text-gray-600 flex-1">{board}</span>
+                    <span className="text-[11px] text-gray-400">{filterCounts.boards[board] || 0}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+          {/* Category */}
+          {dynamicCategories.length > 0 && (
+            <div className="py-3 border-b border-gray-50">
+              <span className="text-[13px] font-semibold text-gray-800 block mb-2">Category</span>
+              <div className="space-y-1.5 max-h-44 overflow-y-auto">
+                {dynamicCategories.map(cat => (
+                  <label key={cat} className="flex items-center gap-2.5 py-0.5 cursor-pointer group">
+                    <input type="checkbox" checked={selectedCategories.includes(cat)} onChange={() => setSelectedCategories(prev => prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat])} className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                    <span className="text-sm text-gray-600 flex-1">{cat}</span>
+                    <span className="text-[11px] text-gray-400">{filterCounts.categories[cat] || 0}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+          {/* Cancellation */}
+          <div className="py-3 border-b border-gray-50">
+            <span className="text-[13px] font-semibold text-gray-800 block mb-2">Cancellation</span>
+            <div className="space-y-1.5">
+              {[{ value: 'free', label: 'Free cancellation' }, { value: 'partial', label: 'Partial refund' }, { value: 'nonrefundable', label: 'Non-refundable' }].map(opt => (
+                <label key={opt.value} className="flex items-center gap-2.5 py-0.5 cursor-pointer group">
+                  <input type="radio" name="cancellation-mobile" checked={selectedCancellation === opt.value} onChange={() => setSelectedCancellation(selectedCancellation === opt.value ? '' : opt.value)} className="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500" />
+                  <span className="text-sm text-gray-600 flex-1">{opt.label}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+          {/* Price Range */}
+          <div className="py-3 border-b border-gray-50">
+            <span className="text-[13px] font-semibold text-gray-800 block mb-2">Price Range (PKR)</span>
+            <div className="flex items-center gap-2">
+              <input type="number" value={priceMin} onChange={(e) => setPriceMin(e.target.value)} placeholder={String(priceBounds.min)} className="w-full px-2.5 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50/50 focus:bg-white focus:ring-1 focus:ring-blue-500 outline-none" />
+              <span className="text-gray-300 text-xs">–</span>
+              <input type="number" value={priceMax} onChange={(e) => setPriceMax(e.target.value)} placeholder={String(priceBounds.max)} className="w-full px-2.5 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50/50 focus:bg-white focus:ring-1 focus:ring-blue-500 outline-none" />
+            </div>
+          </div>
+          {/* Zone */}
+          {dynamicZones.length > 0 && (
+            <div className="py-3 border-b border-gray-50">
+              <span className="text-[13px] font-semibold text-gray-800 block mb-2">Zone</span>
+              <div className="space-y-1.5 max-h-44 overflow-y-auto">
+                {dynamicZones.map(zone => (
+                  <label key={zone} className="flex items-center gap-2.5 py-0.5 cursor-pointer group">
+                    <input type="checkbox" checked={selectedZones.includes(zone)} onChange={() => setSelectedZones(prev => prev.includes(zone) ? prev.filter(z => z !== zone) : [...prev, zone])} className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                    <span className="text-sm text-gray-600 flex-1">{zone}</span>
+                    <span className="text-[11px] text-gray-400">{filterCounts.zones[zone] || 0}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+          {/* Accommodation Type */}
+          <div className="py-3 border-b border-gray-50">
+            <span className="text-[13px] font-semibold text-gray-800 block mb-2">Accommodation Type</span>
+            <div className="space-y-1.5">
+              {accommodationTypes.map(type => (
+                <label key={type.id} className="flex items-center gap-2.5 py-0.5 cursor-pointer group">
+                  <input type="checkbox" checked={selectedAccommodationTypes.includes(type.id)} onChange={() => handleAccommodationTypeChange(type.id)} className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                  <span className="text-sm text-gray-600 flex-1">{type.name}</span>
+                  <span className="text-[11px] text-gray-400">{filterCounts.accommodationTypes[type.id] || 0}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+          {/* Amenities */}
+          <div className="py-3 border-b border-gray-50">
+            <span className="text-[13px] font-semibold text-gray-800 block mb-2">Amenities</span>
+            <div className="space-y-1.5">
+              {availableAmenities.map(amenity => (
+                <label key={amenity.id} className="flex items-center gap-2.5 py-0.5 cursor-pointer group">
+                  <input type="checkbox" checked={selectedAmenities.includes(amenity.id)} onChange={() => handleAmenityChange(amenity.id)} className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                  <span className="text-sm text-gray-600 flex-1">{amenity.name}</span>
+                  <span className="text-[11px] text-gray-400">{filterCounts.amenities[amenity.id] || 0}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+          {/* Promotions */}
+          {dynamicPromos.length > 0 && (
+            <div className="py-3 border-b border-gray-50">
+              <span className="text-[13px] font-semibold text-gray-800 block mb-2">Promotions</span>
+              <div className="space-y-1.5 max-h-44 overflow-y-auto">
+                {dynamicPromos.map(promo => (
+                  <label key={promo} className="flex items-center gap-2.5 py-0.5 cursor-pointer group">
+                    <input type="checkbox" checked={selectedPromos.includes(promo)} onChange={() => setSelectedPromos(prev => prev.includes(promo) ? prev.filter(p => p !== promo) : [...prev, promo])} className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                    <span className="text-sm text-gray-600 flex-1">{promo}</span>
+                    <span className="text-[11px] text-gray-400">{filterCounts.promos[promo] || 0}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+          {/* Hotel Chain */}
+          {dynamicChains.length > 0 && (
+            <div className="py-3 border-b border-gray-50">
+              <span className="text-[13px] font-semibold text-gray-800 block mb-2">Hotel Chain</span>
+              <div className="space-y-1.5 max-h-44 overflow-y-auto">
+                {dynamicChains.map(chain => (
+                  <label key={chain} className="flex items-center gap-2.5 py-0.5 cursor-pointer group">
+                    <input type="checkbox" checked={selectedChains.includes(chain)} onChange={() => setSelectedChains(prev => prev.includes(chain) ? prev.filter(c => c !== chain) : [...prev, chain])} className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                    <span className="text-sm text-gray-600 flex-1">{chain}</span>
+                    <span className="text-[11px] text-gray-400">{filterCounts.chains[chain] || 0}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+        </MobileFilterDrawer>
 
         <div className="flex-1 min-w-0 flex flex-col">
           {/* Sort bar — fixed, always below header with gap */}
@@ -1732,7 +1793,7 @@ if (children > 0 && childAges.length > 0) {
 
                     {/* Bottom row */}
                     <div className="flex items-center justify-end mt-2 pt-2 border-t border-gray-50">
-                      <button onClick={(e) => { e.stopPropagation(); setSelectedHotel(hotel); }} className="w-full sm:w-auto px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-[12px] font-medium inline-flex items-center justify-center gap-1" style={{ minHeight: '40px' }}>
+                      <button onClick={(e) => { e.stopPropagation(); setSelectedHotel(hotel); }} className="w-full sm:w-auto px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-[12px] font-medium inline-flex items-center justify-center gap-1 min-h-[44px]">
                         <Bed className="w-3 h-3" />View Rooms
                       </button>
                     </div>

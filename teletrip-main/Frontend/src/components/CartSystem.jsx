@@ -750,7 +750,7 @@ export const SlideOutCart = ({ isOpen, onClose, onProceedToCheckout }) => {
               <h2 className="text-lg font-semibold text-gray-900">Cart</h2>
               <p className="text-[12px] text-gray-400">{items.length} {items.length === 1 ? 'item' : 'items'}</p>
             </div>
-            <button onClick={handleCloseCart} className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"><X className="w-5 h-5 text-gray-400" /></button>
+            <button onClick={handleCloseCart} className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"><X className="w-5 h-5 text-gray-400" /></button>
           </div>
 
           {/* Items */}
@@ -762,7 +762,7 @@ export const SlideOutCart = ({ isOpen, onClose, onProceedToCheckout }) => {
                 </div>
                 <p className="text-[14px] font-medium text-gray-800 mb-1">Your cart is empty</p>
                 <p className="text-[12px] text-gray-400 mb-5">Search and add hotels or experiences</p>
-                <button onClick={onClose} className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-[13px] font-medium transition-colors">Browse</button>
+                <button onClick={onClose} className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-[13px] font-medium transition-colors min-h-[44px]">Browse</button>
               </div>
             ) : (
               <div className="p-4 space-y-3">
@@ -827,7 +827,7 @@ export const SlideOutCart = ({ isOpen, onClose, onProceedToCheckout }) => {
                 <span className="text-[13px] text-gray-500">Total</span>
                 <span className="text-xl font-bold text-gray-900">{fmtPKR(getTotalPrice()) || `${items[0]?.currency || 'EUR'} ${getTotalPrice().toFixed(0)}`}</span>
               </div>
-              <button onClick={handleCheckoutClick} className="w-full bg-blue-600 text-white py-2.5 rounded-lg font-semibold hover:bg-blue-700 transition-colors text-[14px]">
+              <button onClick={handleCheckoutClick} className="w-full bg-blue-600 text-white py-2.5 rounded-lg font-semibold hover:bg-blue-700 transition-colors text-[14px] min-h-[44px]">
                 Checkout
               </button>
               {!user?.email && <p className="text-[11px] text-center text-gray-400">Sign in required to proceed</p>}
