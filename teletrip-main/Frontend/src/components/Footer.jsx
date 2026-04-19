@@ -1,115 +1,125 @@
 import React from 'react';
-import { BsArrowRight, BsFacebook, BsTwitter, BsInstagram, BsLinkedin } from 'react-icons/bs';
+import { Link } from 'react-router-dom';
+import { Mail, Phone, MapPin } from 'lucide-react';
+import logo from '../images/Telitrip-Logo-1.png';
 
 const Footer = () => {
-  return (
-    <footer className="bg-gradient-to-br from-[#010115] via-[#0a0825] to-[#010115] text-white py-16 px-4 md:px-0 relative overflow-hidden">
-      {/* Background decoration */}
-      <div className="absolute inset-0 opacity-5">
-        <div className="absolute top-10 left-10 w-32 h-32 bg-[#3f8cff] rounded-full blur-3xl"></div>
-        <div className="absolute bottom-10 right-10 w-40 h-40 bg-[#009dff] rounded-full blur-3xl"></div>
-        <div className="absolute top-1/2 left-1/3 w-24 h-24 bg-[#100d44] rounded-full blur-2xl"></div>
-      </div>
+  const quickLinks = [
+    { text: 'Home', href: '/home' },
+    { text: 'Hotels', href: '/hotel-search-results' },
+    { text: 'Transfers', href: '/transfers' },
+    { text: 'Experiences', href: '/activity-search-results' },
+    { text: 'About Us', href: '/about' },
+    { text: 'Contact', href: '/contact' },
+  ];
 
-      <div className="max-w-6xl mx-auto relative z-10">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-12">
-          {/* Logo and Description */}
-          <div className="md:col-span-1 space-y-6">
-            <div className="transform hover:scale-105 transition-transform duration-300">
-              <img 
-                src="/images/Telitrip-Logo-White.png" 
-                alt="Telitrip Logo" 
-                className="h-12 mb-4 filter drop-shadow-lg"
-              />
-            </div>
-            <div className="space-y-4">
-              <h3 className="text-xl font-semibold bg-gradient-to-r from-[#3f8cff] to-[#009dff] bg-clip-text text-transparent">
-                Book Your Adventure Today!
-              </h3>
-              <p className="text-gray-300 leading-relaxed">
-                Experience the magic of Sri Lanka with Telitrip Holidays. We look forward to welcoming you and making your travel dreams come true.
-              </p>
+  const legalLinks = [
+    { text: 'Privacy Policy', href: '/privacy-policy' },
+    { text: 'Terms & Conditions', href: '/terms' },
+    { text: 'Cancellation Policy', href: '/cancellation-policy' },
+    { text: 'FAQs', href: '/faqs' },
+  ];
+
+  return (
+    <footer className="bg-gray-50 relative overflow-hidden">
+      {/* Gradient blobs */}
+      <div className="absolute -top-20 -right-20 w-80 h-80 rounded-full opacity-[0.06]" style={{ background: 'radial-gradient(circle, #3b82f6, #8b5cf6)', filter: 'blur(80px)' }} />
+      <div className="absolute -bottom-20 -left-20 w-64 h-64 rounded-full opacity-[0.05]" style={{ background: 'radial-gradient(circle, #059669, #06b6d4)', filter: 'blur(60px)' }} />
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-8 relative">
+        {/* Main grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-8 mb-14">
+
+          {/* Brand */}
+          <div className="sm:col-span-2 lg:col-span-1">
+            <Link to="/home" className="inline-block mb-5">
+              <img src={logo} alt="Telitrip" className="h-12 w-auto" />
+            </Link>
+            <p className="text-gray-500 text-sm leading-relaxed mb-5 max-w-xs">
+              Compare hotels, transfers and experiences across the globe. Best rates, guaranteed.
+            </p>
+            <div className="flex items-center gap-3">
+              {['facebook', 'twitter', 'instagram', 'linkedin'].map((s) => (
+                <a key={s} href={`#${s}`} className="w-9 h-9 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-400 hover:text-blue-600 hover:border-blue-200 hover:shadow-sm transition-all duration-200" style={{ minHeight: 'unset' }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    {s === 'facebook' && <path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z" />}
+                    {s === 'twitter' && <path d="M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z" />}
+                    {s === 'instagram' && <><rect x="2" y="2" width="20" height="20" rx="5" ry="5" fill="none" stroke="currentColor" strokeWidth="2" /><circle cx="12" cy="12" r="5" fill="none" stroke="currentColor" strokeWidth="2" /><circle cx="17.5" cy="6.5" r="1.5" /></>}
+                    {s === 'linkedin' && <path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2zM4 2a2 2 0 110 4 2 2 0 010-4z" />}
+                  </svg>
+                </a>
+              ))}
             </div>
           </div>
 
           {/* Quick Links */}
-          <div className="md:col-span-1">
-            <h5 className="text-[#3f8cff] text-xl font-semibold mb-6 relative">
-              Quick Links
-              <div className="absolute -bottom-2 left-0 w-12 h-0.5 bg-gradient-to-r from-[#3f8cff] to-[#009dff] rounded-full"></div>
-            </h5>
-            <ul className="space-y-3">
-              {[
-                { text: 'Home', href: '/home' },
-                { text: 'Contact Us', href: '/contact' },
-                { text: 'About Us', href: '/about' },
-                { text: 'FAQs', href: '/faqs' },
-                { text: 'Privacy Policy', href: '/privacy-policy' },
-                { text: 'Terms & Conditions', href: '/terms' },
-                { text: 'Cancellation Policy', href: '/cancellation-policy' }
-              ].map((link, index) => (
-                <li key={index} className="group">
-                  <a 
-                    href={link.href} 
-                    className="text-gray-300 hover:text-[#3f8cff] transition-all duration-300 flex items-center group-hover:translate-x-2"
-                  >
-                    <span className="w-2 h-2 bg-[#3f8cff] rounded-full mr-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
-                    {link.text}
-                  </a>
+          <div>
+            <h4 className="text-gray-900 font-semibold text-sm mb-4" style={{ letterSpacing: '-0.01em' }}>Quick Links</h4>
+            <ul className="space-y-2.5">
+              {quickLinks.map((link, i) => (
+                <li key={i}>
+                  <Link to={link.href} className="text-gray-500 hover:text-blue-600 text-sm transition-colors duration-200">{link.text}</Link>
                 </li>
               ))}
             </ul>
           </div>
 
-          {/* Contact and Social */}
-          <div className="md:col-span-1">
-            <h5 className="text-[#3f8cff] text-xl font-semibold mb-6 relative">
-              Stay Connected
-              <div className="absolute -bottom-2 left-0 w-12 h-0.5 bg-gradient-to-r from-[#3f8cff] to-[#009dff] rounded-full"></div>
-            </h5>
-            
-            {/* Contact Info */}
-            <div className="mb-8 space-y-4">
-              <p className="text-gray-300 leading-relaxed">
-                Ready to embark on your  adventure? Get in touch with us today and let's plan your perfect getaway!
-              </p>
-              <div className="bg-gradient-to-r from-[#100d44]/50 to-[#0a0825]/50 backdrop-blur-sm p-4 rounded-lg border border-[#3f8cff]/20">
-                <p className="text-[#3f8cff] font-semibold mb-2">Contact Us</p>
-                <p className="text-gray-300 text-sm">Get personalized travel recommendations and expert guidance for your Sri Lankan journey.</p>
-              </div>
-            </div>
+          {/* Legal */}
+          <div>
+            <h4 className="text-gray-900 font-semibold text-sm mb-4" style={{ letterSpacing: '-0.01em' }}>Legal</h4>
+            <ul className="space-y-2.5">
+              {legalLinks.map((link, i) => (
+                <li key={i}>
+                  <Link to={link.href} className="text-gray-500 hover:text-blue-600 text-sm transition-colors duration-200">{link.text}</Link>
+                </li>
+              ))}
+            </ul>
+          </div>
 
-            {/* Social Media */}
-            <div className="space-y-4">
-              <h6 className="text-gray-300 font-medium">Follow Us</h6>
-              <div className="flex space-x-4">
-                {[
-                  { icon: BsFacebook, href: '#facebook', color: 'hover:text-blue-500' },
-                  { icon: BsTwitter, href: '#twitter', color: 'hover:text-blue-400' },
-                  { icon: BsInstagram, href: '#instagram', color: 'hover:text-pink-500' },
-                  { icon: BsLinkedin, href: '#linkedin', color: 'hover:text-blue-600' }
-                ].map((social, index) => (
-                  <a
-                    key={index}
-                    href={social.href}
-                    className={`text-gray-400 ${social.color} transition-all duration-300 transform hover:scale-110 p-2 rounded-full hover:bg-white/10`}
-                  >
-                    <social.icon className="text-xl" />
-                  </a>
-                ))}
+          {/* Contact */}
+          <div>
+            <h4 className="text-gray-900 font-semibold text-sm mb-4" style={{ letterSpacing: '-0.01em' }}>Contact</h4>
+            <div className="space-y-3">
+              <a href="mailto:support@telitrip.com" className="flex items-center gap-2.5 text-gray-500 hover:text-blue-600 text-sm transition-colors">
+                <Mail className="w-4 h-4 flex-shrink-0" style={{ strokeWidth: 1.5 }} />
+                support@telitrip.com
+              </a>
+              <a href="tel:+923001234567" className="flex items-center gap-2.5 text-gray-500 hover:text-blue-600 text-sm transition-colors">
+                <Phone className="w-4 h-4 flex-shrink-0" style={{ strokeWidth: 1.5 }} />
+                +92 300 1234567
+              </a>
+              <div className="flex items-start gap-2.5 text-gray-500 text-sm">
+                <MapPin className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ strokeWidth: 1.5 }} />
+                Islamabad, Pakistan
               </div>
             </div>
           </div>
         </div>
 
         {/* Divider */}
-        <div className="w-full h-px bg-gradient-to-r from-transparent via-[#3f8cff]/30 to-transparent mb-8"></div>
+        <div className="w-full h-px bg-gray-200 mb-6" />
 
-        {/* Copyright */}
-        <div className="bg-gradient-to-r from-[#100d44]/50 to-[#0a0825]/50 backdrop-blur-sm py-6 px-8 rounded-2xl border border-[#3f8cff]/20 text-center">
-          <p className="text-gray-300 text-sm">
-            &copy; 2026 <span className="text-[#3f8cff] font-semibold">TELITRIP</span>  | All rights reserved | Developed by <a href="https://www.tmrhino.com" target="_blank" rel="noopener noreferrer" className="text-[#009dff] hover:text-[#3f8cff] transition-colors">Team Rhino</a>
-          </p>
+        {/* Copyright — pill style */}
+        <div className="flex justify-center">
+          <div
+            className="inline-flex items-center gap-2 px-6 py-2.5 text-[12px] text-gray-500"
+            style={{
+              background: '#ffffff',
+              borderRadius: 50,
+              border: '1px solid rgba(0,0,0,0.06)',
+              boxShadow: '0 1px 8px rgba(0,0,0,0.04)',
+            }}
+          >
+            <span>&copy; {new Date().getFullYear()}</span>
+            <span className="text-gray-900 font-semibold">TELITRIP</span>
+            <span className="text-gray-300">|</span>
+            <span>All rights reserved</span>
+            <span className="text-gray-300">|</span>
+            <span>Developed by</span>
+            <a href="https://www.tmrhino.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-700 font-medium transition-colors">
+              Team Rhino
+            </a>
+          </div>
         </div>
       </div>
     </footer>

@@ -58,10 +58,12 @@ const Header = () => {
   };
 
   const navLinks = [
+    { label: 'Home', to: '/home' },
     { label: 'Hotels', to: '/hotel-search-results' },
     { label: 'Transfers', to: '/transfers' },
     { label: 'Experiences', to: '/activity-search-results' },
-    { label: 'About', to: '/home' },
+    { label: 'About', to: '/about' },
+    { label: 'Contact', to: '/contact' },
   ];
 
   // Pill style: solid white at top, frosted glass when scrolled
