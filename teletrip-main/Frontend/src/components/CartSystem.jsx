@@ -455,69 +455,74 @@ export const AuthModal = ({ isOpen, onClose, defaultTab = 'login', returnUrl }) 
           onClose={() => setToast(null)}
         />
       )}
-      <div className="fixed inset-0 bg-white/10 backdrop-blur-md flex items-center justify-center z-[150] p-4">
-      <div className="bg-white rounded-lg w-full max-w-md relative max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b">
-          <h2 className="text-xl font-semibold">
-            {activeTab === 'login' ? 'Welcome Back' : 'Create Account'}
-          </h2>
-          <button
-            onClick={handleClose}
-            className="p-1 hover:bg-gray-100 rounded-full transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
+      <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-end sm:items-center justify-center z-[150] p-0 sm:p-4">
+      <div className="bg-white w-full sm:max-w-md sm:rounded-2xl rounded-t-2xl relative max-h-[92vh] overflow-y-auto shadow-2xl" style={{scrollbarWidth:'thin'}}>
+
+        {/* ── Header with gradient accent ── */}
+        <div className="relative overflow-hidden">
+          {/* Gradient blob */}
+          <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full opacity-20" style={{ background: 'radial-gradient(circle, #3b82f6, #8b5cf6)', filter: 'blur(40px)' }} />
+          <div className="relative px-6 pt-6 pb-4">
+            <div className="flex items-center justify-between mb-1">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900" style={{ letterSpacing: '-0.03em' }}>
+                {activeTab === 'login' ? 'Welcome back' : 'Get started'}
+              </h2>
+              <button onClick={handleClose} className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors" style={{minHeight:'unset'}}>
+                <X className="w-4 h-4 text-gray-500" />
+              </button>
+            </div>
+            <p className="text-gray-500 text-sm">
+              {activeTab === 'login' ? 'Sign in to manage your bookings' : 'Create your free Telitrip account'}
+            </p>
+          </div>
         </div>
 
-        {/* Tab Navigation */}
-        <div className="flex border-b">
-          <button
-            onClick={() => {
-              setActiveTab('login');
-              setError('');
-            }}
-            className={`flex-1 py-3 px-4 text-center font-medium transition-colors ${
-              activeTab === 'login'
-                ? 'text-blue-600 border-b-2 border-blue-600'
-                : 'text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            Sign In
-          </button>
-          <button
-            onClick={() => {
-              setActiveTab('signup');
-              setError('');
-            }}
-            className={`flex-1 py-3 px-4 text-center font-medium transition-colors ${
-              activeTab === 'signup'
-                ? 'text-blue-600 border-b-2 border-blue-600'
-                : 'text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            Sign Up
-          </button>
+        {/* ── Tab Switcher — pill style ── */}
+        <div className="px-6 pb-4">
+          <div className="flex bg-gray-100 rounded-full p-1">
+            <button
+              onClick={() => { setActiveTab('login'); setError(''); }}
+              className={`flex-1 py-2 rounded-full text-sm font-semibold transition-all duration-300 ${
+                activeTab === 'login'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+              style={{minHeight:'unset'}}
+            >
+              Sign In
+            </button>
+            <button
+              onClick={() => { setActiveTab('signup'); setError(''); }}
+              className={`flex-1 py-2 rounded-full text-sm font-semibold transition-all duration-300 ${
+                activeTab === 'signup'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+              style={{minHeight:'unset'}}
+            >
+              Sign Up
+            </button>
+          </div>
         </div>
 
-        {/* Content */}
-        <div className="p-6">
+        {/* ── Content ── */}
+        <div className="px-6 pb-6">
           {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm">
+            <div className="mb-4 p-3 bg-red-50 border border-red-100 text-red-600 rounded-xl text-sm">
               {error}
             </div>
           )}
 
-          {/* Google Sign In Button — rendered by Google GSI */}
+          {/* Google Sign In */}
           <div ref={googleBtnRef} className="w-full mb-4 flex justify-center" style={{ minHeight: 44 }} />
 
           {/* Divider */}
-          <div className="relative my-6">
+          <div className="relative my-5">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300"></div>
+              <div className="w-full border-t border-gray-200"></div>
             </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">Or continue with email</span>
+            <div className="relative flex justify-center text-xs">
+              <span className="px-3 bg-white text-gray-400 uppercase tracking-wider font-medium">or</span>
             </div>
           </div>
 
@@ -525,54 +530,26 @@ export const AuthModal = ({ isOpen, onClose, defaultTab = 'login', returnUrl }) 
           {activeTab === 'login' && (
             <form onSubmit={handleLogin} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Email Address
-                </label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  <input
-                    type="email"
-                    required
-                    value={loginData.email}
-                    onChange={(e) => setLoginData({...loginData, email: e.target.value})}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                    placeholder="Enter your email"
-                    disabled={isLoading}
-                  />
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
+                <div className="flex items-center border border-gray-200 rounded-xl px-3 py-2.5 gap-2 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent transition-all">
+                  <Mail className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                  <input type="email" required value={loginData.email} onChange={(e) => setLoginData({...loginData, email: e.target.value})}
+                    className="flex-1 min-w-0 outline-none bg-transparent text-sm text-gray-900 placeholder-gray-400" placeholder="you@example.com" disabled={isLoading} />
                 </div>
               </div>
-
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Password
-                </label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    required
-                    value={loginData.password}
-                    onChange={(e) => setLoginData({...loginData, password: e.target.value})}
-                    className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                    placeholder="Enter your password"
-                    disabled={isLoading}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
-                    disabled={isLoading}
-                  >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Password</label>
+                <div className="flex items-center border border-gray-200 rounded-xl px-3 py-2.5 gap-2 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent transition-all">
+                  <Lock className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                  <input type={showPassword ? 'text' : 'password'} required value={loginData.password} onChange={(e) => setLoginData({...loginData, password: e.target.value})}
+                    className="flex-1 min-w-0 outline-none bg-transparent text-sm text-gray-900 placeholder-gray-400" placeholder="Enter password" disabled={isLoading} />
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="text-gray-400 hover:text-gray-600 flex-shrink-0" disabled={isLoading} style={{minHeight:'unset'}}>
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
               </div>
-
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full bg-blue-600 text-white py-2.5 rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-              >
+              <button type="submit" disabled={isLoading}
+                className="w-full py-3 rounded-xl text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 transition-colors disabled:opacity-50" style={{minHeight:'unset'}}>
                 {isLoading ? 'Signing in...' : 'Sign In'}
               </button>
             </form>
@@ -581,129 +558,57 @@ export const AuthModal = ({ isOpen, onClose, defaultTab = 'login', returnUrl }) 
           {/* Signup Form */}
           {activeTab === 'signup' && (
             <form onSubmit={handleSignup} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    First Name
-                  </label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                    <input
-                      type="text"
-                      required
-                      value={signupData.firstName}
-                      onChange={(e) => setSignupData({...signupData, firstName: e.target.value})}
-                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                      placeholder="First name"
-                      disabled={isLoading}
-                    />
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">First Name</label>
+                  <div className="flex items-center border border-gray-200 rounded-xl px-3 py-2.5 gap-2 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent transition-all">
+                    <User className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                    <input type="text" required value={signupData.firstName} onChange={(e) => setSignupData({...signupData, firstName: e.target.value})}
+                      className="flex-1 min-w-0 outline-none bg-transparent text-sm text-gray-900 placeholder-gray-400" placeholder="First" disabled={isLoading} />
                   </div>
                 </div>
-
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Last Name
-                  </label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                    <input
-                      type="text"
-                      required
-                      value={signupData.lastName}
-                      onChange={(e) => setSignupData({...signupData, lastName: e.target.value})}
-                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                      placeholder="Last name"
-                      disabled={isLoading}
-                    />
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Last Name</label>
+                  <div className="flex items-center border border-gray-200 rounded-xl px-3 py-2.5 gap-2 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent transition-all">
+                    <User className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                    <input type="text" required value={signupData.lastName} onChange={(e) => setSignupData({...signupData, lastName: e.target.value})}
+                      className="flex-1 min-w-0 outline-none bg-transparent text-sm text-gray-900 placeholder-gray-400" placeholder="Last" disabled={isLoading} />
                   </div>
                 </div>
               </div>
-
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Email Address
-                </label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  <input
-                    type="email"
-                    required
-                    value={signupData.email}
-                    onChange={(e) => setSignupData({...signupData, email: e.target.value})}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                    placeholder="Enter your email"
-                    disabled={isLoading}
-                  />
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
+                <div className="flex items-center border border-gray-200 rounded-xl px-3 py-2.5 gap-2 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent transition-all">
+                  <Mail className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                  <input type="email" required value={signupData.email} onChange={(e) => setSignupData({...signupData, email: e.target.value})}
+                    className="flex-1 min-w-0 outline-none bg-transparent text-sm text-gray-900 placeholder-gray-400" placeholder="you@example.com" disabled={isLoading} />
                 </div>
               </div>
-
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Password
-                </label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    required
-                    value={signupData.password}
-                    onChange={(e) => setSignupData({...signupData, password: e.target.value})}
-                    className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                    placeholder="Create a password"
-                    disabled={isLoading}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
-                    disabled={isLoading}
-                  >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Password</label>
+                <div className="flex items-center border border-gray-200 rounded-xl px-3 py-2.5 gap-2 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent transition-all">
+                  <Lock className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                  <input type={showPassword ? 'text' : 'password'} required value={signupData.password} onChange={(e) => setSignupData({...signupData, password: e.target.value})}
+                    className="flex-1 min-w-0 outline-none bg-transparent text-sm text-gray-900 placeholder-gray-400" placeholder="Create password" disabled={isLoading} />
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="text-gray-400 hover:text-gray-600 flex-shrink-0" disabled={isLoading} style={{minHeight:'unset'}}>
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
               </div>
-
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full bg-blue-600 text-white py-2.5 rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-              >
+              <button type="submit" disabled={isLoading}
+                className="w-full py-3 rounded-xl text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 transition-colors disabled:opacity-50" style={{minHeight:'unset'}}>
                 {isLoading ? 'Creating account...' : 'Create Account'}
               </button>
             </form>
           )}
         </div>
 
-        {/* Footer */}
-        <div className="px-6 pb-6 text-center text-sm text-gray-600">
+        {/* ── Footer ── */}
+        <div className="px-6 pb-6 text-center text-sm text-gray-500">
           {activeTab === 'login' ? (
-            <p>
-              Don't have an account?{' '}
-              <button
-                onClick={() => {
-                  setActiveTab('signup');
-                  setError('');
-                }}
-                className="text-blue-600 hover:text-blue-700 font-medium"
-                disabled={isLoading}
-              >
-                Sign up
-              </button>
-            </p>
+            <p>Don't have an account? <button onClick={() => { setActiveTab('signup'); setError(''); }} className="text-blue-600 hover:text-blue-700 font-semibold" disabled={isLoading} style={{minHeight:'unset'}}>Sign up</button></p>
           ) : (
-            <p>
-              Already have an account?{' '}
-              <button
-                onClick={() => {
-                  setActiveTab('login');
-                  setError('');
-                }}
-                className="text-blue-600 hover:text-blue-700 font-medium"
-                disabled={isLoading}
-              >
-                Sign in
-              </button>
-            </p>
+            <p>Already have an account? <button onClick={() => { setActiveTab('login'); setError(''); }} className="text-blue-600 hover:text-blue-700 font-semibold" disabled={isLoading} style={{minHeight:'unset'}}>Sign in</button></p>
           )}
         </div>
       </div>
