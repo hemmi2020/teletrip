@@ -165,7 +165,7 @@ const TransferSearch = () => {
         </div>
       )}
 
-      <div className="pt-[52px] sm:pt-[68px] min-h-screen bg-gray-50 flex">
+      <div className="pt-14 sm:pt-16 min-h-screen bg-gray-50 flex">
         {/* Mobile overlay backdrop */}
         {showMobileFilters && (
           <div className="fixed inset-0 bg-black/40 z-[120] lg:hidden" onClick={() => setShowMobileFilters(false)} />
@@ -255,7 +255,7 @@ const TransferSearch = () => {
         {/* Main content — boxed */}
         <div className="flex-1 min-w-0 flex flex-col">
           {/* Sort bar — fixed, always below header */}
-          <div className="fixed top-12 sm:top-16 left-0 right-0 z-[99] bg-white border-b border-gray-200 shadow-sm">
+          <div className="fixed top-14 sm:top-16 left-0 right-0 z-[99] bg-white border-b border-gray-200 shadow-sm">
             <div className="max-w-[1280px] mx-auto px-4 py-2.5 flex items-center gap-2">
               {/* Mobile: count */}
               <span className="text-[13px] font-semibold text-gray-900 md:hidden flex-1 min-w-0 truncate">

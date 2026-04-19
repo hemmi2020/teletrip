@@ -1036,7 +1036,7 @@ if (children > 0 && childAges.length > 0) {
   return (
     <>
       <Header />
-      <div className="pt-[52px] sm:pt-[68px] flex">
+      <div className="pt-14 sm:pt-16 flex">
 
         {/* Sidebar Filters — desktop only */}
         <div className={`
@@ -1612,7 +1612,7 @@ if (children > 0 && childAges.length > 0) {
 
         <div className="flex-1 min-w-0 flex flex-col">
           {/* Sort bar — fixed, always below header with gap */}
-          <div className="fixed top-12 sm:top-16 left-0 right-0 z-[99] bg-white border-b border-gray-200 shadow-sm">
+          <div className="fixed top-14 sm:top-16 left-0 right-0 z-[99] bg-white border-b border-gray-200 shadow-sm">
             <div className="max-w-[1280px] mx-auto px-4 py-2.5 flex items-center gap-2">
               <h1 className="text-[13px] sm:text-base font-semibold text-gray-900 truncate flex-1 min-w-0">
                 {sortedHotels.length} Hotels{searchParams.get("city") ? ` in ${searchParams.get("city")}` : searchParams.get("hotelName") ? ` · "${searchParams.get("hotelName")}"` : ''}
