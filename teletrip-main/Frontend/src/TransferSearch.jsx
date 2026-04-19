@@ -289,7 +289,7 @@ const TransferSearch = () => {
             )}
           </div>
 
-        <div className="max-w-[1280px] mx-auto px-4 py-4 pt-10 sm:pt-11">
+        <div className="max-w-[980px] mx-auto px-4 sm:px-6 py-4 pt-10 sm:pt-11">
           {/* Error / Empty / No search states */}
           {hasSearched && !error && transfers.length === 0 && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-10 text-center">

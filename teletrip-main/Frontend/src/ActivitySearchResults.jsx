@@ -679,7 +679,7 @@ const ActivitySearchResults = () => {
             )}
           </div>
 
-          <div className="max-w-[1280px] mx-auto px-4 sm:px-6 w-full pt-10 sm:pt-11">
+          <div className="max-w-[980px] mx-auto px-4 sm:px-6 w-full pt-10 sm:pt-11">
             {error && (<div className="bg-red-50 border border-red-200 rounded-lg p-4 mt-4 mb-2"><p className="text-red-800">{error}</p></div>)}
             <div className="flex items-center gap-2 text-[12px] text-gray-500 py-2.5 flex-wrap border-b border-gray-50 mb-1">
               <MapPin className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" />
