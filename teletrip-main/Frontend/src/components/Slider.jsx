@@ -47,13 +47,13 @@ const Slider = () => {
       {/* Content — centered vertically, floats over hero */}
       <div className="relative z-10 h-full flex flex-col items-center justify-center px-4">
         <div className="max-w-7xl w-full mx-auto text-center">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight mb-3 sm:mb-4">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-tight mb-4 sm:mb-5" style={{ letterSpacing: '-0.04em', lineHeight: 1.05 }}>
             Find your perfect{' '}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">
               stay anywhere
             </span>
           </h1>
-          <p className="text-sm sm:text-base text-white/60 max-w-xl mx-auto mb-8 sm:mb-10">
+          <p className="text-base sm:text-lg text-white/60 max-w-xl mx-auto mb-8 sm:mb-10 font-normal" style={{ letterSpacing: '-0.01em', lineHeight: 1.6 }}>
             Compare prices across 250,000+ hotels. Best rates guaranteed.
           </p>
         </div>
