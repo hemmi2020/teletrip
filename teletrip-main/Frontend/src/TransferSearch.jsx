@@ -254,9 +254,10 @@ const TransferSearch = () => {
 
         {/* Main content — boxed */}
         <div className="flex-1 min-w-0 flex flex-col">
-          {/* Sort bar — fixed, always below header */}
-          <div className="fixed top-16 sm:top-20 left-0 right-0 z-[99] border-b border-white/30 shadow-sm" style={{ background: 'rgba(255,255,255,0.72)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' }}>
-            <div className="max-w-[1280px] mx-auto px-3 sm:px-4 py-2.5 flex items-center gap-2">
+          {/* Sort bar — pill design, extension of header */}
+          <div className="fixed top-16 sm:top-20 left-0 right-0 z-[99] flex justify-center px-3 sm:px-6 pt-1.5 sm:pt-2 pointer-events-none">
+            <div className="pointer-events-auto w-full max-w-4xl" style={{ background: 'rgba(255,255,255,0.78)', backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)', borderRadius: 40, border: '1px solid rgba(255,255,255,0.5)', boxShadow: '0 2px 16px rgba(0,0,0,0.07)' }}>
+            <div className="px-4 sm:px-5 py-2 flex items-center gap-2">
               {/* Mobile: count */}
               <span className="text-[13px] font-semibold text-gray-900 md:hidden flex-1 min-w-0 truncate">
                 {filteredTransfers.length} Transfers
@@ -283,10 +284,11 @@ const TransferSearch = () => {
               <button onClick={() => setShowModifySearch(!showModifySearch)} className="text-[12px] text-blue-600 font-medium cursor-pointer flex-shrink-0 px-3 py-1.5 rounded-lg border border-blue-200 bg-blue-50" style={{minHeight:'unset'}}>{showModifySearch ? 'Close' : 'Modify'}</button>
             </div>
             {showModifySearch && (
-              <div className="max-w-[1280px] mx-auto px-3 sm:px-4 pb-3 pt-2 border-t border-gray-100">
+              <div className="px-4 sm:px-5 pb-3 pt-2 border-t border-gray-100/50">
                 <HotelSearchForm defaultTab="transfers" variant="light" />
               </div>
             )}
+            </div>
           </div>
 
         <div className="w-full px-3 sm:px-4 max-w-[980px] sm:max-w-[1280px] mx-auto py-4 pt-10 sm:pt-11">

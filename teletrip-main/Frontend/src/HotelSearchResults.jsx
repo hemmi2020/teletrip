@@ -1612,8 +1612,9 @@ if (children > 0 && childAges.length > 0) {
 
         <div className="flex-1 min-w-0 flex flex-col">
           {/* Sort bar — fixed, always below header with gap */}
-          <div className="fixed top-16 sm:top-20 left-0 right-0 z-[99] border-b border-white/30 shadow-sm" style={{ background: 'rgba(255,255,255,0.72)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' }}>
-            <div className="max-w-[1280px] mx-auto px-3 sm:px-4 py-2.5 flex items-center gap-2">
+          <div className="fixed top-16 sm:top-20 left-0 right-0 z-[99] flex justify-center px-3 sm:px-6 pt-1.5 sm:pt-2 pointer-events-none">
+            <div className="pointer-events-auto w-full max-w-4xl border-b-0" style={{ background: 'rgba(255,255,255,0.78)', backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)', borderRadius: 40, border: '1px solid rgba(255,255,255,0.5)', boxShadow: '0 2px 16px rgba(0,0,0,0.07)' }}>
+            <div className="px-4 sm:px-5 py-2 flex items-center gap-2">
               <h1 className="text-[13px] sm:text-base font-semibold text-gray-900 truncate flex-1 min-w-0">
                 {sortedHotels.length} Hotels{searchParams.get("city") ? ` in ${searchParams.get("city")}` : searchParams.get("hotelName") ? ` · "${searchParams.get("hotelName")}"` : ''}
               </h1>
@@ -1629,10 +1630,11 @@ if (children > 0 && childAges.length > 0) {
               </button>
             </div>
             {showModifySearch && (
-              <div className="max-w-[1280px] mx-auto px-3 sm:px-4 pb-3 pt-2 border-t border-gray-100">
+              <div className="px-4 sm:px-5 pb-3 pt-2 border-t border-gray-100/50">
                 <HotelSearchForm defaultTab="stays" variant="light" />
               </div>
             )}
+            </div>
           </div>
           <div className="max-w-[1280px] mx-auto px-3 sm:px-6 w-full pt-10 sm:pt-11">
             {user && (
