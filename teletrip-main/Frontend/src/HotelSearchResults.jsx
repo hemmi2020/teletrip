@@ -1612,7 +1612,7 @@ if (children > 0 && childAges.length > 0) {
 
         <div className="flex-1 min-w-0 flex flex-col">
           {/* Sort bar — fixed, always below header with gap */}
-          <div className="fixed top-16 sm:top-20 left-0 right-0 z-[99] bg-white border-b border-gray-200 shadow-sm">
+          <div className="fixed top-16 sm:top-20 left-0 right-0 z-[99] border-b border-white/30 shadow-sm" style={{ background: 'rgba(255,255,255,0.72)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)' }}>
             <div className="max-w-[1280px] mx-auto px-3 sm:px-4 py-2.5 flex items-center gap-2">
               <h1 className="text-[13px] sm:text-base font-semibold text-gray-900 truncate flex-1 min-w-0">
                 {sortedHotels.length} Hotels{searchParams.get("city") ? ` in ${searchParams.get("city")}` : searchParams.get("hotelName") ? ` · "${searchParams.get("hotelName")}"` : ''}
