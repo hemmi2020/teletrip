@@ -61,14 +61,12 @@ const Header = () => {
     { label: 'About', to: '/home' },
   ];
 
-  // Pill background — warm blue-tinted translucent matching site theme
+  // Pill background — solid white, clean and premium
   const pillStyle = {
-    background: 'rgba(255,255,255,0.18)',
-    backdropFilter: 'blur(16px)',
-    WebkitBackdropFilter: 'blur(16px)',
+    background: '#ffffff',
     borderRadius: 50,
-    border: '1px solid rgba(255,255,255,0.25)',
-    boxShadow: '0 4px 24px rgba(0,0,0,0.12)',
+    border: '1px solid rgba(0,0,0,0.08)',
+    boxShadow: '0 2px 20px rgba(0,0,0,0.10)',
   };
 
   return (
@@ -79,13 +77,12 @@ const Header = () => {
           className="pointer-events-auto w-full max-w-5xl flex items-center justify-between gap-3 px-3 py-2"
           style={pillStyle}
         >
-          {/* ── Logo — no circle, just the image ── */}
+          {/* ── Logo — full color ── */}
           <NavLink to="/home" className="flex-shrink-0 flex items-center">
             <img
               src={logo}
               alt="Telitrip"
               className="h-10 sm:h-12 w-auto object-contain"
-              style={{ filter: 'brightness(0) invert(1)' }}
             />
           </NavLink>
 
@@ -98,8 +95,8 @@ const Header = () => {
                 className={({ isActive }) =>
                   `px-4 py-1.5 rounded-full text-[11px] font-semibold tracking-widest uppercase transition-all duration-200 ${
                     isActive
-                      ? 'bg-white/25 text-white'
-                      : 'text-white/80 hover:text-white hover:bg-white/15'
+                      ? 'bg-gray-900 text-white'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                   }`
                 }
                 style={{ minHeight: 'unset', letterSpacing: '0.08em' }}
@@ -113,41 +110,41 @@ const Header = () => {
           <div className="hidden md:flex items-center gap-2 flex-shrink-0">
             {user?.email ? (
               <>
-                <button onClick={handleAccountClick} className="px-4 py-1.5 text-[11px] font-semibold tracking-widest uppercase text-white/80 hover:text-white hover:bg-white/15 rounded-full transition-all" style={{ minHeight: 'unset', letterSpacing: '0.08em' }}>
+                <button onClick={handleAccountClick} className="px-4 py-1.5 text-[11px] font-semibold tracking-widest uppercase text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-all" style={{ minHeight: 'unset', letterSpacing: '0.08em' }}>
                   Account
                 </button>
-                <button onClick={handleLogout} className="px-4 py-1.5 text-[11px] font-semibold tracking-widest uppercase text-white/60 hover:text-red-300 hover:bg-white/10 rounded-full transition-all" style={{ minHeight: 'unset', letterSpacing: '0.08em' }}>
+                <button onClick={handleLogout} className="px-4 py-1.5 text-[11px] font-semibold tracking-widest uppercase text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-all" style={{ minHeight: 'unset', letterSpacing: '0.08em' }}>
                   Logout
                 </button>
               </>
             ) : (
-              <button onClick={handleAccountClick} className="px-4 py-1.5 text-[11px] font-semibold tracking-widest uppercase text-white/80 hover:text-white hover:bg-white/15 rounded-full transition-all" style={{ minHeight: 'unset', letterSpacing: '0.08em' }}>
+              <button onClick={handleAccountClick} className="px-4 py-1.5 text-[11px] font-semibold tracking-widest uppercase text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-all" style={{ minHeight: 'unset', letterSpacing: '0.08em' }}>
                 Contact
               </button>
             )}
 
             {/* Cart */}
-            <button onClick={() => setIsCartOpen(true)} className="relative flex items-center justify-center rounded-full bg-white/15 hover:bg-white/25 transition-all" style={{ width: 36, height: 36, minHeight: 'unset' }}>
-              <ShoppingCart className="w-4 h-4 text-white" />
+            <button onClick={() => setIsCartOpen(true)} className="relative flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 transition-all" style={{ width: 36, height: 36, minHeight: 'unset' }}>
+              <ShoppingCart className="w-4 h-4 text-gray-700" />
               {getTotalItems() > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 bg-blue-500 text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center leading-none">
+                <span className="absolute -top-0.5 -right-0.5 bg-blue-600 text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center leading-none">
                   {getTotalItems()}
                 </span>
               )}
             </button>
 
             {/* JOIN US */}
-            <button onClick={handleAccountClick} className="px-5 py-2 text-[11px] font-bold tracking-widest uppercase text-white rounded-full transition-all hover:opacity-90" style={{ background: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.4)', minHeight: 'unset', letterSpacing: '0.08em' }}>
+            <button onClick={handleAccountClick} className="px-5 py-2 text-[11px] font-bold tracking-widest uppercase text-white rounded-full transition-all hover:opacity-90" style={{ background: '#111827', minHeight: 'unset', letterSpacing: '0.08em' }}>
               {user?.email ? 'Dashboard' : 'Join Us'}
             </button>
           </div>
 
           {/* ── Mobile: Cart + Hamburger ── */}
           <div className="flex md:hidden items-center gap-2 flex-shrink-0">
-            <button onClick={() => setIsCartOpen(true)} className="relative flex items-center justify-center rounded-full bg-white/15" style={{ width: 38, height: 38, minHeight: 'unset' }}>
-              <ShoppingCart className="w-4 h-4 text-white" />
+            <button onClick={() => setIsCartOpen(true)} className="relative flex items-center justify-center rounded-full bg-gray-100" style={{ width: 38, height: 38, minHeight: 'unset' }}>
+              <ShoppingCart className="w-4 h-4 text-gray-700" />
               {getTotalItems() > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 bg-blue-500 text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center leading-none">
+                <span className="absolute -top-0.5 -right-0.5 bg-blue-600 text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center leading-none">
                   {getTotalItems()}
                 </span>
               )}
@@ -157,16 +154,16 @@ const Header = () => {
             <button
               onClick={() => setIsMobileMenuOpen(o => !o)}
               className="flex items-center justify-center rounded-full transition-all"
-              style={{ width: 38, height: 38, minHeight: 'unset', border: '2px solid #f59e0b', background: 'rgba(245,158,11,0.1)' }}
+              style={{ width: 38, height: 38, minHeight: 'unset', border: '2px solid #f59e0b', background: 'rgba(245,158,11,0.08)' }}
               aria-label="Toggle menu"
             >
               {isMobileMenuOpen ? (
-                <X className="w-4 h-4 text-white" />
+                <X className="w-4 h-4 text-gray-800" />
               ) : (
                 <svg width="16" height="11" viewBox="0 0 16 11" fill="none">
-                  <rect y="0" width="16" height="2" rx="1" fill="white" />
-                  <rect y="4.5" width="16" height="2" rx="1" fill="white" />
-                  <rect y="9" width="16" height="2" rx="1" fill="white" />
+                  <rect y="0" width="16" height="2" rx="1" fill="#1a1a2e" />
+                  <rect y="4.5" width="16" height="2" rx="1" fill="#1a1a2e" />
+                  <rect y="9" width="16" height="2" rx="1" fill="#1a1a2e" />
                 </svg>
               )}
             </button>
@@ -183,12 +180,12 @@ const Header = () => {
       >
         {/* Top pill replica */}
         <div className="flex items-center justify-between px-3 pt-3 flex-shrink-0">
-          <div className="flex items-center justify-between w-full px-3 py-2" style={pillStyle}>
+          <div className="flex items-center justify-between w-full px-3 py-2" style={{ background: '#ffffff', borderRadius: 50, border: '1px solid rgba(0,0,0,0.08)', boxShadow: '0 2px 12px rgba(0,0,0,0.08)' }}>
             <NavLink to="/home" className="flex-shrink-0">
-              <img src={logo} alt="Telitrip" className="h-10 w-auto object-contain" style={{ filter: 'brightness(0) invert(1)' }} />
+              <img src={logo} alt="Telitrip" className="h-10 w-auto object-contain" />
             </NavLink>
-            <button onClick={() => setIsMobileMenuOpen(false)} className="flex items-center justify-center rounded-full" style={{ width: 38, height: 38, minHeight: 'unset', border: '2px solid #f59e0b', background: 'rgba(245,158,11,0.1)' }}>
-              <X className="w-4 h-4 text-white" />
+            <button onClick={() => setIsMobileMenuOpen(false)} className="flex items-center justify-center rounded-full" style={{ width: 38, height: 38, minHeight: 'unset', border: '2px solid #f59e0b', background: 'rgba(245,158,11,0.08)' }}>
+              <X className="w-4 h-4 text-gray-800" />
             </button>
           </div>
         </div>
