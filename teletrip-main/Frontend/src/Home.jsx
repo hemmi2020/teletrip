@@ -235,7 +235,7 @@ const Home = () => {
       <div className="relative z-10 bg-white">
 
         {/* ── SECTION 1: Our Deals ── */}
-        <section className="relative py-14 sm:py-20 md:py-28 px-4 sm:px-6 lg:px-8 overflow-hidden">
+        <section className="relative py-14 sm:py-20 md:py-28 px-3 sm:px-6 lg:px-8 overflow-hidden">
           <div className="absolute -top-32 -right-32 w-64 sm:w-96 h-64 sm:h-96 rounded-full opacity-20 animate-pulse" style={{ background: 'radial-gradient(circle, #3b82f6, #8b5cf6)', filter: 'blur(80px)' }} />
           <div className="absolute bottom-0 -left-20 w-48 sm:w-72 h-48 sm:h-72 rounded-full opacity-15" style={{ background: 'radial-gradient(circle, #06b6d4, #3b82f6)', filter: 'blur(60px)', animation: 'float1 8s ease-in-out infinite alternate' }} />
 
@@ -280,7 +280,7 @@ const Home = () => {
         </section>
 
         {/* ── SECTION 2: Why Telitrip ── */}
-        <section className="relative py-14 sm:py-20 md:py-28 px-4 sm:px-6 lg:px-8 bg-gray-50 overflow-hidden">
+        <section className="relative py-14 sm:py-20 md:py-28 px-3 sm:px-6 lg:px-8 bg-gray-50 overflow-hidden">
           <div className="absolute top-20 -right-40 w-60 sm:w-80 h-60 sm:h-80 rounded-full opacity-15" style={{ background: 'radial-gradient(circle, #a855f7, #ec4899)', filter: 'blur(70px)', animation: 'float2 10s ease-in-out infinite alternate' }} />
           <div className="absolute -bottom-20 left-10 w-48 sm:w-64 h-48 sm:h-64 rounded-full opacity-10" style={{ background: 'radial-gradient(circle, #f59e0b, #ef4444)', filter: 'blur(60px)', animation: 'float3 12s ease-in-out infinite alternate' }} />
 
@@ -315,7 +315,7 @@ const Home = () => {
         </section>
 
         {/* ── SECTION 3: Testimonials ── */}
-        <section className="relative py-14 sm:py-20 md:py-28 px-4 sm:px-6 lg:px-8 overflow-hidden">
+        <section className="relative py-14 sm:py-20 md:py-28 px-3 sm:px-6 lg:px-8 overflow-hidden">
           <div className="absolute -top-20 left-1/3 w-64 sm:w-96 h-64 sm:h-96 rounded-full opacity-12" style={{ background: 'radial-gradient(circle, #10b981, #06b6d4)', filter: 'blur(80px)', animation: 'float1 14s ease-in-out infinite alternate' }} />
 
           <div className="max-w-7xl mx-auto relative">
@@ -362,7 +362,7 @@ const Home = () => {
         </section>
 
         {/* ── SECTION 4: CTA ── */}
-        <section className="relative py-16 sm:py-24 md:py-32 px-4 sm:px-6 lg:px-8 bg-gray-50 overflow-hidden">
+        <section className="relative py-16 sm:py-24 md:py-32 px-3 sm:px-6 lg:px-8 bg-gray-50 overflow-hidden">
           <div className="absolute top-10 right-10 w-48 sm:w-72 h-48 sm:h-72 rounded-full opacity-15" style={{ background: 'radial-gradient(circle, #f59e0b, #ef4444)', filter: 'blur(70px)', animation: 'float2 9s ease-in-out infinite alternate' }} />
           <div className="absolute bottom-10 left-20 w-40 sm:w-60 h-40 sm:h-60 rounded-full opacity-10" style={{ background: 'radial-gradient(circle, #3b82f6, #8b5cf6)', filter: 'blur(60px)', animation: 'float3 11s ease-in-out infinite alternate' }} />
 
