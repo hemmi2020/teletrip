@@ -20,7 +20,7 @@ const Slider = () => {
   }, [active, images.length]);
 
   return (
-    <main className="pt-14 sm:pt-16 w-full">
+    <main className="pt-16 sm:pt-20 w-full">
       {/* Hero with high z-index so dropdowns appear above next section */}
       <section className="relative w-full bg-gray-900 z-30">
         {/* BG Images - clipped */}

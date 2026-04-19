@@ -1,10 +1,10 @@
-import React, { useState, useContext, useEffect, useRef } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import logo from "../images/Telitrip-Logo-1.png";
 import { SlideOutCart, AuthModal, useCart } from './CartSystem';
 import { UserDataContext } from './CartSystem';
 import BottomNavBar from './BottomNavBar';
-import { ShoppingCart, Menu, X, User, LogOut, ChevronDown } from 'lucide-react';
+import { X, User, LogOut, ShoppingCart } from 'lucide-react';
 
 const Header = () => {
   const navigate = useNavigate();
@@ -12,29 +12,16 @@ const Header = () => {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
   const { user, setUser } = useContext(UserDataContext);
   const { getTotalItems, items: cartItems, getTotalPrice } = useCart();
 
-  const isHomePage = location.pathname === '/home' || location.pathname === '/';
-
-  // Scroll detection — header becomes solid after scrolling 20px
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
-
-  // Close mobile menu on route change
   useEffect(() => { setIsMobileMenuOpen(false); }, [location.pathname]);
 
-  // Lock body scroll when mobile menu is open
   useEffect(() => {
     document.body.style.overflow = isMobileMenuOpen ? 'hidden' : '';
     return () => { document.body.style.overflow = ''; };
   }, [isMobileMenuOpen]);
 
-  // Listen for cart open events
   useEffect(() => {
     const handler = () => setIsCartOpen(true);
     window.addEventListener('openCart', handler);
@@ -67,115 +54,148 @@ const Header = () => {
     navigate('/checkout', { state: { cartItems, totalAmount: getTotalPrice(), fromCart: true } });
   };
 
-  // Header background: transparent on home hero, dark solid otherwise / on scroll
-  const isTransparent = isHomePage && !scrolled && !isMobileMenuOpen;
-  const headerBg = isTransparent
-    ? 'bg-transparent'
-    : 'bg-[#0d0d0d]';
-
   const navLinks = [
-    { label: 'Home', to: '/home' },
-    { label: 'Hotels', to: '/hotel-search-results', partial: true },
-    { label: 'Transfers', to: '/transfers', partial: true },
-    { label: 'Experiences', to: '/activity-search-results', partial: true },
-    { label: 'Contact', to: '/contact' },
+    { label: 'Hotels', to: '/hotel-search-results' },
+    { label: 'Transfers', to: '/transfers' },
+    { label: 'Experiences', to: '/activity-search-results' },
+    { label: 'About', to: '/home' },
   ];
 
   return (
     <>
-      {/* ── Main Header ── */}
-      <header
-        className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-300 ${headerBg} ${
-          !isTransparent ? 'border-b border-white/10' : ''
-        }`}
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-14 sm:h-16">
+      {/* ── Floating Pill Header ── */}
+      <header className="fixed top-0 left-0 right-0 z-[100] flex justify-center px-3 sm:px-6 pt-3 sm:pt-4 pointer-events-none">
+        <div
+          className="pointer-events-auto w-full max-w-5xl flex items-center justify-between gap-2 px-2 py-1.5"
+          style={{
+            background: '#edeae4',
+            borderRadius: 50,
+            boxShadow: '0 2px 20px rgba(0,0,0,0.08)',
+          }}
+        >
+          {/* ── Logo circle ── */}
+          <NavLink
+            to="/home"
+            className="flex-shrink-0 flex items-center justify-center rounded-full bg-white overflow-hidden"
+            style={{ width: 44, height: 44, minWidth: 44 }}
+          >
+            <img src={logo} alt="Telitrip" style={{ width: 36, height: 36, objectFit: 'contain' }} />
+          </NavLink>
 
-            {/* ── Logo ── */}
-            <NavLink to="/home" className="flex-shrink-0 flex items-center">
-              <img
-                src={logo}
-                alt="Telitrip"
-                className="h-8 sm:h-10 brightness-0 invert"
-                style={{ filter: isTransparent ? 'brightness(0) invert(1)' : 'brightness(0) invert(1)' }}
-              />
-            </NavLink>
+          {/* ── Desktop Nav links (center) ── */}
+          <nav className="hidden md:flex items-center gap-1 flex-1 justify-center">
+            {navLinks.map(({ label, to }) => (
+              <NavLink
+                key={to}
+                to={to}
+                className={({ isActive }) =>
+                  `px-4 py-1.5 rounded-full text-[11px] font-semibold tracking-widest uppercase transition-all duration-200 ${
+                    isActive
+                      ? 'bg-white/60 text-gray-900'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-white/40'
+                  }`
+                }
+                style={{ minHeight: 'unset', letterSpacing: '0.08em' }}
+              >
+                {label}
+              </NavLink>
+            ))}
+          </nav>
 
-            {/* ── Desktop Nav ── */}
-            <nav className="hidden md:flex items-center gap-1">
-              {navLinks.map(({ label, to, partial }) => (
-                <NavLink
-                  key={to}
-                  to={to}
-                  className={({ isActive }) =>
-                    `px-3 py-1.5 rounded-lg text-[13px] font-medium transition-all duration-200 ${
-                      isActive
-                        ? 'text-white bg-white/10'
-                        : 'text-white/70 hover:text-white hover:bg-white/8'
-                    }`
-                  }
-                >
-                  {label}
-                </NavLink>
-              ))}
-            </nav>
-
-            {/* ── Desktop Right: Account + Cart ── */}
-            <div className="hidden md:flex items-center gap-2">
-              {user?.email ? (
-                <>
-                  <span className="text-white/60 text-[13px] max-w-[120px] truncate">
-                    {user.fullname?.firstname || user.email}
-                  </span>
-                  <button
-                    onClick={handleAccountClick}
-                    className="px-3 py-1.5 text-[13px] font-medium text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-all"
-                    style={{ minHeight: 'unset' }}
-                  >
-                    Account
-                  </button>
-                  <button
-                    onClick={handleLogout}
-                    className="px-3 py-1.5 text-[13px] font-medium text-white/60 hover:text-red-400 hover:bg-white/5 rounded-lg transition-all"
-                    style={{ minHeight: 'unset' }}
-                  >
-                    Logout
-                  </button>
-                </>
-              ) : (
+          {/* ── Desktop Right: Contact + CTA + Cart ── */}
+          <div className="hidden md:flex items-center gap-2 flex-shrink-0">
+            {/* Contact / Account */}
+            {user?.email ? (
+              <>
                 <button
                   onClick={handleAccountClick}
-                  className="px-4 py-1.5 text-[13px] font-semibold text-white border border-white/30 rounded-full hover:bg-white hover:text-gray-900 transition-all duration-200"
-                  style={{ minHeight: 'unset' }}
+                  className="px-4 py-1.5 text-[11px] font-semibold tracking-widest uppercase text-gray-600 hover:text-gray-900 rounded-full hover:bg-white/40 transition-all"
+                  style={{ minHeight: 'unset', letterSpacing: '0.08em' }}
                 >
-                  Sign In
+                  Account
                 </button>
-              )}
-
-              {/* Cart */}
+                <button
+                  onClick={handleLogout}
+                  className="px-4 py-1.5 text-[11px] font-semibold tracking-widest uppercase text-gray-500 hover:text-red-500 rounded-full hover:bg-white/40 transition-all"
+                  style={{ minHeight: 'unset', letterSpacing: '0.08em' }}
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
               <button
-                onClick={() => setIsCartOpen(true)}
-                className="relative p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-all"
-                style={{ minHeight: 'unset' }}
+                onClick={handleAccountClick}
+                className="px-4 py-1.5 text-[11px] font-semibold tracking-widest uppercase text-gray-600 hover:text-gray-900 rounded-full hover:bg-white/40 transition-all"
+                style={{ minHeight: 'unset', letterSpacing: '0.08em' }}
               >
-                <ShoppingCart className="w-5 h-5" />
-                {getTotalItems() > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 bg-blue-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center leading-none">
-                    {getTotalItems()}
-                  </span>
-                )}
+                Contact
               </button>
-            </div>
+            )}
 
-            {/* ── Mobile: Hamburger ── */}
+            {/* Cart */}
+            <button
+              onClick={() => setIsCartOpen(true)}
+              className="relative flex items-center justify-center rounded-full bg-white/60 hover:bg-white transition-all"
+              style={{ width: 36, height: 36, minHeight: 'unset' }}
+            >
+              <ShoppingCart className="w-4 h-4 text-gray-700" />
+              {getTotalItems() > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 bg-blue-600 text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center leading-none">
+                  {getTotalItems()}
+                </span>
+              )}
+            </button>
+
+            {/* JOIN US / Sign In CTA */}
+            <button
+              onClick={handleAccountClick}
+              className="px-5 py-2 text-[11px] font-bold tracking-widest uppercase text-white rounded-full transition-all hover:opacity-90"
+              style={{
+                background: '#1a1a2e',
+                minHeight: 'unset',
+                letterSpacing: '0.08em',
+              }}
+            >
+              {user?.email ? 'Dashboard' : 'Join Us'}
+            </button>
+          </div>
+
+          {/* ── Mobile: Cart + Hamburger ── */}
+          <div className="flex md:hidden items-center gap-2 flex-shrink-0">
+            {/* Cart */}
+            <button
+              onClick={() => setIsCartOpen(true)}
+              className="relative flex items-center justify-center rounded-full bg-white/60"
+              style={{ width: 40, height: 40, minHeight: 'unset' }}
+            >
+              <ShoppingCart className="w-4 h-4 text-gray-700" />
+              {getTotalItems() > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 bg-blue-600 text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center leading-none">
+                  {getTotalItems()}
+                </span>
+              )}
+            </button>
+
+            {/* Hamburger in amber circle */}
             <button
               onClick={() => setIsMobileMenuOpen(o => !o)}
-              className="md:hidden p-2 text-white/80 hover:text-white rounded-lg transition-colors"
-              style={{ minHeight: 'unset' }}
+              className="flex items-center justify-center rounded-full transition-all"
+              style={{
+                width: 40, height: 40, minHeight: 'unset',
+                border: '2.5px solid #f59e0b',
+                background: 'transparent',
+              }}
               aria-label="Toggle menu"
             >
-              {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              {isMobileMenuOpen ? (
+                <X className="w-4 h-4 text-gray-800" />
+              ) : (
+                <svg width="16" height="12" viewBox="0 0 16 12" fill="none">
+                  <rect y="0" width="16" height="2" rx="1" fill="#1a1a2e" />
+                  <rect y="5" width="16" height="2" rx="1" fill="#1a1a2e" />
+                  <rect y="10" width="16" height="2" rx="1" fill="#1a1a2e" />
+                </svg>
+              )}
             </button>
           </div>
         </div>
@@ -183,93 +203,91 @@ const Header = () => {
 
       {/* ── Mobile Full-Screen Menu ── */}
       <div
-        className={`fixed inset-0 z-[99] bg-[#0d0d0d] flex flex-col transition-all duration-300 md:hidden ${
+        className={`fixed inset-0 z-[99] flex flex-col transition-all duration-300 md:hidden ${
           isMobileMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         }`}
+        style={{ background: '#edeae4' }}
       >
-        {/* Top bar inside overlay */}
-        <div className="flex items-center justify-between px-4 h-14 border-b border-white/10 flex-shrink-0">
-          <NavLink to="/home" className="flex-shrink-0">
-            <img src={logo} alt="Telitrip" className="h-8 brightness-0 invert" />
-          </NavLink>
-          <button
-            onClick={() => setIsMobileMenuOpen(false)}
-            className="p-2 text-white/70 hover:text-white rounded-lg"
-            style={{ minHeight: 'unset' }}
+        {/* Top bar */}
+        <div className="flex items-center justify-between px-4 pt-4 pb-3 flex-shrink-0">
+          {/* Same pill header inside overlay */}
+          <div
+            className="flex items-center justify-between w-full px-2 py-1.5"
+            style={{ background: '#e4e0d9', borderRadius: 50 }}
           >
-            <X className="w-5 h-5" />
-          </button>
+            <NavLink to="/home" className="flex items-center justify-center rounded-full bg-white overflow-hidden" style={{ width: 44, height: 44 }}>
+              <img src={logo} alt="Telitrip" style={{ width: 36, height: 36, objectFit: 'contain' }} />
+            </NavLink>
+            <button
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="flex items-center justify-center rounded-full"
+              style={{ width: 40, height: 40, minHeight: 'unset', border: '2.5px solid #f59e0b', background: 'transparent' }}
+            >
+              <X className="w-4 h-4 text-gray-800" />
+            </button>
+          </div>
         </div>
 
         {/* Nav links */}
-        <nav className="flex-1 overflow-y-auto px-4 py-6 space-y-1">
+        <nav className="flex-1 overflow-y-auto px-6 py-8 space-y-2">
           {navLinks.map(({ label, to }) => (
             <NavLink
               key={to}
               to={to}
               onClick={() => setIsMobileMenuOpen(false)}
               className={({ isActive }) =>
-                `flex items-center px-4 py-3 rounded-xl text-[15px] font-medium transition-all ${
+                `flex items-center px-5 py-4 rounded-2xl text-[15px] font-semibold tracking-wide uppercase transition-all ${
                   isActive
-                    ? 'bg-white/10 text-white'
-                    : 'text-white/70 hover:text-white hover:bg-white/8'
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-white/60'
                 }`
               }
+              style={{ letterSpacing: '0.06em' }}
             >
               {label}
             </NavLink>
           ))}
         </nav>
 
-        {/* Bottom: Account + Cart */}
-        <div className="flex-shrink-0 px-4 pb-8 pt-4 border-t border-white/10 space-y-2">
+        {/* Bottom CTA */}
+        <div className="flex-shrink-0 px-6 pb-10 pt-4 space-y-3">
           {user?.email ? (
             <>
-              <p className="text-white/40 text-[12px] px-4 mb-2">
-                Signed in as {user.fullname?.firstname || user.email}
+              <p className="text-gray-500 text-[12px] text-center mb-2">
+                {user.fullname?.firstname || user.email}
               </p>
               <button
                 onClick={() => { handleAccountClick(); setIsMobileMenuOpen(false); }}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-[14px] font-medium text-white/80 hover:text-white hover:bg-white/10 transition-all"
-                style={{ minHeight: 'unset' }}
+                className="w-full py-3.5 rounded-2xl text-[13px] font-bold tracking-widest uppercase text-white transition-all"
+                style={{ background: '#1a1a2e', minHeight: 'unset', letterSpacing: '0.08em' }}
               >
-                <User className="w-4 h-4" /> Account
+                My Account
               </button>
               <button
                 onClick={() => { handleLogout(); setIsMobileMenuOpen(false); }}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-[14px] font-medium text-red-400 hover:bg-red-500/10 transition-all"
+                className="w-full py-3.5 rounded-2xl text-[13px] font-semibold text-gray-600 bg-white/60 hover:bg-white transition-all"
                 style={{ minHeight: 'unset' }}
               >
-                <LogOut className="w-4 h-4" /> Logout
+                Logout
               </button>
             </>
           ) : (
             <button
               onClick={() => { handleAccountClick(); setIsMobileMenuOpen(false); }}
-              className="w-full py-3 rounded-xl text-[14px] font-semibold text-white bg-blue-600 hover:bg-blue-700 transition-colors"
-              style={{ minHeight: 'unset' }}
+              className="w-full py-3.5 rounded-2xl text-[13px] font-bold tracking-widest uppercase text-white transition-all"
+              style={{ background: '#1a1a2e', minHeight: 'unset', letterSpacing: '0.08em' }}
             >
-              Sign In / Create Account
+              Join Us
             </button>
           )}
         </div>
       </div>
 
-      {/* ── Cart Slide-out ── */}
-      <SlideOutCart
-        isOpen={isCartOpen}
-        onClose={() => setIsCartOpen(false)}
-        onProceedToCheckout={handleProceedToCheckout}
-      />
+      {/* ── Cart ── */}
+      <SlideOutCart isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} onProceedToCheckout={handleProceedToCheckout} />
 
       {/* ── Auth Modal ── */}
-      <AuthModal
-        isOpen={showAuthModal}
-        onClose={() => setShowAuthModal(false)}
-        onAuthSuccess={handleAuthSuccess}
-        defaultTab="login"
-        returnUrl={location.pathname}
-      />
+      <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} onAuthSuccess={handleAuthSuccess} defaultTab="login" returnUrl={location.pathname} />
 
       {/* ── Bottom Nav (mobile only) ── */}
       <BottomNavBar />
