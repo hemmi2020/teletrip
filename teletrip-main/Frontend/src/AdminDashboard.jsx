@@ -1507,7 +1507,7 @@ Amount: ${voucher.currency} ${voucher.totalAmount}
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="admin-dashboard min-h-screen bg-gray-50">
       {/* Toast */}
       {toast && <Toast {...toast} onClose={() => setToast(null)} />}
 
