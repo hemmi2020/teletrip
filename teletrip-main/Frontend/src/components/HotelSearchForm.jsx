@@ -391,7 +391,7 @@ const TransfersTab = ({ variant = 'dark' }) => {
           </span>
         </div>
         {showCalendar && (
-          <div className="fixed sm:absolute z-50 left-1/2 top-1/2 sm:top-auto transform -translate-x-1/2 -translate-y-1/2 sm:translate-y-0 sm:mt-2 bg-white border border-gray-300 rounded-lg shadow-xl overflow-auto max-w-[95vw]">
+          <div className="fixed sm:absolute z-[200] left-1/2 top-1/2 sm:top-auto transform -translate-x-1/2 -translate-y-1/2 sm:translate-y-0 sm:mt-2 bg-white border border-gray-300 rounded-2xl shadow-2xl overflow-auto max-w-[95vw] max-h-[85vh]">
             <Suspense fallback={<div className="p-8 text-center text-gray-400">Loading calendar...</div>}>
               <LazyDateRange
                 ranges={transferDateRange}
@@ -656,7 +656,7 @@ const ExperiencesTab = ({ variant = 'dark' }) => {
             </span>
           </div>
           {showCalendar && (
-            <div className="fixed sm:absolute z-50 left-1/2 top-1/2 sm:top-auto transform -translate-x-1/2 -translate-y-1/2 sm:translate-y-0 sm:mt-2 bg-white border border-gray-300 rounded-lg shadow-xl overflow-auto max-w-[95vw]">
+            <div className="fixed sm:absolute z-[200] left-1/2 top-1/2 sm:top-auto transform -translate-x-1/2 -translate-y-1/2 sm:translate-y-0 sm:mt-2 bg-white border border-gray-300 rounded-2xl shadow-2xl overflow-auto max-w-[95vw] max-h-[85vh]">
                 <Suspense fallback={<div className="p-8 text-center text-gray-400">Loading calendar...</div>}>
                   <LazyDateRange
                     ranges={dateRange}
@@ -987,72 +987,53 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
   return (
     <div className="w-full">
       <div className="bg-white/15 backdrop-blur-xl rounded-2xl border border-white/20 shadow-2xl p-4 sm:p-5 md:p-6">
-        {/* ── Tabs: white pill bar with elevated active circle ── */}
-        <div className="relative mb-6 sm:mb-7" style={{ paddingTop: 28 }}>
-          {/* SVG wave bar — white pill with notch cutout for active tab */}
-          <div className="relative">
-            {/* White pill background */}
-            <div className="relative bg-white rounded-full flex items-center" style={{ height: 56, boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
-              {/* Wave notch SVG — positioned behind the active circle */}
-              <svg
-                className="absolute top-0 transition-all duration-500 ease-out"
-                style={{
-                  left: `calc(${(tabs.findIndex(t => t.id === activeTab) / tabs.length) * 100}% + ${100 / tabs.length / 2}% - 36px)`,
-                  top: -20,
-                }}
-                width="72" height="32" viewBox="0 0 72 32" fill="none"
-              >
-                <path d="M0 32 C0 32 8 32 16 20 C24 8 28 0 36 0 C44 0 48 8 56 20 C64 32 72 32 72 32" fill="white" />
-              </svg>
+        {/* ── Tabs: white pill with floating active circle ── */}
+        <div className="relative mb-5 sm:mb-6" style={{ height: 72 }}>
+          {/* White pill bar */}
+          <div
+            className="absolute bottom-0 left-0 right-0 bg-white rounded-full flex items-center"
+            style={{ height: 48, boxShadow: '0 2px 16px rgba(0,0,0,0.06)' }}
+          >
+            {tabs.map((tab) => {
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className="flex-1 flex items-center justify-center relative z-10"
+                  style={{ minHeight: 'unset', height: 48 }}
+                >
+                  {isActive ? (
+                    /* Active: show label text only (icon is in the floating circle) */
+                    <span className="text-[11px] font-bold tracking-widest uppercase text-gray-800" style={{ letterSpacing: '0.08em', marginTop: 8 }}>
+                      {tab.label}
+                    </span>
+                  ) : (
+                    /* Inactive: show icon only */
+                    <tab.Icon style={{ width: 20, height: 20, color: '#9ca3af', strokeWidth: 1.5 }} />
+                  )}
+                </button>
+              );
+            })}
+          </div>
 
-              {/* Tab buttons */}
-              {tabs.map((tab, idx) => {
-                const isActive = activeTab === tab.id;
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className="flex-1 flex flex-col items-center justify-center relative z-10"
-                    style={{ minHeight: 'unset', height: 56 }}
-                  >
-                    {/* Inactive icon — inside the bar */}
-                    {!isActive && (
-                      <tab.Icon
-                        className="transition-all duration-300"
-                        style={{ width: 22, height: 22, color: '#9ca3af', strokeWidth: 1.5 }}
-                      />
-                    )}
-                    {/* Active: label below the bar */}
-                    {isActive && (
-                      <span
-                        className="text-[11px] font-semibold tracking-wider uppercase text-gray-700 mt-1 transition-all duration-300"
-                        style={{ letterSpacing: '0.06em' }}
-                      >
-                        {tab.label}
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Elevated amber circle — floats above the bar */}
-            <div
-              className="absolute z-20 flex items-center justify-center rounded-full transition-all duration-500 ease-out"
-              style={{
-                width: 54,
-                height: 54,
-                background: 'linear-gradient(135deg, #f59e0b, #f97316)',
-                boxShadow: '0 8px 28px rgba(245,158,11,0.45)',
-                top: 0,
-                left: `calc(${(tabs.findIndex(t => t.id === activeTab) / tabs.length) * 100}% + ${100 / tabs.length / 2}% - 27px)`,
-              }}
-            >
-              {(() => {
-                const ActiveIcon = tabs.find(t => t.id === activeTab)?.Icon;
-                return ActiveIcon ? <ActiveIcon style={{ width: 24, height: 24, color: '#fff', strokeWidth: 2 }} /> : null;
-              })()}
-            </div>
+          {/* Floating amber circle — sits above the pill */}
+          <div
+            className="absolute z-20 flex items-center justify-center rounded-full"
+            style={{
+              width: 52,
+              height: 52,
+              background: 'linear-gradient(135deg, #f59e0b, #f97316)',
+              boxShadow: '0 6px 24px rgba(245,158,11,0.4)',
+              top: 0,
+              left: `calc(${tabs.findIndex(t => t.id === activeTab) * (100 / tabs.length)}% + ${100 / tabs.length / 2}% - 26px)`,
+              transition: 'left 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
+            }}
+          >
+            {(() => {
+              const ActiveIcon = tabs.find(t => t.id === activeTab)?.Icon;
+              return ActiveIcon ? <ActiveIcon style={{ width: 22, height: 22, color: '#fff', strokeWidth: 2 }} /> : null;
+            })()}
           </div>
         </div>
 
@@ -1148,7 +1129,7 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
                   </div>
 
                   {showCalendar && (
-                    <div className="fixed sm:absolute z-50 left-1/2 top-1/2 sm:top-auto transform -translate-x-1/2 -translate-y-1/2 sm:translate-y-0 sm:mt-2 bg-white border border-gray-300 rounded-lg shadow-xl overflow-auto max-w-[95vw]">
+                    <div className="fixed sm:absolute z-[200] left-1/2 top-1/2 sm:top-auto transform -translate-x-1/2 -translate-y-1/2 sm:translate-y-0 sm:mt-2 bg-white border border-gray-300 rounded-2xl shadow-2xl overflow-auto max-w-[95vw] max-h-[85vh]">
                         <Suspense fallback={<div className="p-8 text-center text-gray-400">Loading calendar...</div>}>
                           <LazyDateRange
                             ranges={dateRange}
