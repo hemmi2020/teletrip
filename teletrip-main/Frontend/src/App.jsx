@@ -1,11 +1,10 @@
-// Fixed App.jsx - Complete working version with Admin Routes
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { CartProvider, UserProvider } from './components/CartSystem';
 import { HelmetProvider } from 'react-helmet-async';
 import { CurrencyProvider } from './context/CurrencyContext';
 
-// Import your page components
+// Pages
 import Home from './Home';
 import Login from './Login';
 import Signup from './Signup';
@@ -28,12 +27,16 @@ import PrivacyPolicy from './PrivacyPolicy';
 import Terms from './Terms';
 import CancellationPolicy from './CancellationPolicy';
 
-// Import Admin Components
+// Admin
 import AdminLogin from './components/AdminLogin';
 import AdminDashboard from './AdminDashboard';
 import ProtectedAdminRoute from './components/ProtectedAdminRoute';
 
-// Error Boundary Component
+// Error pages
+import NotFound from './pages/NotFound';
+import ErrorPage from './pages/ErrorPage';
+
+// Error Boundary
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
@@ -51,21 +54,12 @@ class ErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">
-          <div className="text-center p-8">
-            <h1 className="text-2xl font-bold text-red-600 mb-4">Something went wrong</h1>
-            <p className="text-gray-600 mb-4">We're sorry, but something unexpected happened.</p>
-            <button
-              onClick={() => window.location.reload()}
-              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
-            >
-              Refresh Page
-            </button>
-          </div>
-        </div>
+        <ErrorPage
+          error={this.state.error}
+          resetError={() => this.setState({ hasError: false, error: null })}
+        />
       );
     }
-
     return this.props.children;
   }
 }
@@ -105,15 +99,7 @@ const App = () => {
                     <Route path="/admin/login" element={<AdminLogin />} />
                     <Route path="/admin/dashboard" element={<ProtectedAdminRoute><AdminDashboard /></ProtectedAdminRoute>} />
                     <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
-                    <Route path="*" element={
-                      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                        <div className="text-center">
-                          <h1 className="text-4xl font-bold text-gray-900 mb-4">404</h1>
-                          <p className="text-gray-600 mb-6">Page not found</p>
-                          <button onClick={() => window.location.href = '/home'} className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700">Go Home</button>
-                        </div>
-                      </div>
-                    } />
+                    <Route path="*" element={<NotFound />} />
                   </Routes>
                 </div>
               </CartProvider>
