@@ -235,21 +235,22 @@ const Home = () => {
       <div className="relative z-10 bg-white">
 
         {/* ── SECTION 1: Our Deals ── */}
-        <section className="relative py-20 md:py-28 px-4 sm:px-6 lg:px-8 overflow-hidden">
-          {/* 3D gradient shape — blue/purple blob */}
-          <div className="absolute -top-32 -right-32 w-96 h-96 rounded-full opacity-20 animate-pulse" style={{ background: 'radial-gradient(circle, #3b82f6, #8b5cf6)', filter: 'blur(80px)' }} />
-          <div className="absolute bottom-0 -left-20 w-72 h-72 rounded-full opacity-15" style={{ background: 'radial-gradient(circle, #06b6d4, #3b82f6)', filter: 'blur(60px)', animation: 'float1 8s ease-in-out infinite alternate' }} />
+        <section className="relative py-14 sm:py-20 md:py-28 px-4 sm:px-6 lg:px-8 overflow-hidden">
+          <div className="absolute -top-32 -right-32 w-64 sm:w-96 h-64 sm:h-96 rounded-full opacity-20 animate-pulse" style={{ background: 'radial-gradient(circle, #3b82f6, #8b5cf6)', filter: 'blur(80px)' }} />
+          <div className="absolute bottom-0 -left-20 w-48 sm:w-72 h-48 sm:h-72 rounded-full opacity-15" style={{ background: 'radial-gradient(circle, #06b6d4, #3b82f6)', filter: 'blur(60px)', animation: 'float1 8s ease-in-out infinite alternate' }} />
 
           <div className="max-w-7xl mx-auto relative">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-8 h-px bg-blue-500" />
-              <span className="text-[11px] font-semibold tracking-widest uppercase text-blue-500" style={{ letterSpacing: '0.14em' }}>Featured Destinations</span>
+            <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+              <div className="w-6 sm:w-8 h-px bg-blue-500" />
+              <span className="text-[10px] sm:text-[11px] font-semibold tracking-widest uppercase text-blue-500" style={{ letterSpacing: '0.14em' }}>Featured Destinations</span>
             </div>
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-4" style={{ letterSpacing: '-0.03em', lineHeight: 1.1 }}>
+            <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-3 sm:mb-4" style={{ letterSpacing: '-0.03em', lineHeight: 1.1 }}>
               Handpicked deals,<br /><span className="text-blue-600">just for you.</span>
             </h2>
-            <p className="text-gray-500 text-sm max-w-md mb-12" style={{ lineHeight: 1.7 }}>Curated stays across the world's most sought-after destinations.</p>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <p className="text-gray-500 text-sm max-w-md mb-8 sm:mb-12" style={{ lineHeight: 1.7 }}>Curated stays across the world's most sought-after destinations.</p>
+
+            {/* Desktop: 3-col grid */}
+            <div className="hidden md:grid md:grid-cols-3 gap-5">
               {featuredDestinations.map((dest, i) => (
                 <motion.div key={dest.id} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: i * 0.1 }}
                   className="group relative overflow-hidden rounded-2xl cursor-pointer bg-gray-100" style={{ aspectRatio: '4/5' }}>
@@ -262,24 +263,36 @@ const Home = () => {
                 </motion.div>
               ))}
             </div>
+            {/* Mobile: horizontal scroll cards */}
+            <div className="flex md:hidden gap-3 overflow-x-auto pb-2 -mx-4 px-4 snap-x snap-mandatory" style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
+              {featuredDestinations.map((dest) => (
+                <div key={dest.id} className="flex-shrink-0 w-[72vw] snap-start group relative overflow-hidden rounded-2xl bg-gray-100" style={{ aspectRatio: '3/4' }}>
+                  <img src={dest.image} alt={dest.name} className="w-full h-full object-cover" />
+                  <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 50%)' }} />
+                  <div className="absolute bottom-0 left-0 right-0 p-4">
+                    <h3 className="text-white font-bold text-base mb-0.5">{dest.name}</h3>
+                    <p className="text-white/60 text-[12px] line-clamp-2">{dest.description}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
 
         {/* ── SECTION 2: Why Telitrip ── */}
-        <section className="relative py-20 md:py-28 px-4 sm:px-6 lg:px-8 bg-gray-50 overflow-hidden">
-          {/* 3D gradient shape — purple/pink */}
-          <div className="absolute top-20 -right-40 w-80 h-80 rounded-full opacity-15" style={{ background: 'radial-gradient(circle, #a855f7, #ec4899)', filter: 'blur(70px)', animation: 'float2 10s ease-in-out infinite alternate' }} />
-          <div className="absolute -bottom-20 left-10 w-64 h-64 rounded-full opacity-10" style={{ background: 'radial-gradient(circle, #f59e0b, #ef4444)', filter: 'blur(60px)', animation: 'float3 12s ease-in-out infinite alternate' }} />
+        <section className="relative py-14 sm:py-20 md:py-28 px-4 sm:px-6 lg:px-8 bg-gray-50 overflow-hidden">
+          <div className="absolute top-20 -right-40 w-60 sm:w-80 h-60 sm:h-80 rounded-full opacity-15" style={{ background: 'radial-gradient(circle, #a855f7, #ec4899)', filter: 'blur(70px)', animation: 'float2 10s ease-in-out infinite alternate' }} />
+          <div className="absolute -bottom-20 left-10 w-48 sm:w-64 h-48 sm:h-64 rounded-full opacity-10" style={{ background: 'radial-gradient(circle, #f59e0b, #ef4444)', filter: 'blur(60px)', animation: 'float3 12s ease-in-out infinite alternate' }} />
 
           <div className="max-w-7xl mx-auto relative">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-8 h-px bg-purple-500" />
-              <span className="text-[11px] font-semibold tracking-widest uppercase text-purple-500" style={{ letterSpacing: '0.14em' }}>Why Telitrip</span>
+            <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+              <div className="w-6 sm:w-8 h-px bg-purple-500" />
+              <span className="text-[10px] sm:text-[11px] font-semibold tracking-widest uppercase text-purple-500" style={{ letterSpacing: '0.14em' }}>Why Telitrip</span>
             </div>
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-14" style={{ letterSpacing: '-0.03em', lineHeight: 1.1 }}>
+            <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-8 sm:mb-14" style={{ letterSpacing: '-0.03em', lineHeight: 1.1 }}>
               Everything you need,<br /><span className="text-purple-600">in one place.</span>
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
               {[
                 { Icon: Hotel, title: 'Hotels', desc: '250,000+ properties worldwide. Best rate guaranteed.', color: '#2563eb' },
                 { Icon: Car, title: 'Transfers', desc: 'Airport pickups, private cars and shared shuttles.', color: '#059669' },
@@ -288,13 +301,13 @@ const Home = () => {
                 { Icon: Shield, title: 'Secure Booking', desc: 'End-to-end encrypted payments. Your data stays private.', color: '#ef4444' },
                 { Icon: Globe, title: 'Global Coverage', desc: 'Available in 190+ countries. Book anywhere, anytime.', color: '#0891b2' },
               ].map((item, i) => (
-                <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: i * 0.08 }}
-                  className="p-6 rounded-2xl bg-white border border-gray-100 hover:shadow-lg hover:border-gray-200 hover:scale-[1.02] transition-all duration-300">
-                  <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4" style={{ background: `${item.color}15` }}>
-                    <item.Icon style={{ width: 24, height: 24, color: item.color, strokeWidth: 1.8 }} />
+                <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: i * 0.06 }}
+                  className="p-4 sm:p-6 rounded-xl sm:rounded-2xl bg-white border border-gray-100 hover:shadow-lg hover:border-gray-200 transition-all duration-300">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center mb-3 sm:mb-4" style={{ background: `${item.color}15` }}>
+                    <item.Icon style={{ width: 20, height: 20, color: item.color, strokeWidth: 1.8 }} />
                   </div>
-                  <h3 className="text-gray-900 font-semibold text-lg mb-2" style={{ letterSpacing: '-0.02em' }}>{item.title}</h3>
-                  <p className="text-gray-500 text-[13px]" style={{ lineHeight: 1.65 }}>{item.desc}</p>
+                  <h3 className="text-gray-900 font-semibold text-sm sm:text-lg mb-1 sm:mb-2" style={{ letterSpacing: '-0.02em' }}>{item.title}</h3>
+                  <p className="text-gray-500 text-[11px] sm:text-[13px] leading-relaxed">{item.desc}</p>
                 </motion.div>
               ))}
             </div>
@@ -302,19 +315,20 @@ const Home = () => {
         </section>
 
         {/* ── SECTION 3: Testimonials ── */}
-        <section className="relative py-20 md:py-28 px-4 sm:px-6 lg:px-8 overflow-hidden">
-          {/* 3D gradient shape — green/teal */}
-          <div className="absolute -top-20 left-1/3 w-96 h-96 rounded-full opacity-12" style={{ background: 'radial-gradient(circle, #10b981, #06b6d4)', filter: 'blur(80px)', animation: 'float1 14s ease-in-out infinite alternate' }} />
+        <section className="relative py-14 sm:py-20 md:py-28 px-4 sm:px-6 lg:px-8 overflow-hidden">
+          <div className="absolute -top-20 left-1/3 w-64 sm:w-96 h-64 sm:h-96 rounded-full opacity-12" style={{ background: 'radial-gradient(circle, #10b981, #06b6d4)', filter: 'blur(80px)', animation: 'float1 14s ease-in-out infinite alternate' }} />
 
           <div className="max-w-7xl mx-auto relative">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-8 h-px bg-emerald-500" />
-              <span className="text-[11px] font-semibold tracking-widest uppercase text-emerald-500" style={{ letterSpacing: '0.14em' }}>Traveller Stories</span>
+            <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+              <div className="w-6 sm:w-8 h-px bg-emerald-500" />
+              <span className="text-[10px] sm:text-[11px] font-semibold tracking-widest uppercase text-emerald-500" style={{ letterSpacing: '0.14em' }}>Traveller Stories</span>
             </div>
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-12" style={{ letterSpacing: '-0.03em', lineHeight: 1.1 }}>
+            <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-8 sm:mb-12" style={{ letterSpacing: '-0.03em', lineHeight: 1.1 }}>
               Loved by travellers<br /><span className="text-emerald-600">around the world.</span>
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+
+            {/* Desktop: grid */}
+            <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {testimonials.slice(0, 6).map((t, i) => (
                 <motion.div key={t.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: i * 0.07 }}
                   className="p-6 rounded-2xl bg-white border border-gray-100 hover:shadow-md transition-all">
@@ -329,26 +343,40 @@ const Home = () => {
                 </motion.div>
               ))}
             </div>
+            {/* Mobile: horizontal scroll */}
+            <div className="flex sm:hidden gap-3 overflow-x-auto pb-2 -mx-4 px-4 snap-x snap-mandatory" style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
+              {testimonials.slice(0, 6).map((t) => (
+                <div key={t.id} className="flex-shrink-0 w-[80vw] snap-start p-4 rounded-xl bg-white border border-gray-100 shadow-sm">
+                  <div className="flex items-center gap-0.5 mb-3">
+                    {[...Array(t.rating)].map((_, j) => <span key={j} style={{ color: '#f59e0b', fontSize: 12 }}>★</span>)}
+                  </div>
+                  <p className="text-gray-600 text-[13px] mb-4" style={{ lineHeight: 1.65 }}>"{t.text}"</p>
+                  <div className="flex items-center gap-2.5">
+                    <img src={t.image} alt={t.name} className="w-8 h-8 rounded-full" />
+                    <span className="text-gray-500 text-[12px] font-medium">{t.name}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
 
         {/* ── SECTION 4: CTA ── */}
-        <section className="relative py-24 md:py-32 px-4 sm:px-6 lg:px-8 bg-gray-50 overflow-hidden">
-          {/* 3D gradient shape — amber/orange */}
-          <div className="absolute top-10 right-10 w-72 h-72 rounded-full opacity-15" style={{ background: 'radial-gradient(circle, #f59e0b, #ef4444)', filter: 'blur(70px)', animation: 'float2 9s ease-in-out infinite alternate' }} />
-          <div className="absolute bottom-10 left-20 w-60 h-60 rounded-full opacity-10" style={{ background: 'radial-gradient(circle, #3b82f6, #8b5cf6)', filter: 'blur(60px)', animation: 'float3 11s ease-in-out infinite alternate' }} />
+        <section className="relative py-16 sm:py-24 md:py-32 px-4 sm:px-6 lg:px-8 bg-gray-50 overflow-hidden">
+          <div className="absolute top-10 right-10 w-48 sm:w-72 h-48 sm:h-72 rounded-full opacity-15" style={{ background: 'radial-gradient(circle, #f59e0b, #ef4444)', filter: 'blur(70px)', animation: 'float2 9s ease-in-out infinite alternate' }} />
+          <div className="absolute bottom-10 left-20 w-40 sm:w-60 h-40 sm:h-60 rounded-full opacity-10" style={{ background: 'radial-gradient(circle, #3b82f6, #8b5cf6)', filter: 'blur(60px)', animation: 'float3 11s ease-in-out infinite alternate' }} />
 
           <div className="max-w-4xl mx-auto text-center relative">
             <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
-              <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold text-gray-900 mb-6" style={{ letterSpacing: '-0.04em', lineHeight: 1.05 }}>
+              <h2 className="text-3xl sm:text-5xl md:text-6xl font-bold text-gray-900 mb-4 sm:mb-6" style={{ letterSpacing: '-0.04em', lineHeight: 1.05 }}>
                 Ready to explore<br /><span className="text-blue-600">the world?</span>
               </h2>
-              <p className="text-gray-500 text-base sm:text-lg mb-10 max-w-lg mx-auto">Join millions of travellers who book smarter with Telitrip.</p>
+              <p className="text-gray-500 text-sm sm:text-lg mb-8 sm:mb-10 max-w-lg mx-auto">Join millions of travellers who book smarter with Telitrip.</p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-                <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="px-8 py-3.5 rounded-full text-[13px] font-bold tracking-widest uppercase text-white bg-blue-600 hover:bg-blue-700 transition-all" style={{ letterSpacing: '0.08em', minHeight: 'unset' }}>
+                <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="w-full sm:w-auto px-8 py-3.5 rounded-full text-[13px] font-bold tracking-widest uppercase text-white bg-blue-600 hover:bg-blue-700 transition-all" style={{ letterSpacing: '0.08em', minHeight: 'unset' }}>
                   Start Searching
                 </button>
-                <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="px-8 py-3.5 rounded-full text-[13px] font-semibold text-gray-600 border border-gray-300 hover:border-gray-400 hover:text-gray-900 transition-all" style={{ minHeight: 'unset' }}>
+                <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="w-full sm:w-auto px-8 py-3.5 rounded-full text-[13px] font-semibold text-gray-600 border border-gray-300 hover:border-gray-400 hover:text-gray-900 transition-all" style={{ minHeight: 'unset' }}>
                   Learn More
                 </button>
               </div>

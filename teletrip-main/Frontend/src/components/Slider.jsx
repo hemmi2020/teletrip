@@ -16,7 +16,7 @@ const Slider = () => {
   }, [active, images.length]);
 
   return (
-    <section className="sticky top-0 w-full bg-gray-900 z-0 overflow-hidden" style={{ height: '100vh', minHeight: 600 }}>
+    <section className="sticky top-0 w-full bg-gray-900 z-0 overflow-hidden" style={{ height: '100svh', minHeight: 550 }}>
       {/* Photo slideshow */}
       <div className="absolute inset-0">
         {images.map((img, i) => (
@@ -24,27 +24,27 @@ const Slider = () => {
             <img src={img} alt="" className="w-full h-full object-cover" />
           </div>
         ))}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/30 to-black/60" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-black/70" />
       </div>
 
-      {/* Content */}
-      <div className="relative z-10 h-full flex flex-col items-center justify-center px-4 text-center">
-        <div className="max-w-7xl w-full mx-auto">
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-4 sm:mb-5" style={{ letterSpacing: '-0.04em', lineHeight: 1.05 }}>
+      {/* Content — responsive vertical layout */}
+      <div className="relative z-10 h-full flex flex-col items-center justify-end sm:justify-center px-3 sm:px-4 pb-8 sm:pb-0 pt-24 sm:pt-0 text-center">
+        <div className="max-w-7xl w-full mx-auto mb-6 sm:mb-8">
+          <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-3 sm:mb-5" style={{ letterSpacing: '-0.04em', lineHeight: 1.05 }}>
             Find your perfect{' '}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">stay anywhere</span>
           </h1>
-          <p className="text-base sm:text-lg text-white/60 max-w-xl mx-auto mb-8 sm:mb-10">
+          <p className="text-sm sm:text-lg text-white/60 max-w-xl mx-auto mb-0">
             Compare prices across 250,000+ hotels. Best rates guaranteed.
           </p>
         </div>
-        <div className="max-w-5xl w-full mx-auto px-0 sm:px-4 search-form-section">
+        <div className="max-w-5xl w-full mx-auto search-form-section">
           <HotelSearchForm />
         </div>
       </div>
 
-      {/* Dots */}
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-20">
+      {/* Dots — above bottom nav on mobile */}
+      <div className="absolute bottom-16 sm:bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-20">
         {images.map((_, i) => (
           <span key={i} onClick={() => setActive(i)} className={`block rounded-full transition-all duration-500 cursor-pointer ${i === active ? 'w-6 h-1.5 bg-white' : 'w-1.5 h-1.5 bg-white/40 hover:bg-white/60'}`} />
         ))}
