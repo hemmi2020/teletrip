@@ -103,6 +103,8 @@ const TransfersTab = ({ variant = 'dark' }) => {
         setShowTravellerDropdown(false);
       }
       if (calendarRef.current && !calendarRef.current.contains(event.target)) {
+        // Don't close if clicking inside the portal calendar overlay
+        if (event.target.closest('[data-calendar-portal]')) return;
         setShowCalendar(false);
       }
     };
@@ -392,7 +394,7 @@ const TransfersTab = ({ variant = 'dark' }) => {
           </span>
         </div>
         {showCalendar && createPortal(
-          <div style={{position:"fixed",inset:0,zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.3)"}} onClick={(e) => { if (e.target === e.currentTarget) setShowCalendar(false); }}><div className="bg-white border border-gray-200 rounded-2xl shadow-2xl overflow-auto max-h-[80vh]" style={{maxWidth:"95vw",margin:"16px"}}>
+          <div data-calendar-portal style={{position:"fixed",inset:0,zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.3)"}} onClick={(e) => { if (e.target === e.currentTarget) setShowCalendar(false); }}><div className="bg-white border border-gray-200 rounded-2xl shadow-2xl overflow-auto max-h-[80vh]" style={{maxWidth:"95vw",margin:"16px"}}>
             <Suspense fallback={<div className="p-8 text-center text-gray-400">Loading calendar...</div>}>
               <LazyDateRange
                 ranges={transferDateRange}
@@ -547,7 +549,10 @@ const ExperiencesTab = ({ variant = 'dark' }) => {
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (calendarRef.current && !calendarRef.current.contains(event.target)) setShowCalendar(false);
+      if (calendarRef.current && !calendarRef.current.contains(event.target)) {
+        if (event.target.closest('[data-calendar-portal]')) return;
+        setShowCalendar(false);
+      }
       if (locationRef.current && !locationRef.current.contains(event.target)) setShowLocationDropdown(false);
       if (travellerRef.current && !travellerRef.current.contains(event.target)) setShowTravellerDropdown(false);
     };
@@ -658,7 +663,7 @@ const ExperiencesTab = ({ variant = 'dark' }) => {
             </span>
           </div>
           {showCalendar && createPortal(
-            <div style={{position:"fixed",inset:0,zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.3)"}} onClick={(e) => { if (e.target === e.currentTarget) setShowCalendar(false); }}><div className="bg-white border border-gray-200 rounded-2xl shadow-2xl overflow-auto max-h-[80vh]" style={{maxWidth:"95vw",margin:"16px"}}>
+            <div data-calendar-portal style={{position:"fixed",inset:0,zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.3)"}} onClick={(e) => { if (e.target === e.currentTarget) setShowCalendar(false); }}><div className="bg-white border border-gray-200 rounded-2xl shadow-2xl overflow-auto max-h-[80vh]" style={{maxWidth:"95vw",margin:"16px"}}>
                 <Suspense fallback={<div className="p-8 text-center text-gray-400">Loading calendar...</div>}>
                   <LazyDateRange
                     ranges={dateRange}
@@ -888,6 +893,7 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (calendarRef.current && !calendarRef.current.contains(event.target)) {
+        if (event.target.closest('[data-calendar-portal]')) return;
         setShowCalendar(false);
       }
       if (travellerRef.current && !travellerRef.current.contains(event.target)) {
@@ -1107,7 +1113,7 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
                   </div>
 
                   {showCalendar && createPortal(
-                    <div style={{position:"fixed",inset:0,zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.3)"}} onClick={(e) => { if (e.target === e.currentTarget) setShowCalendar(false); }}><div className="bg-white border border-gray-200 rounded-2xl shadow-2xl overflow-auto max-h-[80vh]" style={{maxWidth:"95vw",margin:"16px"}}>
+                    <div data-calendar-portal style={{position:"fixed",inset:0,zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.3)"}} onClick={(e) => { if (e.target === e.currentTarget) setShowCalendar(false); }}><div className="bg-white border border-gray-200 rounded-2xl shadow-2xl overflow-auto max-h-[80vh]" style={{maxWidth:"95vw",margin:"16px"}}>
                         <Suspense fallback={<div className="p-8 text-center text-gray-400">Loading calendar...</div>}>
                           <LazyDateRange
                             ranges={dateRange}

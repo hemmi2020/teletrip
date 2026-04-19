@@ -21,6 +21,7 @@ import BookingDetails from './components/hotels/BookingDetails';
 import PaymentSuccess from './components/PaymentSuccess';
 import PaymentCancel from './components/PaymentCancel';
 import PaymentSuccessOnSite from './PaymentSuccessOnSite';
+import Contact from './Contact';
 
 // Import Admin Components
 import AdminLogin from './components/AdminLogin';
@@ -84,6 +85,7 @@ const App = () => {
                     <Route path="/activity/:activityCode" element={<ActivityDetails />} />
                     <Route path="/transfers" element={<TransferSearch />} />
                     <Route path="/account" element={<AccountDashboard />} />
+                    <Route path="/contact" element={<Contact />} />
                     <Route path="/bookings" element={<BookingManagement />} />
                     <Route path="/bookings/:bookingId" element={<BookingDetails />} />
                     <Route path="/checkout" element={<Checkout />} />
