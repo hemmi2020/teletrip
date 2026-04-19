@@ -230,90 +230,49 @@ const Home = () => {
         <title>TELITRIP</title>
       </Helmet>
       <Header />
+      {/* Hero — sticky, sits behind header (z-0), content scrolls over it */}
       <Slider />
-              
 
-      <div className="hotel-app ">
-        {/* Hero Section */}
-
-        {/* Featured Destinations */}
-        <motion.section 
+      {/* Content sections — z-10 so they slide over the sticky hero */}
+      <div className="hotel-app relative z-10 bg-white">
+        {/* Our Deals */}
+        <motion.section
           className="py-12 md:py-16 bg-gray-50"
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, amount: 0.2 }}
         >
           <div className="container mx-auto px-4">
-            <motion.h2 
+            <motion.h2
               className="text-2xl md:text-3xl font-bold text-center mb-8 md:mb-12 underline"
               variants={isMobile ? fadeInUpMobile : fadeInUp}
             >
               Our Deals
             </motion.h2>
-            <motion.div 
+            <motion.div
               className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8"
               variants={isMobile ? staggerContainerMobile : staggerContainer}
             >
-              {featuredDestinations.map((destination, index) => (
-                <motion.div
-                  key={destination.id}
-                  variants={isMobile ? scaleInMobile : scaleIn}
-                >
-                  <DestinationCard
-                    name={destination.name}
-                    image={destination.image}
-                    description={destination.description}
-                  />
+              {featuredDestinations.map((destination) => (
+                <motion.div key={destination.id} variants={isMobile ? scaleInMobile : scaleIn}>
+                  <DestinationCard name={destination.name} image={destination.image} description={destination.description} />
                 </motion.div>
               ))}
             </motion.div>
           </div>
         </motion.section>
-        
 
-        {/* Special Offers */}
-        {/* <section className="py-16">
-        <div className="container mx-auto px-4">
-        <h2 className="text-3xl font-bold text-center mb-12">Special Offers</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {specialOffers.map((offer) => (
-          <OfferCard 
-          key={offer.id}
-          title={offer.title}
-          discount={offer.discount}
-          image={offer.image}
-          description={offer.description}
-          />
-          ))}
-          </div>
-        </div>
-      </section> */}
-        <motion.div
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.2 }}
-          variants={isMobile ? fadeInUpMobile : fadeInUp}
-        >
+        <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.2 }} variants={isMobile ? fadeInUpMobile : fadeInUp}>
           <Accommodation />
         </motion.div>
-        
 
-        {/* Testimonials Carousel */}
         <TestimonialsCarousel testimonials={testimonials} isMobile={isMobile} />
-        <motion.div
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.2 }}
-          variants={isMobile ? fadeInUpMobile : fadeInUp}
-        >
+
+        <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.2 }} variants={isMobile ? fadeInUpMobile : fadeInUp}>
           <Services />
         </motion.div>
-        <motion.div
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.2 }}
-          variants={isMobile ? fadeInUpMobile : fadeInUp}
-        >
+
+        <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.2 }} variants={isMobile ? fadeInUpMobile : fadeInUp}>
           <Row01 />
         </motion.div>
 
