@@ -703,33 +703,33 @@ const ActivitySearchResults = () => {
               <div className="space-y-3">
                 {sortedActivities.map((activity, idx) => (
                   <div key={activity.code} className="bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-lg hover:border-gray-200 transition-all duration-200 flex flex-col sm:flex-row group">
-                    {/* Image — same as hotel card */}
+                    {/* Image */}
                     <div className="sm:w-56 lg:w-64 relative overflow-hidden flex-shrink-0">
-                      <img src={activity.images?.[0] || 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} alt={activity.name} className="w-full aspect-video sm:aspect-auto sm:h-full object-cover group-hover:scale-105 transition-transform duration-500" onError={(e) => e.target.src = 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} />
+                      <img src={activity.images?.[0] || 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} alt={activity.name} className="w-full h-40 sm:h-full object-cover group-hover:scale-105 transition-transform duration-500" onError={(e) => e.target.src = 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} />
                       {activity.activityFactsheetType && (<div className="absolute top-2 left-2 bg-blue-600/90 text-white px-2 py-0.5 rounded text-[10px] font-medium">{activity.activityFactsheetType}</div>)}
                     </div>
-                    {/* Content — same structure as hotel card */}
+                    {/* Content */}
                     <div className="flex-1 p-3 sm:p-4 min-w-0 flex flex-col justify-between">
                       <div>
                         {/* Name + Price row */}
                         <div className="flex justify-between items-start gap-2 mb-1">
                           <div className="min-w-0 flex-1">
-                            <h2 className="text-[14px] font-semibold text-gray-900 leading-tight truncate">{activity.name}</h2>
+                            <h2 className="text-[14px] font-semibold text-gray-900 leading-tight line-clamp-2 sm:truncate">{activity.name}</h2>
                           </div>
                           <div className="text-right flex-shrink-0">
                             {activity.pricing?.amount
-                              ? <div className="text-lg font-bold text-blue-600 leading-tight">{formatPKR(activity.pricing.amount) || `${activity.pricing.currency} ${parseFloat(activity.pricing.amount).toFixed(0)}`}</div>
+                              ? <div className="text-base sm:text-lg font-bold text-blue-600 leading-tight whitespace-nowrap">{formatPKR(activity.pricing.amount) || `${activity.pricing.currency} ${parseFloat(activity.pricing.amount).toFixed(0)}`}</div>
                               : <span className="text-[11px] text-gray-400">On request</span>}
                             <div className="text-[10px] text-gray-400">per person</div>
                           </div>
                         </div>
                         {/* Location + Duration */}
-                        <div className="flex items-center text-gray-400 text-[12px] mb-2">
+                        <div className="flex items-center text-gray-400 text-[12px] mb-2 overflow-hidden">
                           {activity.destination && <><MapPin className="w-3 h-3 mr-0.5 flex-shrink-0" /><span className="truncate">{activity.destination}</span></>}
-                          {activity.scheduling?.duration?.value && <span className="ml-2 flex items-center gap-0.5"><Clock className="w-3 h-3" />{activity.scheduling.duration.value}h</span>}
+                          {activity.scheduling?.duration?.value && <span className="ml-2 flex items-center gap-0.5 flex-shrink-0"><Clock className="w-3 h-3" />{activity.scheduling.duration.value}h</span>}
                         </div>
-                        {/* Tags */}
-                        <div className="flex gap-1 flex-wrap mb-1.5">
+                        {/* Tags — hidden on very small screens to prevent overlap */}
+                        <div className="hidden sm:flex gap-1 flex-wrap mb-1.5">
                           {activity.supplier && <span className="text-[10px] px-1.5 py-0.5 bg-gray-50 text-gray-500 rounded">{activity.supplier}</span>}
                           {activity.voucherType && <span className="text-[10px] px-1.5 py-0.5 bg-gray-50 text-gray-500 rounded">{activity.voucherType}</span>}
                           {activity.services && activity.services.filter(Boolean).slice(0, 2).map((s, i) => (
@@ -737,7 +737,7 @@ const ActivitySearchResults = () => {
                           ))}
                         </div>
                       </div>
-                      {/* CTA — same as hotel card */}
+                      {/* CTA */}
                       <div className="flex items-center justify-end mt-2 pt-2 border-t border-gray-50">
                         <button onClick={() => setSelectedActivity(activity)} className="w-full sm:w-auto px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-[12px] font-medium inline-flex items-center justify-center gap-1" style={{ minHeight: '40px' }}>
                           <Compass className="w-3 h-3" />View Options
@@ -756,29 +756,38 @@ const ActivitySearchResults = () => {
       {selectedActivity && (
         <div className="fixed inset-0 z-[150] flex items-end sm:items-center justify-center" onClick={() => setSelectedActivity(null)}>
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
-          <div className="relative bg-white w-full sm:max-w-3xl sm:rounded-2xl max-h-[92vh] overflow-hidden flex flex-col shadow-2xl" onClick={(e) => e.stopPropagation()}>
+          <div className="relative bg-white w-full sm:max-w-3xl rounded-t-2xl sm:rounded-2xl max-h-[92vh] overflow-hidden flex flex-col shadow-2xl" onClick={(e) => e.stopPropagation()}>
             {/* Image collage — same layout as hotel modal */}
             <div className="relative flex-shrink-0 bg-gray-200 overflow-hidden">
               {selectedActivity.images && selectedActivity.images.length >= 3 ? (
-                <div style={{display:'grid', gridTemplateColumns:'2fr 1fr', gridTemplateRows:'1fr 1fr', gap:2, height:200, width:'100%'}}>
-                  {/* Large left — spans 2 rows */}
-                  <div style={{gridRow:'1/3', overflow:'hidden', cursor:'pointer'}} onClick={() => { setGalleryImages(selectedActivity.images); setGalleryIndex(0); setGalleryOpen(true); }}>
+                <>
+                  {/* Desktop: grid collage */}
+                  <div className="hidden sm:grid" style={{gridTemplateColumns:'2fr 1fr', gridTemplateRows:'1fr 1fr', gap:2, height:200, width:'100%'}}>
+                    <div style={{gridRow:'1/3', overflow:'hidden', cursor:'pointer'}} onClick={() => { setGalleryImages(selectedActivity.images); setGalleryIndex(0); setGalleryOpen(true); }}>
+                      <img src={selectedActivity.images[0]} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}} onError={(e) => e.target.src='https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} />
+                    </div>
+                    <div style={{overflow:'hidden', cursor:'pointer'}} onClick={() => { setGalleryImages(selectedActivity.images); setGalleryIndex(1); setGalleryOpen(true); }}>
+                      <img src={selectedActivity.images[1]} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}} onError={(e) => e.target.src='https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} />
+                    </div>
+                    <div style={{overflow:'hidden', cursor:'pointer', position:'relative'}} onClick={() => { setGalleryImages(selectedActivity.images); setGalleryIndex(2); setGalleryOpen(true); }}>
+                      <img src={selectedActivity.images[2]} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}} onError={(e) => e.target.src='https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} />
+                      {selectedActivity.images.length > 3 && (
+                        <div style={{position:'absolute',inset:0,backgroundColor:'rgba(0,0,0,0.5)',display:'flex',alignItems:'center',justifyContent:'center'}}>
+                          <span style={{color:'#fff',fontSize:13,fontWeight:600}}>+{selectedActivity.images.length - 3} photos</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  {/* Mobile: single hero image with photo count */}
+                  <div className="sm:hidden relative" style={{height:180, width:'100%', overflow:'hidden', cursor:'pointer'}} onClick={() => { setGalleryImages(selectedActivity.images); setGalleryIndex(0); setGalleryOpen(true); }}>
                     <img src={selectedActivity.images[0]} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}} onError={(e) => e.target.src='https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} />
-                  </div>
-                  {/* Top right */}
-                  <div style={{overflow:'hidden', cursor:'pointer'}} onClick={() => { setGalleryImages(selectedActivity.images); setGalleryIndex(1); setGalleryOpen(true); }}>
-                    <img src={selectedActivity.images[1]} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}} onError={(e) => e.target.src='https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} />
-                  </div>
-                  {/* Bottom right — with count overlay */}
-                  <div style={{overflow:'hidden', cursor:'pointer', position:'relative'}} onClick={() => { setGalleryImages(selectedActivity.images); setGalleryIndex(2); setGalleryOpen(true); }}>
-                    <img src={selectedActivity.images[2]} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}} onError={(e) => e.target.src='https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} />
-                    {selectedActivity.images.length > 3 && (
-                      <div style={{position:'absolute',inset:0,backgroundColor:'rgba(0,0,0,0.5)',display:'flex',alignItems:'center',justifyContent:'center'}}>
-                        <span style={{color:'#fff',fontSize:13,fontWeight:600}}>+{selectedActivity.images.length - 3} photos</span>
+                    {selectedActivity.images.length > 1 && (
+                      <div className="absolute bottom-2 right-2 bg-black/60 text-white px-2.5 py-1 rounded-lg text-[11px] font-medium">
+                        {selectedActivity.images.length} photos
                       </div>
                     )}
                   </div>
-                </div>
+                </>
               ) : (
                 <div style={{height:180, width:'100%', overflow:'hidden', cursor:'pointer'}} onClick={() => { setGalleryImages(selectedActivity.images || []); setGalleryIndex(0); setGalleryOpen(true); }}>
                   <img src={selectedActivity.images?.[0] || 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}} />

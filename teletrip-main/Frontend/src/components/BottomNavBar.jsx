@@ -12,12 +12,22 @@ const BottomNavBar = () => {
   const cartCount = getTotalItems();
   const isLoggedIn = !!(user?.email || localStorage.getItem('token'));
 
-  const tabs = [
+  const baseTabs = [
     { label: "Home", icon: House, path: "/home" },
     { label: "Search", icon: Search, path: null, action: 'search' },
+  ];
+
+  // Show Bookings tab only when logged in
+  if (isLoggedIn) {
+    baseTabs.push({ label: "Bookings", icon: Calendar, path: "/bookings" });
+  }
+
+  baseTabs.push(
     { label: "Account", icon: User, path: "/account" },
     { label: "Cart", icon: ShoppingCart, path: null, action: 'cart' },
-  ];
+  );
+
+  const tabs = baseTabs;
 
   const isActive = (tab) => {
     if (!tab.path) return false;

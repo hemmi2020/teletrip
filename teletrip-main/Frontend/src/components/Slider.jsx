@@ -16,7 +16,7 @@ const Slider = () => {
   }, [active, images.length]);
 
   return (
-    <section className="sticky top-0 w-full bg-gray-900 z-0 overflow-hidden" style={{ height: '100svh', minHeight: 550 }}>
+    <section className="sticky top-0 w-full bg-gray-900 z-0 overflow-hidden" style={{ height: '100svh', minHeight: 550, margin: 0, padding: 0 }}>
       {/* Photo slideshow */}
       <div className="absolute inset-0">
         {images.map((img, i) => (

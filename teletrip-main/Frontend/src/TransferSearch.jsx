@@ -289,7 +289,7 @@ const TransferSearch = () => {
             )}
           </div>
 
-        <div className="w-full px-3 sm:px-4 sm:max-w-[1280px] mx-auto py-4 pt-10 sm:pt-11">
+        <div className="w-full px-3 sm:px-4 max-w-[980px] sm:max-w-[1280px] mx-auto py-4 pt-10 sm:pt-11">
           {/* Error / Empty / No search states */}
           {hasSearched && !error && transfers.length === 0 && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-10 text-center">
@@ -332,12 +332,12 @@ const TransferSearch = () => {
 
                     return (
                       <div key={idx} className="bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-lg hover:border-gray-200 transition-all duration-200 flex flex-col sm:flex-row group">
-                        {/* Image — same as hotel card */}
+                        {/* Image — fixed height on mobile, cover properly */}
                         <div className="sm:w-56 lg:w-64 relative overflow-hidden flex-shrink-0 bg-gradient-to-br from-blue-50 to-blue-100">
                           {t.images?.[0] ? (
-                            <img src={t.images[0]} alt={t.vehicle} className="w-full aspect-video sm:aspect-auto sm:h-full object-cover group-hover:scale-105 transition-transform duration-500" onError={(e) => { e.target.style.display='none'; }} />
+                            <img src={t.images[0]} alt={t.vehicle} className="w-full h-40 sm:h-full object-cover group-hover:scale-105 transition-transform duration-500" onError={(e) => { e.target.style.display='none'; }} />
                           ) : (
-                            <div className="w-full aspect-video sm:aspect-auto sm:h-full flex items-center justify-center min-h-[120px]">
+                            <div className="w-full h-40 sm:h-full flex items-center justify-center">
                               <Car className="w-12 h-12 text-blue-200" />
                             </div>
                           )}
@@ -347,17 +347,17 @@ const TransferSearch = () => {
                           )}
                         </div>
 
-                        {/* Content — same structure as hotel card */}
+                        {/* Content */}
                         <div className="flex-1 p-3 sm:p-4 flex flex-col justify-between min-w-0">
                           <div>
                             {/* Name + Price row */}
                             <div className="flex justify-between items-start gap-2 mb-1">
                               <div className="min-w-0 flex-1">
-                                <h2 className="text-[14px] font-semibold text-gray-900 truncate leading-tight">{t.vehicle || 'Transfer Vehicle'}</h2>
+                                <h2 className="text-[14px] font-semibold text-gray-900 leading-tight line-clamp-1">{t.vehicle || 'Transfer Vehicle'}</h2>
                                 <p className="text-[12px] text-gray-500">{t.category || 'Standard'}</p>
                               </div>
                               <div className="text-right flex-shrink-0">
-                                <div className="text-lg font-bold text-blue-600 leading-tight">{pkrPrice || '...'}</div>
+                                <div className="text-base sm:text-lg font-bold text-blue-600 leading-tight whitespace-nowrap">{pkrPrice || '...'}</div>
                                 <div className="text-[10px] text-gray-400">total</div>
                               </div>
                             </div>
@@ -439,8 +439,8 @@ const TransferSearch = () => {
                 </div>
               )}
 
-              {/* Stats — minimalist 4-item row */}
-              <div className="grid grid-cols-4 gap-2">
+              {/* Stats — minimalist grid, 2 cols on mobile, 4 on desktop */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {[
                   { icon: Users, color: '#3b82f6', value: `${selectedTransfer.minPaxCapacity || 1}–${selectedTransfer.maxPaxCapacity || '?'}`, label: 'Passengers' },
                   { icon: Car, color: '#22c55e', value: selectedTransfer.transferType || '—', label: 'Type' },
