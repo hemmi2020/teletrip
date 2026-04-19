@@ -987,52 +987,73 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
   return (
     <div className="w-full">
       <div className="bg-white/15 backdrop-blur-xl rounded-2xl border border-white/20 shadow-2xl p-4 sm:p-5 md:p-6">
-        {/* Tabs — elevated active icon with smooth animation */}
-        <div className="relative flex items-end justify-center gap-0 mb-4 sm:mb-5 bg-white/10 backdrop-blur-sm rounded-2xl p-1.5 overflow-visible">
-          {tabs.map((tab, idx) => {
-            const isActive = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                style={{ minHeight: 'unset' }}
-                className="no-min-h flex-1 flex flex-col items-center gap-1 py-2 relative z-10 transition-all duration-300"
+        {/* ── Tabs: white pill bar with elevated active circle ── */}
+        <div className="relative mb-6 sm:mb-7" style={{ paddingTop: 28 }}>
+          {/* SVG wave bar — white pill with notch cutout for active tab */}
+          <div className="relative">
+            {/* White pill background */}
+            <div className="relative bg-white rounded-full flex items-center" style={{ height: 56, boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
+              {/* Wave notch SVG — positioned behind the active circle */}
+              <svg
+                className="absolute top-0 transition-all duration-500 ease-out"
+                style={{
+                  left: `calc(${(tabs.findIndex(t => t.id === activeTab) / tabs.length) * 100}% + ${100 / tabs.length / 2}% - 36px)`,
+                  top: -20,
+                }}
+                width="72" height="32" viewBox="0 0 72 32" fill="none"
               >
-                {/* Elevated circle for active tab */}
-                <div
-                  className="flex items-center justify-center rounded-full transition-all duration-500 ease-out"
-                  style={{
-                    width: isActive ? 48 : 36,
-                    height: isActive ? 48 : 36,
-                    background: isActive ? '#f59e0b' : 'transparent',
-                    transform: isActive ? 'translateY(-14px)' : 'translateY(0)',
-                    boxShadow: isActive ? '0 8px 24px rgba(245,158,11,0.4)' : 'none',
-                  }}
-                >
-                  <tab.Icon
-                    className="transition-all duration-300"
-                    style={{
-                      width: isActive ? 22 : 18,
-                      height: isActive ? 22 : 18,
-                      color: isActive ? '#fff' : 'rgba(255,255,255,0.5)',
-                    }}
-                  />
-                </div>
-                {/* Label — only shows for active */}
-                <span
-                  className="text-[10px] sm:text-[11px] font-semibold tracking-wider uppercase transition-all duration-300"
-                  style={{
-                    color: isActive ? '#fff' : 'rgba(255,255,255,0.4)',
-                    opacity: isActive ? 1 : 0.7,
-                    transform: isActive ? 'translateY(-8px)' : 'translateY(0)',
-                    letterSpacing: '0.06em',
-                  }}
-                >
-                  {tab.label}
-                </span>
-              </button>
-            );
-          })}
+                <path d="M0 32 C0 32 8 32 16 20 C24 8 28 0 36 0 C44 0 48 8 56 20 C64 32 72 32 72 32" fill="white" />
+              </svg>
+
+              {/* Tab buttons */}
+              {tabs.map((tab, idx) => {
+                const isActive = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className="flex-1 flex flex-col items-center justify-center relative z-10"
+                    style={{ minHeight: 'unset', height: 56 }}
+                  >
+                    {/* Inactive icon — inside the bar */}
+                    {!isActive && (
+                      <tab.Icon
+                        className="transition-all duration-300"
+                        style={{ width: 22, height: 22, color: '#9ca3af', strokeWidth: 1.5 }}
+                      />
+                    )}
+                    {/* Active: label below the bar */}
+                    {isActive && (
+                      <span
+                        className="text-[11px] font-semibold tracking-wider uppercase text-gray-700 mt-1 transition-all duration-300"
+                        style={{ letterSpacing: '0.06em' }}
+                      >
+                        {tab.label}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Elevated amber circle — floats above the bar */}
+            <div
+              className="absolute z-20 flex items-center justify-center rounded-full transition-all duration-500 ease-out"
+              style={{
+                width: 54,
+                height: 54,
+                background: 'linear-gradient(135deg, #f59e0b, #f97316)',
+                boxShadow: '0 8px 28px rgba(245,158,11,0.45)',
+                top: 0,
+                left: `calc(${(tabs.findIndex(t => t.id === activeTab) / tabs.length) * 100}% + ${100 / tabs.length / 2}% - 27px)`,
+              }}
+            >
+              {(() => {
+                const ActiveIcon = tabs.find(t => t.id === activeTab)?.Icon;
+                return ActiveIcon ? <ActiveIcon style={{ width: 24, height: 24, color: '#fff', strokeWidth: 2 }} /> : null;
+              })()}
+            </div>
+          </div>
         </div>
 
           {activeTab === 'stays' && (
