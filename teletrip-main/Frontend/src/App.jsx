@@ -22,6 +22,11 @@ import PaymentSuccess from './components/PaymentSuccess';
 import PaymentCancel from './components/PaymentCancel';
 import PaymentSuccessOnSite from './PaymentSuccessOnSite';
 import Contact from './Contact';
+import About from './About';
+import FAQs from './FAQs';
+import PrivacyPolicy from './PrivacyPolicy';
+import Terms from './Terms';
+import CancellationPolicy from './CancellationPolicy';
 
 // Import Admin Components
 import AdminLogin from './components/AdminLogin';
@@ -86,6 +91,11 @@ const App = () => {
                     <Route path="/transfers" element={<TransferSearch />} />
                     <Route path="/account" element={<AccountDashboard />} />
                     <Route path="/contact" element={<Contact />} />
+                    <Route path="/about" element={<About />} />
+                    <Route path="/faqs" element={<FAQs />} />
+                    <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                    <Route path="/terms" element={<Terms />} />
+                    <Route path="/cancellation-policy" element={<CancellationPolicy />} />
                     <Route path="/bookings" element={<BookingManagement />} />
                     <Route path="/bookings/:bookingId" element={<BookingDetails />} />
                     <Route path="/checkout" element={<Checkout />} />
