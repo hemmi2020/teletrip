@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
+import { createPortal } from 'react-dom';
 import { MapPin, Calendar, Users, Search, ChevronDown, X, Plus, Minus, Loader2, Star, Clock, Tag, Plane, Building2, Hotel, Car, Compass } from 'lucide-react';
 import { addDays, format } from 'date-fns';
 import { searchTransfers } from '../services/transfersApi';
@@ -390,8 +391,8 @@ const TransfersTab = ({ variant = 'dark' }) => {
               : format(transferDateRange[0].startDate, 'MMM dd, yyyy')}
           </span>
         </div>
-        {showCalendar && (
-          <div className="fixed inset-0 sm:inset-auto sm:absolute z-[200] flex items-center justify-center sm:block sm:mt-2" onClick={(e) => { if (e.target === e.currentTarget) setShowCalendar(false); }}><div className="bg-white border border-gray-200 rounded-2xl shadow-2xl overflow-auto max-w-[95vw] max-h-[85vh] mx-4 sm:mx-0">
+        {showCalendar && createPortal(
+          <div style={{position:"fixed",inset:0,zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.3)"}} onClick={(e) => { if (e.target === e.currentTarget) setShowCalendar(false); }}><div className="bg-white border border-gray-200 rounded-2xl shadow-2xl overflow-auto max-h-[80vh]" style={{maxWidth:"95vw",margin:"16px"}}>
             <Suspense fallback={<div className="p-8 text-center text-gray-400">Loading calendar...</div>}>
               <LazyDateRange
                 ranges={transferDateRange}
@@ -414,7 +415,7 @@ const TransfersTab = ({ variant = 'dark' }) => {
             </div>
           </div>
           </div>
-        )}
+        , document.body)}
         </div>
 
         <div className="relative" ref={travellerRef}>
@@ -656,8 +657,8 @@ const ExperiencesTab = ({ variant = 'dark' }) => {
               ({calculateNights()}d)
             </span>
           </div>
-          {showCalendar && (
-            <div className="fixed inset-0 sm:inset-auto sm:absolute z-[200] flex items-center justify-center sm:block sm:mt-2" onClick={(e) => { if (e.target === e.currentTarget) setShowCalendar(false); }}><div className="bg-white border border-gray-200 rounded-2xl shadow-2xl overflow-auto max-w-[95vw] max-h-[85vh] mx-4 sm:mx-0">
+          {showCalendar && createPortal(
+            <div style={{position:"fixed",inset:0,zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.3)"}} onClick={(e) => { if (e.target === e.currentTarget) setShowCalendar(false); }}><div className="bg-white border border-gray-200 rounded-2xl shadow-2xl overflow-auto max-h-[80vh]" style={{maxWidth:"95vw",margin:"16px"}}>
                 <Suspense fallback={<div className="p-8 text-center text-gray-400">Loading calendar...</div>}>
                   <LazyDateRange
                     ranges={dateRange}
@@ -682,7 +683,7 @@ const ExperiencesTab = ({ variant = 'dark' }) => {
               </div>
             </div>
             </div>
-          )}
+          , document.body)}
         </div>
 
         <div className="relative" ref={travellerRef}>
@@ -1105,8 +1106,8 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
                     </span>
                   </div>
 
-                  {showCalendar && (
-                    <div className="fixed inset-0 sm:inset-auto sm:absolute z-[200] flex items-center justify-center sm:block sm:mt-2" onClick={(e) => { if (e.target === e.currentTarget) setShowCalendar(false); }}><div className="bg-white border border-gray-200 rounded-2xl shadow-2xl overflow-auto max-w-[95vw] max-h-[85vh] mx-4 sm:mx-0">
+                  {showCalendar && createPortal(
+                    <div style={{position:"fixed",inset:0,zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.3)"}} onClick={(e) => { if (e.target === e.currentTarget) setShowCalendar(false); }}><div className="bg-white border border-gray-200 rounded-2xl shadow-2xl overflow-auto max-h-[80vh]" style={{maxWidth:"95vw",margin:"16px"}}>
                         <Suspense fallback={<div className="p-8 text-center text-gray-400">Loading calendar...</div>}>
                           <LazyDateRange
                             ranges={dateRange}
@@ -1131,7 +1132,7 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
                       </div>
                     </div>
                     </div>
-                  )}
+                  , document.body)}
                 </div>
 
                 {/* Travellers Dropdown */}
