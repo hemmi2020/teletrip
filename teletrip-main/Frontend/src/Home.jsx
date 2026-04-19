@@ -225,58 +225,175 @@ const Home = () => {
     },
   ];
   return (
-    <div>
-      <Helmet>
-        <title>TELITRIP</title>
-      </Helmet>
+    <div style={{ background: '#050a14' }}>
+      <Helmet><title>Telitrip — Travel Smarter</title></Helmet>
       <Header />
-      {/* Hero — sticky, sits behind header (z-0), content scrolls over it */}
+
+      {/* ── Hero (sticky, behind header) ── */}
       <Slider />
 
-      {/* Content sections — z-10 so they slide over the sticky hero */}
-      <div className="hotel-app relative z-10 bg-white">
-        {/* Our Deals */}
-        <motion.section
-          className="py-12 md:py-16 bg-gray-50"
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.2 }}
-        >
-          <div className="container mx-auto px-4">
-            <motion.h2
-              className="text-2xl md:text-3xl font-bold text-center mb-8 md:mb-12 underline"
-              variants={isMobile ? fadeInUpMobile : fadeInUp}
-            >
-              Our Deals
-            </motion.h2>
-            <motion.div
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8"
-              variants={isMobile ? staggerContainerMobile : staggerContainer}
-            >
-              {featuredDestinations.map((destination) => (
-                <motion.div key={destination.id} variants={isMobile ? scaleInMobile : scaleIn}>
-                  <DestinationCard name={destination.name} image={destination.image} description={destination.description} />
+      {/* ── All content slides over the sticky hero ── */}
+      <div className="relative z-10" style={{ background: '#050a14' }}>
+
+        {/* ── SECTION 1: Our Deals ── */}
+        <section className="py-24 md:py-32 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto">
+            {/* Section label */}
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-8 h-px bg-blue-500" />
+              <span className="text-[11px] font-semibold tracking-widest uppercase text-blue-400" style={{ letterSpacing: '0.14em' }}>Featured Destinations</span>
+            </div>
+            <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-12 md:mb-16">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white" style={{ letterSpacing: '-0.03em', lineHeight: 1.1 }}>
+                Handpicked deals,<br />
+                <span style={{ color: '#60a5fa' }}>just for you.</span>
+              </h2>
+              <p className="text-white/40 text-sm max-w-xs md:text-right" style={{ lineHeight: 1.7 }}>
+                Curated stays across the world's most sought-after destinations.
+              </p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+              {featuredDestinations.map((dest, i) => (
+                <motion.div
+                  key={dest.id}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: i * 0.1 }}
+                  className="group relative overflow-hidden rounded-2xl cursor-pointer"
+                  style={{ aspectRatio: i === 0 ? '4/5' : '4/5', background: '#0d1526' }}
+                >
+                  <img src={dest.image} alt={dest.name} className="w-full h-full object-cover opacity-70 group-hover:opacity-90 group-hover:scale-105 transition-all duration-700" />
+                  <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(5,10,20,0.9) 0%, transparent 60%)' }} />
+                  <div className="absolute bottom-0 left-0 right-0 p-5">
+                    <h3 className="text-white font-bold text-lg mb-1" style={{ letterSpacing: '-0.02em' }}>{dest.name}</h3>
+                    <p className="text-white/50 text-[13px]" style={{ lineHeight: 1.5 }}>{dest.description}</p>
+                  </div>
                 </motion.div>
               ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── SECTION 2: Why Telitrip ── */}
+        <section className="py-24 md:py-32 px-4 sm:px-6 lg:px-8 border-t" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+          <div className="max-w-7xl mx-auto">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-8 h-px bg-purple-500" />
+              <span className="text-[11px] font-semibold tracking-widest uppercase text-purple-400" style={{ letterSpacing: '0.14em' }}>Why Telitrip</span>
+            </div>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-16" style={{ letterSpacing: '-0.03em', lineHeight: 1.1 }}>
+              Everything you need,<br />
+              <span style={{ color: '#a78bfa' }}>in one place.</span>
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {[
+                { icon: '🏨', title: 'Hotels', desc: '250,000+ properties worldwide. Best rate guaranteed on every booking.' },
+                { icon: '🚗', title: 'Transfers', desc: 'Airport pickups, private cars and shared shuttles — all pre-booked.' },
+                { icon: '🎭', title: 'Experiences', desc: 'Tours, activities and local adventures curated by experts.' },
+                { icon: '💳', title: 'Best Prices', desc: 'We compare rates across providers so you always pay less.' },
+                { icon: '🔒', title: 'Secure Booking', desc: 'End-to-end encrypted payments. Your data stays private.' },
+                { icon: '🌍', title: 'Global Coverage', desc: 'Available in 190+ countries. Book anywhere, anytime.' },
+              ].map((item, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.4, delay: i * 0.08 }}
+                  className="p-6 rounded-2xl group hover:scale-[1.02] transition-transform duration-300"
+                  style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}
+                >
+                  <div className="text-3xl mb-4">{item.icon}</div>
+                  <h3 className="text-white font-semibold text-lg mb-2" style={{ letterSpacing: '-0.02em' }}>{item.title}</h3>
+                  <p className="text-white/40 text-[13px]" style={{ lineHeight: 1.65 }}>{item.desc}</p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── SECTION 3: Testimonials ── */}
+        <section className="py-24 md:py-32 px-4 sm:px-6 lg:px-8 border-t overflow-hidden" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+          <div className="max-w-7xl mx-auto">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-8 h-px bg-emerald-500" />
+              <span className="text-[11px] font-semibold tracking-widest uppercase text-emerald-400" style={{ letterSpacing: '0.14em' }}>Traveller Stories</span>
+            </div>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-12" style={{ letterSpacing: '-0.03em', lineHeight: 1.1 }}>
+              Loved by travellers<br />
+              <span style={{ color: '#34d399' }}>around the world.</span>
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {testimonials.slice(0, 6).map((t, i) => (
+                <motion.div
+                  key={t.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.4, delay: i * 0.07 }}
+                  className="p-6 rounded-2xl"
+                  style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}
+                >
+                  <div className="flex items-center gap-1 mb-4">
+                    {[...Array(t.rating)].map((_, j) => (
+                      <span key={j} style={{ color: '#f59e0b', fontSize: 14 }}>★</span>
+                    ))}
+                  </div>
+                  <p className="text-white/70 text-[14px] mb-5" style={{ lineHeight: 1.7 }}>"{t.text}"</p>
+                  <div className="flex items-center gap-3">
+                    <img src={t.image} alt={t.name} className="w-9 h-9 rounded-full" />
+                    <span className="text-white/50 text-[13px] font-medium">{t.name}</span>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── SECTION 4: CTA ── */}
+        <section className="py-24 md:py-32 px-4 sm:px-6 lg:px-8 border-t" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+          <div className="max-w-4xl mx-auto text-center">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+            >
+              <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-6" style={{ letterSpacing: '-0.04em', lineHeight: 1.05 }}>
+                Ready to explore<br />
+                <span style={{
+                  background: 'linear-gradient(135deg, #60a5fa 0%, #a78bfa 50%, #34d399 100%)',
+                  WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+                }}>the world?</span>
+              </h2>
+              <p className="text-white/40 text-base sm:text-lg mb-10 max-w-lg mx-auto" style={{ lineHeight: 1.7 }}>
+                Join millions of travellers who book smarter with Telitrip.
+              </p>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                <button
+                  onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                  className="px-8 py-3.5 rounded-full text-[13px] font-bold tracking-widest uppercase text-white transition-all hover:opacity-90"
+                  style={{ background: 'linear-gradient(135deg, #2563eb, #7c3aed)', letterSpacing: '0.08em', minHeight: 'unset' }}
+                >
+                  Start Searching
+                </button>
+                <button
+                  onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                  className="px-8 py-3.5 rounded-full text-[13px] font-semibold text-white/70 hover:text-white transition-all"
+                  style={{ border: '1px solid rgba(255,255,255,0.15)', minHeight: 'unset' }}
+                >
+                  Learn More
+                </button>
+              </div>
             </motion.div>
           </div>
-        </motion.section>
+        </section>
 
-        <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.2 }} variants={isMobile ? fadeInUpMobile : fadeInUp}>
-          <Accommodation />
-        </motion.div>
-
-        <TestimonialsCarousel testimonials={testimonials} isMobile={isMobile} />
-
-        <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.2 }} variants={isMobile ? fadeInUpMobile : fadeInUp}>
-          <Services />
-        </motion.div>
-
-        <motion.div initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.2 }} variants={isMobile ? fadeInUpMobile : fadeInUp}>
-          <Row01 />
-        </motion.div>
-
-        <Footer />
+        {/* ── Footer ── */}
+        <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+          <Footer />
+        </div>
       </div>
     </div>
   );
