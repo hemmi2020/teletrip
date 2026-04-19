@@ -404,8 +404,8 @@ const TransferSearch = () => {
           </div>
         </div>
       {selectedTransfer && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-end sm:items-center justify-center" onClick={() => setSelectedTransfer(null)}>
-          <div className="relative bg-white w-full sm:max-w-2xl sm:rounded-2xl rounded-t-2xl flex flex-col shadow-2xl" style={{maxHeight:'92vh'}} onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[120] flex items-end sm:items-center justify-center" onClick={() => setSelectedTransfer(null)}>
+          <div className="relative bg-white w-full sm:max-w-2xl sm:rounded-2xl rounded-t-2xl flex flex-col shadow-2xl" style={{maxHeight:'calc(92vh - env(safe-area-inset-bottom, 0px))'}} onClick={(e) => e.stopPropagation()}>
 
             {/* ── Sticky Header ── */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100" style={{flexShrink:0}}>
@@ -538,7 +538,7 @@ const TransferSearch = () => {
             </div>
 
             {/* ── Sticky Footer: Price + Add to Cart ── */}
-            <div style={{flexShrink:0}} className="border-t border-gray-100 px-4 py-3 bg-white flex items-center justify-between gap-3">
+            <div style={{flexShrink:0, paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 60px)'}} className="border-t border-gray-100 px-4 py-3 bg-white sm:pb-3 flex items-center justify-between gap-3">
               <div>
                 <div className="text-[10px] text-gray-400 uppercase tracking-wide">Total</div>
                 <div className="text-[17px] font-bold text-blue-600 leading-tight">{formatPKR(parseFloat(selectedTransfer.price?.amount || 0)) || '...'}</div>

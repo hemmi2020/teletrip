@@ -31,7 +31,7 @@ const Footer = () => {
         <div className="relative px-6 pt-10 pb-24 text-center">
           {/* Logo */}
           <Link to="/home" className="inline-block mb-3">
-            <img src={logo} alt="Telitrip" className="h-9 w-auto mx-auto brightness-0 invert opacity-80" />
+            <img src={logo} alt="Telitrip" className="h-14 w-auto mx-auto brightness-0 invert opacity-80" />
           </Link>
           <p className="text-white/30 text-[11px] mb-7 max-w-[220px] mx-auto leading-relaxed">
             Hotels · Transfers · Experiences<br />Best rates, guaranteed.

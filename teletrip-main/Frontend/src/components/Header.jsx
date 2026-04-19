@@ -172,7 +172,7 @@ const Header = () => {
             >{label}</NavLink>
           ))}
         </nav>
-        <div className="flex-shrink-0 px-6 pb-10 pt-4 space-y-3">
+        <div className="flex-shrink-0 px-6 pb-24 pt-4 space-y-3">
           {user?.email ? (
             <>
               <p className="text-white/40 text-[12px] text-center mb-2">{user.fullname?.firstname || user.email}</p>
