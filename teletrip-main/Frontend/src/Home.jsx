@@ -72,10 +72,13 @@ const Home = () => {
   ];
 
   return (
-    <div className="bg-white">
+    <div className="bg-white" style={{ margin: 0, padding: 0 }}>
       <Helmet><title>Telitrip — Travel Smarter</title></Helmet>
       <Header />
-      <Slider />
+      {/* Wrapper matches hero bg so no white flash/border */}
+      <div style={{ background: '#111827', margin: 0, padding: 0 }}>
+        <Slider />
+      </div>
 
       {/* Content slides over sticky hero */}
       <div className="relative z-10 bg-white">
