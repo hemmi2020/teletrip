@@ -24,6 +24,7 @@ const reportsRoutes = require('./routes/reports.route');
 const financialRoutes = require('./routes/financial.route');
 const bookingManagementRoutes = require('./routes/bookingManagement.route');
 const currencyRoutes = require('./routes/currency.route');
+const destinationsRoutes = require('./routes/destinations.route');
 require('./models/blacklistToken.model');
 require('./models/notification.model');
 require('./models/review.model');
@@ -132,6 +133,7 @@ app.use('/api/reports', reportsRoutes);
 app.use('/api/financial', financialRoutes);
 app.use('/api/bookings', bookingManagementRoutes);
 app.use('/api/currency', currencyRoutes);
+app.use('/api/destinations', destinationsRoutes);
 
 console.log('userRoutes:', typeof userRoutes);
 console.log('hotelRoutes:', typeof hotelRoutes);
