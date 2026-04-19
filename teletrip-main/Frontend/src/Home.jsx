@@ -225,49 +225,38 @@ const Home = () => {
     },
   ];
   return (
-    <div style={{ background: '#050a14' }}>
+    <div className="bg-white">
       <Helmet><title>Telitrip — Travel Smarter</title></Helmet>
       <Header />
-
-      {/* ── Hero (sticky, behind header) ── */}
       <Slider />
 
-      {/* ── All content slides over the sticky hero ── */}
-      <div className="relative z-10" style={{ background: '#050a14' }}>
+      {/* Content slides over sticky hero */}
+      <div className="relative z-10 bg-white">
 
         {/* ── SECTION 1: Our Deals ── */}
-        <section className="py-24 md:py-32 px-4 sm:px-6 lg:px-8">
-          <div className="max-w-7xl mx-auto">
-            {/* Section label */}
-            <div className="flex items-center gap-3 mb-6">
+        <section className="relative py-20 md:py-28 px-4 sm:px-6 lg:px-8 overflow-hidden">
+          {/* 3D gradient shape — blue/purple blob */}
+          <div className="absolute -top-32 -right-32 w-96 h-96 rounded-full opacity-20 animate-pulse" style={{ background: 'radial-gradient(circle, #3b82f6, #8b5cf6)', filter: 'blur(80px)' }} />
+          <div className="absolute bottom-0 -left-20 w-72 h-72 rounded-full opacity-15" style={{ background: 'radial-gradient(circle, #06b6d4, #3b82f6)', filter: 'blur(60px)', animation: 'float1 8s ease-in-out infinite alternate' }} />
+
+          <div className="max-w-7xl mx-auto relative">
+            <div className="flex items-center gap-3 mb-4">
               <div className="w-8 h-px bg-blue-500" />
-              <span className="text-[11px] font-semibold tracking-widest uppercase text-blue-400" style={{ letterSpacing: '0.14em' }}>Featured Destinations</span>
+              <span className="text-[11px] font-semibold tracking-widest uppercase text-blue-500" style={{ letterSpacing: '0.14em' }}>Featured Destinations</span>
             </div>
-            <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-12 md:mb-16">
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white" style={{ letterSpacing: '-0.03em', lineHeight: 1.1 }}>
-                Handpicked deals,<br />
-                <span style={{ color: '#60a5fa' }}>just for you.</span>
-              </h2>
-              <p className="text-white/40 text-sm max-w-xs md:text-right" style={{ lineHeight: 1.7 }}>
-                Curated stays across the world's most sought-after destinations.
-              </p>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-4" style={{ letterSpacing: '-0.03em', lineHeight: 1.1 }}>
+              Handpicked deals,<br /><span className="text-blue-600">just for you.</span>
+            </h2>
+            <p className="text-gray-500 text-sm max-w-md mb-12" style={{ lineHeight: 1.7 }}>Curated stays across the world's most sought-after destinations.</p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
               {featuredDestinations.map((dest, i) => (
-                <motion.div
-                  key={dest.id}
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: i * 0.1 }}
-                  className="group relative overflow-hidden rounded-2xl cursor-pointer"
-                  style={{ aspectRatio: i === 0 ? '4/5' : '4/5', background: '#0d1526' }}
-                >
-                  <img src={dest.image} alt={dest.name} className="w-full h-full object-cover opacity-70 group-hover:opacity-90 group-hover:scale-105 transition-all duration-700" />
-                  <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(5,10,20,0.9) 0%, transparent 60%)' }} />
+                <motion.div key={dest.id} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: i * 0.1 }}
+                  className="group relative overflow-hidden rounded-2xl cursor-pointer bg-gray-100" style={{ aspectRatio: '4/5' }}>
+                  <img src={dest.image} alt={dest.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                  <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 50%)' }} />
                   <div className="absolute bottom-0 left-0 right-0 p-5">
-                    <h3 className="text-white font-bold text-lg mb-1" style={{ letterSpacing: '-0.02em' }}>{dest.name}</h3>
-                    <p className="text-white/50 text-[13px]" style={{ lineHeight: 1.5 }}>{dest.description}</p>
+                    <h3 className="text-white font-bold text-lg mb-1">{dest.name}</h3>
+                    <p className="text-white/60 text-[13px]">{dest.description}</p>
                   </div>
                 </motion.div>
               ))}
@@ -276,37 +265,33 @@ const Home = () => {
         </section>
 
         {/* ── SECTION 2: Why Telitrip ── */}
-        <section className="py-24 md:py-32 px-4 sm:px-6 lg:px-8 border-t" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
-          <div className="max-w-7xl mx-auto">
-            <div className="flex items-center gap-3 mb-6">
+        <section className="relative py-20 md:py-28 px-4 sm:px-6 lg:px-8 bg-gray-50 overflow-hidden">
+          {/* 3D gradient shape — purple/pink */}
+          <div className="absolute top-20 -right-40 w-80 h-80 rounded-full opacity-15" style={{ background: 'radial-gradient(circle, #a855f7, #ec4899)', filter: 'blur(70px)', animation: 'float2 10s ease-in-out infinite alternate' }} />
+          <div className="absolute -bottom-20 left-10 w-64 h-64 rounded-full opacity-10" style={{ background: 'radial-gradient(circle, #f59e0b, #ef4444)', filter: 'blur(60px)', animation: 'float3 12s ease-in-out infinite alternate' }} />
+
+          <div className="max-w-7xl mx-auto relative">
+            <div className="flex items-center gap-3 mb-4">
               <div className="w-8 h-px bg-purple-500" />
-              <span className="text-[11px] font-semibold tracking-widest uppercase text-purple-400" style={{ letterSpacing: '0.14em' }}>Why Telitrip</span>
+              <span className="text-[11px] font-semibold tracking-widest uppercase text-purple-500" style={{ letterSpacing: '0.14em' }}>Why Telitrip</span>
             </div>
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-16" style={{ letterSpacing: '-0.03em', lineHeight: 1.1 }}>
-              Everything you need,<br />
-              <span style={{ color: '#a78bfa' }}>in one place.</span>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-14" style={{ letterSpacing: '-0.03em', lineHeight: 1.1 }}>
+              Everything you need,<br /><span className="text-purple-600">in one place.</span>
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {[
-                { icon: '🏨', title: 'Hotels', desc: '250,000+ properties worldwide. Best rate guaranteed on every booking.' },
-                { icon: '🚗', title: 'Transfers', desc: 'Airport pickups, private cars and shared shuttles — all pre-booked.' },
+                { icon: '🏨', title: 'Hotels', desc: '250,000+ properties worldwide. Best rate guaranteed.' },
+                { icon: '🚗', title: 'Transfers', desc: 'Airport pickups, private cars and shared shuttles.' },
                 { icon: '🎭', title: 'Experiences', desc: 'Tours, activities and local adventures curated by experts.' },
-                { icon: '💳', title: 'Best Prices', desc: 'We compare rates across providers so you always pay less.' },
+                { icon: '💳', title: 'Best Prices', desc: 'We compare rates across providers so you pay less.' },
                 { icon: '🔒', title: 'Secure Booking', desc: 'End-to-end encrypted payments. Your data stays private.' },
                 { icon: '🌍', title: 'Global Coverage', desc: 'Available in 190+ countries. Book anywhere, anytime.' },
               ].map((item, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.4, delay: i * 0.08 }}
-                  className="p-6 rounded-2xl group hover:scale-[1.02] transition-transform duration-300"
-                  style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}
-                >
+                <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: i * 0.08 }}
+                  className="p-6 rounded-2xl bg-white border border-gray-100 hover:shadow-lg hover:border-gray-200 hover:scale-[1.02] transition-all duration-300">
                   <div className="text-3xl mb-4">{item.icon}</div>
-                  <h3 className="text-white font-semibold text-lg mb-2" style={{ letterSpacing: '-0.02em' }}>{item.title}</h3>
-                  <p className="text-white/40 text-[13px]" style={{ lineHeight: 1.65 }}>{item.desc}</p>
+                  <h3 className="text-gray-900 font-semibold text-lg mb-2" style={{ letterSpacing: '-0.02em' }}>{item.title}</h3>
+                  <p className="text-gray-500 text-[13px]" style={{ lineHeight: 1.65 }}>{item.desc}</p>
                 </motion.div>
               ))}
             </div>
@@ -314,36 +299,29 @@ const Home = () => {
         </section>
 
         {/* ── SECTION 3: Testimonials ── */}
-        <section className="py-24 md:py-32 px-4 sm:px-6 lg:px-8 border-t overflow-hidden" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
-          <div className="max-w-7xl mx-auto">
-            <div className="flex items-center gap-3 mb-6">
+        <section className="relative py-20 md:py-28 px-4 sm:px-6 lg:px-8 overflow-hidden">
+          {/* 3D gradient shape — green/teal */}
+          <div className="absolute -top-20 left-1/3 w-96 h-96 rounded-full opacity-12" style={{ background: 'radial-gradient(circle, #10b981, #06b6d4)', filter: 'blur(80px)', animation: 'float1 14s ease-in-out infinite alternate' }} />
+
+          <div className="max-w-7xl mx-auto relative">
+            <div className="flex items-center gap-3 mb-4">
               <div className="w-8 h-px bg-emerald-500" />
-              <span className="text-[11px] font-semibold tracking-widest uppercase text-emerald-400" style={{ letterSpacing: '0.14em' }}>Traveller Stories</span>
+              <span className="text-[11px] font-semibold tracking-widest uppercase text-emerald-500" style={{ letterSpacing: '0.14em' }}>Traveller Stories</span>
             </div>
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-12" style={{ letterSpacing: '-0.03em', lineHeight: 1.1 }}>
-              Loved by travellers<br />
-              <span style={{ color: '#34d399' }}>around the world.</span>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-12" style={{ letterSpacing: '-0.03em', lineHeight: 1.1 }}>
+              Loved by travellers<br /><span className="text-emerald-600">around the world.</span>
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {testimonials.slice(0, 6).map((t, i) => (
-                <motion.div
-                  key={t.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.4, delay: i * 0.07 }}
-                  className="p-6 rounded-2xl"
-                  style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}
-                >
+                <motion.div key={t.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: i * 0.07 }}
+                  className="p-6 rounded-2xl bg-white border border-gray-100 hover:shadow-md transition-all">
                   <div className="flex items-center gap-1 mb-4">
-                    {[...Array(t.rating)].map((_, j) => (
-                      <span key={j} style={{ color: '#f59e0b', fontSize: 14 }}>★</span>
-                    ))}
+                    {[...Array(t.rating)].map((_, j) => <span key={j} style={{ color: '#f59e0b', fontSize: 14 }}>★</span>)}
                   </div>
-                  <p className="text-white/70 text-[14px] mb-5" style={{ lineHeight: 1.7 }}>"{t.text}"</p>
+                  <p className="text-gray-600 text-[14px] mb-5" style={{ lineHeight: 1.7 }}>"{t.text}"</p>
                   <div className="flex items-center gap-3">
                     <img src={t.image} alt={t.name} className="w-9 h-9 rounded-full" />
-                    <span className="text-white/50 text-[13px] font-medium">{t.name}</span>
+                    <span className="text-gray-500 text-[13px] font-medium">{t.name}</span>
                   </div>
                 </motion.div>
               ))}
@@ -352,37 +330,22 @@ const Home = () => {
         </section>
 
         {/* ── SECTION 4: CTA ── */}
-        <section className="py-24 md:py-32 px-4 sm:px-6 lg:px-8 border-t" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
-          <div className="max-w-4xl mx-auto text-center">
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-            >
-              <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white mb-6" style={{ letterSpacing: '-0.04em', lineHeight: 1.05 }}>
-                Ready to explore<br />
-                <span style={{
-                  background: 'linear-gradient(135deg, #60a5fa 0%, #a78bfa 50%, #34d399 100%)',
-                  WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-                }}>the world?</span>
+        <section className="relative py-24 md:py-32 px-4 sm:px-6 lg:px-8 bg-gray-50 overflow-hidden">
+          {/* 3D gradient shape — amber/orange */}
+          <div className="absolute top-10 right-10 w-72 h-72 rounded-full opacity-15" style={{ background: 'radial-gradient(circle, #f59e0b, #ef4444)', filter: 'blur(70px)', animation: 'float2 9s ease-in-out infinite alternate' }} />
+          <div className="absolute bottom-10 left-20 w-60 h-60 rounded-full opacity-10" style={{ background: 'radial-gradient(circle, #3b82f6, #8b5cf6)', filter: 'blur(60px)', animation: 'float3 11s ease-in-out infinite alternate' }} />
+
+          <div className="max-w-4xl mx-auto text-center relative">
+            <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
+              <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold text-gray-900 mb-6" style={{ letterSpacing: '-0.04em', lineHeight: 1.05 }}>
+                Ready to explore<br /><span className="text-blue-600">the world?</span>
               </h2>
-              <p className="text-white/40 text-base sm:text-lg mb-10 max-w-lg mx-auto" style={{ lineHeight: 1.7 }}>
-                Join millions of travellers who book smarter with Telitrip.
-              </p>
+              <p className="text-gray-500 text-base sm:text-lg mb-10 max-w-lg mx-auto">Join millions of travellers who book smarter with Telitrip.</p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-                <button
-                  onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                  className="px-8 py-3.5 rounded-full text-[13px] font-bold tracking-widest uppercase text-white transition-all hover:opacity-90"
-                  style={{ background: 'linear-gradient(135deg, #2563eb, #7c3aed)', letterSpacing: '0.08em', minHeight: 'unset' }}
-                >
+                <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="px-8 py-3.5 rounded-full text-[13px] font-bold tracking-widest uppercase text-white bg-blue-600 hover:bg-blue-700 transition-all" style={{ letterSpacing: '0.08em', minHeight: 'unset' }}>
                   Start Searching
                 </button>
-                <button
-                  onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                  className="px-8 py-3.5 rounded-full text-[13px] font-semibold text-white/70 hover:text-white transition-all"
-                  style={{ border: '1px solid rgba(255,255,255,0.15)', minHeight: 'unset' }}
-                >
+                <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="px-8 py-3.5 rounded-full text-[13px] font-semibold text-gray-600 border border-gray-300 hover:border-gray-400 hover:text-gray-900 transition-all" style={{ minHeight: 'unset' }}>
                   Learn More
                 </button>
               </div>
@@ -390,11 +353,15 @@ const Home = () => {
           </div>
         </section>
 
-        {/* ── Footer ── */}
-        <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-          <Footer />
-        </div>
+        <Footer />
       </div>
+
+      {/* Float animations */}
+      <style>{`
+        @keyframes float1 { 0% { transform: translate(0,0) scale(1); } 100% { transform: translate(30px, -20px) scale(1.1); } }
+        @keyframes float2 { 0% { transform: translate(0,0) scale(1); } 100% { transform: translate(-20px, 30px) scale(1.15); } }
+        @keyframes float3 { 0% { transform: translate(0,0) scale(1); } 100% { transform: translate(15px, 15px) scale(1.08); } }
+      `}</style>
     </div>
   );
 };

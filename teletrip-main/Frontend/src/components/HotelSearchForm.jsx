@@ -987,23 +987,52 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
   return (
     <div className="w-full">
       <div className="bg-white/15 backdrop-blur-xl rounded-2xl border border-white/20 shadow-2xl p-4 sm:p-5 md:p-6">
-        {/* Tabs */}
-        <div className="grid grid-cols-3 gap-1 mb-4 sm:mb-5 bg-black/20 rounded-xl p-1">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              style={{ minHeight: 'unset' }}
-              className={`no-min-h flex items-center justify-center gap-1.5 px-2 py-2 rounded-lg font-medium transition-all text-xs sm:text-sm ${
-                activeTab === tab.id
-                  ? 'bg-white text-gray-900 shadow-md'
-                  : 'text-white/70 hover:text-white hover:bg-white/10'
-              }`}
-            >
-              <tab.Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
-              <span className="truncate">{tab.label}</span>
-            </button>
-          ))}
+        {/* Tabs — elevated active icon with smooth animation */}
+        <div className="relative flex items-end justify-center gap-0 mb-4 sm:mb-5 bg-white/10 backdrop-blur-sm rounded-2xl p-1.5 overflow-visible">
+          {tabs.map((tab, idx) => {
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                style={{ minHeight: 'unset' }}
+                className="no-min-h flex-1 flex flex-col items-center gap-1 py-2 relative z-10 transition-all duration-300"
+              >
+                {/* Elevated circle for active tab */}
+                <div
+                  className="flex items-center justify-center rounded-full transition-all duration-500 ease-out"
+                  style={{
+                    width: isActive ? 48 : 36,
+                    height: isActive ? 48 : 36,
+                    background: isActive ? '#f59e0b' : 'transparent',
+                    transform: isActive ? 'translateY(-14px)' : 'translateY(0)',
+                    boxShadow: isActive ? '0 8px 24px rgba(245,158,11,0.4)' : 'none',
+                  }}
+                >
+                  <tab.Icon
+                    className="transition-all duration-300"
+                    style={{
+                      width: isActive ? 22 : 18,
+                      height: isActive ? 22 : 18,
+                      color: isActive ? '#fff' : 'rgba(255,255,255,0.5)',
+                    }}
+                  />
+                </div>
+                {/* Label — only shows for active */}
+                <span
+                  className="text-[10px] sm:text-[11px] font-semibold tracking-wider uppercase transition-all duration-300"
+                  style={{
+                    color: isActive ? '#fff' : 'rgba(255,255,255,0.4)',
+                    opacity: isActive ? 1 : 0.7,
+                    transform: isActive ? 'translateY(-8px)' : 'translateY(0)',
+                    letterSpacing: '0.06em',
+                  }}
+                >
+                  {tab.label}
+                </span>
+              </button>
+            );
+          })}
         </div>
 
           {activeTab === 'stays' && (
