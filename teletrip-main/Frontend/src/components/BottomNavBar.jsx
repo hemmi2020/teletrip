@@ -15,7 +15,6 @@ const BottomNavBar = () => {
   const tabs = [
     { label: "Home", icon: House, path: "/home" },
     { label: "Search", icon: Search, path: null, action: 'search' },
-    ...(isLoggedIn ? [{ label: "Bookings", icon: Calendar, path: "/bookings" }] : []),
     { label: "Account", icon: User, path: "/account" },
     { label: "Cart", icon: ShoppingCart, path: null, action: 'cart' },
   ];

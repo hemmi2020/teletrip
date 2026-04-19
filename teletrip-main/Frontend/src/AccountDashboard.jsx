@@ -1195,8 +1195,8 @@ const AccountDashboard = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
           {/* Header */}
-          <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
-            <div className="flex items-center space-x-4">
+          <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 mb-6 sm:mb-8">
+            <div className="flex items-center gap-3 sm:gap-4">
               <div className="relative">
                 <div className="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center overflow-hidden">
                   {profile?.profilePicture ? (
@@ -1220,7 +1220,7 @@ const AccountDashboard = () => {
                 </label>
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">
+                <h1 className="text-xl sm:text-3xl font-bold text-gray-900">
                   Welcome back, {profile?.fullname?.firstname || profile?.firstName || user?.fullname?.firstname || user?.email || 'User'}!
                 </h1>
                 <p className="text-gray-600 mt-1">Manage your account and view your bookings</p>
@@ -1274,7 +1274,7 @@ const AccountDashboard = () => {
             </div>
 
             {/* Tab Content */}
-            <div className="p-6">
+            <div className="p-3 sm:p-6">
               {/* Overview Tab */}
               {activeTab === "overview" && (
                 <div>
@@ -1594,9 +1594,9 @@ const AccountDashboard = () => {
               {/* Bookings Tab */}
               {activeTab === "bookings" && (
                 <div>
-                  <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-xl font-semibold text-gray-900">My Bookings</h2>
-                    <div className="flex space-x-4">
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6">
+                    <h2 className="text-lg sm:text-xl font-semibold text-gray-900">My Bookings</h2>
+                    <div className="flex gap-2 sm:gap-4">
                       <select
                         value={bookingFilters.status}
                         onChange={(e) => {
@@ -1604,7 +1604,7 @@ const AccountDashboard = () => {
                           setBookingFilters(newFilters);
                           loadTabData("bookings", newFilters);
                         }}
-                        className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        className="flex-1 sm:flex-none px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
                       >
                         <option value="">All Status</option>
                         <option value="pending">Pending</option>
@@ -1615,10 +1615,10 @@ const AccountDashboard = () => {
                       <button
                         onClick={() => loadTabData("bookings", bookingFilters)}
                         disabled={loading}
-                        className="flex items-center space-x-2 px-4 py-2 text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50 disabled:opacity-50"
+                        className="flex items-center gap-2 px-3 sm:px-4 py-2 text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50 disabled:opacity-50 text-sm"
                       >
                         <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-                        <span>Refresh</span>
+                        <span className="hidden sm:inline">Refresh</span>
                       </button>
                     </div>
                   </div>
@@ -1715,15 +1715,15 @@ const AccountDashboard = () => {
                       <div className="space-y-3">
                         {pendingPayments.map((payment) => (
                           <div key={payment._id} className="bg-white rounded-lg p-4 border border-yellow-200">
-                            <div className="flex items-center justify-between">
-                              <div className="flex-1">
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                              <div className="flex-1 min-w-0">
                                 <div className="flex items-center space-x-2 mb-2">
                                   <Building2 className="w-4 h-4 text-gray-500" />
                                   <span className="font-medium text-gray-900">
                                     {payment.bookingId?.hotelBooking?.hotelName || 'Hotel Booking'}
                                   </span>
                                 </div>
-                                <div className="grid grid-cols-2 gap-4 text-sm">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 text-sm">
                                   <div>
                                     <span className="text-gray-500">Booking Ref:</span>
                                     <span className="ml-2 font-mono text-gray-900">
@@ -1773,9 +1773,9 @@ const AccountDashboard = () => {
                     </div>
                   )}
 
-                  <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-xl font-semibold text-gray-900">Payment History</h2>
-                    <div className="flex space-x-4">
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6">
+                    <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Payment History</h2>
+                    <div className="flex gap-2 sm:gap-4">
                       <select
                         value={paymentFilters.status}
                         onChange={(e) => {
@@ -1783,7 +1783,7 @@ const AccountDashboard = () => {
                           setPaymentFilters(newFilters);
                           loadTabData("payments", newFilters);
                         }}
-                        className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        className="flex-1 sm:flex-none px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
                       >
                         <option value="">All Payments</option>
                         <option value="completed">Completed</option>
@@ -1794,10 +1794,10 @@ const AccountDashboard = () => {
                       <button
                         onClick={() => loadTabData("payments", paymentFilters)}
                         disabled={loading}
-                        className="flex items-center space-x-2 px-4 py-2 text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50 disabled:opacity-50"
+                        className="flex items-center gap-2 px-3 sm:px-4 py-2 text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50 disabled:opacity-50 text-sm"
                       >
                         <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-                        <span>Refresh</span>
+                        <span className="hidden sm:inline">Refresh</span>
                       </button>
                     </div>
                   </div>
@@ -1805,7 +1805,35 @@ const AccountDashboard = () => {
                   {loading && <LoadingSpinner text="Loading payments..." />}
 
                   {!loading && payments.docs?.length > 0 ? (
-                    <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+                    <div>
+                      {/* Mobile: Card layout */}
+                      <div className="sm:hidden space-y-3">
+                        {payments.docs.map((payment) => (
+                          <div key={payment._id} className="bg-white rounded-xl border border-gray-100 p-4 space-y-3">
+                            <div className="flex items-center justify-between">
+                              <span className="text-[13px] font-mono text-gray-700">{payment.transactionId || payment._id.slice(-8)}</span>
+                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium ${
+                                payment.status === 'completed' ? 'bg-green-100 text-green-800' :
+                                payment.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                payment.status === 'failed' ? 'bg-red-100 text-red-800' :
+                                payment.status === 'refunded' ? 'bg-orange-100 text-orange-800' :
+                                'bg-gray-100 text-gray-800'
+                              }`}>{payment.status}</span>
+                            </div>
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-gray-500">Booking: {payment.bookingId?.bookingReference || 'N/A'}</span>
+                              <span className="font-semibold text-gray-900">{formatCurrency(payment.amount)}</span>
+                            </div>
+                            <div className="flex items-center justify-between text-[12px] text-gray-400">
+                              <span>{formatDate(payment.createdAt)}</span>
+                              <span className="flex items-center gap-1"><CreditCard className="w-3 h-3" />{payment.paymentMethod || 'Card'}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Desktop: Table layout */}
+                      <div className="hidden sm:block bg-white rounded-lg shadow-sm overflow-hidden">
                       <div className="overflow-x-auto">
                         <table className="min-w-full divide-y divide-gray-200">
                           <thead className="bg-gray-50">
@@ -1879,8 +1907,9 @@ const AccountDashboard = () => {
                           </tbody>
                         </table>
                       </div>
+                      </div>
 
-                      {/* Payment Pagination */}
+                      {/* Pagination — works for both mobile and desktop */}
                       {payments.totalPages > 1 && (
                         <div className="bg-white px-6 py-4 border-t border-gray-200">
                           <div className="flex items-center justify-between">
