@@ -259,7 +259,10 @@ const TransfersTab = ({ variant = 'dark' }) => {
             )}
           </div>
           {showPickupDropdown && pickupQuery.trim() !== '' && (
-            <div className="fixed sm:absolute inset-x-0 sm:inset-x-auto bottom-0 sm:bottom-auto sm:top-full z-50 sm:w-full sm:mt-2 bg-white border border-gray-200 rounded-t-2xl sm:rounded-xl shadow-xl max-h-[60vh] overflow-y-auto" style={{scrollbarWidth:'thin'}}>
+            <>
+            <div className="fixed inset-0 bg-black/30 z-[209] sm:hidden" onClick={() => setShowPickupDropdown(false)} />
+            <div className="fixed sm:absolute inset-x-0 sm:inset-x-auto bottom-0 sm:bottom-auto sm:top-full z-[210] sm:z-50 sm:w-full sm:mt-2 bg-white border border-gray-200 rounded-t-2xl sm:rounded-xl shadow-2xl max-h-[55vh] sm:max-h-[60vh] overflow-y-auto" style={{scrollbarWidth:'thin'}}>
+              <div className="w-10 h-1 bg-gray-300 rounded-full mx-auto mt-2 mb-1 sm:hidden" />
               {isLoadingLocations ? (
                 <div className="p-3 text-center text-gray-500 text-sm">Searching locations...</div>
               ) : groupedPickup.length > 0 ? (
@@ -302,6 +305,7 @@ const TransfersTab = ({ variant = 'dark' }) => {
                 <div className="p-3 text-center text-gray-500 text-sm">No locations found</div>
               )}
             </div>
+            </>
           )}
         </div>
 
@@ -329,7 +333,10 @@ const TransfersTab = ({ variant = 'dark' }) => {
             )}
           </div>
           {showDropoffDropdown && dropoffQuery.trim() !== '' && (
-            <div className="fixed sm:absolute inset-x-0 sm:inset-x-auto bottom-0 sm:bottom-auto sm:top-full z-50 sm:w-full sm:mt-2 bg-white border border-gray-200 rounded-t-2xl sm:rounded-xl shadow-xl max-h-[60vh] overflow-y-auto" style={{scrollbarWidth:'thin'}}>
+            <>
+            <div className="fixed inset-0 bg-black/30 z-[209] sm:hidden" onClick={() => setShowDropoffDropdown(false)} />
+            <div className="fixed sm:absolute inset-x-0 sm:inset-x-auto bottom-0 sm:bottom-auto sm:top-full z-[210] sm:z-50 sm:w-full sm:mt-2 bg-white border border-gray-200 rounded-t-2xl sm:rounded-xl shadow-2xl max-h-[55vh] sm:max-h-[60vh] overflow-y-auto" style={{scrollbarWidth:'thin'}}>
+              <div className="w-10 h-1 bg-gray-300 rounded-full mx-auto mt-2 mb-1 sm:hidden" />
               {isLoadingLocations ? (
                 <div className="p-3 text-center text-gray-500 text-sm">Searching locations...</div>
               ) : groupedDropoff.length > 0 ? (
@@ -369,9 +376,10 @@ const TransfersTab = ({ variant = 'dark' }) => {
                   </div>
                 ))
               ) : (
-                <div className="p-3 text-center text-gray-500 text-sm">No locations found</div>
+                <div className="p-3 text-center text-gray-500 text-sm">No dropoff locations found</div>
               )}
             </div>
+            </>
           )}
         </div>
 
@@ -614,7 +622,10 @@ const ExperiencesTab = ({ variant = 'dark' }) => {
         </div>
 
         {showLocationDropdown && (searchQuery.trim() !== '' || isLoadingLocations) && (
-          <div className="fixed sm:absolute inset-x-0 sm:inset-x-auto bottom-0 sm:bottom-auto sm:top-full z-50 sm:w-full sm:mt-2 bg-white border border-gray-300 rounded-t-2xl sm:rounded-lg shadow-lg max-h-[60vh] overflow-y-auto">
+          <>
+          <div className="fixed inset-0 bg-black/30 z-[209] sm:hidden" onClick={() => setShowLocationDropdown(false)} />
+          <div className="fixed sm:absolute inset-x-0 sm:inset-x-auto bottom-0 sm:bottom-auto sm:top-full z-[210] sm:z-50 sm:w-full sm:mt-2 bg-white border border-gray-200 rounded-t-2xl sm:rounded-xl shadow-2xl max-h-[55vh] sm:max-h-[60vh] overflow-y-auto">
+            <div className="w-10 h-1 bg-gray-300 rounded-full mx-auto mt-2 mb-1 sm:hidden" />
             {isLoadingLocations ? (
               <div className="p-3 sm:p-4 text-center text-gray-500 text-sm sm:text-base">Loading locations...</div>
             ) : filteredLocations.length > 0 ? (
@@ -641,6 +652,7 @@ const ExperiencesTab = ({ variant = 'dark' }) => {
               </div>
             )}
           </div>
+          </>
         )}
       </div>
 
@@ -1004,7 +1016,7 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-full transition-all duration-300 relative"
+                className="flex-1 flex items-center justify-center gap-1.5 sm:gap-2 py-2.5 rounded-full transition-all duration-300 relative"
                 style={{
                   minHeight: 'unset',
                   background: isActive ? '#2563eb' : 'transparent',
@@ -1014,8 +1026,8 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
                   boxShadow: isActive ? '0 4px 16px rgba(37,99,235,0.3)' : 'none',
                 }}
               >
-                <tab.Icon style={{ width: 18, height: 18, strokeWidth: isActive ? 2 : 1.5 }} />
-                <span className="hidden sm:inline">{tab.label}</span>
+                <tab.Icon style={{ width: 16, height: 16, strokeWidth: isActive ? 2 : 1.5 }} />
+                <span>{tab.label}</span>
               </button>
             );
           })}
@@ -1045,7 +1057,10 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
                     )}
                   </div>
                   {showLocationDropdown && searchQuery.trim() !== '' && (
-                    <div className="fixed sm:absolute inset-x-0 sm:inset-x-auto bottom-0 sm:bottom-auto sm:top-full z-50 sm:w-full sm:mt-2 bg-white border border-gray-200 rounded-t-2xl sm:rounded-xl shadow-xl max-h-[60vh] overflow-y-auto" style={{scrollbarWidth:'thin'}}>
+                    <>
+                    <div className="fixed inset-0 bg-black/30 z-[209] sm:hidden" onClick={() => setShowLocationDropdown(false)} />
+                    <div className="fixed sm:absolute inset-x-0 sm:inset-x-auto bottom-0 sm:bottom-auto sm:top-full z-[210] sm:z-50 sm:w-full sm:mt-2 bg-white border border-gray-200 rounded-t-2xl sm:rounded-xl shadow-2xl max-h-[55vh] sm:max-h-[60vh] overflow-y-auto" style={{scrollbarWidth:'thin'}}>
+                      <div className="w-10 h-1 bg-gray-300 rounded-full mx-auto mt-2 mb-1 sm:hidden" />
                       {isLoadingLocations ? (
                         <div className="p-4 text-center text-gray-400 text-sm">Searching...</div>
                       ) : filteredLocations.length > 0 ? (
@@ -1065,6 +1080,7 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
                         <div className="p-4 text-center text-gray-400 text-sm">No destinations found</div>
                       )}
                     </div>
+                    </>
                   )}
                 </div>
 

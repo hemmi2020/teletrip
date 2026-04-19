@@ -1636,7 +1636,7 @@ if (children > 0 && childAges.length > 0) {
             )}
             </div>
           </div>
-          <div className="max-w-[1280px] mx-auto px-3 sm:px-6 w-full pt-10 sm:pt-11">
+          <div className="max-w-[1280px] mx-auto px-3 sm:px-6 w-full pt-16 sm:pt-12">
             {user && (
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4 mb-2">
                 <div className="flex items-center">
