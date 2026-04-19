@@ -256,7 +256,7 @@ const TransferSearch = () => {
         <div className="flex-1 min-w-0 flex flex-col">
           {/* Sort bar — fixed, always below header */}
           <div className="fixed top-16 sm:top-20 left-0 right-0 z-[99] bg-white border-b border-gray-200 shadow-sm">
-            <div className="max-w-[1280px] mx-auto px-4 py-2.5 flex items-center gap-2">
+            <div className="max-w-[1280px] mx-auto px-3 sm:px-4 py-2.5 flex items-center gap-2">
               {/* Mobile: count */}
               <span className="text-[13px] font-semibold text-gray-900 md:hidden flex-1 min-w-0 truncate">
                 {filteredTransfers.length} Transfers
@@ -283,13 +283,13 @@ const TransferSearch = () => {
               <button onClick={() => setShowModifySearch(!showModifySearch)} className="text-[12px] text-blue-600 font-medium cursor-pointer flex-shrink-0 px-3 py-1.5 rounded-lg border border-blue-200 bg-blue-50" style={{minHeight:'unset'}}>{showModifySearch ? 'Close' : 'Modify'}</button>
             </div>
             {showModifySearch && (
-              <div className="max-w-[1280px] mx-auto px-4 pb-3 pt-2 border-t border-gray-100">
+              <div className="max-w-[1280px] mx-auto px-3 sm:px-4 pb-3 pt-2 border-t border-gray-100">
                 <HotelSearchForm defaultTab="transfers" variant="light" />
               </div>
             )}
           </div>
 
-        <div className="max-w-[1280px] mx-auto px-4 sm:px-6 py-4 pt-10 sm:pt-11">
+        <div className="w-full sm:max-w-[1280px] mx-auto px-3 sm:px-6 py-4 pt-10 sm:pt-11">
           {/* Error / Empty / No search states */}
           {hasSearched && !error && transfers.length === 0 && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-10 text-center">
@@ -406,7 +406,7 @@ const TransferSearch = () => {
           <div className="relative bg-white w-full sm:max-w-2xl sm:rounded-2xl rounded-t-2xl flex flex-col shadow-2xl" style={{maxHeight:'92vh'}} onClick={(e) => e.stopPropagation()}>
 
             {/* ── Sticky Header ── */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 flex-shrink-0">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100" style={{flexShrink:0}}>
               <div className="min-w-0 flex-1">
                 <h2 className="text-[15px] font-bold text-gray-900 truncate">{selectedTransfer.vehicle || 'Transfer'}</h2>
                 <p className="text-[12px] text-gray-500">{selectedTransfer.category} · {selectedTransfer.transferType}</p>
@@ -415,7 +415,7 @@ const TransferSearch = () => {
             </div>
 
             {/* ── Scrollable body ── */}
-            <div className="overflow-y-auto px-4 py-3 space-y-3" style={{flex:'1 1 auto', minHeight:0, scrollbarWidth:'thin'}}>
+            <div className="overflow-y-auto px-4 py-3 space-y-3" style={{flex:'1 1 auto', minHeight:0, overflow:'auto', scrollbarWidth:'thin'}}>
 
               {/* Route */}
               {searchInfo && (

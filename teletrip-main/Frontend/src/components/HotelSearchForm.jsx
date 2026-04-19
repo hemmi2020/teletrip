@@ -259,7 +259,7 @@ const TransfersTab = ({ variant = 'dark' }) => {
             )}
           </div>
           {showPickupDropdown && pickupQuery.trim() !== '' && (
-            <div className="absolute z-50 w-full mt-2 bg-white border border-gray-200 rounded-xl shadow-xl max-h-72 overflow-y-auto" style={{scrollbarWidth:'thin'}}>
+            <div className="fixed sm:absolute inset-x-0 sm:inset-x-auto bottom-0 sm:bottom-auto sm:top-full z-50 sm:w-full sm:mt-2 bg-white border border-gray-200 rounded-t-2xl sm:rounded-xl shadow-xl max-h-[60vh] overflow-y-auto" style={{scrollbarWidth:'thin'}}>
               {isLoadingLocations ? (
                 <div className="p-3 text-center text-gray-500 text-sm">Searching locations...</div>
               ) : groupedPickup.length > 0 ? (
@@ -329,7 +329,7 @@ const TransfersTab = ({ variant = 'dark' }) => {
             )}
           </div>
           {showDropoffDropdown && dropoffQuery.trim() !== '' && (
-            <div className="absolute z-50 w-full mt-2 bg-white border border-gray-200 rounded-xl shadow-xl max-h-72 overflow-y-auto" style={{scrollbarWidth:'thin'}}>
+            <div className="fixed sm:absolute inset-x-0 sm:inset-x-auto bottom-0 sm:bottom-auto sm:top-full z-50 sm:w-full sm:mt-2 bg-white border border-gray-200 rounded-t-2xl sm:rounded-xl shadow-xl max-h-[60vh] overflow-y-auto" style={{scrollbarWidth:'thin'}}>
               {isLoadingLocations ? (
                 <div className="p-3 text-center text-gray-500 text-sm">Searching locations...</div>
               ) : groupedDropoff.length > 0 ? (
@@ -614,7 +614,7 @@ const ExperiencesTab = ({ variant = 'dark' }) => {
         </div>
 
         {showLocationDropdown && (searchQuery.trim() !== '' || isLoadingLocations) && (
-          <div className="absolute z-50 w-full mt-2 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 sm:max-h-80 overflow-y-auto">
+          <div className="fixed sm:absolute inset-x-0 sm:inset-x-auto bottom-0 sm:bottom-auto sm:top-full z-50 sm:w-full sm:mt-2 bg-white border border-gray-300 rounded-t-2xl sm:rounded-lg shadow-lg max-h-[60vh] overflow-y-auto">
             {isLoadingLocations ? (
               <div className="p-3 sm:p-4 text-center text-gray-500 text-sm sm:text-base">Loading locations...</div>
             ) : filteredLocations.length > 0 ? (
@@ -1045,7 +1045,7 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
                     )}
                   </div>
                   {showLocationDropdown && searchQuery.trim() !== '' && (
-                    <div className="absolute z-50 w-full mt-2 bg-white border border-gray-200 rounded-xl shadow-xl max-h-72 sm:max-h-96 overflow-y-auto" style={{scrollbarWidth:'thin'}}>
+                    <div className="fixed sm:absolute inset-x-0 sm:inset-x-auto bottom-0 sm:bottom-auto sm:top-full z-50 sm:w-full sm:mt-2 bg-white border border-gray-200 rounded-t-2xl sm:rounded-xl shadow-xl max-h-[60vh] overflow-y-auto" style={{scrollbarWidth:'thin'}}>
                       {isLoadingLocations ? (
                         <div className="p-4 text-center text-gray-400 text-sm">Searching...</div>
                       ) : filteredLocations.length > 0 ? (

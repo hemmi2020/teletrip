@@ -28,7 +28,7 @@ const Slider = () => {
       </div>
 
       {/* Content — responsive vertical layout */}
-      <div className="relative z-10 h-full flex flex-col items-center justify-end sm:justify-center px-3 sm:px-4 pb-8 sm:pb-0 pt-24 sm:pt-0 text-center">
+      <div className="relative z-10 h-full flex flex-col items-center justify-start sm:justify-center px-4 pb-8 sm:pb-0 pt-28 sm:pt-0 text-center">
         <div className="max-w-7xl w-full mx-auto mb-6 sm:mb-8">
           <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-3 sm:mb-5" style={{ letterSpacing: '-0.04em', lineHeight: 1.05 }}>
             Find your perfect{' '}

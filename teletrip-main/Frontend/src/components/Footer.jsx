@@ -102,14 +102,12 @@ const Footer = () => {
         {/* Copyright — pill style */}
         <div className="flex justify-center">
           <div
-            className="inline-flex items-center px-6 py-2.5 text-[12px] text-gray-500"
+            className="inline-flex flex-wrap justify-center items-center px-6 py-2.5 text-[12px] text-gray-500 text-center gap-1"
             style={{
               background: '#ffffff',
               borderRadius: 50,
               border: '1px solid rgba(0,0,0,0.06)',
               boxShadow: '0 1px 8px rgba(0,0,0,0.04)',
-              whiteSpace: 'nowrap',
-              gap: 6,
             }}
           >
             &copy; {new Date().getFullYear()} <span className="text-gray-900 font-semibold">TELITRIP</span> <span className="text-gray-300">|</span> All rights reserved <span className="text-gray-300">|</span> Developed by <a href="https://www.tmrhino.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-700 font-medium transition-colors">Team Rhino</a>
