@@ -391,7 +391,7 @@ const TransfersTab = ({ variant = 'dark' }) => {
           </span>
         </div>
         {showCalendar && (
-          <div className="fixed sm:absolute z-[200] left-1/2 top-1/2 sm:top-auto transform -translate-x-1/2 -translate-y-1/2 sm:translate-y-0 sm:mt-2 bg-white border border-gray-300 rounded-2xl shadow-2xl overflow-auto max-w-[95vw] max-h-[85vh]">
+          <div className="fixed inset-0 sm:inset-auto sm:absolute z-[200] flex items-center justify-center sm:block sm:mt-2" onClick={(e) => { if (e.target === e.currentTarget) setShowCalendar(false); }}><div className="bg-white border border-gray-200 rounded-2xl shadow-2xl overflow-auto max-w-[95vw] max-h-[85vh] mx-4 sm:mx-0">
             <Suspense fallback={<div className="p-8 text-center text-gray-400">Loading calendar...</div>}>
               <LazyDateRange
                 ranges={transferDateRange}
@@ -412,6 +412,7 @@ const TransfersTab = ({ variant = 'dark' }) => {
             <div className="px-4 pb-3 flex justify-end">
               <button type="button" onClick={() => setShowCalendar(false)} className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm">OK</button>
             </div>
+          </div>
           </div>
         )}
         </div>
@@ -656,7 +657,7 @@ const ExperiencesTab = ({ variant = 'dark' }) => {
             </span>
           </div>
           {showCalendar && (
-            <div className="fixed sm:absolute z-[200] left-1/2 top-1/2 sm:top-auto transform -translate-x-1/2 -translate-y-1/2 sm:translate-y-0 sm:mt-2 bg-white border border-gray-300 rounded-2xl shadow-2xl overflow-auto max-w-[95vw] max-h-[85vh]">
+            <div className="fixed inset-0 sm:inset-auto sm:absolute z-[200] flex items-center justify-center sm:block sm:mt-2" onClick={(e) => { if (e.target === e.currentTarget) setShowCalendar(false); }}><div className="bg-white border border-gray-200 rounded-2xl shadow-2xl overflow-auto max-w-[95vw] max-h-[85vh] mx-4 sm:mx-0">
                 <Suspense fallback={<div className="p-8 text-center text-gray-400">Loading calendar...</div>}>
                   <LazyDateRange
                     ranges={dateRange}
@@ -679,6 +680,7 @@ const ExperiencesTab = ({ variant = 'dark' }) => {
                   OK
                 </button>
               </div>
+            </div>
             </div>
           )}
         </div>
@@ -987,54 +989,29 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
   return (
     <div className="w-full">
       <div className="bg-white/15 backdrop-blur-xl rounded-2xl border border-white/20 shadow-2xl p-4 sm:p-5 md:p-6">
-        {/* ── Tabs: white pill with floating active circle ── */}
-        <div className="relative mb-5 sm:mb-6" style={{ height: 72 }}>
-          {/* White pill bar */}
-          <div
-            className="absolute bottom-0 left-0 right-0 bg-white rounded-full flex items-center"
-            style={{ height: 48, boxShadow: '0 2px 16px rgba(0,0,0,0.06)' }}
-          >
-            {tabs.map((tab) => {
-              const isActive = activeTab === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className="flex-1 flex items-center justify-center relative z-10"
-                  style={{ minHeight: 'unset', height: 48 }}
-                >
-                  {isActive ? (
-                    /* Active: show label text only (icon is in the floating circle) */
-                    <span className="text-[11px] font-bold tracking-widest uppercase text-gray-800" style={{ letterSpacing: '0.08em', marginTop: 8 }}>
-                      {tab.label}
-                    </span>
-                  ) : (
-                    /* Inactive: show icon only */
-                    <tab.Icon style={{ width: 20, height: 20, color: '#9ca3af', strokeWidth: 1.5 }} />
-                  )}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Floating amber circle — sits above the pill */}
-          <div
-            className="absolute z-20 flex items-center justify-center rounded-full"
-            style={{
-              width: 52,
-              height: 52,
-              background: 'linear-gradient(135deg, #f59e0b, #f97316)',
-              boxShadow: '0 6px 24px rgba(245,158,11,0.4)',
-              top: 0,
-              left: `calc(${tabs.findIndex(t => t.id === activeTab) * (100 / tabs.length)}% + ${100 / tabs.length / 2}% - 26px)`,
-              transition: 'left 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
-            }}
-          >
-            {(() => {
-              const ActiveIcon = tabs.find(t => t.id === activeTab)?.Icon;
-              return ActiveIcon ? <ActiveIcon style={{ width: 22, height: 22, color: '#fff', strokeWidth: 2 }} /> : null;
-            })()}
-          </div>
+        {/* ── Search Tabs ── */}
+        <div className="flex items-center bg-white rounded-full p-1 mb-5 sm:mb-6" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
+          {tabs.map((tab) => {
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-full transition-all duration-300 relative"
+                style={{
+                  minHeight: 'unset',
+                  background: isActive ? '#2563eb' : 'transparent',
+                  color: isActive ? '#fff' : '#6b7280',
+                  fontWeight: isActive ? 600 : 500,
+                  fontSize: 13,
+                  boxShadow: isActive ? '0 4px 16px rgba(37,99,235,0.3)' : 'none',
+                }}
+              >
+                <tab.Icon style={{ width: 18, height: 18, strokeWidth: isActive ? 2 : 1.5 }} />
+                <span className="hidden sm:inline">{tab.label}</span>
+              </button>
+            );
+          })}
         </div>
 
           {activeTab === 'stays' && (
@@ -1129,7 +1106,7 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
                   </div>
 
                   {showCalendar && (
-                    <div className="fixed sm:absolute z-[200] left-1/2 top-1/2 sm:top-auto transform -translate-x-1/2 -translate-y-1/2 sm:translate-y-0 sm:mt-2 bg-white border border-gray-300 rounded-2xl shadow-2xl overflow-auto max-w-[95vw] max-h-[85vh]">
+                    <div className="fixed inset-0 sm:inset-auto sm:absolute z-[200] flex items-center justify-center sm:block sm:mt-2" onClick={(e) => { if (e.target === e.currentTarget) setShowCalendar(false); }}><div className="bg-white border border-gray-200 rounded-2xl shadow-2xl overflow-auto max-w-[95vw] max-h-[85vh] mx-4 sm:mx-0">
                         <Suspense fallback={<div className="p-8 text-center text-gray-400">Loading calendar...</div>}>
                           <LazyDateRange
                             ranges={dateRange}
@@ -1152,6 +1129,7 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
                           OK
                         </button>
                       </div>
+                    </div>
                     </div>
                   )}
                 </div>

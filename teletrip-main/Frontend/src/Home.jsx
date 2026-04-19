@@ -11,6 +11,7 @@ import Row01 from "./components/Row01";
 import Accommodation from "./components/Accomodation";
 import Services from "./components/Services";
 import Footer from "./components/Footer";
+import { Hotel, Car, Compass, CreditCard, Shield, Globe } from "lucide-react";
 
 const TestimonialsCarousel = ({ testimonials, isMobile }) => {
   const [isPaused, setIsPaused] = useState(false);
@@ -280,16 +281,18 @@ const Home = () => {
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {[
-                { icon: '🏨', title: 'Hotels', desc: '250,000+ properties worldwide. Best rate guaranteed.' },
-                { icon: '🚗', title: 'Transfers', desc: 'Airport pickups, private cars and shared shuttles.' },
-                { icon: '🎭', title: 'Experiences', desc: 'Tours, activities and local adventures curated by experts.' },
-                { icon: '💳', title: 'Best Prices', desc: 'We compare rates across providers so you pay less.' },
-                { icon: '🔒', title: 'Secure Booking', desc: 'End-to-end encrypted payments. Your data stays private.' },
-                { icon: '🌍', title: 'Global Coverage', desc: 'Available in 190+ countries. Book anywhere, anytime.' },
+                { Icon: Hotel, title: 'Hotels', desc: '250,000+ properties worldwide. Best rate guaranteed.', color: '#2563eb' },
+                { Icon: Car, title: 'Transfers', desc: 'Airport pickups, private cars and shared shuttles.', color: '#059669' },
+                { Icon: Compass, title: 'Experiences', desc: 'Tours, activities and local adventures curated by experts.', color: '#7c3aed' },
+                { Icon: CreditCard, title: 'Best Prices', desc: 'We compare rates across providers so you pay less.', color: '#f59e0b' },
+                { Icon: Shield, title: 'Secure Booking', desc: 'End-to-end encrypted payments. Your data stays private.', color: '#ef4444' },
+                { Icon: Globe, title: 'Global Coverage', desc: 'Available in 190+ countries. Book anywhere, anytime.', color: '#0891b2' },
               ].map((item, i) => (
                 <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: i * 0.08 }}
                   className="p-6 rounded-2xl bg-white border border-gray-100 hover:shadow-lg hover:border-gray-200 hover:scale-[1.02] transition-all duration-300">
-                  <div className="text-3xl mb-4">{item.icon}</div>
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4" style={{ background: `${item.color}15` }}>
+                    <item.Icon style={{ width: 24, height: 24, color: item.color, strokeWidth: 1.8 }} />
+                  </div>
                   <h3 className="text-gray-900 font-semibold text-lg mb-2" style={{ letterSpacing: '-0.02em' }}>{item.title}</h3>
                   <p className="text-gray-500 text-[13px]" style={{ lineHeight: 1.65 }}>{item.desc}</p>
                 </motion.div>
