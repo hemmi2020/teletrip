@@ -99,24 +99,20 @@ const Footer = () => {
         {/* Divider */}
         <div className="w-full h-px bg-gray-200 mb-6" />
 
-        {/* Copyright — pill style, Team Rhino on same line */}
+        {/* Copyright — pill style */}
         <div className="flex justify-center">
           <div
-            className="inline-flex items-center gap-1.5 px-6 py-2.5 text-[12px] text-gray-500 flex-wrap justify-center"
+            className="inline-flex items-center px-6 py-2.5 text-[12px] text-gray-500"
             style={{
               background: '#ffffff',
               borderRadius: 50,
               border: '1px solid rgba(0,0,0,0.06)',
               boxShadow: '0 1px 8px rgba(0,0,0,0.04)',
+              whiteSpace: 'nowrap',
+              gap: 6,
             }}
           >
-            <span>&copy; {new Date().getFullYear()}</span>
-            <span className="text-gray-900 font-semibold">TELITRIP</span>
-            <span className="text-gray-300">|</span>
-            <span>All rights reserved</span>
-            <span className="text-gray-300">|</span>
-            <span>Developed by</span>
-            <a href="https://www.tmrhino.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-700 font-medium transition-colors">Team Rhino</a>
+            &copy; {new Date().getFullYear()} <span className="text-gray-900 font-semibold">TELITRIP</span> <span className="text-gray-300">|</span> All rights reserved <span className="text-gray-300">|</span> Developed by <a href="https://www.tmrhino.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-700 font-medium transition-colors">Team Rhino</a>
           </div>
         </div>
       </div>
