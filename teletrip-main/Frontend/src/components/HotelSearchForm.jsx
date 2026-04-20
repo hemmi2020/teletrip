@@ -1127,7 +1127,7 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className="flex-1 flex-shrink-0 flex items-center justify-center gap-1.5 sm:gap-2 py-2.5 rounded-full transition-all duration-300 relative whitespace-nowrap"
+                className="no-min-h flex-1 flex-shrink-0 flex items-center justify-center gap-1.5 sm:gap-2 py-2.5 rounded-full transition-all duration-300 relative whitespace-nowrap"
                 style={{
                   minHeight: 'unset',
                   background: isActive ? '#2563eb' : 'transparent',
