@@ -95,7 +95,7 @@ const Header = () => {
         >
           {/* Logo — with left padding, full color */}
           <NavLink to="/home" className="flex-shrink-0 flex items-center pl-1">
-            <img src={logo} alt="Telitrip" className="h-7 sm:h-10 md:h-12 w-auto object-contain" />
+            <img src={logo} alt="Telitrip" className="h-6 sm:h-10 md:h-12 w-auto max-w-[100px] sm:max-w-none object-contain" />
           </NavLink>
 
           {/* Desktop Nav */}

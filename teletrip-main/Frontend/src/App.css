@@ -105,7 +105,7 @@ label:has(input[type="radio"]), summary { cursor: pointer; }
 
 /* ─── Mobile touch targets (44px minimum) ───────────────────────────────────── */
 @media (max-width: 767px) {
-  button:not([style*="minHeight: 'unset'"]):not(.no-min-h),
+  button:not(.no-min-h),
   [role="button"]:not(.no-min-h),
   a[href]:not(.no-min-h):not(.inline-link) {
     min-height: 44px;
