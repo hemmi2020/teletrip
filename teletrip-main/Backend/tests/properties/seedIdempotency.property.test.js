@@ -14,7 +14,7 @@ const { seedEmailTemplates, defaultTemplateDefinitions } = require('../../script
  * **Validates: Requirements 7.2, 7.5**
  */
 
-// The 12 expected slugs from the default template catalog
+// The 18 expected slugs from the default template catalog
 const EXPECTED_SLUGS = [
   'welcome',
   'password_reset',
@@ -27,7 +27,13 @@ const EXPECTED_SLUGS = [
   'payment_confirmation',
   'payment_refund',
   'support_ticket_created',
-  'support_ticket_response'
+  'support_ticket_response',
+  'payment_failure',
+  'checkin_reminder',
+  'feedback_request',
+  'admin_new_booking',
+  'admin_booking_cancellation',
+  'pay_on_site_confirmation'
 ];
 
 // ---------------------------------------------------------------------------
@@ -67,8 +73,8 @@ describe('Property 8: Seed Idempotency', () => {
 
           for (let i = 0; i < numRuns; i++) {
             const result = await seedEmailTemplates();
-            // Every single run must account for exactly 12 templates
-            expect(result.created + result.skipped).toBe(12);
+            // Every single run must account for exactly 18 templates
+            expect(result.created + result.skipped).toBe(18);
           }
         }
       ),
@@ -100,7 +106,7 @@ describe('Property 8: Seed Idempotency', () => {
           for (const expected of EXPECTED_SLUGS) {
             expect(slugs).toContain(expected);
           }
-          expect(slugs.length).toBe(12);
+          expect(slugs.length).toBe(18);
         }
       ),
       { numRuns: 1 }
@@ -128,8 +134,8 @@ describe('Property 8: Seed Idempotency', () => {
             await seedEmailTemplates();
           }
 
-          // After any number of runs, exactly 12 unique slugs exist
-          expect(insertedSlugs.size).toBe(12);
+          // After any number of runs, exactly 18 unique slugs exist
+          expect(insertedSlugs.size).toBe(18);
           // And they match the expected set
           for (const expected of EXPECTED_SLUGS) {
             expect(insertedSlugs.has(expected)).toBe(true);
@@ -157,16 +163,16 @@ describe('Property 8: Seed Idempotency', () => {
             }
           });
 
-          // First run: all 12 should be created
+          // First run: all 18 should be created
           const firstResult = await seedEmailTemplates();
-          expect(firstResult.created).toBe(12);
+          expect(firstResult.created).toBe(18);
           expect(firstResult.skipped).toBe(0);
 
-          // All subsequent runs: all 12 should be skipped
+          // All subsequent runs: all 18 should be skipped
           for (let i = 1; i < numRuns; i++) {
             const result = await seedEmailTemplates();
             expect(result.created).toBe(0);
-            expect(result.skipped).toBe(12);
+            expect(result.skipped).toBe(18);
           }
         }
       ),

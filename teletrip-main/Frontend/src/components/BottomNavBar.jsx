@@ -1,33 +1,21 @@
-import React, { useContext } from "react";
+import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { House, Search, Calendar, User, ShoppingCart } from "lucide-react";
-import { useCart, UserDataContext } from "./CartSystem";
+import { House, Search, User, ShoppingCart } from "lucide-react";
+import { useCart } from "./CartSystem";
 
 const BottomNavBar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { getTotalItems } = useCart();
-  const { user } = useContext(UserDataContext);
 
   const cartCount = getTotalItems();
-  const isLoggedIn = !!(user?.email || localStorage.getItem('token'));
 
-  const baseTabs = [
+  const tabs = [
     { label: "Home", icon: House, path: "/home" },
     { label: "Search", icon: Search, path: null, action: 'search' },
-  ];
-
-  // Show Bookings tab only when logged in
-  if (isLoggedIn) {
-    baseTabs.push({ label: "Bookings", icon: Calendar, path: "/bookings" });
-  }
-
-  baseTabs.push(
     { label: "Account", icon: User, path: "/account" },
     { label: "Cart", icon: ShoppingCart, path: null, action: 'cart' },
-  );
-
-  const tabs = baseTabs;
+  ];
 
   const isActive = (tab) => {
     if (!tab.path) return false;

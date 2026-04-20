@@ -421,11 +421,270 @@ ${ctaButton('View Ticket', '{{ticketUrl}}')}
     },
     isDefault: true,
     isActive: true
+  },
+
+  // ─── NEW TEMPLATES ───
+
+  // Payment Failure
+  {
+    name: 'Payment Failure',
+    slug: 'payment_failure',
+    category: 'payment',
+    subject: 'Payment Failed - {{bookingReference}}',
+    htmlContent: wrapInBrand(`
+<h2 style="margin:0 0 16px 0;color:#dc3545;font-size:22px;font-family:Arial,Helvetica,sans-serif;">Payment Failed</h2>
+<p style="margin:0 0 16px 0;color:#333333;font-size:15px;line-height:1.6;font-family:Arial,Helvetica,sans-serif;">Hi {{userName}},</p>
+<p style="margin:0 0 16px 0;color:#333333;font-size:15px;line-height:1.6;font-family:Arial,Helvetica,sans-serif;">We were unable to process your payment. Here are the details:</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f8f9fa;border-radius:6px;padding:16px;margin:0 0 16px 0;">
+<tr><td style="padding:8px 16px;"><strong style="color:#333333;font-family:Arial,Helvetica,sans-serif;">Booking Reference:</strong></td><td style="padding:8px 16px;color:#333333;font-family:Arial,Helvetica,sans-serif;">{{bookingReference}}</td></tr>
+<tr><td style="padding:8px 16px;"><strong style="color:#333333;font-family:Arial,Helvetica,sans-serif;">Amount:</strong></td><td style="padding:8px 16px;color:#333333;font-family:Arial,Helvetica,sans-serif;">{{amount}}</td></tr>
+<tr><td style="padding:8px 16px;"><strong style="color:#333333;font-family:Arial,Helvetica,sans-serif;">Payment Method:</strong></td><td style="padding:8px 16px;color:#333333;font-family:Arial,Helvetica,sans-serif;">{{paymentMethod}}</td></tr>
+<tr><td style="padding:8px 16px;"><strong style="color:#333333;font-family:Arial,Helvetica,sans-serif;">Error:</strong></td><td style="padding:8px 16px;color:#dc3545;font-family:Arial,Helvetica,sans-serif;">{{errorMessage}}</td></tr>
+</table>
+${ctaButton('Retry Payment', '{{retryUrl}}')}
+<p style="margin:0 0 16px 0;color:#666666;font-size:14px;font-family:Arial,Helvetica,sans-serif;">If the issue persists, please contact our support team.</p>
+<p style="margin:0;color:#666666;font-size:14px;font-family:Arial,Helvetica,sans-serif;">The Telitrip Team</p>`),
+    textContent: 'Hi {{userName}}, your payment for booking {{bookingReference}} of {{amount}} via {{paymentMethod}} has failed. Error: {{errorMessage}}. Retry at: {{retryUrl}}',
+    variables: [
+      { key: 'userName', description: 'Customer name', required: true, defaultValue: 'Customer' },
+      { key: 'bookingReference', description: 'Booking reference code', required: true, defaultValue: '' },
+      { key: 'amount', description: 'Payment amount', required: true, defaultValue: '' },
+      { key: 'paymentMethod', description: 'Payment method used', required: true, defaultValue: '' },
+      { key: 'errorMessage', description: 'Payment error message', required: true, defaultValue: '' },
+      { key: 'retryUrl', description: 'URL to retry payment', required: false, defaultValue: 'https://telitrip.com/bookings' }
+    ],
+    sampleData: {
+      userName: 'Ahmed',
+      bookingReference: 'TT-2025-001234',
+      amount: 'PKR 45,000',
+      paymentMethod: 'Credit Card (Visa ending 4242)',
+      errorMessage: 'Card declined by issuing bank',
+      retryUrl: 'https://telitrip.com/bookings/TT-2025-001234/pay'
+    },
+    isDefault: true,
+    isActive: true
+  },
+
+  // Check-in Reminder
+  {
+    name: 'Check-in Reminder',
+    slug: 'checkin_reminder',
+    category: 'booking',
+    subject: 'Reminder: Your Stay at {{hotelName}} is Coming Up!',
+    htmlContent: wrapInBrand(`
+<h2 style="margin:0 0 16px 0;color:#1a73e8;font-size:22px;font-family:Arial,Helvetica,sans-serif;">Your Trip is Almost Here!</h2>
+<p style="margin:0 0 16px 0;color:#333333;font-size:15px;line-height:1.6;font-family:Arial,Helvetica,sans-serif;">Hi {{userName}},</p>
+<p style="margin:0 0 16px 0;color:#333333;font-size:15px;line-height:1.6;font-family:Arial,Helvetica,sans-serif;">Just a friendly reminder about your upcoming stay:</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f8f9fa;border-radius:6px;padding:16px;margin:0 0 16px 0;">
+<tr><td style="padding:8px 16px;"><strong style="color:#333333;font-family:Arial,Helvetica,sans-serif;">Booking Reference:</strong></td><td style="padding:8px 16px;color:#333333;font-family:Arial,Helvetica,sans-serif;">{{bookingReference}}</td></tr>
+<tr><td style="padding:8px 16px;"><strong style="color:#333333;font-family:Arial,Helvetica,sans-serif;">Hotel:</strong></td><td style="padding:8px 16px;color:#333333;font-family:Arial,Helvetica,sans-serif;">{{hotelName}}</td></tr>
+<tr><td style="padding:8px 16px;"><strong style="color:#333333;font-family:Arial,Helvetica,sans-serif;">Check-in:</strong></td><td style="padding:8px 16px;color:#333333;font-family:Arial,Helvetica,sans-serif;">{{checkInDate}}</td></tr>
+<tr><td style="padding:8px 16px;"><strong style="color:#333333;font-family:Arial,Helvetica,sans-serif;">Check-out:</strong></td><td style="padding:8px 16px;color:#333333;font-family:Arial,Helvetica,sans-serif;">{{checkOutDate}}</td></tr>
+<tr><td style="padding:8px 16px;"><strong style="color:#333333;font-family:Arial,Helvetica,sans-serif;">Address:</strong></td><td style="padding:8px 16px;color:#333333;font-family:Arial,Helvetica,sans-serif;">{{hotelAddress}}</td></tr>
+</table>
+${ctaButton('View Booking', '{{bookingUrl}}')}
+<div style="background-color:#e8f0fe;border-radius:6px;padding:12px 16px;margin:0 0 16px 0;">
+<p style="margin:0;color:#333333;font-size:14px;font-family:Arial,Helvetica,sans-serif;">💡 <strong>Tip:</strong> Remember to bring a valid ID for check-in.</p>
+</div>
+<p style="margin:0;color:#666666;font-size:14px;font-family:Arial,Helvetica,sans-serif;">Have a great trip!<br>The Telitrip Team</p>`),
+    textContent: 'Hi {{userName}}, reminder: your stay at {{hotelName}} is coming up! Booking: {{bookingReference}}. Check-in: {{checkInDate}}, Check-out: {{checkOutDate}}. Address: {{hotelAddress}}. View booking: {{bookingUrl}}',
+    variables: [
+      { key: 'userName', description: 'Customer name', required: true, defaultValue: 'Customer' },
+      { key: 'bookingReference', description: 'Booking reference code', required: true, defaultValue: '' },
+      { key: 'hotelName', description: 'Hotel name', required: true, defaultValue: '' },
+      { key: 'checkInDate', description: 'Check-in date', required: true, defaultValue: '' },
+      { key: 'checkOutDate', description: 'Check-out date', required: true, defaultValue: '' },
+      { key: 'hotelAddress', description: 'Hotel address', required: true, defaultValue: '' },
+      { key: 'bookingUrl', description: 'URL to view booking details', required: false, defaultValue: 'https://telitrip.com/bookings' }
+    ],
+    sampleData: {
+      userName: 'Ahmed',
+      bookingReference: 'TT-2025-001234',
+      hotelName: 'Pearl Continental Lahore',
+      checkInDate: 'July 15, 2025',
+      checkOutDate: 'July 18, 2025',
+      hotelAddress: 'Shahrah-e-Quaid-e-Azam, Lahore, Pakistan',
+      bookingUrl: 'https://telitrip.com/bookings/TT-2025-001234'
+    },
+    isDefault: true,
+    isActive: true
+  },
+
+  // Feedback Request
+  {
+    name: 'Feedback Request',
+    slug: 'feedback_request',
+    category: 'booking',
+    subject: 'How Was Your Stay at {{hotelName}}?',
+    htmlContent: wrapInBrand(`
+<h2 style="margin:0 0 16px 0;color:#1a73e8;font-size:22px;font-family:Arial,Helvetica,sans-serif;">We'd Love Your Feedback!</h2>
+<p style="margin:0 0 16px 0;color:#333333;font-size:15px;line-height:1.6;font-family:Arial,Helvetica,sans-serif;">Hi {{userName}},</p>
+<p style="margin:0 0 16px 0;color:#333333;font-size:15px;line-height:1.6;font-family:Arial,Helvetica,sans-serif;">We hope you enjoyed your stay at {{hotelName}} ({{checkInDate}} - {{checkOutDate}}).</p>
+<p style="margin:0 0 16px 0;color:#333333;font-size:15px;line-height:1.6;font-family:Arial,Helvetica,sans-serif;">Your feedback helps us improve and helps other travelers make informed decisions.</p>
+${ctaButton('Leave a Review', '{{reviewUrl}}')}
+<p style="margin:0 0 16px 0;color:#666666;font-size:14px;font-family:Arial,Helvetica,sans-serif;">Booking Reference: {{bookingReference}}</p>
+<p style="margin:0;color:#666666;font-size:14px;font-family:Arial,Helvetica,sans-serif;">Thank you!<br>The Telitrip Team</p>`),
+    textContent: 'Hi {{userName}}, how was your stay at {{hotelName}} ({{checkInDate}} - {{checkOutDate}})? We would love your feedback! Leave a review: {{reviewUrl}}. Booking: {{bookingReference}}',
+    variables: [
+      { key: 'userName', description: 'Customer name', required: true, defaultValue: 'Customer' },
+      { key: 'bookingReference', description: 'Booking reference code', required: true, defaultValue: '' },
+      { key: 'hotelName', description: 'Hotel name', required: true, defaultValue: '' },
+      { key: 'checkInDate', description: 'Check-in date', required: true, defaultValue: '' },
+      { key: 'checkOutDate', description: 'Check-out date', required: true, defaultValue: '' },
+      { key: 'reviewUrl', description: 'URL to leave a review', required: true, defaultValue: 'https://telitrip.com/reviews' }
+    ],
+    sampleData: {
+      userName: 'Ahmed',
+      bookingReference: 'TT-2025-001234',
+      hotelName: 'Pearl Continental Lahore',
+      checkInDate: 'July 15, 2025',
+      checkOutDate: 'July 18, 2025',
+      reviewUrl: 'https://telitrip.com/reviews/TT-2025-001234'
+    },
+    isDefault: true,
+    isActive: true
+  },
+
+  // Admin New Booking
+  {
+    name: 'Admin New Booking',
+    slug: 'admin_new_booking',
+    category: 'booking',
+    subject: 'New Booking: {{bookingReference}} - {{hotelName}}',
+    htmlContent: wrapInBrand(`
+<h2 style="margin:0 0 16px 0;color:#1a73e8;font-size:22px;font-family:Arial,Helvetica,sans-serif;">New Booking Received</h2>
+<p style="margin:0 0 16px 0;color:#333333;font-size:15px;line-height:1.6;font-family:Arial,Helvetica,sans-serif;">A new booking has been created on the platform:</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f8f9fa;border-radius:6px;padding:16px;margin:0 0 16px 0;">
+<tr><td style="padding:8px 16px;"><strong style="color:#333333;font-family:Arial,Helvetica,sans-serif;">Booking Reference:</strong></td><td style="padding:8px 16px;color:#333333;font-family:Arial,Helvetica,sans-serif;">{{bookingReference}}</td></tr>
+<tr><td style="padding:8px 16px;"><strong style="color:#333333;font-family:Arial,Helvetica,sans-serif;">Customer:</strong></td><td style="padding:8px 16px;color:#333333;font-family:Arial,Helvetica,sans-serif;">{{customerName}} ({{customerEmail}})</td></tr>
+<tr><td style="padding:8px 16px;"><strong style="color:#333333;font-family:Arial,Helvetica,sans-serif;">Hotel:</strong></td><td style="padding:8px 16px;color:#333333;font-family:Arial,Helvetica,sans-serif;">{{hotelName}}</td></tr>
+<tr><td style="padding:8px 16px;"><strong style="color:#333333;font-family:Arial,Helvetica,sans-serif;">Check-in:</strong></td><td style="padding:8px 16px;color:#333333;font-family:Arial,Helvetica,sans-serif;">{{checkInDate}}</td></tr>
+<tr><td style="padding:8px 16px;"><strong style="color:#333333;font-family:Arial,Helvetica,sans-serif;">Check-out:</strong></td><td style="padding:8px 16px;color:#333333;font-family:Arial,Helvetica,sans-serif;">{{checkOutDate}}</td></tr>
+<tr><td style="padding:8px 16px;"><strong style="color:#333333;font-family:Arial,Helvetica,sans-serif;">Total Amount:</strong></td><td style="padding:8px 16px;color:#1a73e8;font-weight:bold;font-family:Arial,Helvetica,sans-serif;">{{totalAmount}}</td></tr>
+<tr><td style="padding:8px 16px;"><strong style="color:#333333;font-family:Arial,Helvetica,sans-serif;">Booking Type:</strong></td><td style="padding:8px 16px;color:#333333;font-family:Arial,Helvetica,sans-serif;">{{bookingType}}</td></tr>
+</table>
+<p style="margin:0 0 16px 0;color:#666666;font-size:13px;font-family:Arial,Helvetica,sans-serif;">This is an automated admin notification.</p>
+<p style="margin:0;color:#666666;font-size:14px;font-family:Arial,Helvetica,sans-serif;">Telitrip System</p>`),
+    textContent: 'New Booking: {{bookingReference}} at {{hotelName}}. Customer: {{customerName}} ({{customerEmail}}). Check-in: {{checkInDate}}, Check-out: {{checkOutDate}}. Total: {{totalAmount}}. Type: {{bookingType}}.',
+    variables: [
+      { key: 'bookingReference', description: 'Booking reference code', required: true, defaultValue: '' },
+      { key: 'customerName', description: 'Customer full name', required: true, defaultValue: '' },
+      { key: 'customerEmail', description: 'Customer email address', required: true, defaultValue: '' },
+      { key: 'hotelName', description: 'Hotel name', required: true, defaultValue: '' },
+      { key: 'checkInDate', description: 'Check-in date', required: true, defaultValue: '' },
+      { key: 'checkOutDate', description: 'Check-out date', required: true, defaultValue: '' },
+      { key: 'totalAmount', description: 'Total booking amount', required: true, defaultValue: '' },
+      { key: 'bookingType', description: 'Type of booking (hotel, transfer, etc.)', required: false, defaultValue: 'hotel' }
+    ],
+    sampleData: {
+      bookingReference: 'TT-2025-001234',
+      customerName: 'Ahmed Khan',
+      customerEmail: 'ahmed@example.com',
+      hotelName: 'Pearl Continental Lahore',
+      checkInDate: 'July 15, 2025',
+      checkOutDate: 'July 18, 2025',
+      totalAmount: 'PKR 45,000',
+      bookingType: 'hotel'
+    },
+    isDefault: true,
+    isActive: true
+  },
+
+  // Admin Booking Cancellation
+  {
+    name: 'Admin Booking Cancellation',
+    slug: 'admin_booking_cancellation',
+    category: 'booking',
+    subject: 'Booking Cancelled: {{bookingReference}} - {{hotelName}}',
+    htmlContent: wrapInBrand(`
+<h2 style="margin:0 0 16px 0;color:#dc3545;font-size:22px;font-family:Arial,Helvetica,sans-serif;">Booking Cancellation Notice</h2>
+<p style="margin:0 0 16px 0;color:#333333;font-size:15px;line-height:1.6;font-family:Arial,Helvetica,sans-serif;">A booking has been cancelled:</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f8f9fa;border-radius:6px;padding:16px;margin:0 0 16px 0;">
+<tr><td style="padding:8px 16px;"><strong style="color:#333333;font-family:Arial,Helvetica,sans-serif;">Booking Reference:</strong></td><td style="padding:8px 16px;color:#333333;font-family:Arial,Helvetica,sans-serif;">{{bookingReference}}</td></tr>
+<tr><td style="padding:8px 16px;"><strong style="color:#333333;font-family:Arial,Helvetica,sans-serif;">Customer:</strong></td><td style="padding:8px 16px;color:#333333;font-family:Arial,Helvetica,sans-serif;">{{customerName}} ({{customerEmail}})</td></tr>
+<tr><td style="padding:8px 16px;"><strong style="color:#333333;font-family:Arial,Helvetica,sans-serif;">Hotel:</strong></td><td style="padding:8px 16px;color:#333333;font-family:Arial,Helvetica,sans-serif;">{{hotelName}}</td></tr>
+<tr><td style="padding:8px 16px;"><strong style="color:#333333;font-family:Arial,Helvetica,sans-serif;">Original Amount:</strong></td><td style="padding:8px 16px;color:#333333;font-family:Arial,Helvetica,sans-serif;">{{totalAmount}}</td></tr>
+<tr><td style="padding:8px 16px;"><strong style="color:#333333;font-family:Arial,Helvetica,sans-serif;">Cancellation Fee:</strong></td><td style="padding:8px 16px;color:#dc3545;font-family:Arial,Helvetica,sans-serif;">{{cancellationFee}}</td></tr>
+<tr><td style="padding:8px 16px;"><strong style="color:#333333;font-family:Arial,Helvetica,sans-serif;">Refund Amount:</strong></td><td style="padding:8px 16px;color:#28a745;font-weight:bold;font-family:Arial,Helvetica,sans-serif;">{{refundAmount}}</td></tr>
+<tr><td style="padding:8px 16px;"><strong style="color:#333333;font-family:Arial,Helvetica,sans-serif;">Reason:</strong></td><td style="padding:8px 16px;color:#333333;font-family:Arial,Helvetica,sans-serif;">{{cancellationReason}}</td></tr>
+</table>
+<p style="margin:0 0 16px 0;color:#666666;font-size:13px;font-family:Arial,Helvetica,sans-serif;">Please process the refund if applicable.</p>
+<p style="margin:0;color:#666666;font-size:14px;font-family:Arial,Helvetica,sans-serif;">Telitrip System</p>`),
+    textContent: 'Booking Cancelled: {{bookingReference}} at {{hotelName}}. Customer: {{customerName}} ({{customerEmail}}). Original: {{totalAmount}}, Fee: {{cancellationFee}}, Refund: {{refundAmount}}. Reason: {{cancellationReason}}.',
+    variables: [
+      { key: 'bookingReference', description: 'Booking reference code', required: true, defaultValue: '' },
+      { key: 'customerName', description: 'Customer full name', required: true, defaultValue: '' },
+      { key: 'customerEmail', description: 'Customer email address', required: true, defaultValue: '' },
+      { key: 'hotelName', description: 'Hotel name', required: true, defaultValue: '' },
+      { key: 'totalAmount', description: 'Original booking amount', required: true, defaultValue: '' },
+      { key: 'cancellationFee', description: 'Cancellation fee charged', required: false, defaultValue: 'PKR 0' },
+      { key: 'refundAmount', description: 'Amount to be refunded', required: true, defaultValue: '' },
+      { key: 'cancellationReason', description: 'Reason for cancellation', required: false, defaultValue: 'Customer requested' }
+    ],
+    sampleData: {
+      bookingReference: 'TT-2025-001234',
+      customerName: 'Ahmed Khan',
+      customerEmail: 'ahmed@example.com',
+      hotelName: 'Pearl Continental Lahore',
+      totalAmount: 'PKR 45,000',
+      cancellationFee: 'PKR 5,000',
+      refundAmount: 'PKR 40,000',
+      cancellationReason: 'Change of travel plans'
+    },
+    isDefault: true,
+    isActive: true
+  },
+
+  // Pay on Site Confirmation
+  {
+    name: 'Pay on Site Confirmation',
+    slug: 'pay_on_site_confirmation',
+    category: 'payment',
+    subject: 'Booking Confirmed - Pay at Hotel ({{bookingReference}})',
+    htmlContent: wrapInBrand(`
+<h2 style="margin:0 0 16px 0;color:#28a745;font-size:22px;font-family:Arial,Helvetica,sans-serif;">Booking Confirmed!</h2>
+<p style="margin:0 0 16px 0;color:#333333;font-size:15px;line-height:1.6;font-family:Arial,Helvetica,sans-serif;">Hi {{userName}},</p>
+<p style="margin:0 0 16px 0;color:#333333;font-size:15px;line-height:1.6;font-family:Arial,Helvetica,sans-serif;">Your booking has been confirmed. Payment will be collected at the hotel.</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f8f9fa;border-radius:6px;padding:16px;margin:0 0 16px 0;">
+<tr><td style="padding:8px 16px;"><strong style="color:#333333;font-family:Arial,Helvetica,sans-serif;">Booking Reference:</strong></td><td style="padding:8px 16px;color:#333333;font-family:Arial,Helvetica,sans-serif;">{{bookingReference}}</td></tr>
+<tr><td style="padding:8px 16px;"><strong style="color:#333333;font-family:Arial,Helvetica,sans-serif;">Hotel:</strong></td><td style="padding:8px 16px;color:#333333;font-family:Arial,Helvetica,sans-serif;">{{hotelName}}</td></tr>
+<tr><td style="padding:8px 16px;"><strong style="color:#333333;font-family:Arial,Helvetica,sans-serif;">Check-in:</strong></td><td style="padding:8px 16px;color:#333333;font-family:Arial,Helvetica,sans-serif;">{{checkInDate}}</td></tr>
+<tr><td style="padding:8px 16px;"><strong style="color:#333333;font-family:Arial,Helvetica,sans-serif;">Check-out:</strong></td><td style="padding:8px 16px;color:#333333;font-family:Arial,Helvetica,sans-serif;">{{checkOutDate}}</td></tr>
+<tr><td style="padding:8px 16px;"><strong style="color:#333333;font-family:Arial,Helvetica,sans-serif;">Total Amount:</strong></td><td style="padding:8px 16px;color:#1a73e8;font-weight:bold;font-family:Arial,Helvetica,sans-serif;">{{currency}} {{totalAmount}}</td></tr>
+<tr><td style="padding:8px 16px;"><strong style="color:#333333;font-family:Arial,Helvetica,sans-serif;">Payment ID:</strong></td><td style="padding:8px 16px;color:#333333;font-family:Arial,Helvetica,sans-serif;">{{paymentId}}</td></tr>
+</table>
+<div style="background-color:#fff3cd;border-left:4px solid #ffc107;padding:12px 16px;margin:0 0 16px 0;">
+<p style="margin:0;color:#856404;font-size:14px;font-family:Arial,Helvetica,sans-serif;"><strong>Important:</strong> Please bring a valid ID and be prepared to pay {{currency}} {{totalAmount}} at the hotel reception. Cash and card accepted.</p>
+</div>
+<p style="margin:0;color:#666666;font-size:14px;font-family:Arial,Helvetica,sans-serif;">Have a great trip!<br>The Telitrip Team</p>`),
+    textContent: 'Hi {{userName}}, your booking {{bookingReference}} at {{hotelName}} is confirmed. Pay at hotel: {{currency}} {{totalAmount}}. Check-in: {{checkInDate}}, Check-out: {{checkOutDate}}. Payment ID: {{paymentId}}. Please bring a valid ID.',
+    variables: [
+      { key: 'userName', description: 'Customer name', required: true, defaultValue: 'Customer' },
+      { key: 'bookingReference', description: 'Booking reference code', required: true, defaultValue: '' },
+      { key: 'hotelName', description: 'Hotel name', required: true, defaultValue: '' },
+      { key: 'checkInDate', description: 'Check-in date', required: true, defaultValue: '' },
+      { key: 'checkOutDate', description: 'Check-out date', required: true, defaultValue: '' },
+      { key: 'totalAmount', description: 'Total booking amount', required: true, defaultValue: '' },
+      { key: 'currency', description: 'Payment currency code', required: true, defaultValue: 'PKR' },
+      { key: 'paymentId', description: 'Payment transaction ID', required: true, defaultValue: '' }
+    ],
+    sampleData: {
+      userName: 'Ahmed',
+      bookingReference: 'TT-2025-001234',
+      hotelName: 'Pearl Continental Lahore',
+      checkInDate: 'July 15, 2025',
+      checkOutDate: 'July 18, 2025',
+      totalAmount: '45,000',
+      currency: 'PKR',
+      paymentId: 'PAY-2025-567890'
+    },
+    isDefault: true,
+    isActive: true
   }
 ];
 
 /**
- * Seeds the 12 default Telitrip-branded email templates into MongoDB.
+ * Seeds the 18 default Telitrip-branded email templates into MongoDB.
  * Uses updateOne with upsert and $setOnInsert to prevent overwriting
  * existing templates on re-run.
  *
