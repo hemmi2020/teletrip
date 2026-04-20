@@ -1,14 +1,22 @@
-import React from "react";
+import React, { useState, useContext, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { House, Search, User, ShoppingCart } from "lucide-react";
-import { useCart } from "./CartSystem";
+import { useCart, UserDataContext } from "./CartSystem";
 
 const BottomNavBar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { getTotalItems } = useCart();
+  const { user } = useContext(UserDataContext);
 
   const cartCount = getTotalItems();
+
+  // Listen for auth modal close with success — navigate to account
+  useEffect(() => {
+    const handler = () => navigate("/account");
+    window.addEventListener("authSuccess", handler);
+    return () => window.removeEventListener("authSuccess", handler);
+  }, [navigate]);
 
   const tabs = [
     { label: "Home", icon: House, path: "/home" },
@@ -41,6 +49,12 @@ const BottomNavBar = () => {
           const el = document.querySelector('.search-form-section');
           if (el) el.scrollIntoView({ behavior: 'smooth' });
         }, 400);
+      }
+    } else if (tab.label === 'Account') {
+      if (user?.email) {
+        navigate(tab.path);
+      } else {
+        window.dispatchEvent(new CustomEvent("openAuthModal"));
       }
     } else if (tab.path) {
       navigate(tab.path);

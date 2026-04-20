@@ -595,4 +595,25 @@ router.get('/reports/export',
   adminDashboardController.exportData
 );
 
+// ========== EMAIL SETTINGS ==========
+/**
+ * @route   GET /api/v1/admin/settings/email
+ * @desc    Get email SMTP settings
+ * @access  Private (Admin only)
+ */
+router.get('/settings/email',
+  ...requireAdmin,
+  adminDashboardController.getEmailSettings
+);
+
+/**
+ * @route   PUT /api/v1/admin/settings/email
+ * @desc    Update email SMTP settings
+ * @access  Private (Admin only)
+ */
+router.put('/settings/email',
+  ...requireAdmin,
+  adminDashboardController.updateEmailSettings
+);
+
 module.exports = router;

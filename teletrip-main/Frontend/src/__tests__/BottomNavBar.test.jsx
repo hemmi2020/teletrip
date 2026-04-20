@@ -9,12 +9,16 @@ vi.mock("react-router-dom", () => ({
   useNavigate: () => vi.fn(),
 }));
 
-// Mock CartSystem's useCart hook
-vi.mock("../components/CartSystem", () => ({
-  useCart: () => ({
-    getTotalItems: () => 0,
-  }),
-}));
+// Mock CartSystem's useCart hook and UserDataContext
+vi.mock("../components/CartSystem", () => {
+  const React = require("react");
+  return {
+    useCart: () => ({
+      getTotalItems: () => 0,
+    }),
+    UserDataContext: React.createContext({ user: null, setUser: () => {} }),
+  };
+});
 
 describe("BottomNavBar - Requirements 1.1, 1.2, 1.3, 1.4, 1.5", () => {
   beforeEach(() => {

@@ -43,6 +43,7 @@ const DestinationManagement = ({ showToast }) => {
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [seeding, setSeeding] = useState(false);
 
   const toast = useCallback((message, type = 'success') => {
     if (showToast) showToast(message, type);
@@ -67,6 +68,43 @@ const DestinationManagement = ({ showToast }) => {
   }, [toast]);
 
   useEffect(() => { fetchDestinations(); }, [fetchDestinations]);
+
+  // Seed sample destinations
+  const SAMPLE_DESTINATIONS = [
+    { name: 'Paris', country: 'France', image: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=800', tag: 'Popular', description: 'The City of Light, famous for the Eiffel Tower, world-class cuisine, and romantic ambiance.', continent: 'Europe', isFeatured: true, isActive: true, order: 0 },
+    { name: 'Bali', country: 'Indonesia', image: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=800', tag: 'Tropical', description: 'A tropical paradise known for stunning beaches, lush rice terraces, and vibrant culture.', continent: 'Asia', isFeatured: true, isActive: true, order: 1 },
+    { name: 'New York', country: 'United States', image: 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=800', tag: 'City', description: 'The city that never sleeps, home to iconic landmarks, Broadway, and diverse neighborhoods.', continent: 'North America', isFeatured: true, isActive: true, order: 2 },
+    { name: 'Dubai', country: 'United Arab Emirates', image: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=800', tag: 'Luxury', description: 'A futuristic metropolis with stunning architecture, luxury shopping, and desert adventures.', continent: 'Asia', isFeatured: true, isActive: true, order: 3 },
+    { name: 'Tokyo', country: 'Japan', image: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=800', tag: 'Culture', description: 'A fascinating blend of ancient traditions and cutting-edge technology in Japan\'s capital.', continent: 'Asia', isFeatured: false, isActive: true, order: 4 }
+  ];
+
+  const handleSeedDestinations = async () => {
+    setSeeding(true);
+    let created = 0;
+    let skipped = 0;
+
+    for (const dest of SAMPLE_DESTINATIONS) {
+      try {
+        const res = await fetch(`${API_BASE}/destinations`, {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          body: JSON.stringify(dest)
+        });
+        const data = await res.json();
+        if (data.success) {
+          created++;
+        } else {
+          skipped++;
+        }
+      } catch {
+        skipped++;
+      }
+    }
+
+    toast(`Sample destinations seeded: ${created} created, ${skipped} skipped`, created > 0 ? 'success' : 'error');
+    fetchDestinations();
+    setSeeding(false);
+  };
 
   // Form handlers
   const openAddModal = () => {
@@ -242,13 +280,23 @@ const DestinationManagement = ({ showToast }) => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold text-gray-900">Destination Management</h2>
-        <button
-          onClick={openAddModal}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium"
-        >
-          <Plus className="w-4 h-4" />
-          Add Destination
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleSeedDestinations}
+            disabled={seeding}
+            className="flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition text-sm font-medium disabled:opacity-50"
+          >
+            {seeding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+            Seed Sample Destinations
+          </button>
+          <button
+            onClick={openAddModal}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-medium"
+          >
+            <Plus className="w-4 h-4" />
+            Add Destination
+          </button>
+        </div>
       </div>
 
       {/* Table with drag-and-drop */}

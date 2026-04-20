@@ -37,11 +37,21 @@ const Header = () => {
     return () => window.removeEventListener('openCart', handler);
   }, []);
 
+  useEffect(() => {
+    const handler = () => setShowAuthModal(true);
+    window.addEventListener('openAuthModal', handler);
+    return () => window.removeEventListener('openAuthModal', handler);
+  }, []);
+
   const handleAccountClick = () => {
     if (user?.email) navigate("/account");
     else setShowAuthModal(true);
   };
-  const handleAuthSuccess = () => { setShowAuthModal(false); navigate("/account"); };
+  const handleAuthSuccess = () => {
+    setShowAuthModal(false);
+    window.dispatchEvent(new CustomEvent("authSuccess"));
+    navigate("/account");
+  };
   const handleLogout = () => {
     setUser(null);
     localStorage.removeItem('token');

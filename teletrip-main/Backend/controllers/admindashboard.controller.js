@@ -1313,6 +1313,54 @@ const markPayOnSiteAsPaid = asyncErrorHandler(async (req, res) => {
   }
 });
 
+// ========== EMAIL SETTINGS ==========
+const SystemSettings = require('../models/systemsetting.model');
+
+/**
+ * GET /api/v1/admin/settings/email
+ * Fetch all email settings from SystemSettings where category='email'
+ */
+const getEmailSettings = asyncErrorHandler(async (req, res) => {
+  const settings = await SystemSettings.find({ category: 'email' }).lean();
+  
+  // Convert array of {key, value} docs into a flat object
+  const settingsObj = {};
+  for (const s of settings) {
+    settingsObj[s.key] = s.value;
+  }
+
+  return ApiResponse.success(res, settingsObj, 'Email settings retrieved successfully');
+});
+
+/**
+ * PUT /api/v1/admin/settings/email
+ * Update email settings (upsert each key)
+ */
+const updateEmailSettings = asyncErrorHandler(async (req, res) => {
+  const allowedKeys = ['smtp_host', 'smtp_port', 'smtp_user', 'smtp_password', 'sender_name', 'sender_email', 'enable_tls'];
+  const updates = req.body;
+
+  const results = [];
+  for (const key of allowedKeys) {
+    if (updates[key] !== undefined) {
+      const result = await SystemSettings.findOneAndUpdate(
+        { key, category: 'email' },
+        { 
+          key, 
+          value: updates[key], 
+          category: 'email',
+          lastModifiedBy: req.user?._id || req.user?.id,
+          isActive: true
+        },
+        { upsert: true, new: true }
+      );
+      results.push(result);
+    }
+  }
+
+  return ApiResponse.success(res, { updated: results.length }, 'Email settings updated successfully');
+});
+
 
 // Bulk Actions
 const bulkActions = require('./bulkActions.controller');
@@ -1347,5 +1395,7 @@ module.exports = {
   bulkUpdateHotels: bulkActions.bulkUpdateHotels,
   bulkUpdateTickets: bulkActions.bulkUpdateTickets,
   bulkExport: bulkActions.bulkExport,
-  bulkEmail: bulkActions.bulkEmail
+  bulkEmail: bulkActions.bulkEmail,
+  getEmailSettings,
+  updateEmailSettings
 };

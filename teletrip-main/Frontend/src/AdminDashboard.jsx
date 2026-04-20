@@ -47,6 +47,7 @@ import CommissionTracker from './components/CommissionTracker';
 import PaymentReconciliation from './components/PaymentReconciliation';
 import FinancialForecasting from './components/FinancialForecasting';
 import CurrencySettings from './components/CurrencySettings';
+import EmailSettings from './components/EmailSettings';
 import HotelApprovalWorkflow from './components/HotelApprovalWorkflow';
 import RoomInventoryManager from './components/RoomInventoryManager';
 import PricingCalendar from './components/PricingCalendar';
@@ -1026,6 +1027,7 @@ Amount: ${voucher.currency} ${voucher.totalAmount}
     if (activeTab === 'settings') {
       return (
         <div className="space-y-6">
+          <EmailSettings showToast={showToast} />
           <CurrencySettings showToast={showToast} />
         </div>
       );

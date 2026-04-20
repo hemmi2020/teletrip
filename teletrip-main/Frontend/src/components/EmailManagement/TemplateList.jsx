@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Search, Filter, Edit, Copy, Trash2, Send, Plus, RefreshCw,
-  ChevronLeft, ChevronRight, Loader2, ToggleLeft, ToggleRight
+  ChevronLeft, ChevronRight, Loader2, ToggleLeft, ToggleRight, Database
 } from 'lucide-react';
 import { EmailManagementAPI } from '../../services/emailApi';
 import TemplateEditor from './TemplateEditor';
@@ -26,6 +26,7 @@ const TemplateList = ({ showToast }) => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalDocs, setTotalDocs] = useState(0);
   const [editingTemplateId, setEditingTemplateId] = useState(null);
+  const [seeding, setSeeding] = useState(false);
   const limit = 10;
 
   const loadTemplates = useCallback(async () => {
@@ -153,6 +154,24 @@ const TemplateList = ({ showToast }) => {
             </div>
           </div>
           <div className="flex gap-2">
+            <button
+              onClick={async () => {
+                setSeeding(true);
+                const result = await EmailManagementAPI.seedTemplates();
+                if (result.success) {
+                  showToast?.(`Seed complete: ${result.data?.created ?? 0} created, ${result.data?.skipped ?? 0} skipped`, 'success');
+                  loadTemplates();
+                } else {
+                  showToast?.(result.error, 'error');
+                }
+                setSeeding(false);
+              }}
+              disabled={seeding}
+              className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2 text-sm disabled:opacity-50"
+            >
+              {seeding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Database className="w-4 h-4" />}
+              Seed Default Templates
+            </button>
             <button
               onClick={loadTemplates}
               className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2 text-sm"
