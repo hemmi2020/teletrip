@@ -35,6 +35,7 @@ const Carousel = ({
   touchPauseDuration = 8000,
   showDots = true,
   showArrows = true,
+  arrowPosition = "center-sides",
   itemsPerView = { mobile: 1, tablet: 2, desktop: 3 },
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -179,9 +180,12 @@ const Carousel = ({
 
   const hideNav = totalItems <= 1 || totalItems <= currentItemsPerView;
 
-  // Get the items for the current page
-  const startIdx = currentIndex * currentItemsPerView;
-  const visibleItems = items.slice(startIdx, startIdx + currentItemsPerView);
+  // Calculate the gap in pixels (matches Tailwind gap-4 = 16px)
+  const gapPx = 16;
+  // Each item width as a percentage of the container
+  const itemWidthPercent = 100 / currentItemsPerView;
+  // translateX offset: shift by currentIndex pages worth of items
+  const translateX = -(currentIndex * 100);
 
   return (
     <div
@@ -193,24 +197,55 @@ const Carousel = ({
       data-testid="carousel-container"
       data-play-state={playState}
     >
-      {/* Carousel content */}
+      {/* Carousel content — sliding strip */}
       <div className="overflow-hidden">
         <div
-          className="grid gap-4 transition-opacity duration-300"
+          className="flex transition-transform duration-500 ease-in-out"
           style={{
-            gridTemplateColumns: `repeat(${currentItemsPerView}, minmax(0, 1fr))`,
+            transform: `translateX(${translateX}%)`,
           }}
         >
-          {visibleItems.map((item, idx) => (
-            <div key={`${currentIndex}-${idx}`} className="min-w-0">
+          {items.map((item, idx) => (
+            <div
+              key={idx}
+              className="min-w-0 flex-shrink-0"
+              style={{
+                width: `calc(${itemWidthPercent}% - ${gapPx * (currentItemsPerView - 1) / currentItemsPerView}px)`,
+                marginRight: idx < totalItems - 1 ? `${gapPx}px` : 0,
+              }}
+            >
               {item}
             </div>
           ))}
         </div>
       </div>
 
-      {/* Arrow navigation */}
-      {showArrows && !hideNav && (
+      {/* Arrow navigation — top-right */}
+      {showArrows && !hideNav && arrowPosition === "top-right" && (
+        <div className="absolute top-0 right-0 flex items-center gap-2 -mt-12">
+          <button
+            onClick={goToPrev}
+            className="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-500 hover:text-gray-700 hover:border-gray-300 active:scale-90 transition-all"
+            style={{ minHeight: "unset", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}
+            aria-label="Previous slide"
+            data-testid="carousel-prev"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+          <button
+            onClick={goToNext}
+            className="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-500 hover:text-gray-700 hover:border-gray-300 active:scale-90 transition-all"
+            style={{ minHeight: "unset", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}
+            aria-label="Next slide"
+            data-testid="carousel-next"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
+      {/* Arrow navigation — center-sides (default) */}
+      {showArrows && !hideNav && arrowPosition === "center-sides" && (
         <>
           <button
             onClick={goToPrev}

@@ -72,7 +72,9 @@ const Home = () => {
                 View All <ArrowRight style={{ width: 14, height: 14 }} />
               </Link>
             </div>
+            <div className="relative pt-10">
             <Carousel
+              arrowPosition="top-right"
               items={(destinations.length ? destinations : fallbackDestinations).map((dest) => (
                 <div key={dest._id} className="relative overflow-hidden rounded-2xl" style={{ aspectRatio: '3/4' }}>
                   <img src={dest.image} alt={dest.name} className="w-full h-full object-cover" />
@@ -93,6 +95,7 @@ const Home = () => {
               autoPlayInterval={4000}
               itemsPerView={{ mobile: 1, tablet: 2, desktop: 3 }}
             />
+            </div>
           </section>
 
           {/* ── Why Telitrip — Bento Grid ── */}
@@ -131,7 +134,9 @@ const Home = () => {
             <div className="pt-7 pb-3">
               <h2 className="text-lg font-bold text-gray-900" style={{ letterSpacing: '-0.02em' }}>Loved by travellers</h2>
             </div>
+            <div className="relative pt-10">
             <Carousel
+              arrowPosition="top-right"
               items={testimonials.map((t) => (
                 <div key={t.id} className="p-4 rounded-2xl bg-white border border-gray-100/80 shadow-sm h-full">
                   <div className="flex items-center gap-0.5 mb-2.5">
@@ -147,6 +152,7 @@ const Home = () => {
               autoPlayInterval={5000}
               itemsPerView={{ mobile: 1, tablet: 2, desktop: 3 }}
             />
+            </div>
           </section>
 
           {/* ── CTA ── */}
@@ -194,7 +200,9 @@ const Home = () => {
               </h2>
               <p className="text-gray-500 text-sm max-w-md mb-12" style={{ lineHeight: 1.7 }}>Curated stays across the world's most sought-after destinations.</p>
 
+              <div className="relative pt-10">
               <Carousel
+                arrowPosition="top-right"
                 items={(destinations.length ? destinations : fallbackDestinations).map((dest) => (
                   <div key={dest._id} className="group relative overflow-hidden rounded-2xl cursor-pointer bg-gray-100" style={{ aspectRatio: '4/5' }}>
                     <img src={dest.image} alt={dest.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
@@ -214,6 +222,7 @@ const Home = () => {
                 autoPlayInterval={4000}
                 itemsPerView={{ mobile: 1, tablet: 2, desktop: 3 }}
               />
+              </div>
             </div>
           </section>
 
@@ -260,7 +269,9 @@ const Home = () => {
               <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-12" style={{ letterSpacing: '-0.03em', lineHeight: 1.1 }}>
                 Loved by travellers<br /><span className="text-emerald-600">around the world.</span>
               </h2>
+              <div className="relative pt-10">
               <Carousel
+                arrowPosition="top-right"
                 items={testimonials.map((t) => (
                   <div key={t.id} className="p-6 rounded-2xl bg-white border border-gray-100 hover:shadow-md transition-all h-full">
                     <div className="flex items-center gap-1 mb-4">
@@ -276,6 +287,7 @@ const Home = () => {
                 autoPlayInterval={5000}
                 itemsPerView={{ mobile: 1, tablet: 2, desktop: 3 }}
               />
+              </div>
             </div>
           </section>
 
