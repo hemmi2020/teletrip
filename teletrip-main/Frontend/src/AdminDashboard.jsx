@@ -62,6 +62,7 @@ import SpecialRequestHandling from './components/SpecialRequestHandling';
 import BookingTimelineView from './components/BookingTimelineView';
 import MobileTable from './components/MobileTable';
 import BookingReconfirmation from './components/BookingReconfirmation';
+import EmailManagementTab from './components/EmailManagement/EmailManagementTab';
 import './styles/admin-responsive.css';
 
 // Toast Component
@@ -1009,6 +1010,12 @@ Amount: ${voucher.currency} ${voucher.totalAmount}
       );
     }
 
+    if (activeTab === 'email') {
+      return (
+        <EmailManagementTab showToast={showToast} />
+      );
+    }
+
     if (activeTab === 'settings') {
       return (
         <div className="space-y-6">
@@ -1503,6 +1510,7 @@ Amount: ${voucher.currency} ${voucher.totalAmount}
     { id: 'support', label: 'Support', icon: MessageSquare },
     { id: 'reports', label: 'Reports', icon: FileText },
     { id: 'financial', label: 'Financial', icon: DollarSign },
+    { id: 'email', label: 'Email', icon: Mail },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
 
