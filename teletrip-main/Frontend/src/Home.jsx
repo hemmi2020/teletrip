@@ -1,41 +1,17 @@
-import React, { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Helmet } from "react-helmet-async";
 import Header from "./components/Header";
 import Slider from "./components/Slider";
 import Footer from "./components/Footer";
-import { Hotel, Car, Compass, CreditCard, Shield, Globe, ArrowRight, Star, ChevronLeft, ChevronRight, TrendingUp, MapPin } from "lucide-react";
-
-// Carousel scroll helper with arrows
-const useCarousel = () => {
-  const ref = useRef(null);
-  const scroll = (dir) => {
-    if (!ref.current) return;
-    const w = ref.current.offsetWidth * 0.7;
-    ref.current.scrollBy({ left: dir === 'left' ? -w : w, behavior: 'smooth' });
-  };
-  return { ref, scroll };
-};
-
-const CarouselArrows = ({ onLeft, onRight }) => (
-  <div className="flex items-center gap-1.5">
-    <button onClick={onLeft} className="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-500 active:scale-90 transition-transform" style={{ minHeight: 'unset', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-      <ChevronLeft className="w-4 h-4" />
-    </button>
-    <button onClick={onRight} className="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-500 active:scale-90 transition-transform" style={{ minHeight: 'unset', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-      <ChevronRight className="w-4 h-4" />
-    </button>
-  </div>
-);
+import Carousel from "./components/Carousel";
+import { Hotel, Car, Compass, CreditCard, Shield, Globe, ArrowRight, Star, TrendingUp, MapPin } from "lucide-react";
 
 const Home = () => {
   const navigate = useNavigate();
   const [isMobile, setIsMobile] = useState(false);
   const [destinations, setDestinations] = useState([]);
-
-  const destCarousel = useCarousel();
-  const reviewCarousel = useCarousel();
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -89,14 +65,16 @@ const Home = () => {
         <div className="md:hidden">
 
           {/* ── Featured Destinations ── */}
-          <section className="pt-8 pb-8">
-            <div className="px-4 mb-4 flex items-center justify-between">
+          <section className="pt-8 pb-8 px-4">
+            <div className="mb-4 flex items-center justify-between">
               <h2 className="text-lg font-bold text-gray-900" style={{ letterSpacing: '-0.02em' }}>Top Destinations</h2>
-              <CarouselArrows onLeft={() => destCarousel.scroll('left')} onRight={() => destCarousel.scroll('right')} />
+              <Link to="/destinations" data-testid="view-all-destinations" className="flex items-center gap-1 text-[12px] font-semibold text-blue-600 hover:text-blue-700 transition-colors">
+                View All <ArrowRight style={{ width: 14, height: 14 }} />
+              </Link>
             </div>
-            <div ref={destCarousel.ref} className="flex gap-3 overflow-x-auto pl-4 pr-4 pb-2 snap-x snap-mandatory" style={{ scrollbarWidth: 'none' }}>
-              {(destinations.length ? destinations : fallbackDestinations).map((dest) => (
-                <div key={dest._id} className="flex-shrink-0 w-[60vw] snap-start relative overflow-hidden rounded-2xl" style={{ aspectRatio: '3/4' }}>
+            <Carousel
+              items={(destinations.length ? destinations : fallbackDestinations).map((dest) => (
+                <div key={dest._id} className="relative overflow-hidden rounded-2xl" style={{ aspectRatio: '3/4' }}>
                   <img src={dest.image} alt={dest.name} className="w-full h-full object-cover" />
                   <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.05) 45%, transparent 65%)' }} />
                   {dest.tag && (
@@ -112,7 +90,9 @@ const Home = () => {
                   </div>
                 </div>
               ))}
-            </div>
+              autoPlayInterval={4000}
+              itemsPerView={{ mobile: 1, tablet: 2, desktop: 3 }}
+            />
           </section>
 
           {/* ── Why Telitrip — Bento Grid ── */}
@@ -147,14 +127,13 @@ const Home = () => {
           </section>
 
           {/* ── Testimonials ── */}
-          <section className="pb-8" style={{ background: '#f8fafc' }}>
-            <div className="px-4 pt-7 pb-3 flex items-center justify-between">
+          <section className="pb-8 px-4" style={{ background: '#f8fafc' }}>
+            <div className="pt-7 pb-3">
               <h2 className="text-lg font-bold text-gray-900" style={{ letterSpacing: '-0.02em' }}>Loved by travellers</h2>
-              <CarouselArrows onLeft={() => reviewCarousel.scroll('left')} onRight={() => reviewCarousel.scroll('right')} />
             </div>
-            <div ref={reviewCarousel.ref} className="flex gap-3 overflow-x-auto pl-4 pr-4 pb-3 snap-x snap-mandatory" style={{ scrollbarWidth: 'none' }}>
-              {testimonials.map((t) => (
-                <div key={t.id} className="flex-shrink-0 w-[72vw] snap-start p-4 rounded-2xl bg-white border border-gray-100/80 shadow-sm">
+            <Carousel
+              items={testimonials.map((t) => (
+                <div key={t.id} className="p-4 rounded-2xl bg-white border border-gray-100/80 shadow-sm h-full">
                   <div className="flex items-center gap-0.5 mb-2.5">
                     {[...Array(t.rating)].map((_, j) => <Star key={j} className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />)}
                   </div>
@@ -165,7 +144,9 @@ const Home = () => {
                   </div>
                 </div>
               ))}
-            </div>
+              autoPlayInterval={5000}
+              itemsPerView={{ mobile: 1, tablet: 2, desktop: 3 }}
+            />
           </section>
 
           {/* ── CTA ── */}
@@ -199,27 +180,40 @@ const Home = () => {
             <div className="absolute bottom-0 -left-20 w-72 h-72 rounded-full opacity-15" style={{ background: 'radial-gradient(circle, #06b6d4, #3b82f6)', filter: 'blur(60px)', animation: 'float1 8s ease-in-out infinite alternate' }} />
 
             <div className="max-w-7xl mx-auto relative">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-8 h-px bg-blue-500" />
-                <span className="text-[11px] font-semibold tracking-widest uppercase text-blue-500" style={{ letterSpacing: '0.14em' }}>Featured Destinations</span>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-px bg-blue-500" />
+                  <span className="text-[11px] font-semibold tracking-widest uppercase text-blue-500" style={{ letterSpacing: '0.14em' }}>Featured Destinations</span>
+                </div>
+                <Link to="/destinations" data-testid="view-all-destinations" className="flex items-center gap-1.5 text-[13px] font-semibold text-blue-600 hover:text-blue-700 transition-colors">
+                  View All <ArrowRight style={{ width: 16, height: 16 }} />
+                </Link>
               </div>
               <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4" style={{ letterSpacing: '-0.03em', lineHeight: 1.1 }}>
                 Handpicked deals,<br /><span className="text-blue-600">just for you.</span>
               </h2>
               <p className="text-gray-500 text-sm max-w-md mb-12" style={{ lineHeight: 1.7 }}>Curated stays across the world's most sought-after destinations.</p>
 
-              <div className="grid md:grid-cols-3 gap-5">
-                {(destinations.length ? destinations : fallbackDestinations).slice(0, 3).map((dest, i) => (
-                  <motion.div key={dest._id} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: i * 0.1 }}
-                    className="group relative overflow-hidden rounded-2xl cursor-pointer bg-gray-100" style={{ aspectRatio: '4/5' }}>
+              <Carousel
+                items={(destinations.length ? destinations : fallbackDestinations).map((dest) => (
+                  <div key={dest._id} className="group relative overflow-hidden rounded-2xl cursor-pointer bg-gray-100" style={{ aspectRatio: '4/5' }}>
                     <img src={dest.image} alt={dest.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                     <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 50%)' }} />
+                    {dest.tag && (
+                      <div className="absolute top-3 left-3">
+                        <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full" style={{ background: 'rgba(255,255,255,0.18)', backdropFilter: 'blur(8px)', color: '#fff', border: '1px solid rgba(255,255,255,0.25)' }}>
+                          {dest.tag}
+                        </span>
+                      </div>
+                    )}
                     <div className="absolute bottom-0 left-0 right-0 p-5">
                       <h3 className="text-white font-bold text-lg mb-1">{dest.name}, {dest.country}</h3>
                     </div>
-                  </motion.div>
+                  </div>
                 ))}
-              </div>
+                autoPlayInterval={4000}
+                itemsPerView={{ mobile: 1, tablet: 2, desktop: 3 }}
+              />
             </div>
           </section>
 
@@ -266,10 +260,9 @@ const Home = () => {
               <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-12" style={{ letterSpacing: '-0.03em', lineHeight: 1.1 }}>
                 Loved by travellers<br /><span className="text-emerald-600">around the world.</span>
               </h2>
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {testimonials.map((t, i) => (
-                  <motion.div key={t.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: i * 0.07 }}
-                    className="p-6 rounded-2xl bg-white border border-gray-100 hover:shadow-md transition-all">
+              <Carousel
+                items={testimonials.map((t) => (
+                  <div key={t.id} className="p-6 rounded-2xl bg-white border border-gray-100 hover:shadow-md transition-all h-full">
                     <div className="flex items-center gap-1 mb-4">
                       {[...Array(t.rating)].map((_, j) => <Star key={j} className="w-4 h-4 text-amber-400 fill-amber-400" />)}
                     </div>
@@ -278,9 +271,11 @@ const Home = () => {
                       <div className="w-9 h-9 rounded-full flex items-center justify-center text-white text-[12px] font-bold" style={{ background: t.color }}>{t.avatar}</div>
                       <span className="text-gray-500 text-[13px] font-medium">{t.name}</span>
                     </div>
-                  </motion.div>
+                  </div>
                 ))}
-              </div>
+                autoPlayInterval={5000}
+                itemsPerView={{ mobile: 1, tablet: 2, desktop: 3 }}
+              />
             </div>
           </section>
 

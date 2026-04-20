@@ -32,6 +32,10 @@ import AdminLogin from './components/AdminLogin';
 import AdminDashboard from './AdminDashboard';
 import ProtectedAdminRoute from './components/ProtectedAdminRoute';
 
+// Destination pages
+import DestinationsListingPage from './pages/DestinationsListingPage';
+import DestinationPage from './pages/DestinationPage';
+
 // Error pages
 import NotFound from './pages/NotFound';
 import ErrorPage from './pages/ErrorPage';
@@ -96,6 +100,8 @@ const App = () => {
                     <Route path="/payment/success" element={<PaymentSuccess />} />
                     <Route path="/payment/cancel" element={<PaymentCancel />} />
                     <Route path="/payment-success-onsite" element={<PaymentSuccessOnSite />} />
+                    <Route path="/destinations" element={<DestinationsListingPage />} />
+                    <Route path="/destinations/:slug" element={<DestinationPage />} />
                     <Route path="/admin/login" element={<AdminLogin />} />
                     <Route path="/admin/dashboard" element={<ProtectedAdminRoute><AdminDashboard /></ProtectedAdminRoute>} />
                     <Route path="/admin" element={<Navigate to="/admin/login" replace />} />

@@ -63,6 +63,7 @@ import BookingTimelineView from './components/BookingTimelineView';
 import MobileTable from './components/MobileTable';
 import BookingReconfirmation from './components/BookingReconfirmation';
 import EmailManagementTab from './components/EmailManagement/EmailManagementTab';
+import DestinationManagement from './components/DestinationManagement';
 import './styles/admin-responsive.css';
 
 // Toast Component
@@ -1010,6 +1011,12 @@ Amount: ${voucher.currency} ${voucher.totalAmount}
       );
     }
 
+    if (activeTab === 'destinations') {
+      return (
+        <DestinationManagement showToast={showToast} />
+      );
+    }
+
     if (activeTab === 'email') {
       return (
         <EmailManagementTab showToast={showToast} />
@@ -1506,6 +1513,7 @@ Amount: ${voucher.currency} ${voucher.totalAmount}
     { id: 'booking-management', label: 'Booking Mgmt', icon: Calendar },
     { id: 'hotels', label: 'Hotels', icon: Hotel },
     { id: 'hotel-management', label: 'Hotel Mgmt', icon: Settings },
+    { id: 'destinations', label: 'Destinations', icon: MapPin },
     { id: 'payments', label: 'Payments', icon: CreditCard },
     { id: 'support', label: 'Support', icon: MessageSquare },
     { id: 'reports', label: 'Reports', icon: FileText },

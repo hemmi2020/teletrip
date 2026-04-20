@@ -88,9 +88,29 @@ const Header = () => {
 
   return (
     <>
+      <style>{`
+        @keyframes headerPillBounceIn {
+          0% {
+            transform: scale(0.85) translateY(-10px);
+            opacity: 0;
+          }
+          60% {
+            transform: scale(1.03) translateY(2px);
+            opacity: 1;
+          }
+          100% {
+            transform: scale(1) translateY(0);
+            opacity: 1;
+          }
+        }
+        .header-pill-bounce {
+          animation: headerPillBounceIn 800ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+        }
+      `}</style>
       <header className={headerClass} style={{ transition: 'padding 0.3s ease' }}>
         <div
-          className="pointer-events-auto w-full max-w-5xl flex items-center justify-between gap-3 py-2"
+          data-testid="header-pill"
+          className="header-pill-bounce pointer-events-auto w-full max-w-5xl flex items-center justify-between gap-3 py-2"
           style={{ ...pillStyle, paddingLeft: '20px', paddingRight: '12px' }}
         >
           {/* Logo — with left padding, full color */}

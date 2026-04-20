@@ -1,6 +1,32 @@
 import React, { useEffect, useState } from "react";
 import HotelSearchForm from "./HotelSearchForm";
 
+/* Hero entrance animation — fade in + translate up from 30px below */
+const heroAnimationStyles = `
+@keyframes heroFadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.hero-animate-headline {
+  animation: heroFadeInUp 600ms ease-out both;
+}
+
+.hero-animate-subtitle {
+  animation: heroFadeInUp 600ms ease-out 150ms both;
+}
+
+.hero-animate-search {
+  animation: heroFadeInUp 600ms ease-out 300ms both;
+}
+`;
+
 const Slider = () => {
   const images = [
     "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=1920&h=1080&fit=crop&q=80",
@@ -17,6 +43,7 @@ const Slider = () => {
 
   return (
     <section className="sticky top-0 w-full bg-gray-900 z-0 overflow-hidden" style={{ height: '100svh', minHeight: 550, margin: 0, padding: 0 }}>
+      <style>{heroAnimationStyles}</style>
       {/* Photo slideshow */}
       <div className="absolute inset-0">
         {images.map((img, i) => (
@@ -30,15 +57,15 @@ const Slider = () => {
       {/* Content — responsive vertical layout */}
       <div className="relative z-10 h-full flex flex-col items-center justify-center px-4 pt-20 pb-16 sm:pt-0 sm:pb-0 text-center">
         <div className="max-w-7xl w-full mx-auto mb-6 sm:mb-8">
-          <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-3 sm:mb-5" style={{ letterSpacing: '-0.04em', lineHeight: 1.05 }}>
+          <h1 data-testid="hero-headline" className="hero-animate-headline text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-3 sm:mb-5" style={{ letterSpacing: '-0.04em', lineHeight: 1.05 }}>
             Find your perfect{' '}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">stay anywhere</span>
           </h1>
-          <p className="text-sm sm:text-lg text-white/60 max-w-xl mx-auto mb-0">
+          <p data-testid="hero-subtitle" className="hero-animate-subtitle text-sm sm:text-lg text-white/60 max-w-xl mx-auto mb-0">
             Compare prices across 250,000+ hotels. Best rates guaranteed.
           </p>
         </div>
-        <div className="max-w-5xl w-full mx-auto search-form-section">
+        <div data-testid="hero-search-form" className="hero-animate-search max-w-5xl w-full mx-auto search-form-section">
           <HotelSearchForm />
         </div>
       </div>
