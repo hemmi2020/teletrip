@@ -54,8 +54,8 @@ const Slider = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-black/70" />
       </div>
 
-      {/* Content — top-down on mobile, centered on desktop */}
-      <div className="relative z-10 flex flex-col items-center sm:justify-center px-3 sm:px-4 pt-24 pb-20 sm:pt-28 sm:pb-16 text-center" style={{ minHeight: '100svh' }}>
+      {/* Content — centered on all screens */}
+      <div className="relative z-10 flex flex-col items-center justify-center px-3 sm:px-4 pt-20 pb-16 sm:pt-28 sm:pb-16 text-center" style={{ minHeight: '100svh' }}>
         {/* Headline — hidden on mobile when space is tight, always visible on desktop */}
         <div className="max-w-7xl w-full mx-auto mb-3 sm:mb-8 hidden sm:block">
           <h1 data-testid="hero-headline" className="hero-animate-headline sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-5" style={{ letterSpacing: '-0.04em', lineHeight: 1.05 }}>
@@ -77,8 +77,8 @@ const Slider = () => {
         </div>
       </div>
 
-      {/* Dots — above bottom nav on mobile */}
-      <div className="absolute bottom-14 sm:bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-20 hidden sm:flex">
+      {/* Dots — visible on all screens */}
+      <div className="absolute bottom-16 sm:bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-20">
         {images.map((_, i) => (
           <span key={i} onClick={() => setActive(i)} className={`block rounded-full transition-all duration-500 cursor-pointer ${i === active ? 'w-6 h-1.5 bg-white' : 'w-1.5 h-1.5 bg-white/40 hover:bg-white/60'}`} />
         ))}
