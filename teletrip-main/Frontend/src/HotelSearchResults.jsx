@@ -37,6 +37,7 @@ import { useCart } from "./components/CartSystem";
 import { useCurrency } from "./context/CurrencyContext";
 import MobileFilters from "./components/MobileFilters";
 import { AlertCircle } from "lucide-react";
+import SearchLoadingScreen from './components/SearchLoadingScreen';
 import logo from './images/Telitrip-Logo.png';
 
 
@@ -1004,11 +1005,7 @@ if (children > 0 && childAges.length > 0) {
     return (
       <>
         <Header />
-        <div className="flex flex-col items-center justify-center min-h-screen px-6 text-center">
-          <img src={logo} alt="Telitrip" className="h-12 mb-8 opacity-80" />
-          <Loader2 className="w-8 h-8 animate-spin text-blue-600 mb-3" />
-          <p className="text-sm text-gray-500">Finding the best hotels for you...</p>
-        </div>
+        <SearchLoadingScreen type="hotels" />
       </>
     );
   }
