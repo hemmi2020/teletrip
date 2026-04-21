@@ -699,8 +699,11 @@ export const SlideOutCart = ({ isOpen, onClose, onProceedToCheckout }) => {
   };
 
   const handleRemoveItem = (item) => {
-    console.log('🗑️ Removing item from cart:', item);
-    removeFromCart(item);
+    const itemName = item.hotelName || item.name || item.vehicle || 'this item';
+    if (window.confirm(`Remove "${itemName}" from your cart?`)) {
+      console.log('🗑️ Removing item from cart:', item);
+      removeFromCart(item);
+    }
   };
 
   const handleCloseCart = () => {

@@ -259,10 +259,7 @@ const TransfersTab = ({ variant = 'dark' }) => {
             )}
           </div>
           {showPickupDropdown && pickupQuery.trim() !== '' && (
-            <>
-            <div className="fixed inset-0 bg-black/30 z-[209] sm:hidden" onClick={() => setShowPickupDropdown(false)} />
-            <div className="fixed sm:absolute inset-x-0 sm:inset-x-auto bottom-0 sm:bottom-auto sm:top-full z-[210] sm:z-50 sm:w-full sm:mt-2 bg-white border border-gray-200 rounded-t-2xl sm:rounded-xl shadow-2xl max-h-[55vh] sm:max-h-[60vh] overflow-y-auto" style={{scrollbarWidth:'thin'}}>
-              <div className="w-10 h-1 bg-gray-300 rounded-full mx-auto mt-2 mb-1 sm:hidden" />
+            <div className="absolute left-0 right-0 top-full mt-1 z-[210] bg-white border border-gray-200 rounded-xl shadow-2xl max-h-[60vh] overflow-y-auto" style={{scrollbarWidth:'thin'}}>
               {isLoadingLocations ? (
                 <div className="p-3 text-center text-gray-500 text-sm">Searching locations...</div>
               ) : groupedPickup.length > 0 ? (
@@ -305,7 +302,6 @@ const TransfersTab = ({ variant = 'dark' }) => {
                 <div className="p-3 text-center text-gray-500 text-sm">No locations found</div>
               )}
             </div>
-            </>
           )}
         </div>
 
@@ -333,10 +329,7 @@ const TransfersTab = ({ variant = 'dark' }) => {
             )}
           </div>
           {showDropoffDropdown && dropoffQuery.trim() !== '' && (
-            <>
-            <div className="fixed inset-0 bg-black/30 z-[209] sm:hidden" onClick={() => setShowDropoffDropdown(false)} />
-            <div className="fixed sm:absolute inset-x-0 sm:inset-x-auto bottom-0 sm:bottom-auto sm:top-full z-[210] sm:z-50 sm:w-full sm:mt-2 bg-white border border-gray-200 rounded-t-2xl sm:rounded-xl shadow-2xl max-h-[55vh] sm:max-h-[60vh] overflow-y-auto" style={{scrollbarWidth:'thin'}}>
-              <div className="w-10 h-1 bg-gray-300 rounded-full mx-auto mt-2 mb-1 sm:hidden" />
+            <div className="absolute left-0 right-0 top-full mt-1 z-[210] bg-white border border-gray-200 rounded-xl shadow-2xl max-h-[60vh] overflow-y-auto" style={{scrollbarWidth:'thin'}}>
               {isLoadingLocations ? (
                 <div className="p-3 text-center text-gray-500 text-sm">Searching locations...</div>
               ) : groupedDropoff.length > 0 ? (
@@ -379,7 +372,6 @@ const TransfersTab = ({ variant = 'dark' }) => {
                 <div className="p-3 text-center text-gray-500 text-sm">No dropoff locations found</div>
               )}
             </div>
-            </>
           )}
         </div>
 
@@ -443,7 +435,7 @@ const TransfersTab = ({ variant = 'dark' }) => {
             <ChevronDown className="text-gray-400 flex-shrink-0" size={18} />
           </div>
           {showTravellerDropdown && (
-            <div className="fixed sm:absolute inset-x-0 sm:inset-x-auto bottom-0 sm:bottom-auto sm:top-full sm:mt-2 z-[200] bg-white border border-gray-300 rounded-t-2xl sm:rounded-xl shadow-2xl p-4 space-y-3 max-h-[70vh] overflow-y-auto">
+            <div className="absolute left-0 right-0 top-full mt-1 z-[200] bg-white border border-gray-300 rounded-xl shadow-2xl p-4 space-y-3 max-h-[70vh] overflow-y-auto">
               <div className="flex items-center justify-between">
                 <span className="text-gray-700 font-medium text-sm sm:text-base">Adults</span>
                 <div className="flex items-center space-x-2 sm:space-x-3">
@@ -622,10 +614,7 @@ const ExperiencesTab = ({ variant = 'dark' }) => {
         </div>
 
         {showLocationDropdown && (searchQuery.trim() !== '' || isLoadingLocations) && (
-          <>
-          <div className="fixed inset-0 bg-black/30 z-[209] sm:hidden" onClick={() => setShowLocationDropdown(false)} />
-          <div className="fixed sm:absolute inset-x-0 sm:inset-x-auto bottom-0 sm:bottom-auto sm:top-full z-[210] sm:z-50 sm:w-full sm:mt-2 bg-white border border-gray-200 rounded-t-2xl sm:rounded-xl shadow-2xl max-h-[55vh] sm:max-h-[60vh] overflow-y-auto">
-            <div className="w-10 h-1 bg-gray-300 rounded-full mx-auto mt-2 mb-1 sm:hidden" />
+          <div className="absolute left-0 right-0 top-full mt-1 z-[210] bg-white border border-gray-200 rounded-xl shadow-2xl max-h-[60vh] overflow-y-auto">
             {isLoadingLocations ? (
               <div className="p-3 sm:p-4 text-center text-gray-500 text-sm sm:text-base">Loading locations...</div>
             ) : filteredLocations.length > 0 ? (
@@ -652,7 +641,6 @@ const ExperiencesTab = ({ variant = 'dark' }) => {
               </div>
             )}
           </div>
-          </>
         )}
       </div>
 
@@ -718,7 +706,7 @@ const ExperiencesTab = ({ variant = 'dark' }) => {
             <ChevronDown className="text-gray-400 flex-shrink-0" size={18} />
           </div>
           {showTravellerDropdown && (
-            <div className="fixed sm:absolute inset-x-0 sm:inset-x-auto bottom-0 sm:bottom-auto sm:top-full sm:mt-2 z-[200] bg-white border border-gray-300 rounded-t-2xl sm:rounded-xl shadow-2xl p-4 space-y-3 max-h-[70vh] overflow-y-auto">
+            <div className="absolute left-0 right-0 top-full mt-1 z-[200] bg-white border border-gray-300 rounded-xl shadow-2xl p-4 space-y-3 max-h-[70vh] overflow-y-auto">
               <div className="flex items-center justify-between">
                 <span className="text-gray-700 font-medium text-sm sm:text-base">Adults</span>
                 <div className="flex items-center space-x-2 sm:space-x-3">
@@ -1057,10 +1045,7 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
                     )}
                   </div>
                   {showLocationDropdown && searchQuery.trim() !== '' && (
-                    <>
-                    <div className="fixed inset-0 bg-black/30 z-[209] sm:hidden" onClick={() => setShowLocationDropdown(false)} />
-                    <div className="fixed sm:absolute inset-x-0 sm:inset-x-auto bottom-0 sm:bottom-auto sm:top-full z-[210] sm:z-50 sm:w-full sm:mt-2 bg-white border border-gray-200 rounded-t-2xl sm:rounded-xl shadow-2xl max-h-[55vh] sm:max-h-[60vh] overflow-y-auto" style={{scrollbarWidth:'thin'}}>
-                      <div className="w-10 h-1 bg-gray-300 rounded-full mx-auto mt-2 mb-1 sm:hidden" />
+                    <div className="absolute left-0 right-0 top-full mt-1 z-[210] bg-white border border-gray-200 rounded-xl shadow-2xl max-h-[60vh] overflow-y-auto" style={{scrollbarWidth:'thin'}}>
                       {isLoadingLocations ? (
                         <div className="p-4 text-center text-gray-400 text-sm">Searching...</div>
                       ) : filteredLocations.length > 0 ? (
@@ -1080,7 +1065,6 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
                         <div className="p-4 text-center text-gray-400 text-sm">No destinations found</div>
                       )}
                     </div>
-                    </>
                   )}
                 </div>
 
@@ -1174,12 +1158,7 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
                   </div>
 
                   {showTravellerDropdown && (
-                    <>
-                      {/* Mobile backdrop — prevents background scroll */}
-                      <div className="fixed inset-0 bg-black/30 z-[199] sm:hidden" onClick={() => setShowTravellerDropdown(false)} />
-                      <div className="fixed sm:absolute inset-x-0 sm:inset-x-auto bottom-0 sm:bottom-auto sm:top-full sm:mt-2 z-[200] bg-white border border-gray-300 rounded-t-2xl sm:rounded-xl shadow-2xl p-4 space-y-3 max-h-[70vh] overflow-y-auto">
-                      {/* Mobile drag handle */}
-                      <div className="w-10 h-1 bg-gray-300 rounded-full mx-auto mb-2 sm:hidden" />
+                      <div className="absolute left-0 right-0 top-full mt-1 z-[200] bg-white border border-gray-300 rounded-xl shadow-2xl p-4 space-y-3 max-h-[70vh] overflow-y-auto">
                       {/* Rooms */}
                       <div className="flex items-center justify-between">
                         <span className="text-gray-700 font-medium text-sm sm:text-base">Rooms</span>
@@ -1276,7 +1255,6 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
                         Done
                       </button>
                     </div>
-                  </>
                   )}
                 </div>
               </div>

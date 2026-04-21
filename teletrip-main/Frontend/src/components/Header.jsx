@@ -4,7 +4,7 @@ import logo from "../images/Telitrip-Logo-1.png";
 import { SlideOutCart, AuthModal, useCart } from './CartSystem';
 import { UserDataContext } from './CartSystem';
 import BottomNavBar from './BottomNavBar';
-import { X, ShoppingCart } from 'lucide-react';
+import { X, ShoppingCart, Phone, User, LogOut } from 'lucide-react';
 
 const Header = () => {
   const navigate = useNavigate();
@@ -121,34 +121,48 @@ const Header = () => {
             <img src={logo} alt="Telitrip" className="h-10 sm:h-12 w-auto object-contain" />
           </NavLink>
 
-          {/* Desktop Right — Contact, Account/Logout, Cart, Join Us */}
+          {/* Desktop Right */}
           <div className="hidden md:flex items-center gap-2 flex-shrink-0">
+            {/* Contact — phone icon with tooltip */}
             <NavLink
               to="/contact"
-              className={({ isActive }) =>
-                `px-4 py-1.5 rounded-full text-[11px] font-semibold tracking-widest uppercase transition-all duration-200 ${
-                  isActive ? 'bg-gray-900 text-white' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                }`
-              }
-              style={{ minHeight: 'unset', letterSpacing: '0.08em' }}
+              className="relative group flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 transition-all"
+              style={{ width: 36, height: 36, minHeight: 'unset' }}
+              title="Contact Us"
             >
-              Contact
+              <Phone className="w-4 h-4 text-gray-700" />
+              <span className="absolute top-full mt-2 left-1/2 -translate-x-1/2 whitespace-nowrap bg-gray-900 text-white text-[11px] px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity shadow-lg">
+                +971 50 123 4567
+              </span>
             </NavLink>
-            {user?.email && (
-              <>
-                <button onClick={handleAccountClick} className="px-4 py-1.5 text-[11px] font-semibold tracking-widest uppercase text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-all" style={{ minHeight: 'unset', letterSpacing: '0.08em' }}>Account</button>
-                <button onClick={handleLogout} className="px-4 py-1.5 text-[11px] font-semibold tracking-widest uppercase text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-all" style={{ minHeight: 'unset', letterSpacing: '0.08em' }}>Logout</button>
-              </>
-            )}
+
+            {/* Cart */}
             <button onClick={() => setIsCartOpen(true)} className="relative flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 transition-all" style={{ width: 36, height: 36, minHeight: 'unset' }}>
               <ShoppingCart className="w-4 h-4 text-gray-700" />
               {getTotalItems() > 0 && (
                 <span className="absolute -top-0.5 -right-0.5 bg-blue-600 text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center leading-none">{getTotalItems()}</span>
               )}
             </button>
-            <button onClick={handleAccountClick} className="px-5 py-2 text-[11px] font-bold tracking-widest uppercase text-white rounded-full transition-all hover:opacity-90" style={{ background: '#111827', minHeight: 'unset', letterSpacing: '0.08em' }}>
-              {user?.email ? 'Dashboard' : 'Join Us'}
-            </button>
+
+            {user?.email ? (
+              <>
+                {/* Dashboard — user icon + first name */}
+                <button onClick={handleAccountClick} className="flex items-center gap-2 px-4 py-2 rounded-full transition-all hover:opacity-90" style={{ background: '#111827', minHeight: 'unset' }}>
+                  <User className="w-4 h-4 text-white" />
+                  <span className="text-[11px] font-bold tracking-widest uppercase text-white" style={{ letterSpacing: '0.08em' }}>
+                    {user.fullname?.firstname || 'Account'}
+                  </span>
+                </button>
+                {/* Logout icon */}
+                <button onClick={handleLogout} className="flex items-center justify-center rounded-full bg-gray-100 hover:bg-red-50 transition-all group" style={{ width: 36, height: 36, minHeight: 'unset' }} title="Logout">
+                  <LogOut className="w-4 h-4 text-gray-500 group-hover:text-red-500 transition-colors" />
+                </button>
+              </>
+            ) : (
+              <button onClick={handleAccountClick} className="px-5 py-2 text-[11px] font-bold tracking-widest uppercase text-white rounded-full transition-all hover:opacity-90" style={{ background: '#111827', minHeight: 'unset', letterSpacing: '0.08em' }}>
+                Join Us
+              </button>
+            )}
           </div>
 
           {/* Mobile */}
