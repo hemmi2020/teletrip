@@ -42,7 +42,7 @@ const Slider = () => {
   }, [active, images.length]);
 
   return (
-    <section className="sticky top-0 w-full bg-gray-900 z-0 overflow-hidden" style={{ height: '100svh', minHeight: 550, margin: 0, padding: 0 }}>
+    <section className="sticky top-0 w-full bg-gray-900 z-0 overflow-hidden" style={{ height: '100svh', minHeight: 480, margin: 0, padding: 0 }}>
       <style>{heroAnimationStyles}</style>
       {/* Photo slideshow */}
       <div className="absolute inset-0">
@@ -55,13 +55,13 @@ const Slider = () => {
       </div>
 
       {/* Content — responsive vertical layout */}
-      <div className="relative z-10 h-full flex flex-col items-center justify-center px-4 pt-20 pb-16 sm:pt-0 sm:pb-0 text-center">
-        <div className="max-w-7xl w-full mx-auto mb-6 sm:mb-8">
-          <h1 data-testid="hero-headline" className="hero-animate-headline text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-3 sm:mb-5" style={{ letterSpacing: '-0.04em', lineHeight: 1.05 }}>
+      <div className="relative z-10 h-full flex flex-col items-center justify-center px-3 sm:px-4 pt-16 pb-12 sm:pt-0 sm:pb-0 text-center">
+        <div className="max-w-7xl w-full mx-auto mb-4 sm:mb-8">
+          <h1 data-testid="hero-headline" className="hero-animate-headline text-[22px] leading-[1.15] sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-2 sm:mb-5" style={{ letterSpacing: '-0.04em', lineHeight: 1.05 }}>
             Find your perfect{' '}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">stay anywhere</span>
           </h1>
-          <p data-testid="hero-subtitle" className="hero-animate-subtitle text-sm sm:text-lg text-white/60 max-w-xl mx-auto mb-0">
+          <p data-testid="hero-subtitle" className="hero-animate-subtitle text-xs sm:text-lg text-white/60 max-w-xl mx-auto mb-0">
             Compare prices across 250,000+ hotels. Best rates guaranteed.
           </p>
         </div>
@@ -71,7 +71,7 @@ const Slider = () => {
       </div>
 
       {/* Dots — above bottom nav on mobile */}
-      <div className="absolute bottom-16 sm:bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-20">
+      <div className="absolute bottom-14 sm:bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-20">
         {images.map((_, i) => (
           <span key={i} onClick={() => setActive(i)} className={`block rounded-full transition-all duration-500 cursor-pointer ${i === active ? 'w-6 h-1.5 bg-white' : 'w-1.5 h-1.5 bg-white/40 hover:bg-white/60'}`} />
         ))}

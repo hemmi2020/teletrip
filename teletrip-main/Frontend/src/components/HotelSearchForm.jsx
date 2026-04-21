@@ -1002,26 +1002,26 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
 
   return (
     <div className="w-full">
-      <div className="bg-white/30 backdrop-blur-2xl rounded-2xl border border-white/30 shadow-2xl p-4 sm:p-5 md:p-6 text-left" style={{ WebkitBackdropFilter: 'blur(40px)', backdropFilter: 'blur(40px)' }}>
+      <div className="bg-white/30 backdrop-blur-2xl rounded-2xl border border-white/30 shadow-2xl p-3 sm:p-5 md:p-6 text-left" style={{ WebkitBackdropFilter: 'blur(40px)', backdropFilter: 'blur(40px)' }}>
         {/* ── Search Tabs ── */}
-        <div className="flex items-center bg-white rounded-full p-1 mb-5 sm:mb-6" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
+        <div className="flex items-center bg-white rounded-full p-1 mb-3 sm:mb-6" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className="flex-1 flex items-center justify-center gap-1.5 sm:gap-2 py-2.5 rounded-full transition-all duration-300 relative"
+                className="flex-1 flex items-center justify-center gap-1 sm:gap-2 py-2 sm:py-2.5 rounded-full transition-all duration-300 relative"
                 style={{
                   minHeight: 'unset',
                   background: isActive ? '#2563eb' : 'transparent',
                   color: isActive ? '#fff' : '#6b7280',
                   fontWeight: isActive ? 600 : 500,
-                  fontSize: 13,
+                  fontSize: window.innerWidth < 380 ? 11 : 13,
                   boxShadow: isActive ? '0 4px 16px rgba(37,99,235,0.3)' : 'none',
                 }}
               >
-                <tab.Icon style={{ width: 16, height: 16, strokeWidth: isActive ? 2 : 1.5 }} />
+                <tab.Icon style={{ width: 14, height: 14, strokeWidth: isActive ? 2 : 1.5 }} />
                 <span>{tab.label}</span>
               </button>
             );

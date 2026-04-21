@@ -1044,11 +1044,12 @@ if (children > 0 && childAges.length > 0) {
 
         {/* Sidebar Filters — desktop only */}
         <div className={`
-          hidden lg:block flex-shrink-0
-          lg:sticky lg:top-20 lg:max-h-[calc(100vh-5rem)] lg:z-40
-          ${sidebarCollapsed ? 'lg:w-0 lg:overflow-hidden lg:border-0' : 'lg:w-[300px]'}
+          hidden lg:block
+          fixed top-20 left-0 bottom-0 z-40 bg-white border-r border-gray-100
+          ${sidebarCollapsed ? 'w-0 overflow-hidden border-0' : 'w-[300px]'}
+          transition-all duration-200
         `}>
-          <div className="h-full max-h-[calc(100vh-5rem)] overflow-y-auto px-4 py-4 text-left" style={{scrollbarWidth:'thin',scrollbarColor:'#e5e7eb transparent', width: '100%', boxSizing: 'border-box'}}>
+          <div className="h-full overflow-y-auto px-4 py-4 text-left" style={{scrollbarWidth:'thin',scrollbarColor:'#e5e7eb transparent', width: '100%', boxSizing: 'border-box'}}>
             <div className="flex justify-between items-center pb-3 mb-1 border-b border-gray-100">
               <span className="text-xs font-semibold text-gray-900 tracking-wider uppercase">Filters</span>
               <div className="flex items-center gap-2">
@@ -1614,7 +1615,7 @@ if (children > 0 && childAges.length > 0) {
           ]}
         />
 
-        <div className="flex-1 min-w-0 flex flex-col">
+        <div className={`flex-1 min-w-0 flex flex-col ${sidebarCollapsed ? '' : 'lg:ml-[300px]'} transition-all duration-200`}>
           {/* Sort bar — fixed, always below header with gap */}
           <div className="fixed top-16 sm:top-20 left-0 right-0 z-[99] flex justify-center px-3 sm:px-6 pt-1.5 sm:pt-2 pointer-events-none">
             <div className="pointer-events-auto w-full max-w-4xl border-b-0" style={{ background: 'rgba(255,255,255,0.78)', backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)', borderRadius: 40, border: '1px solid rgba(255,255,255,0.5)', boxShadow: '0 2px 16px rgba(0,0,0,0.07)' }}>
