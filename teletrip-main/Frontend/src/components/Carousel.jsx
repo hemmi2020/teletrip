@@ -44,6 +44,9 @@ const Carousel = ({
   const intervalRef = useRef(null);
   const touchTimeoutRef = useRef(null);
   const containerRef = useRef(null);
+  const touchStartX = useRef(0);
+  const touchEndX = useRef(0);
+  const isSwiping = useRef(false);
 
   const totalItems = items.length;
   const totalPages = Math.ceil(totalItems / currentItemsPerView);
@@ -117,17 +120,15 @@ const Carousel = ({
     }
   }, [playState]);
 
-  const handleTouchStart = useCallback(() => {
+  const handleTouchStart = useCallback((e) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchEndX.current = e.touches[0].clientX;
+    isSwiping.current = true;
+
     if (playState === PLAYING || playState === PAUSED_HOVER) {
       setPlayState(PAUSED_TOUCH);
-
-      if (touchTimeoutRef.current) {
-        clearTimeout(touchTimeoutRef.current);
-      }
-
-      touchTimeoutRef.current = setTimeout(() => {
-        setPlayState(PLAYING);
-      }, touchPauseDuration);
+      if (touchTimeoutRef.current) clearTimeout(touchTimeoutRef.current);
+      touchTimeoutRef.current = setTimeout(() => setPlayState(PLAYING), touchPauseDuration);
     }
   }, [playState, touchPauseDuration]);
 
@@ -156,6 +157,24 @@ const Carousel = ({
       setPlayState(PLAYING);
     }, touchPauseDuration);
   }, [totalPages, touchPauseDuration]);
+
+  const handleTouchMove = useCallback((e) => {
+    if (isSwiping.current) {
+      touchEndX.current = e.touches[0].clientX;
+    }
+  }, []);
+
+  const handleTouchEnd = useCallback(() => {
+    if (!isSwiping.current) return;
+    isSwiping.current = false;
+    const diff = touchStartX.current - touchEndX.current;
+    const threshold = 50;
+    if (diff > threshold) {
+      goToNext();
+    } else if (diff < -threshold) {
+      goToPrev();
+    }
+  }, [goToNext, goToPrev]);
 
   const goToPage = useCallback(
     (pageIndex) => {
@@ -194,6 +213,9 @@ const Carousel = ({
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      style={{ touchAction: 'pan-y' }}
       data-testid="carousel-container"
       data-play-state={playState}
     >

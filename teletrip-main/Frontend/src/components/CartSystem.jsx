@@ -639,6 +639,7 @@ export const SlideOutCart = ({ isOpen, onClose, onProceedToCheckout }) => {
   const { user } = useContext(UserDataContext);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [pkrRate, setPkrRate] = useState(null);
+  const [pendingRemove, setPendingRemove] = useState(null);
 
   useEffect(() => {
     const fetchRate = async () => {
@@ -699,11 +700,7 @@ export const SlideOutCart = ({ isOpen, onClose, onProceedToCheckout }) => {
   };
 
   const handleRemoveItem = (item) => {
-    const itemName = item.hotelName || item.name || item.vehicle || 'this item';
-    if (window.confirm(`Remove "${itemName}" from your cart?`)) {
-      console.log('🗑️ Removing item from cart:', item);
-      removeFromCart(item);
-    }
+    setPendingRemove(item);
   };
 
   const handleCloseCart = () => {
@@ -746,7 +743,7 @@ export const SlideOutCart = ({ isOpen, onClose, onProceedToCheckout }) => {
       )}
 
       <div className={`fixed right-0 top-0 h-full w-full sm:w-[440px] bg-white shadow-2xl z-[121] transform transition-transform duration-300 ease-in-out ${isOpen ? "translate-x-0" : "translate-x-full"}`} onClick={(e) => e.stopPropagation()}>
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full relative">
           {/* Header */}
           <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
             <div>
@@ -834,6 +831,18 @@ export const SlideOutCart = ({ isOpen, onClose, onProceedToCheckout }) => {
                 Checkout
               </button>
               {!user?.email && <p className="text-[11px] text-center text-gray-400">Sign in required to proceed</p>}
+            </div>
+          )}
+          {pendingRemove && (
+            <div className="absolute inset-0 bg-black/40 z-10 flex items-end justify-center p-4">
+              <div className="bg-white rounded-2xl p-5 w-full max-w-sm shadow-2xl">
+                <p className="text-sm font-semibold text-gray-900 mb-1">Remove from cart?</p>
+                <p className="text-xs text-gray-500 mb-4 truncate">{pendingRemove.hotelName || pendingRemove.name || pendingRemove.vehicle}</p>
+                <div className="flex gap-3">
+                  <button onClick={() => setPendingRemove(null)} className="flex-1 py-2.5 rounded-xl text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors">Cancel</button>
+                  <button onClick={() => { removeFromCart(pendingRemove); setPendingRemove(null); }} className="flex-1 py-2.5 rounded-xl text-sm font-medium text-white bg-red-500 hover:bg-red-600 transition-colors">Remove</button>
+                </div>
+              </div>
             </div>
           )}
         </div>

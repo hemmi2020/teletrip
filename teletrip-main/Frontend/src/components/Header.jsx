@@ -196,16 +196,24 @@ const Header = () => {
         </div>
         <nav className="flex-1 overflow-y-auto px-6 pt-6 pb-4 space-y-1">
           <NavLink to="/contact" onClick={() => setIsMobileMenuOpen(false)}
-            className={({ isActive }) => `flex items-center px-5 py-4 rounded-2xl text-[15px] font-semibold tracking-wide uppercase transition-all ${isActive ? 'bg-white/15 text-white' : 'text-white/70 hover:text-white hover:bg-white/10'}`}
+            className={({ isActive }) => `flex items-center gap-3 px-5 py-4 rounded-2xl text-[15px] font-semibold tracking-wide uppercase transition-all ${isActive ? 'bg-white/15 text-white' : 'text-white/70 hover:text-white hover:bg-white/10'}`}
             style={{ letterSpacing: '0.06em' }}
-          >Contact</NavLink>
+          >
+            <Phone className="w-4 h-4" />
+            Contact
+          </NavLink>
         </nav>
         <div className="flex-shrink-0 px-6 pb-24 pt-4 space-y-3">
           {user?.email ? (
             <>
-              <p className="text-white/40 text-[12px] text-center mb-2">{user.fullname?.firstname || user.email}</p>
-              <button onClick={() => { handleAccountClick(); setIsMobileMenuOpen(false); }} className="w-full py-3.5 rounded-2xl text-[13px] font-bold tracking-widest uppercase text-white bg-white/15 hover:bg-white/25 transition-all" style={{ minHeight: 'unset', letterSpacing: '0.08em' }}>My Account</button>
-              <button onClick={() => { handleLogout(); setIsMobileMenuOpen(false); }} className="w-full py-3.5 rounded-2xl text-[13px] font-semibold text-white/60 hover:text-red-400 transition-all" style={{ minHeight: 'unset' }}>Logout</button>
+              <button onClick={() => { handleAccountClick(); setIsMobileMenuOpen(false); }} className="w-full py-3.5 rounded-2xl text-[13px] font-bold tracking-widest uppercase text-white bg-white/15 hover:bg-white/25 transition-all flex items-center justify-center gap-2" style={{ minHeight: 'unset', letterSpacing: '0.08em' }}>
+                <User className="w-4 h-4" />
+                {user.fullname?.firstname || 'Account'}
+              </button>
+              <button onClick={() => { handleLogout(); setIsMobileMenuOpen(false); }} className="w-full py-3.5 rounded-2xl text-[13px] font-semibold text-white/60 hover:text-red-400 transition-all flex items-center justify-center gap-2" style={{ minHeight: 'unset' }}>
+                <LogOut className="w-4 h-4" />
+                Logout
+              </button>
             </>
           ) : (
             <button onClick={() => { handleAccountClick(); setIsMobileMenuOpen(false); }} className="w-full py-3.5 rounded-2xl text-[13px] font-bold tracking-widest uppercase text-white transition-all" style={{ background: 'rgba(37,99,235,0.8)', minHeight: 'unset', letterSpacing: '0.08em' }}>Join Us</button>

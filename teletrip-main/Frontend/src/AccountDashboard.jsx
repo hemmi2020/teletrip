@@ -1197,8 +1197,8 @@ const AccountDashboard = () => {
           {/* Header */}
           <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 mb-6 sm:mb-8">
             <div className="flex items-center gap-3 sm:gap-4">
-              <div className="relative">
-                <div className="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center overflow-hidden">
+              <div className="relative flex-shrink-0">
+                <div className="w-14 h-14 sm:w-16 sm:h-16 bg-blue-600 rounded-full flex items-center justify-center overflow-hidden">
                   {profile?.profilePicture ? (
                     <img 
                       src={profile.profilePicture} 
@@ -1206,11 +1206,11 @@ const AccountDashboard = () => {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <User className="w-10 h-10 text-white" />
+                    <User className="w-7 h-7 sm:w-8 sm:h-8 text-white" />
                   )}
                 </div>
-                <label className="absolute -bottom-1 -right-1 bg-blue-600 rounded-full p-2 cursor-pointer hover:bg-blue-700 transition-colors">
-                  <Camera className="w-4 h-4 text-white" />
+                <label className="absolute -bottom-0.5 -right-0.5 bg-blue-600 rounded-full p-1.5 cursor-pointer hover:bg-blue-700 transition-colors">
+                  <Camera className="w-3 h-3 text-white" />
                   <input 
                     type="file" 
                     className="hidden" 
@@ -1219,16 +1219,11 @@ const AccountDashboard = () => {
                   />
                 </label>
               </div>
-              <div>
-                <h1 className="text-xl sm:text-3xl font-bold text-gray-900">
-                  Welcome back, {profile?.fullname?.firstname || profile?.firstName || user?.fullname?.firstname || user?.email || 'User'}!
+              <div className="min-w-0">
+                <h1 className="text-lg sm:text-2xl font-bold text-gray-900 truncate">
+                  {profile?.fullname?.firstname || profile?.firstName || user?.fullname?.firstname || user?.email || 'User'}
                 </h1>
-                <p className="text-gray-600 mt-1">Manage your account and view your bookings</p>
-                {profile?.createdAt && (
-                  <p className="text-sm text-gray-500 mt-1">
-                    Member since {formatDate(profile.createdAt)}
-                  </p>
-                )}
+                <p className="text-sm text-gray-500 truncate">{user?.email}</p>
               </div>
             </div>
           </div>
