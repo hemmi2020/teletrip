@@ -758,10 +758,28 @@ const ActivitySearchResults = () => {
         <div className="fixed inset-0 z-[150] flex items-end sm:items-center justify-center" onClick={() => setSelectedActivity(null)}>
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
           <div className="relative bg-white w-full sm:max-w-3xl rounded-t-2xl sm:rounded-2xl max-h-[92vh] overflow-hidden flex flex-col shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            {/* Sticky title bar — just name + close button */}
-            <div className="flex items-center gap-3 px-5 py-3 border-b border-gray-100 flex-shrink-0">
-              <h2 className="text-[15px] font-bold text-gray-900 leading-tight line-clamp-2 flex-1 min-w-0">{selectedActivity.name}</h2>
-              <button onClick={() => setSelectedActivity(null)} className="flex-shrink-0 w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors"><X className="w-4 h-4 text-gray-600" /></button>
+            {/* ── Sticky Header (matches hotel modal) ── */}
+            <div className="flex-shrink-0 bg-white border-b border-gray-100 px-4 py-3">
+              <div className="flex items-start gap-3">
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-[15px] font-bold text-gray-900 leading-tight line-clamp-2 pr-2">{selectedActivity.name}</h2>
+                  <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                    {selectedActivity.activityFactsheetType && <span className="text-[10px] px-2 py-0.5 bg-blue-50 text-blue-600 rounded-full font-medium">{selectedActivity.activityFactsheetType}</span>}
+                    {selectedActivity.destination && <><span className="text-[11px] text-gray-400">·</span><span className="text-[11px] text-gray-500 flex items-center gap-0.5 truncate"><MapPin className="w-3 h-3 flex-shrink-0" />{selectedActivity.destination}</span></>}
+                    {selectedActivity.scheduling?.duration?.value && <><span className="text-[11px] text-gray-400">·</span><span className="text-[11px] text-gray-500 flex items-center gap-0.5"><Clock className="w-3 h-3" />{selectedActivity.scheduling.duration.value}h</span></>}
+                  </div>
+                </div>
+                <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                  <button onClick={() => setSelectedActivity(null)} className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors" aria-label="Close"><X className="w-4 h-4 text-gray-600" /></button>
+                  {selectedActivity.pricing?.amount && (
+                    <div className="text-right">
+                      <div className="text-[10px] text-gray-400">from</div>
+                      <div className="text-base font-bold text-blue-600 leading-tight">{formatPKR(selectedActivity.pricing.amount) || `${selectedActivity.pricing.currency} ${parseFloat(selectedActivity.pricing.amount).toFixed(0)}`}</div>
+                      <div className="text-[10px] text-gray-400">per person</div>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
             {/* Scrollable body — gallery + info + details */}
             <div className="overflow-y-auto flex-1" style={{scrollbarWidth:'thin'}}>
@@ -805,12 +823,10 @@ const ActivitySearchResults = () => {
                 <div className="absolute bottom-3 left-3 bg-blue-600/90 text-white px-2.5 py-1 rounded-lg text-[12px] font-medium">{selectedActivity.activityFactsheetType}</div>
               )}
             </div>
-            {/* Info header */}
-            <div className="px-5 py-4 border-b border-gray-100">
-              <h2 className="text-lg font-semibold text-gray-900 mb-1.5">{selectedActivity.name}</h2>
+            {/* Info section — tags and context (title/price already in sticky header) */}
+            <div className="px-5 py-3 border-b border-gray-100">
               <div className="flex items-center gap-2 text-[12px] text-gray-500 mb-2 flex-wrap">
-                {selectedActivity.destination && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{selectedActivity.destination}{selectedActivity.country ? `, ${selectedActivity.country}` : ''}</span>}
-                <span>·</span><span>{from} → {to}</span><span>·</span><span>{adults} adults</span>
+                <span>{from} → {to}</span><span>·</span><span>{adults} adults</span>
               </div>
               {/* Tags */}
               {(() => {
@@ -818,7 +834,6 @@ const ActivitySearchResults = () => {
                 if (selectedActivity.supplier) tags.push({ label: selectedActivity.supplier, color: 'bg-gray-100 text-gray-600' });
                 if (selectedActivity.scheduling?.duration?.value) tags.push({ label: `${selectedActivity.scheduling.duration.value}h duration`, color: 'bg-gray-100 text-gray-600' });
                 if (selectedActivity.voucherType) tags.push({ label: `Voucher: ${selectedActivity.voucherType}`, color: 'bg-amber-50 text-amber-600' });
-                if (selectedActivity.activityFactsheetType) tags.push({ label: selectedActivity.activityFactsheetType, color: 'bg-blue-50 text-blue-600' });
                 if (selectedActivity.segmentationGroups) {
                   selectedActivity.segmentationGroups.forEach(g => {
                     if (g.segments) g.segments.forEach(s => { if (s.name) tags.push({ label: s.name, color: 'bg-purple-50 text-purple-600' }); });
@@ -829,19 +844,11 @@ const ActivitySearchResults = () => {
                   selectedActivity.services.forEach(s => { if (s) tags.push({ label: s, color: 'bg-green-50 text-green-600' }); });
                 }
                 return tags.length > 0 ? (
-                  <div className="flex gap-1.5 flex-wrap mb-3">
+                  <div className="flex gap-1.5 flex-wrap">
                     {tags.map((t, i) => <span key={i} className={`text-[10px] px-2 py-0.5 rounded-full ${t.color}`}>{t.label}</span>)}
                   </div>
                 ) : null;
               })()}
-              {/* Price display */}
-              <div className="flex items-center gap-3 flex-wrap">
-                <div className="flex-1 min-w-0">
-                  {selectedActivity.pricing?.amount ? (
-                    <><span className="text-xl font-bold text-blue-600">{formatPKR(selectedActivity.pricing.amount) || `${selectedActivity.pricing.currency} ${parseFloat(selectedActivity.pricing.amount).toFixed(2)}`}</span><span className="text-[12px] text-gray-400 ml-1">from / person</span></>
-                  ) : <span className="text-gray-400">Price on request</span>}
-                </div>
-              </div>
             </div>
             {/* Scrollable details */}
             <div className="px-5 py-4 space-y-4">

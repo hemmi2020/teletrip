@@ -42,10 +42,10 @@ const Slider = () => {
   }, [active, images.length]);
 
   return (
-    <section className="sticky top-0 w-full bg-gray-900 z-0 overflow-hidden" style={{ minHeight: '100svh', margin: 0, padding: 0 }}>
+    <section className="sticky top-0 w-full bg-gray-900 z-0" style={{ margin: 0, padding: 0 }}>
       <style>{heroAnimationStyles}</style>
-      {/* Photo slideshow */}
-      <div className="absolute inset-0">
+      {/* Photo slideshow — fixed to viewport so it covers even when section grows */}
+      <div className="fixed inset-0 z-0">
         {images.map((img, i) => (
           <div key={i} className={`absolute inset-0 transition-all duration-[1500ms] ease-in-out ${i === active ? 'opacity-100 scale-100' : 'opacity-0 scale-105'}`}>
             <img src={img} alt="" className="w-full h-full object-cover" />
@@ -54,16 +54,23 @@ const Slider = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-black/70" />
       </div>
 
-      {/* Content — responsive vertical layout */}
-      <div className="relative z-10 flex flex-col items-center justify-center px-3 sm:px-4 pt-20 pb-20 sm:pt-28 sm:pb-16 text-center" style={{ minHeight: '100svh' }}>
-        <div className="max-w-7xl w-full mx-auto mb-4 sm:mb-8">
-          <h1 data-testid="hero-headline" className="hero-animate-headline text-[22px] leading-[1.15] sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-2 sm:mb-5" style={{ letterSpacing: '-0.04em', lineHeight: 1.05 }}>
+      {/* Content — top-down on mobile, centered on desktop */}
+      <div className="relative z-10 flex flex-col items-center sm:justify-center px-3 sm:px-4 pt-24 pb-20 sm:pt-28 sm:pb-16 text-center" style={{ minHeight: '100svh' }}>
+        {/* Headline — hidden on mobile when space is tight, always visible on desktop */}
+        <div className="max-w-7xl w-full mx-auto mb-3 sm:mb-8 hidden sm:block">
+          <h1 data-testid="hero-headline" className="hero-animate-headline sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-5" style={{ letterSpacing: '-0.04em', lineHeight: 1.05 }}>
             Find your perfect{' '}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">stay anywhere</span>
           </h1>
-          <p data-testid="hero-subtitle" className="hero-animate-subtitle text-xs sm:text-lg text-white/60 max-w-xl mx-auto mb-0">
+          <p data-testid="hero-subtitle" className="hero-animate-subtitle text-lg text-white/60 max-w-xl mx-auto mb-0">
             Compare prices across 250,000+ hotels. Best rates guaranteed.
           </p>
+        </div>
+        {/* Mobile headline — compact */}
+        <div className="sm:hidden w-full mb-3">
+          <h1 className="hero-animate-headline text-[20px] font-bold text-white leading-tight" style={{ letterSpacing: '-0.03em' }}>
+            Find your perfect <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-300">stay</span>
+          </h1>
         </div>
         <div data-testid="hero-search-form" className="hero-animate-search max-w-5xl w-full mx-auto search-form-section">
           <HotelSearchForm />
@@ -71,7 +78,7 @@ const Slider = () => {
       </div>
 
       {/* Dots — above bottom nav on mobile */}
-      <div className="absolute bottom-14 sm:bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-20">
+      <div className="absolute bottom-14 sm:bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-20 hidden sm:flex">
         {images.map((_, i) => (
           <span key={i} onClick={() => setActive(i)} className={`block rounded-full transition-all duration-500 cursor-pointer ${i === active ? 'w-6 h-1.5 bg-white' : 'w-1.5 h-1.5 bg-white/40 hover:bg-white/60'}`} />
         ))}
