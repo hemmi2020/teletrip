@@ -1048,10 +1048,10 @@ if (children > 0 && childAges.length > 0) {
         {/* Sidebar Filters — desktop only */}
         <div className={`
           hidden lg:block flex-shrink-0
-          lg:sticky lg:top-20 lg:max-h-[calc(100vh-5rem)] lg:overflow-y-auto lg:z-40
+          lg:sticky lg:top-20 lg:max-h-[calc(100vh-5rem)] lg:z-40
           ${sidebarCollapsed ? 'lg:w-0 lg:overflow-hidden lg:border-0' : 'lg:w-[300px]'}
         `}>
-          <div className="px-4 py-4 text-left" style={{scrollbarWidth:'thin',scrollbarColor:'#e5e7eb transparent', width: '100%', boxSizing: 'border-box'}}>
+          <div className="h-full max-h-[calc(100vh-5rem)] overflow-y-auto px-4 py-4 text-left" style={{scrollbarWidth:'thin',scrollbarColor:'#e5e7eb transparent', width: '100%', boxSizing: 'border-box'}}>
             <div className="flex justify-between items-center pb-3 mb-1 border-b border-gray-100">
               <span className="text-xs font-semibold text-gray-900 tracking-wider uppercase">Filters</span>
               <div className="flex items-center gap-2">

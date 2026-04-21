@@ -175,10 +175,10 @@ const TransferSearch = () => {
         {/* Sidebar — desktop only */}
         <div className={`
           hidden lg:block flex-shrink-0
-          lg:sticky lg:top-20 lg:max-h-[calc(100vh-5rem)] lg:overflow-y-auto lg:z-40
+          lg:sticky lg:top-20 lg:max-h-[calc(100vh-5rem)] lg:z-40
           ${(sidebarCollapsed || transfers.length === 0) ? 'lg:hidden' : 'lg:w-[300px]'}
         `}>
-          <div className="px-4 py-4" style={{scrollbarWidth:'thin'}}>
+          <div className="h-full max-h-[calc(100vh-5rem)] overflow-y-auto px-4 py-4" style={{scrollbarWidth:'thin'}}>
             <div className="flex items-center justify-between pb-3 mb-1 border-b border-gray-100">
               <span className="text-xs font-semibold text-gray-900 tracking-wider uppercase">Filters</span>
               <div className="flex items-center gap-2">

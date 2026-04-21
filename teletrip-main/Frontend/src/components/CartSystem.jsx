@@ -834,7 +834,7 @@ export const SlideOutCart = ({ isOpen, onClose, onProceedToCheckout }) => {
             </div>
           )}
           {pendingRemove && (
-            <div className="absolute inset-0 bg-black/40 z-10 flex items-end justify-center p-4">
+            <div className="absolute inset-0 bg-black/40 z-10 flex items-center justify-center p-4">
               <div className="bg-white rounded-2xl p-5 w-full max-w-sm shadow-2xl">
                 <p className="text-sm font-semibold text-gray-900 mb-1">Remove from cart?</p>
                 <p className="text-xs text-gray-500 mb-4 truncate">{pendingRemove.hotelName || pendingRemove.name || pendingRemove.vehicle}</p>
