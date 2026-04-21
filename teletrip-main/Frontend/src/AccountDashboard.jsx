@@ -42,6 +42,7 @@ import {
 import { UserDataContext, AuthModal } from './components/CartSystem';
 import Header from './components/Header';
 import Footer from './components/Footer';
+import logo from './images/Telitrip-Logo.png';
 import { DashboardAPIService, handleApiError, validateForm, formatCurrency, formatDate } from './services/dashboardApi';
 
 // Custom Hook for Dashboard Data
@@ -716,7 +717,8 @@ const _InlineAuthForm = () => {
   const [tab, setTab] = useState('login');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [form, setForm] = useState({ email: '', password: '', name: '' });
+  const [showPassword, setShowPassword] = useState(false);
+  const [form, setForm] = useState({ email: '', password: '', firstName: '', lastName: '' });
   const API = (import.meta.env.VITE_BASE_URL || 'http://localhost:3000') + '/api';
 
   const handleSubmit = async (e) => {
@@ -727,14 +729,17 @@ const _InlineAuthForm = () => {
       const endpoint = tab === 'login' ? `${API}/users/login` : `${API}/users/register`;
       const body = tab === 'login'
         ? { email: form.email, password: form.password }
-        : { fullname: { firstname: form.name.split(' ')[0], lastname: form.name.split(' ').slice(1).join(' ') || '' }, email: form.email, password: form.password };
+        : { fullname: { firstname: form.firstName, lastname: form.lastName }, email: form.email, password: form.password };
       const res = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || data.error || 'Authentication failed');
-      if (data.token) {
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('userData', JSON.stringify(data.user || data));
-        setUser(data.user || data);
+      const responseData = data.data || data;
+      const token = responseData.token || data.token;
+      const userData = responseData.user || data.user || responseData;
+      if (token) {
+        localStorage.setItem('token', token);
+        localStorage.setItem('userData', JSON.stringify(userData));
+        setUser(userData);
       }
     } catch (err) {
       setError(err.message);
@@ -749,12 +754,13 @@ const _InlineAuthForm = () => {
 
   return (
     <div>
-      {/* Tab switcher */}
-      <div className="flex bg-gray-100 rounded-xl p-1 mb-5">
+      {/* Tab switcher — pill style */}
+      <div className="flex bg-gray-100 rounded-full p-1 mb-5">
         {['login', 'signup'].map(t => (
           <button key={t} onClick={() => { setTab(t); setError(''); }}
-            className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-all ${tab === t ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500'}`}>
-            {t === 'login' ? 'Sign In' : 'Create Account'}
+            className={`flex-1 py-2 rounded-full text-sm font-semibold transition-all duration-300 ${tab === t ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+            style={{ minHeight: 'unset' }}>
+            {t === 'login' ? 'Sign In' : 'Sign Up'}
           </button>
         ))}
       </div>
@@ -766,31 +772,73 @@ const _InlineAuthForm = () => {
         Continue with Google
       </button>
 
-      <div className="flex items-center gap-3 mb-4">
-        <div className="flex-1 h-px bg-gray-200" />
-        <span className="text-xs text-gray-400">or</span>
-        <div className="flex-1 h-px bg-gray-200" />
+      {/* Divider */}
+      <div className="relative my-5">
+        <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-200" /></div>
+        <div className="relative flex justify-center text-xs"><span className="px-3 bg-white text-gray-400 uppercase tracking-wider font-medium">or</span></div>
       </div>
 
-      {error && <p className="text-red-600 text-sm mb-3 bg-red-50 px-3 py-2 rounded-lg">{error}</p>}
+      {error && (
+        <div className="mb-4 p-3 bg-red-50 border border-red-100 text-red-600 rounded-xl text-sm flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 flex-shrink-0" />
+          {error}
+        </div>
+      )}
 
-      <form onSubmit={handleSubmit} className="space-y-3">
+      <form onSubmit={handleSubmit} className="space-y-4">
         {tab === 'signup' && (
-          <input type="text" placeholder="Full name" required value={form.name}
-            onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-            className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" />
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">First Name</label>
+              <div className="flex items-center border border-gray-200 rounded-xl px-3 py-2.5 gap-2 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent transition-all">
+                <User className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                <input type="text" required value={form.firstName} onChange={e => setForm(f => ({ ...f, firstName: e.target.value }))}
+                  className="flex-1 min-w-0 outline-none bg-transparent text-sm text-gray-900 placeholder-gray-400" placeholder="First" disabled={loading} />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">Last Name</label>
+              <div className="flex items-center border border-gray-200 rounded-xl px-3 py-2.5 gap-2 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent transition-all">
+                <User className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                <input type="text" required value={form.lastName} onChange={e => setForm(f => ({ ...f, lastName: e.target.value }))}
+                  className="flex-1 min-w-0 outline-none bg-transparent text-sm text-gray-900 placeholder-gray-400" placeholder="Last" disabled={loading} />
+              </div>
+            </div>
+          </div>
         )}
-        <input type="email" placeholder="Email address" required value={form.email}
-          onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-          className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" />
-        <input type="password" placeholder="Password" required value={form.password}
-          onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
-          className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" />
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
+          <div className="flex items-center border border-gray-200 rounded-xl px-3 py-2.5 gap-2 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent transition-all">
+            <Mail className="w-4 h-4 text-gray-400 flex-shrink-0" />
+            <input type="email" required value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+              className="flex-1 min-w-0 outline-none bg-transparent text-sm text-gray-900 placeholder-gray-400" placeholder="you@example.com" disabled={loading} />
+          </div>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">Password</label>
+          <div className="flex items-center border border-gray-200 rounded-xl px-3 py-2.5 gap-2 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent transition-all">
+            <Shield className="w-4 h-4 text-gray-400 flex-shrink-0" />
+            <input type={showPassword ? 'text' : 'password'} required value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
+              className="flex-1 min-w-0 outline-none bg-transparent text-sm text-gray-900 placeholder-gray-400" placeholder={tab === 'login' ? 'Enter password' : 'Create password'} disabled={loading} />
+            <button type="button" onClick={() => setShowPassword(!showPassword)} className="text-gray-400 hover:text-gray-600 flex-shrink-0" style={{ minHeight: 'unset' }}>
+              {showPassword ? <Eye className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
+          </div>
+        </div>
         <button type="submit" disabled={loading}
-          className="w-full py-2.5 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 transition-colors disabled:opacity-60">
+          className="w-full py-3 rounded-xl text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 transition-colors disabled:opacity-50" style={{ minHeight: 'unset' }}>
           {loading ? 'Please wait...' : tab === 'login' ? 'Sign In' : 'Create Account'}
         </button>
       </form>
+
+      {/* Footer toggle */}
+      <div className="mt-5 text-center text-sm text-gray-500">
+        {tab === 'login' ? (
+          <p>Don't have an account? <button onClick={() => { setTab('signup'); setError(''); }} className="text-blue-600 hover:text-blue-700 font-semibold" style={{ minHeight: 'unset' }}>Sign up</button></p>
+        ) : (
+          <p>Already have an account? <button onClick={() => { setTab('login'); setError(''); }} className="text-blue-600 hover:text-blue-700 font-semibold" style={{ minHeight: 'unset' }}>Sign in</button></p>
+        )}
+      </div>
     </div>
   );
 };
@@ -1169,19 +1217,17 @@ const AccountDashboard = () => {
         <Header />
         <div className="pt-16 flex items-center justify-center min-h-screen px-4">
           <div className="w-full max-w-md">
-            {/* Card */}
             <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-              {/* Top banner */}
-              <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-8 text-center">
-                <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <User className="w-8 h-8 text-white" />
+              {/* Header with gradient */}
+              <div className="relative overflow-hidden">
+                <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full opacity-20" style={{ background: 'radial-gradient(circle, #3b82f6, #8b5cf6)', filter: 'blur(40px)' }} />
+                <div className="relative px-6 pt-8 pb-5 text-center">
+                  <img src={logo} alt="Telitrip" className="h-10 mx-auto mb-4 opacity-90" />
+                  <h1 className="text-xl font-bold text-gray-900" style={{ letterSpacing: '-0.03em' }}>Welcome to Telitrip</h1>
+                  <p className="text-gray-500 text-sm mt-1">Sign in to manage your bookings and account</p>
                 </div>
-                <h1 className="text-xl font-bold text-white">Welcome to Telitrip</h1>
-                <p className="text-blue-100 text-sm mt-1">Sign in to manage your bookings & account</p>
               </div>
-
-              {/* Inline auth form */}
-              <div className="p-6">
+              <div className="px-6 pb-6">
                 <_InlineAuthForm />
               </div>
             </div>
