@@ -132,8 +132,10 @@ const SuccessMessage = ({ message, onClose }) => (
 );
 
 // Dashboard Stats Component
-const DashboardStats = ({ stats, loading }) => {
+const DashboardStats = ({ stats, loading, toPKR }) => {
   if (loading) return <LoadingSpinner text="Loading statistics..." />;
+
+  const convertPKR = toPKR || ((v) => formatCurrency(v));
 
   const statItems = [
     {
@@ -151,14 +153,14 @@ const DashboardStats = ({ stats, loading }) => {
     },
     {
       title: "Total Spent",
-      value: toPKR(stats?.financial?.totalSpent || 0),
+      value: convertPKR(stats?.financial?.totalSpent || 0),
       icon: DollarSign,
       color: "purple",
       trend: stats?.financial?.growth || 0
     },
     {
       title: "Avg. Booking Value",
-      value: toPKR(stats?.financial?.averageBookingValue || 0),
+      value: convertPKR(stats?.financial?.averageBookingValue || 0),
       icon: TrendingUp,
       color: "orange"
     }
@@ -462,7 +464,8 @@ const ProfileForm = ({ profile, onSave, onCancel, loading }) => {
 };
 
 // Booking Card Component
-const BookingCard = ({ booking, onCancel, onViewDetails, onPayNow }) => {
+const BookingCard = ({ booking, onCancel, onViewDetails, onPayNow, toPKR }) => {
+  const convertPKR = toPKR || ((v) => formatCurrency(v));
   const [activityName, setActivityName] = React.useState(null);
   const [showDetails, setShowDetails] = React.useState(false);
   
@@ -554,7 +557,7 @@ const BookingCard = ({ booking, onCancel, onViewDetails, onPayNow }) => {
           <div className="text-right">
             {getStatusBadge(booking.status)}
             <p className="text-lg font-bold text-gray-900 mt-2">
-              {toPKR(booking.totalAmount || booking.pricing?.totalAmount)}
+              {convertPKR(booking.totalAmount || booking.pricing?.totalAmount)}
             </p>
           </div>
         </div>
@@ -626,11 +629,11 @@ const BookingCard = ({ booking, onCancel, onViewDetails, onPayNow }) => {
               {freeCancellation ? (
                 <span>
                   ✓ Free cancellation until {formatDate(freeCancellation.from)}
-                  {refundAmount > 0 && ` • Full refund: ${toPKR(refundAmount)}`}
+                  {refundAmount > 0 && ` • Full refund: ${convertPKR(refundAmount)}`}
                 </span>
               ) : cancellationPolicies[0] ? (
                 <span>
-                  Cancellation fee: {toPKR(cancellationPolicies[0].amount)} • Refund: {toPKR(refundAmount)}
+                  Cancellation fee: {convertPKR(cancellationPolicies[0].amount)} • Refund: {convertPKR(refundAmount)}
                 </span>
               ) : (
                 <span>Cancellation policy applies</span>
@@ -667,7 +670,7 @@ const BookingCard = ({ booking, onCancel, onViewDetails, onPayNow }) => {
             >
               <XCircle className="w-4 h-4" />
               <span>
-                {freeCancellation ? 'Cancel & Get Full Refund' : `Cancel (Refund: ${toPKR(refundAmount)})`}
+                {freeCancellation ? 'Cancel & Get Full Refund' : `Cancel (Refund: ${convertPKR(refundAmount)})`}
               </span>
             </button>
           )}
@@ -1352,7 +1355,7 @@ const AccountDashboard = () => {
                     </div>
                   )}
                   
-                  <DashboardStats stats={dashboardStats} loading={loading} />
+                  <DashboardStats stats={dashboardStats} loading={loading} toPKR={toPKR} />
 
                   {/* Recent Activity Grid */}
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -1658,6 +1661,7 @@ const AccountDashboard = () => {
                           onCancel={handleCancelBooking}
                           onViewDetails={handleViewBookingDetails}
                           onPayNow={handlePayNow}
+                          toPKR={toPKR}
                         />
                       ))}
                       
