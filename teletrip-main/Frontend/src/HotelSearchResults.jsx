@@ -36,6 +36,8 @@ import HotelSearchForm from "./components/HotelSearchForm";
 import { useCart } from "./components/CartSystem";
 import { useCurrency } from "./context/CurrencyContext";
 import MobileFilters from "./components/MobileFilters";
+import { AlertCircle } from "lucide-react";
+import logo from './images/Telitrip-Logo.png';
 
 
 const RatingCircles = ({ rating, size = 'w-5 h-5' }) => {
@@ -1000,30 +1002,35 @@ if (children > 0 && childAges.length > 0) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-        <span className="ml-2 text-lg">Finding the best hotels for you...</span>
-      </div>
+      <>
+        <Header />
+        <div className="flex flex-col items-center justify-center min-h-screen px-6 text-center">
+          <img src={logo} alt="Telitrip" className="h-12 mb-8 opacity-80" />
+          <Loader2 className="w-8 h-8 animate-spin text-blue-600 mb-3" />
+          <p className="text-sm text-gray-500">Finding the best hotels for you...</p>
+        </div>
+      </>
     );
   }
 
   if (error) {
     return (
-      <div className="text-center py-12">
-        <p className="text-red-600 text-lg mb-4">{error}</p>
-        <button
-          onClick={() => window.location.reload()}
-          className="mr-4 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
-        >
-          Retry
-        </button>
-        <button
-          onClick={() => (window.location.href = "/home")}
-          className="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700"
-        >
-          Back to Search
-        </button>
-      </div>
+      <>
+        <Header />
+        <div className="flex flex-col items-center justify-center min-h-screen px-6 text-center bg-gray-50">
+          <img src={logo} alt="Telitrip" className="h-12 mb-8 opacity-80" />
+          <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mb-4">
+            <AlertCircle className="w-8 h-8 text-red-400" />
+          </div>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Something went wrong</h2>
+          <p className="text-sm text-gray-500 max-w-md mb-2">{error}</p>
+          <p className="text-xs text-gray-400 max-w-sm mb-6">This could be due to a network issue or the hotels being temporarily unavailable. Please try again.</p>
+          <div className="flex gap-3">
+            <button onClick={() => window.location.reload()} className="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium transition-colors">Try Again</button>
+            <button onClick={() => window.location.href = '/home'} className="px-5 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm font-medium transition-colors">Back to Search</button>
+          </div>
+        </div>
+      </>
     );
   }
 

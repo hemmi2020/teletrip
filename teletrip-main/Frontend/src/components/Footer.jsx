@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Mail, Phone, MapPin } from 'lucide-react';
-import logo from '../images/Telitrip-Logo-1.png';
+import logo from '../images/Telitrip-Logo.png';
 
 const Footer = () => {
   const quickLinks = [

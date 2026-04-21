@@ -1,6 +1,6 @@
 import React, { useState, useContext, useEffect, useRef } from "react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
-import logo from "../images/Telitrip-Logo-1.png";
+import logo from "../images/Telitrip-Logo.png";
 import { SlideOutCart, AuthModal, useCart } from './CartSystem';
 import { UserDataContext } from './CartSystem';
 import BottomNavBar from './BottomNavBar';

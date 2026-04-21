@@ -7,6 +7,7 @@ import { useCart } from './components/CartSystem';
 import { useCurrency } from './context/CurrencyContext';
 import HotelSearchForm from './components/HotelSearchForm';
 import MobileFilters from './components/MobileFilters';
+import logo from './images/Telitrip-Logo.png';
 const ActivitySearchResults = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -305,9 +306,10 @@ const ActivitySearchResults = () => {
     return (
       <>
         <Header />
-        <div className="flex items-center justify-center min-h-screen">
-          <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-          <span className="ml-2">Searching activities...</span>
+        <div className="flex flex-col items-center justify-center min-h-screen px-6 text-center">
+          <img src={logo} alt="Telitrip" className="h-12 mb-8 opacity-80" />
+          <Loader2 className="w-8 h-8 animate-spin text-blue-600 mb-3" />
+          <p className="text-sm text-gray-500">Searching activities...</p>
         </div>
       </>
     );
@@ -682,7 +684,7 @@ const ActivitySearchResults = () => {
           </div>
 
           <div className="max-w-[980px] mx-auto px-3 sm:px-6 w-full pt-16 sm:pt-12">
-            {error && (<div className="bg-red-50 border border-red-200 rounded-lg p-4 mt-4 mb-2"><p className="text-red-800">{error}</p></div>)}
+            {error && (<div className="flex flex-col items-center bg-red-50 border border-red-200 rounded-lg p-6 mt-4 mb-2 text-center"><img src={logo} alt="Telitrip" className="h-10 mb-4 opacity-80" /><p className="text-red-800 font-medium mb-1">Something went wrong</p><p className="text-red-600 text-sm">{error}</p></div>)}
             <div className="flex items-center gap-2 text-[12px] text-gray-500 py-2.5 flex-wrap border-b border-gray-50 mb-1">
               <MapPin className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" />
               <span className="font-medium text-gray-700">{destination}{country ? `, ${country}` : ''}</span>

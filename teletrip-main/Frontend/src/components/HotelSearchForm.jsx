@@ -667,7 +667,14 @@ const ExperiencesTab = ({ variant = 'dark' }) => {
                 <Suspense fallback={<div className="p-8 text-center text-gray-400">Loading calendar...</div>}>
                   <LazyDateRange
                     ranges={dateRange}
-                    onChange={(item) => setDateRange([item.selection])}
+                    onChange={(item) => {
+                      const sel = item.selection;
+                      if (sel.startDate.getTime() === sel.endDate.getTime()) {
+                        setDateRange([{ ...sel, endDate: addDays(sel.startDate, 1) }]);
+                      } else {
+                        setDateRange([sel]);
+                      }
+                    }}
                     minDate={new Date()}
                     moveRangeOnFirstSelection={false}
                     preventSnapRefocus={true}
@@ -995,7 +1002,7 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
 
   return (
     <div className="w-full">
-      <div className="bg-white/15 backdrop-blur-xl rounded-2xl border border-white/20 shadow-2xl p-4 sm:p-5 md:p-6 text-left">
+      <div className="bg-white/30 backdrop-blur-2xl rounded-2xl border border-white/30 shadow-2xl p-4 sm:p-5 md:p-6 text-left" style={{ WebkitBackdropFilter: 'blur(40px)', backdropFilter: 'blur(40px)' }}>
         {/* ── Search Tabs ── */}
         <div className="flex items-center bg-white rounded-full p-1 mb-5 sm:mb-6" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
           {tabs.map((tab) => {
@@ -1117,7 +1124,14 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
                         <Suspense fallback={<div className="p-8 text-center text-gray-400">Loading calendar...</div>}>
                           <LazyDateRange
                             ranges={dateRange}
-                            onChange={(item) => setDateRange([item.selection])}
+                            onChange={(item) => {
+                              const sel = item.selection;
+                              if (sel.startDate.getTime() === sel.endDate.getTime()) {
+                                setDateRange([{ ...sel, endDate: addDays(sel.startDate, 1) }]);
+                              } else {
+                                setDateRange([sel]);
+                              }
+                            }}
                             minDate={new Date()}
                             moveRangeOnFirstSelection={false}
                             preventSnapRefocus={true}

@@ -11,6 +11,7 @@ import {
   Briefcase, Shield, Info, ChevronLeft, Eye, Luggage
 } from 'lucide-react';
 import MobileFilters from './components/MobileFilters';
+import logo from './images/Telitrip-Logo.png';
 
 const TransferSearch = () => {
   const navigate = useNavigate();
@@ -295,6 +296,7 @@ const TransferSearch = () => {
           {/* Error / Empty / No search states */}
           {hasSearched && !error && transfers.length === 0 && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-10 text-center">
+              <img src={logo} alt="Telitrip" className="h-10 mb-6 mx-auto opacity-80" />
               <SearchX className="w-10 h-10 text-gray-300 mx-auto mb-3" />
               <h3 className="text-lg font-semibold text-gray-900 mb-2">No Transfers Available</h3>
               <p className="text-gray-500 text-sm mb-1">No transfer services found for this route.</p>
@@ -308,6 +310,7 @@ const TransferSearch = () => {
           )}
           {!hasSearched && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-10 text-center">
+              <img src={logo} alt="Telitrip" className="h-10 mb-6 mx-auto opacity-80" />
               <Car className="w-10 h-10 text-blue-300 mx-auto mb-3" />
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Search for Transfers</h3>
               <p className="text-gray-500 text-sm mb-5">Use the search form on the home page to find available transfers.</p>

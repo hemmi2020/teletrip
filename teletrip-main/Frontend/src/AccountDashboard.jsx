@@ -151,14 +151,14 @@ const DashboardStats = ({ stats, loading }) => {
     },
     {
       title: "Total Spent",
-      value: formatCurrency(stats?.financial?.totalSpent || 0),
+      value: toPKR(stats?.financial?.totalSpent || 0),
       icon: DollarSign,
       color: "purple",
       trend: stats?.financial?.growth || 0
     },
     {
       title: "Avg. Booking Value",
-      value: formatCurrency(stats?.financial?.averageBookingValue || 0),
+      value: toPKR(stats?.financial?.averageBookingValue || 0),
       icon: TrendingUp,
       color: "orange"
     }
@@ -554,7 +554,7 @@ const BookingCard = ({ booking, onCancel, onViewDetails, onPayNow }) => {
           <div className="text-right">
             {getStatusBadge(booking.status)}
             <p className="text-lg font-bold text-gray-900 mt-2">
-              {formatCurrency(booking.totalAmount || booking.pricing?.totalAmount)}
+              {toPKR(booking.totalAmount || booking.pricing?.totalAmount)}
             </p>
           </div>
         </div>
@@ -626,11 +626,11 @@ const BookingCard = ({ booking, onCancel, onViewDetails, onPayNow }) => {
               {freeCancellation ? (
                 <span>
                   ✓ Free cancellation until {formatDate(freeCancellation.from)}
-                  {refundAmount > 0 && ` • Full refund: ${formatCurrency(refundAmount)}`}
+                  {refundAmount > 0 && ` • Full refund: ${toPKR(refundAmount)}`}
                 </span>
               ) : cancellationPolicies[0] ? (
                 <span>
-                  Cancellation fee: {formatCurrency(cancellationPolicies[0].amount)} • Refund: {formatCurrency(refundAmount)}
+                  Cancellation fee: {toPKR(cancellationPolicies[0].amount)} • Refund: {toPKR(refundAmount)}
                 </span>
               ) : (
                 <span>Cancellation policy applies</span>
@@ -667,7 +667,7 @@ const BookingCard = ({ booking, onCancel, onViewDetails, onPayNow }) => {
             >
               <XCircle className="w-4 h-4" />
               <span>
-                {freeCancellation ? 'Cancel & Get Full Refund' : `Cancel (Refund: ${formatCurrency(refundAmount)})`}
+                {freeCancellation ? 'Cancel & Get Full Refund' : `Cancel (Refund: ${toPKR(refundAmount)})`}
               </span>
             </button>
           )}
@@ -809,6 +809,35 @@ const AccountDashboard = () => {
   const [notifications, setNotifications] = useState([]);
   const [favorites, setFavorites] = useState({ docs: [] });
   const [reviews, setReviews] = useState({ docs: [] });
+
+  // PKR conversion rate
+  const [pkrRate, setPkrRate] = useState(null);
+
+  useEffect(() => {
+    const fetchRate = async () => {
+      try {
+        const API = (import.meta.env.VITE_BASE_URL || 'http://localhost:3000') + '/api';
+        const res = await fetch(`${API}/currency/rate`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success) {
+            const r = data.data;
+            setPkrRate({ rate: r.exchangeRate, markup: r.markupPerEuro || 0, txFee: r.transactionFeePercentage || 0 });
+          }
+        }
+      } catch (e) { /* silent */ }
+    };
+    if (user?.email) fetchRate();
+  }, [user]);
+
+  const toPKR = (amountEUR) => {
+    if (!pkrRate || !amountEUR) return formatCurrency(0);
+    const base = amountEUR * pkrRate.rate;
+    const markup = amountEUR * pkrRate.markup;
+    const subtotal = base + markup;
+    const fee = (subtotal * pkrRate.txFee) / 100;
+    return formatCurrency(Math.round(subtotal + fee));
+  };
 
   // Edit states
   const [isEditingProfile, setIsEditingProfile] = useState(false);
@@ -1345,7 +1374,7 @@ const AccountDashboard = () => {
                               </div>
                               <div className="text-right">
                                 <p className="text-sm font-medium text-gray-900">
-                                  {formatCurrency(booking.totalAmount)}
+                                  {toPKR(booking.totalAmount)}
                                 </p>
                                 <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                                   {booking.status}
@@ -1373,7 +1402,7 @@ const AccountDashboard = () => {
                           {dashboardStats.payments.slice(0, 3).map((payment, index) => (
                             <div key={payment._id || index} className="flex items-center justify-between">
                               <div>
-                                <p className="font-medium text-gray-900">{formatCurrency(payment.amount)}</p>
+                                <p className="font-medium text-gray-900">{toPKR(payment.amount)}</p>
                                 <p className="text-sm text-gray-500">{formatDate(payment.createdAt)}</p>
                               </div>
                               <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
@@ -1741,7 +1770,7 @@ const AccountDashboard = () => {
                                   <div>
                                     <span className="text-gray-500">Amount:</span>
                                     <span className="ml-2 font-semibold text-yellow-700">
-                                      {formatCurrency(payment.amount)}
+                                      {toPKR(payment.amount)}
                                     </span>
                                   </div>
                                 </div>
@@ -1817,7 +1846,7 @@ const AccountDashboard = () => {
                             </div>
                             <div className="flex items-center justify-between text-sm">
                               <span className="text-gray-500">Booking: {payment.bookingId?.bookingReference || 'N/A'}</span>
-                              <span className="font-semibold text-gray-900">{formatCurrency(payment.amount)}</span>
+                              <span className="font-semibold text-gray-900">{toPKR(payment.amount)}</span>
                             </div>
                             <div className="flex items-center justify-between text-[12px] text-gray-400">
                               <span>{formatDate(payment.createdAt)}</span>
@@ -1869,7 +1898,7 @@ const AccountDashboard = () => {
                                   {formatDate(payment.createdAt)}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                  {formatCurrency(payment.amount)}
+                                  {toPKR(payment.amount)}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                   <div className="flex items-center">
