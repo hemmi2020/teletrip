@@ -66,7 +66,7 @@ const Footer = () => {
           {/* Copyright — subtle */}
           <div className="pt-5 border-t border-white/[0.06]">
             <p className="text-white/20 text-[10px]">
-              &copy; {new Date().getFullYear()} TELITRIP · <a href="https://www.tmrhino.com" target="_blank" rel="noopener noreferrer" className="text-blue-400/50 hover:text-blue-400/80">Team Rhino</a>
+              &copy; {new Date().getFullYear()} TELITRIP
             </p>
           </div>
         </div>
@@ -152,7 +152,7 @@ const Footer = () => {
         {/* Copyright — pill style */}
         <div className="flex justify-center">
           <p className="inline-block px-6 py-2.5 text-[12px] text-gray-500 text-center sm:whitespace-nowrap" style={{ background: '#ffffff', borderRadius: 50, border: '1px solid rgba(0,0,0,0.06)', boxShadow: '0 1px 8px rgba(0,0,0,0.04)' }}>
-            &copy; {new Date().getFullYear()} <span className="text-gray-900 font-semibold">TELITRIP</span> <span className="text-gray-300 mx-1">|</span> All rights reserved <span className="text-gray-300 mx-1">|</span> Developed by <a href="https://www.tmrhino.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-700 font-medium">Team Rhino</a>
+            &copy; {new Date().getFullYear()} <span className="text-gray-900 font-semibold">TELITRIP</span> <span className="text-gray-300 mx-1">|</span> All rights reserved
           </p>
         </div>
       </div>

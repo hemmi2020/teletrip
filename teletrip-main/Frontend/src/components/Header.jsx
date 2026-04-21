@@ -67,13 +67,6 @@ const Header = () => {
     navigate('/checkout', { state: { cartItems, totalAmount: getTotalPrice(), fromCart: true } });
   };
 
-  const navLinks = [
-    { label: 'Home', to: '/home' },
-    { label: 'About', to: '/about' },
-    { label: 'Contact', to: '/contact' },
-    { label: 'FAQs', to: '/faqs' },
-  ];
-
   // Pill style: solid white at top, frosted glass when scrolled
   const pillStyle = scrolled ? {
     background: 'rgba(255,255,255,0.72)',
@@ -128,26 +121,19 @@ const Header = () => {
             <img src={logo} alt="Telitrip" className="h-10 sm:h-12 w-auto object-contain" />
           </NavLink>
 
-          {/* Desktop Nav */}
-          <nav className="hidden md:flex items-center gap-0.5 flex-1 justify-center">
-            {navLinks.map(({ label, to }) => (
-              <NavLink
-                key={to}
-                to={to}
-                className={({ isActive }) =>
-                  `px-4 py-1.5 rounded-full text-[11px] font-semibold tracking-widest uppercase transition-all duration-200 ${
-                    isActive ? 'bg-gray-900 text-white' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                  }`
-                }
-                style={{ minHeight: 'unset', letterSpacing: '0.08em' }}
-              >
-                {label}
-              </NavLink>
-            ))}
-          </nav>
-
-          {/* Desktop Right */}
+          {/* Desktop Right — Contact, Account/Logout, Cart, Join Us */}
           <div className="hidden md:flex items-center gap-2 flex-shrink-0">
+            <NavLink
+              to="/contact"
+              className={({ isActive }) =>
+                `px-4 py-1.5 rounded-full text-[11px] font-semibold tracking-widest uppercase transition-all duration-200 ${
+                  isActive ? 'bg-gray-900 text-white' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                }`
+              }
+              style={{ minHeight: 'unset', letterSpacing: '0.08em' }}
+            >
+              Contact
+            </NavLink>
             {user?.email && (
               <>
                 <button onClick={handleAccountClick} className="px-4 py-1.5 text-[11px] font-semibold tracking-widest uppercase text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-all" style={{ minHeight: 'unset', letterSpacing: '0.08em' }}>Account</button>
@@ -195,12 +181,10 @@ const Header = () => {
           </button>
         </div>
         <nav className="flex-1 overflow-y-auto px-6 pt-6 pb-4 space-y-1">
-          {navLinks.map(({ label, to }) => (
-            <NavLink key={to} to={to} onClick={() => setIsMobileMenuOpen(false)}
-              className={({ isActive }) => `flex items-center px-5 py-4 rounded-2xl text-[15px] font-semibold tracking-wide uppercase transition-all ${isActive ? 'bg-white/15 text-white' : 'text-white/70 hover:text-white hover:bg-white/10'}`}
-              style={{ letterSpacing: '0.06em' }}
-            >{label}</NavLink>
-          ))}
+          <NavLink to="/contact" onClick={() => setIsMobileMenuOpen(false)}
+            className={({ isActive }) => `flex items-center px-5 py-4 rounded-2xl text-[15px] font-semibold tracking-wide uppercase transition-all ${isActive ? 'bg-white/15 text-white' : 'text-white/70 hover:text-white hover:bg-white/10'}`}
+            style={{ letterSpacing: '0.06em' }}
+          >Contact</NavLink>
         </nav>
         <div className="flex-shrink-0 px-6 pb-24 pt-4 space-y-3">
           {user?.email ? (

@@ -1040,8 +1040,8 @@ if (children > 0 && childAges.length > 0) {
 
         {/* Sidebar Filters — desktop only */}
         <div className={`
-          hidden lg:block
-          lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)] lg:z-40
+          hidden lg:block flex-shrink-0
+          lg:sticky lg:top-20 lg:self-start lg:max-h-[calc(100vh-5rem)] lg:z-40
           ${sidebarCollapsed ? 'lg:w-0 lg:overflow-hidden lg:border-0' : 'lg:w-[300px]'}
         `}>
           <div className="filter-sidebar-inner h-full overflow-y-auto overscroll-contain px-4 py-4 text-left" style={{scrollbarWidth:'thin',scrollbarColor:'#e5e7eb transparent', width: '100%', boxSizing: 'border-box'}}>

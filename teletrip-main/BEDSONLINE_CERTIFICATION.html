@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Telitrip — HBX Group API Certification</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --navy: #0f1b2d;
+    --navy-light: #1a2d47;
+    --blue: #2563eb;
+    --gold: #d4a853;
+    --white: #ffffff;
+    --off-white: #f4f1ec;
+    --gray-50: #fafaf8;
+    --gray-100: #f0ede8;
+    --gray-200: #ddd8d0;
+    --gray-400: #9a9590;
+    --gray-600: #5c5650;
+    --gray-800: #2e2a26;
+    --green: #16a34a;
+    --inset: inset 0 2px 6px rgba(0,0,0,0.07), inset 0 0 0 1px rgba(0,0,0,0.04);
+  }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--gray-100);
+    color: var(--gray-800);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── A4 LANDSCAPE SLIDE ── */
+  @page { size: 297mm 210mm; margin: 0; }
+  .slide {
+    width: 297mm; height: 210mm;
+    padding: 0;
+    margin: 0 auto 2px;
+    background: var(--white);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    page-break-after: always;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+  }
+  .slide:last-child { page-break-after: auto; }
+
+  /* ── HEADER BAR ── */
+  .slide-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 40px;
+    border-bottom: 1px solid var(--gray-200);
+    background: var(--gray-50);
+    flex-shrink: 0;
+  }
+  .slide-header .sh-left {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--navy);
+    letter-spacing: -0.3px;
+  }
+  .slide-header .sh-right {
+    font-size: 11px;
+    color: var(--gray-400);
+  }
+
+  /* ── FOOTER BAR ── */
+  .slide-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 40px;
+    border-top: 1px solid var(--gray-200);
+    background: var(--gray-50);
+    flex-shrink: 0;
+    margin-top: auto;
+  }
+  .slide-footer .sf-left {
+    font-size: 10px;
+    color: var(--gray-400);
+  }
+  .slide-footer .sf-center {
+    font-size: 10px;
+    color: var(--gray-400);
+  }
+  .slide-footer .sf-right {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--gray-600);
+  }
+
+  /* ── BODY ── */
+  .slide-body {
+    flex: 1;
+    padding: 28px 40px 20px;
+    overflow: hidden;
+  }
+
+  /* ── COVER (no header/footer) ── */
+  .slide-cover { background: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%); justify-content: center; align-items: center; text-align: center; }
+  .slide-cover .slide-header, .slide-cover .slide-footer { display: none; }
+  .slide-cover .slide-body { display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 40px 60px; }
+  .cover-label { font-size: 11px; font-weight: 600; letter-spacing: 2.5px; text-transform: uppercase; color: var(--gold); margin-bottom: 28px; }
+  .cover-title { font-size: 46px; font-weight: 800; color: var(--white); letter-spacing: -1.5px; line-height: 1.1; margin-bottom: 10px; }
+  .cover-title span { color: var(--gold); }
+  .cover-sub { font-size: 17px; color: rgba(255,255,255,0.5); margin-bottom: 48px; }
+  .cover-grid { display: flex; gap: 48px; flex-wrap: wrap; justify-content: center; }
+  .cover-item { text-align: center; }
+  .cover-item .ci-label { font-size: 9px; text-transform: uppercase; letter-spacing: 1.5px; color: rgba(255,255,255,0.3); margin-bottom: 4px; }
+  .cover-item .ci-value { font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.85); }
+
+  /* ── HEADINGS ── */
+  .sn { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background: var(--blue); color: var(--white); font-size: 13px; font-weight: 700; border-radius: 7px; margin-right: 12px; box-shadow: 0 2px 5px rgba(37,99,235,0.25); vertical-align: middle; }
+  h2 { font-size: 22px; font-weight: 800; letter-spacing: -0.4px; color: var(--gray-800); margin-bottom: 6px; display: inline; vertical-align: middle; }
+  .slide-desc { font-size: 12px; color: var(--gray-400); margin: 6px 0 18px; max-width: 600px; }
+  h3 { font-size: 13px; font-weight: 700; color: var(--gray-800); margin: 16px 0 8px; }
+
+  /* ── TABLE ── */
+  .dt { width: 100%; border-collapse: separate; border-spacing: 0; border-radius: 8px; overflow: hidden; box-shadow: var(--inset); margin: 8px 0 14px; }
+  .dt thead th { background: var(--gray-100); padding: 7px 14px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--gray-600); text-align: left; border-bottom: 1px solid var(--gray-200); }
+  .dt tbody td { padding: 6px 14px; font-size: 11px; border-bottom: 1px solid rgba(0,0,0,0.03); vertical-align: top; }
+  .dt tbody tr:last-child td { border-bottom: none; }
+  .dt tbody tr:nth-child(even) { background: rgba(0,0,0,0.012); }
+
+  /* ── BADGES ── */
+  .bp { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 5px; font-size: 10px; font-weight: 600; background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+  .bi { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 5px; font-size: 10px; font-weight: 600; background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; }
+  .bw { display: inline-flex; padding: 2px 8px; border-radius: 5px; font-size: 10px; font-weight: 600; background: #fef9c3; color: #854d0e; border: 1px solid #fef08a; }
+  .bn { display: inline-flex; padding: 2px 8px; border-radius: 5px; font-size: 10px; font-weight: 600; background: var(--gray-100); color: var(--gray-600); border: 1px solid var(--gray-200); }
+  .ck { width: 10px; height: 10px; }
+
+  /* ── FLOW ── */
+  .flow { display: flex; align-items: center; justify-content: center; gap: 0; margin: 14px 0 8px; }
+  .fs { background: var(--white); border: 1px solid var(--gray-200); border-radius: 8px; padding: 12px 20px; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.04); min-width: 140px; }
+  .fs .fs-n { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: var(--blue); margin-bottom: 2px; }
+  .fs .fs-l { font-size: 13px; font-weight: 700; color: var(--gray-800); }
+  .fs .fs-e { font-size: 9px; color: var(--gray-400); font-family: monospace; margin-top: 2px; }
+  .fa { font-size: 18px; color: var(--gray-200); padding: 0 6px; }
+  .fc { font-size: 9px; color: var(--gray-400); text-align: center; font-style: italic; margin-top: 2px; }
+
+  /* ── CODE ── */
+  .cb { background: var(--navy); color: #e2e8f0; border-radius: 8px; padding: 14px 18px; font-family: 'Consolas', monospace; font-size: 10px; line-height: 1.6; margin: 8px 0 14px; box-shadow: inset 0 2px 6px rgba(0,0,0,0.25); }
+  .cb .k { color: #93c5fd; } .cb .s { color: #86efac; } .cb .n { color: #fbbf24; } .cb .c { color: #64748b; font-style: italic; }
+
+  /* ── MINI CARDS ── */
+  .cg { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; margin: 8px 0 14px; }
+  .mc { background: var(--white); border: 1px solid var(--gray-200); border-radius: 8px; padding: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); }
+  .mc .mt { font-size: 11px; font-weight: 700; color: var(--gray-800); margin-bottom: 3px; }
+  .mc .md { font-size: 10px; color: var(--gray-400); line-height: 1.4; }
+
+  /* ── CHECKLIST ── */
+  .cl { list-style: none; margin: 6px 0 14px; }
+  .cl li { display: flex; align-items: flex-start; gap: 8px; padding: 5px 0; font-size: 11px; border-bottom: 1px solid rgba(0,0,0,0.03); }
+  .cl li:last-child { border-bottom: none; }
+  .ci { width: 16px; height: 16px; background: #dcfce7; border: 1px solid #bbf7d0; border-radius: 4px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+  .ci svg { width: 9px; height: 9px; color: #166534; }
+
+  /* ── DIVIDER ── */
+  .dv { height: 1px; background: var(--gray-200); margin: 16px 0; }
+
+  /* ── INSET BOX ── */
+  .ib { background: var(--gray-100); border-radius: 8px; padding: 14px 18px; box-shadow: var(--inset); margin: 8px 0 14px; font-size: 11px; color: var(--gray-600); line-height: 1.6; }
+
+  /* ── TWO COLUMNS ── */
+  .cols { display: flex; gap: 28px; }
+  .cols > div { flex: 1; min-width: 0; }
+
+  /* ── PRINT ── */
+  @media print {
+    body { background: white; }
+    .slide { box-shadow: none; margin: 0; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════ SLIDE 0: COVER ══════════ -->
+<div class="slide slide-cover">
+  <div class="slide-body">
+    <div class="cover-label">API Integration Certification</div>
+    <div class="cover-title">Telitrip <span>&times;</span> HBX Group</div>
+    <div class="cover-sub">Bedsonline Certification Submission &mdash; April 2026</div>
+    <div class="cover-grid">
+      <div class="cover-item"><div class="ci-label">Certification URL</div><div class="ci-value">www.telitrip.com</div></div>
+      <div class="cover-item"><div class="ci-label">Managing Director</div><div class="ci-value">Rahil Teli</div></div>
+      <div class="cover-item"><div class="ci-label">Email</div><div class="ci-value">teligroupllc@gmail.com</div></div>
+      <div class="cover-item"><div class="ci-label">APIs Integrated</div><div class="ci-value">Hotels &middot; Transfers &middot; Activities</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ SLIDE 1: COMPANY OVERVIEW ══════════ -->
+<div class="slide">
+  <div class="slide-header"><div class="sh-left">Telitrip &mdash; HBX Group Certification</div><div class="sh-right">Slide 1 of 12</div></div>
+  <div class="slide-body">
+    <span class="sn">1</span><h2>Company Overview</h2>
+    <p class="slide-desc">Telitrip is a B2C online travel agency enabling customers to search, compare, and book hotels, transfers, and activities worldwide through the HBX Group API Suite.</p>
+    <div class="cols">
+      <div>
+        <div class="cg" style="grid-template-columns:1fr 1fr;">
+          <div class="mc"><div class="mt">Distribution</div><div class="md">Single responsive web app for desktop and mobile. Identical API workflow across all viewports.</div></div>
+          <div class="mc"><div class="mt">Hotels</div><div class="md">250,000+ properties via Hotel API Suite. Full availability, checkrate, and booking flow.</div></div>
+          <div class="mc"><div class="mt">Transfers</div><div class="md">Airport-to-hotel and city transfers via Transfers API. Private and shared options.</div></div>
+          <div class="mc"><div class="mt">Activities</div><div class="md">Tours, excursions, and local experiences via Activities API. Full search-to-booking.</div></div>
+        </div>
+      </div>
+      <div>
+        <h3>Commercial Decisions</h3>
+        <table class="dt">
+          <thead><tr><th>Decision</th><th>Approach</th></tr></thead>
+          <tbody>
+            <tr><td>Opaque Rates</td><td><span class="bn">Not Used</span></td></tr>
+            <tr><td>Source Market</td><td><span class="bp"><svg class="ck" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l4 4 6-6"/></svg> Active</span> &mdash; market-specific pricing</td></tr>
+            <tr><td>Rate Types</td><td>All displayed (BOOKABLE + RECHECK)</td></tr>
+            <tr><td>Room / Board</td><td>All types, no exclusions</td></tr>
+            <tr><td>Hotels</td><td>Full portfolio, no exclusions</td></tr>
+            <tr><td>Cancellation</td><td>HBX policies shown as-is</td></tr>
+            <tr><td>Selling Rates</td><td>hotelMandatory respected</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer"><div class="sf-left">Confidential</div><div class="sf-center">www.telitrip.com</div><div class="sf-right">Page 1</div></div>
+</div>
+
+<!-- ══════════ SLIDE 2: TECHNICAL ══════════ -->
+<div class="slide">
+  <div class="slide-header"><div class="sh-left">Telitrip &mdash; HBX Group Certification</div><div class="sh-right">Slide 2 of 12</div></div>
+  <div class="slide-body">
+    <span class="sn">2</span><h2>Technical Implementation</h2>
+    <p class="slide-desc">API integration follows all HBX Group technical requirements for authentication, compression, and resilience.</p>
+    <div class="cols">
+      <div>
+        <table class="dt">
+          <thead><tr><th>Parameter</th><th>Configuration</th></tr></thead>
+          <tbody>
+            <tr><td>Test Base URL</td><td><code>https://api.test.hotelbeds.com</code></td></tr>
+            <tr><td>Live Base URL</td><td><code>https://api.hotelbeds.com</code></td></tr>
+            <tr><td>Authentication</td><td>API Key + SHA-256 Signature</td></tr>
+            <tr><td>Compression</td><td><span class="bp"><svg class="ck" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l4 4 6-6"/></svg> GZIP</span></td></tr>
+            <tr><td>Content Type</td><td><code>application/json</code></td></tr>
+            <tr><td>Booking Timeout</td><td>60 seconds minimum</td></tr>
+          </tbody>
+        </table>
+        <h3>Signature Generation</h3>
+        <div class="cb"><span class="c">// Headers on every request</span>
+<span class="k">"Api-key"</span>:        <span class="s">"[API_KEY]"</span>
+<span class="k">"X-Signature"</span>:    SHA256(apiKey + secret + timestamp)
+<span class="k">"Accept"</span>:          <span class="s">"application/json"</span>
+<span class="k">"Accept-Encoding"</span>: <span class="s">"gzip"</span></div>
+      </div>
+      <div>
+        <h3>Non-Breaking Changes Support</h3>
+        <ul class="cl">
+          <li><div class="ci"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6l3 3 5-5"/></svg></div>New response fields silently ignored</li>
+          <li><div class="ci"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6l3 3 5-5"/></svg></div>New optional request parameters tolerated</li>
+          <li><div class="ci"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6l3 3 5-5"/></svg></div>Property order changes handled</li>
+          <li><div class="ci"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6l3 3 5-5"/></svg></div>String length/format changes tolerated</li>
+          <li><div class="ci"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6l3 3 5-5"/></svg></div>No XSD validation used</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer"><div class="sf-left">Confidential</div><div class="sf-center">www.telitrip.com</div><div class="sf-right">Page 2</div></div>
+</div>
+
+<!-- ══════════ SLIDE 3: WORKFLOW ══════════ -->
+<div class="slide">
+  <div class="slide-header"><div class="sh-left">Telitrip &mdash; HBX Group Certification</div><div class="sh-right">Slide 3 of 12</div></div>
+  <div class="slide-body">
+    <span class="sn">3</span><h2>Booking Workflow</h2>
+    <p class="slide-desc">Standard HBX Group workflow. Availability called once, CheckRate only for RECHECK, rateKey passed unmodified.</p>
+    <div class="flow">
+      <div class="fs"><div class="fs-n">Step 1</div><div class="fs-l">Availability</div><div class="fs-e">/hotel-api/1.0/hotels</div></div>
+      <div class="fa">&rarr;</div>
+      <div class="fs"><div class="fs-n">Step 2 (conditional)</div><div class="fs-l">CheckRate</div><div class="fs-e">/hotel-api/1.0/checkrates</div></div>
+      <div class="fa">&rarr;</div>
+      <div class="fs"><div class="fs-n">Step 3</div><div class="fs-l">Booking</div><div class="fs-e">/hotel-api/1.0/bookings</div></div>
+    </div>
+    <p class="fc">CheckRate called only when rateType = "RECHECK". Skipped entirely for "BOOKABLE" rates.</p>
+    <div class="dv"></div>
+    <table class="dt">
+      <thead><tr><th>Requirement</th><th>Status</th><th>Details</th></tr></thead>
+      <tbody>
+        <tr><td>2.1 Correct workflow order</td><td><span class="bp"><svg class="ck" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l4 4 6-6"/></svg> Pass</span></td><td>Avail &rarr; CheckRate (if RECHECK) &rarr; Booking. No repeated calls.</td></tr>
+        <tr><td>2.2 No repeated Availability</td><td><span class="bp"><svg class="ck" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l4 4 6-6"/></svg> Pass</span></td><td>Never re-called before CheckRate or Booking.</td></tr>
+        <tr><td>2.3 Max hotels per call</td><td><span class="bp"><svg class="ck" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l4 4 6-6"/></svg> Pass</span></td><td>Up to 2,000 hotels per Availability call.</td></tr>
+        <tr><td>2.4 All rooms in same call</td><td><span class="bp"><svg class="ck" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l4 4 6-6"/></svg> Pass</span></td><td>Multi-room via multiple occupancy nodes.</td></tr>
+        <tr><td>2.5 CheckRate only for RECHECK</td><td><span class="bp"><svg class="ck" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l4 4 6-6"/></svg> Pass</span></td><td>BOOKABLE rates skip CheckRate.</td></tr>
+        <tr><td>2.6 Batch CheckRate</td><td><span class="bp"><svg class="ck" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l4 4 6-6"/></svg> Pass</span></td><td>Up to 10 rates grouped per call.</td></tr>
+        <tr><td>2.7 Display promotions</td><td><span class="bp"><svg class="ck" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l4 4 6-6"/></svg> Pass</span></td><td>Promotions shown before booking.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="slide-footer"><div class="sf-left">Confidential</div><div class="sf-center">www.telitrip.com</div><div class="sf-right">Page 3</div></div>
+</div>
+
+<!-- ══════════ SLIDE 4: AVAILABILITY SAMPLE ══════════ -->
+<div class="slide">
+  <div class="slide-header"><div class="sh-left">Telitrip &mdash; HBX Group Certification</div><div class="sh-right">Slide 4 of 12</div></div>
+  <div class="slide-body">
+    <span class="sn">4</span><h2>Availability Request &amp; Display</h2>
+    <p class="slide-desc">All basic information is correctly displayed. Children ages always required. Source market applied per request.</p>
+    <div class="cols">
+      <div>
+        <h3>Sample Availability Request</h3>
+        <div class="cb">{
+  <span class="k">"stay"</span>: {
+    <span class="k">"checkIn"</span>: <span class="s">"2026-09-15"</span>,
+    <span class="k">"checkOut"</span>: <span class="s">"2026-09-18"</span>
+  },
+  <span class="k">"occupancies"</span>: [{
+    <span class="k">"rooms"</span>: <span class="n">1</span>,
+    <span class="k">"adults"</span>: <span class="n">2</span>,
+    <span class="k">"children"</span>: <span class="n">1</span>,
+    <span class="k">"paxes"</span>: [{
+      <span class="k">"type"</span>: <span class="s">"CH"</span>,
+      <span class="k">"age"</span>: <span class="n">7</span>
+    }]
+  }],
+  <span class="k">"hotels"</span>: {
+    <span class="k">"hotel"</span>: [<span class="n">1067</span>, <span class="n">1070</span>, ...]
+  },
+  <span class="k">"sourceMarket"</span>: <span class="s">"GB"</span>
+}</div>
+      </div>
+      <div>
+        <h3>3.1 &mdash; Information Displayed</h3>
+        <table class="dt">
+          <thead><tr><th>Information</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td>Hotel name</td><td><span class="bp"><svg class="ck" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l4 4 6-6"/></svg> Yes</span></td></tr>
+            <tr><td>Hotel category</td><td><span class="bp"><svg class="ck" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l4 4 6-6"/></svg> Yes</span></td></tr>
+            <tr><td>Images</td><td><span class="bp"><svg class="ck" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l4 4 6-6"/></svg> Yes</span></td></tr>
+            <tr><td>Room type</td><td><span class="bp"><svg class="ck" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l4 4 6-6"/></svg> Yes</span></td></tr>
+            <tr><td>Board type</td><td><span class="bp"><svg class="ck" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l4 4 6-6"/></svg> Yes</span></td></tr>
+            <tr><td>Price</td><td><span class="bp"><svg class="ck" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l4 4 6-6"/></svg> Yes</span></td></tr>
+            <tr><td>Dates / Rooms / Guests</td><td><span class="bp"><svg class="ck" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l4 4 6-6"/></svg> Yes</span></td></tr>
+            <tr><td>Pagination</td><td><span class="bp"><svg class="ck" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l4 4 6-6"/></svg> Yes</span></td></tr>
+          </tbody>
+        </table>
+        <h3>3.2&ndash;3.4 &mdash; Passengers &amp; Rooms</h3>
+        <ul class="cl">
+          <li><div class="ci"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6l3 3 5-5"/></svg></div>Adults per room selectable</li>
+          <li><div class="ci"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6l3 3 5-5"/></svg></div>Children with mandatory age input</li>
+          <li><div class="ci"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6l3 3 5-5"/></svg></div>Multi-room bookings supported</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer"><div class="sf-left">Confidential</div><div class="sf-center">www.telitrip.com</div><div class="sf-right">Page 4</div></div>
+</div>
+
+<!-- ══════════ SLIDE 5: POLICIES, COMMENTS, FILTERS ══════════ -->
+<div class="slide">
+  <div class="slide-header"><div class="sh-left">Telitrip &mdash; HBX Group Certification</div><div class="sh-right">Slide 5 of 12</div></div>
+  <div class="slide-body">
+    <span class="sn">5</span><h2>Policies, Rate Comments &amp; Filters</h2>
+    <p class="slide-desc">Cancellation policies, rate comments, promotions, and search filters are all correctly implemented and displayed.</p>
+    <div class="cols">
+      <div>
+        <h3>3.5&ndash;3.6 &mdash; Opaque Rates &amp; Source Market</h3>
+        <ul class="cl">
+          <li><div class="ci"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6l3 3 5-5"/></svg></div>Opaque rates (packaging: true) not used</li>
+          <li><div class="ci"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6l3 3 5-5"/></svg></div>Source market set per request; prices never shown to wrong market</li>
+        </ul>
+        <h3>3.8 &mdash; Cancellation Policies</h3>
+        <p style="font-size:11px;color:var(--gray-600);margin-bottom:10px;">Displayed to customer before booking confirmation. Dates/times shown in destination timezone as provided by the API. Policies never altered.</p>
+        <h3>3.9 &mdash; Rate Comments</h3>
+        <p style="font-size:11px;color:var(--gray-600);margin-bottom:10px;">Retrieved via rateCommentsId from Content API and displayed before confirmation. For RECHECK rates, obtained from CheckRate response.</p>
+        <h3>3.11 &mdash; Booking Timeout</h3>
+        <p style="font-size:11px;color:var(--gray-600);margin-bottom:10px;">Set to 60 seconds as required.</p>
+        <h3>3.12 &mdash; Selling Rates</h3>
+        <p style="font-size:11px;color:var(--gray-600);">hotelMandatory attribute respected when present.</p>
+      </div>
+      <div>
+        <h3>3.7 &mdash; Filters Implemented</h3>
+        <div class="cg" style="grid-template-columns:1fr 1fr;">
+          <div class="mc"><div class="mt">Price Range</div><div class="md">minRate / maxRate</div></div>
+          <div class="mc"><div class="mt">Hotel Category</div><div class="md">minCategory / maxCategory</div></div>
+          <div class="mc"><div class="mt">Board Type</div><div class="md">RO, BB, HB, FB, AI</div></div>
+          <div class="mc"><div class="mt">Room Type</div><div class="md">Filter by room codes</div></div>
+          <div class="mc"><div class="mt">Payment Type</div><div class="md">AT_HOTEL / AT_WEB</div></div>
+          <div class="mc"><div class="mt">Accommodation</div><div class="md">Hotel, Hostel, Apartment</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer"><div class="sf-left">Confidential</div><div class="sf-center">www.telitrip.com</div><div class="sf-right">Page 5</div></div>
+</div>
+
+<!-- ══════════ SLIDE 6: VOUCHER ══════════ -->
+<div class="slide">
+  <div class="slide-header"><div class="sh-left">Telitrip &mdash; HBX Group Certification</div><div class="sh-right">Slide 6 of 12</div></div>
+  <div class="slide-body">
+    <span class="sn">6</span><h2>Voucher</h2>
+    <p class="slide-desc">Automatically generated for every confirmed reservation. Delivered via email and available for download from the booking dashboard.</p>
+    <div class="cols">
+      <div>
+        <h3>4.2 &mdash; Hotel Information</h3>
+        <table class="dt">
+          <thead><tr><th>Field</th><th>Included</th><th>Req.</th></tr></thead>
+          <tbody>
+            <tr><td>Hotel name</td><td><span class="bp"><svg class="ck" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l4 4 6-6"/></svg> Yes</span></td><td>Mandatory</td></tr>
+            <tr><td>Hotel category</td><td><span class="bp"><svg class="ck" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l4 4 6-6"/></svg> Yes</span></td><td>Recommended</td></tr>
+            <tr><td>Hotel address</td><td><span class="bp"><svg class="ck" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l4 4 6-6"/></svg> Yes</span></td><td>Mandatory</td></tr>
+            <tr><td>Destination name</td><td><span class="bp"><svg class="ck" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l4 4 6-6"/></svg> Yes</span></td><td>Recommended</td></tr>
+            <tr><td>Phone number</td><td><span class="bp"><svg class="ck" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l4 4 6-6"/></svg> Yes</span></td><td>Recommended</td></tr>
+          </tbody>
+        </table>
+        <h3>4.3 &mdash; Passenger Information</h3>
+        <table class="dt">
+          <thead><tr><th>Field</th><th>Included</th></tr></thead>
+          <tbody>
+            <tr><td>Holder name (lead passenger)</td><td><span class="bp"><svg class="ck" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l4 4 6-6"/></svg> Yes</span></td></tr>
+            <tr><td>At least one pax name per room</td><td><span class="bp"><svg class="ck" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l4 4 6-6"/></svg> Yes</span></td></tr>
+            <tr><td>Children ages (if applicable)</td><td><span class="bp"><svg class="ck" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l4 4 6-6"/></svg> Yes</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h3>4.4 &mdash; Booking Information</h3>
+        <table class="dt">
+          <thead><tr><th>Field</th><th>Included</th><th>Req.</th></tr></thead>
+          <tbody>
+            <tr><td>Hotelbeds reference</td><td><span class="bp"><svg class="ck" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l4 4 6-6"/></svg> Yes</span></td><td>Mandatory</td></tr>
+            <tr><td>Agency reference</td><td><span class="bp"><svg class="ck" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l4 4 6-6"/></svg> Yes</span></td><td>Recommended</td></tr>
+            <tr><td>Check-in / Check-out</td><td><span class="bp"><svg class="ck" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l4 4 6-6"/></svg> Yes</span></td><td>Mandatory</td></tr>
+            <tr><td>Room type</td><td><span class="bp"><svg class="ck" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l4 4 6-6"/></svg> Yes</span></td><td>Mandatory</td></tr>
+            <tr><td>Board type</td><td><span class="bp"><svg class="ck" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l4 4 6-6"/></svg> Yes</span></td><td>Mandatory</td></tr>
+            <tr><td>Rate comments</td><td><span class="bp"><svg class="ck" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l4 4 6-6"/></svg> Yes</span></td><td>Mandatory</td></tr>
+          </tbody>
+        </table>
+        <h3>4.5 &mdash; Payment Disclaimer</h3>
+        <div class="ib" style="font-style:italic;">"Payable through [Supplier Name], acting as agent for the service operating company, details of which can be provided upon request. VAT: [VAT Number] Reference: [Booking Reference]"</div>
+        <p style="font-size:10px;color:var(--gray-400);">Booking price is not shown on the voucher. Supplier and VAT sourced from booking response.</p>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer"><div class="sf-left">Confidential</div><div class="sf-center">www.telitrip.com</div><div class="sf-right">Page 6</div></div>
+</div>
+
+<!-- ══════════ SLIDE 7: CONTENT API ══════════ -->
+<div class="slide">
+  <div class="slide-header"><div class="sh-left">Telitrip &mdash; HBX Group Certification</div><div class="sh-right">Slide 7 of 12</div></div>
+  <div class="slide-body">
+    <span class="sn">7</span><h2>Content API Integration</h2>
+    <p class="slide-desc">Hotel content sourced exclusively from HBX Group Content API. Cached locally and refreshed weekly.</p>
+    <div class="cols">
+      <div>
+        <h3>5.1 &mdash; Content Source</h3>
+        <p style="font-size:11px;color:var(--gray-600);margin-bottom:12px;">HBX Group Content API is our primary and sole hotel content source. No third-party content is mixed with HBX Group data.</p>
+        <h3>Content Types</h3>
+        <table class="dt">
+          <thead><tr><th>Type</th><th>Status</th><th>Refresh</th></tr></thead>
+          <tbody>
+            <tr><td>5.2 Categories (stars, keys, etc.)</td><td><span class="bp"><svg class="ck" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l4 4 6-6"/></svg> Yes</span></td><td>Weekly</td></tr>
+            <tr><td>5.3 Images (all, correctly associated)</td><td><span class="bp"><svg class="ck" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l4 4 6-6"/></svg> Yes</span></td><td>Weekly</td></tr>
+            <tr><td>5.4 Facilities (paid + mandatory)</td><td><span class="bp"><svg class="ck" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l4 4 6-6"/></svg> Yes</span></td><td>Weekly</td></tr>
+            <tr><td>5.6 Descriptions</td><td><span class="bp"><svg class="ck" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l4 4 6-6"/></svg> Yes</span></td><td>Weekly</td></tr>
+            <tr><td>5.6 Contract remarks</td><td><span class="bp"><svg class="ck" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l4 4 6-6"/></svg> Yes</span></td><td>Weekly</td></tr>
+            <tr><td>5.6 Room types</td><td><span class="bp"><svg class="ck" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l4 4 6-6"/></svg> Yes</span></td><td>Weekly</td></tr>
+            <tr><td>5.6 Board types</td><td><span class="bp"><svg class="ck" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l4 4 6-6"/></svg> Yes</span></td><td>Weekly</td></tr>
+            <tr><td>5.6 Points of interest</td><td><span class="bp"><svg class="ck" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l4 4 6-6"/></svg> Yes</span></td><td>Weekly</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h3>Facilities Handling</h3>
+        <ul class="cl">
+          <li><div class="ci"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6l3 3 5-5"/></svg></div>Paid facilities (indFee: true) clearly marked</li>
+          <li><div class="ci"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6l3 3 5-5"/></svg></div>Mandatory facilities shown only when indYesOrNo: true</li>
+          <li><div class="ci"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6l3 3 5-5"/></svg></div>Payment-related facilities displayed in booking flow</li>
+        </ul>
+        <h3>Caching Strategy</h3>
+        <div class="ib">Content cached in our database and updated weekly. For newly added hotels not yet in cache, the hotel detail endpoint is used for on-demand content retrieval.</div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer"><div class="sf-left">Confidential</div><div class="sf-center">www.telitrip.com</div><div class="sf-right">Page 7</div></div>
+</div>
+
+<!-- ══════════ SLIDE 8: TRANSFERS & ACTIVITIES ══════════ -->
+<div class="slide">
+  <div class="slide-header"><div class="sh-left">Telitrip &mdash; HBX Group Certification</div><div class="sh-right">Slide 8 of 12</div></div>
+  <div class="slide-body">
+    <span class="sn">8</span><h2>Transfers &amp; Activities Integration</h2>
+    <p class="slide-desc">Complete integration with HBX Group Transfers API and Activities API for end-to-end travel booking.</p>
+    <div class="cols">
+      <div>
+        <h3>Transfers API</h3>
+        <div class="flow" style="justify-content:flex-start;">
+          <div class="fs"><div class="fs-n">Step 1</div><div class="fs-l">Availability</div><div class="fs-e">/transfer-api/1.0/availability</div></div>
+          <div class="fa">&rarr;</div>
+          <div class="fs"><div class="fs-n">Step 2</div><div class="fs-l">Booking</div><div class="fs-e">/transfer-api/1.0/bookings</div></div>
+        </div>
+        <div class="cg" style="grid-template-columns:1fr 1fr 1fr;margin-top:12px;">
+          <div class="mc"><div class="mt">Airport Transfers</div><div class="md">Airport-to-hotel and return services</div></div>
+          <div class="mc"><div class="mt">Vehicle Selection</div><div class="md">Private, shared, executive options</div></div>
+          <div class="mc"><div class="mt">Passengers</div><div class="md">Adult and child counts with pax handling</div></div>
+        </div>
+      </div>
+      <div>
+        <h3>Activities API</h3>
+        <div class="flow" style="justify-content:flex-start;">
+          <div class="fs"><div class="fs-n">Step 1</div><div class="fs-l">Availability</div><div class="fs-e">/activity-api/3.0/activities</div></div>
+          <div class="fa">&rarr;</div>
+          <div class="fs"><div class="fs-n">Step 2</div><div class="fs-l">Detail</div><div class="fs-e">.../details</div></div>
+          <div class="fa">&rarr;</div>
+          <div class="fs"><div class="fs-n">Step 3</div><div class="fs-l">Booking</div><div class="fs-e">.../bookings</div></div>
+        </div>
+        <div class="cg" style="grid-template-columns:1fr 1fr 1fr;margin-top:12px;">
+          <div class="mc"><div class="mt">Destination Search</div><div class="md">By location, date, participants</div></div>
+          <div class="mc"><div class="mt">Full Details</div><div class="md">Modalities, images, descriptions</div></div>
+          <div class="mc"><div class="mt">Booking</div><div class="md">Participant details and confirmation</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer"><div class="sf-left">Confidential</div><div class="sf-center">www.telitrip.com</div><div class="sf-right">Page 8</div></div>
+</div>
+
+<!-- ══════════ SLIDE 9: BOOKING MANAGEMENT ══════════ -->
+<div class="slide">
+  <div class="slide-header"><div class="sh-left">Telitrip &mdash; HBX Group Certification</div><div class="sh-right">Slide 9 of 12</div></div>
+  <div class="slide-body">
+    <span class="sn">9</span><h2>Booking Management</h2>
+    <p class="slide-desc">Full booking lifecycle: confirmation, retrieval, and cancellation with simulation and fee handling.</p>
+    <table class="dt">
+      <thead><tr><th>Operation</th><th>Endpoint</th><th>Method</th><th>Details</th></tr></thead>
+      <tbody>
+        <tr><td>Confirmation</td><td><code>/hotel-api/1.0/bookings</code></td><td><span class="bi">POST</span></td><td>rateKey passed unmodified. Hotelbeds reference stored. Voucher emailed automatically.</td></tr>
+        <tr><td>Retrieval</td><td><code>/hotel-api/1.0/bookings/{ref}</code></td><td><span class="bi">GET</span></td><td>Used for status verification and reconfirmation.</td></tr>
+        <tr><td>Cancellation</td><td><code>/hotel-api/1.0/bookings/{ref}</code></td><td><span class="bw">DELETE</span></td><td>Simulation supported. Fees shown before confirming. Reference stored.</td></tr>
+      </tbody>
+    </table>
+    <h3>Cancellation Flow</h3>
+    <div class="flow">
+      <div class="fs"><div class="fs-n">Step 1</div><div class="fs-l">Simulate</div><div class="fs-e">cancellationFlag=SIMULATION</div></div>
+      <div class="fa">&rarr;</div>
+      <div class="fs"><div class="fs-n">Step 2</div><div class="fs-l">Show Fees</div><div class="fs-e">Display to customer</div></div>
+      <div class="fa">&rarr;</div>
+      <div class="fs"><div class="fs-n">Step 3</div><div class="fs-l">Confirm</div><div class="fs-e">cancellationFlag=CANCELLATION</div></div>
+    </div>
+  </div>
+  <div class="slide-footer"><div class="sf-left">Confidential</div><div class="sf-center">www.telitrip.com</div><div class="sf-right">Page 9</div></div>
+</div>
+
+<!-- ══════════ SLIDE 10: LIVE READINESS ══════════ -->
+<div class="slide">
+  <div class="slide-header"><div class="sh-left">Telitrip &mdash; HBX Group Certification</div><div class="sh-right">Slide 10 of 12</div></div>
+  <div class="slide-body">
+    <span class="sn">10</span><h2>Live Environment Readiness</h2>
+    <p class="slide-desc">Complete pre-live checklist and testing plan for production transition.</p>
+    <div class="cols">
+      <div>
+        <table class="dt">
+          <thead><tr><th>Area</th><th>Item</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr><td rowspan="3" style="font-weight:600;">Technical</td><td>API auth (key + SHA-256)</td><td><span class="bp"><svg class="ck" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l4 4 6-6"/></svg></span></td></tr>
+            <tr><td>GZIP compression</td><td><span class="bp"><svg class="ck" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l4 4 6-6"/></svg></span></td></tr>
+            <tr><td>Non-breaking changes</td><td><span class="bp"><svg class="ck" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l4 4 6-6"/></svg></span></td></tr>
+            <tr><td rowspan="3" style="font-weight:600;">Workflow</td><td>Correct call sequence</td><td><span class="bp"><svg class="ck" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l4 4 6-6"/></svg></span></td></tr>
+            <tr><td>No repeated Availability</td><td><span class="bp"><svg class="ck" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l4 4 6-6"/></svg></span></td></tr>
+            <tr><td>CheckRate only for RECHECK</td><td><span class="bp"><svg class="ck" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l4 4 6-6"/></svg></span></td></tr>
+            <tr><td rowspan="3" style="font-weight:600;">Display</td><td>All basic info shown</td><td><span class="bp"><svg class="ck" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l4 4 6-6"/></svg></span></td></tr>
+            <tr><td>Cancellation policies</td><td><span class="bp"><svg class="ck" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l4 4 6-6"/></svg></span></td></tr>
+            <tr><td>Rate comments + timeout</td><td><span class="bp"><svg class="ck" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l4 4 6-6"/></svg></span></td></tr>
+            <tr><td rowspan="2" style="font-weight:600;">Voucher</td><td>All mandatory fields</td><td><span class="bp"><svg class="ck" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l4 4 6-6"/></svg></span></td></tr>
+            <tr><td>Payment disclaimer</td><td><span class="bp"><svg class="ck" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l4 4 6-6"/></svg></span></td></tr>
+            <tr><td style="font-weight:600;">Content</td><td>Weekly refresh + on-demand</td><td><span class="bp"><svg class="ck" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l4 4 6-6"/></svg></span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h3>6.1&ndash;6.3 &mdash; Live Testing Plan</h3>
+        <div class="ib">
+          <p style="margin-bottom:8px;">Upon receiving live API keys:</p>
+          <ol style="padding-left:16px;line-height:2;">
+            <li>Confirm a test booking (6 months ahead, 2 adults + 2 children, refundable rate)</li>
+            <li>Generate and share the voucher with certification team along with price</li>
+            <li>Cancel the test booking after team confirmation (no NRF rates)</li>
+            <li>Verify non-breaking changes work in live environment</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer"><div class="sf-left">Confidential</div><div class="sf-center">www.telitrip.com</div><div class="sf-right">Page 10</div></div>
+</div>
+
+<!-- ══════════ SLIDE 11: API REFERENCE + SCREENSHOTS ══════════ -->
+<div class="slide">
+  <div class="slide-header"><div class="sh-left">Telitrip &mdash; HBX Group Certification</div><div class="sh-right">Slide 11 of 12</div></div>
+  <div class="slide-body">
+    <span class="sn">11</span><h2>API Endpoints &amp; Screenshots</h2>
+    <p class="slide-desc">Complete endpoint reference and list of platform screenshots provided for certification review.</p>
+    <div class="cols">
+      <div>
+        <h3>Hotels API</h3>
+        <table class="dt">
+          <thead><tr><th>Operation</th><th>Endpoint</th><th>Method</th></tr></thead>
+          <tbody>
+            <tr><td>Availability</td><td><code>/hotel-api/1.0/hotels</code></td><td><span class="bi">POST</span></td></tr>
+            <tr><td>CheckRate</td><td><code>/hotel-api/1.0/checkrates</code></td><td><span class="bi">POST</span></td></tr>
+            <tr><td>Booking</td><td><code>/hotel-api/1.0/bookings</code></td><td><span class="bi">POST</span></td></tr>
+            <tr><td>Detail</td><td><code>/hotel-api/1.0/bookings/{ref}</code></td><td><span class="bi">GET</span></td></tr>
+            <tr><td>Cancel</td><td><code>/hotel-api/1.0/bookings/{ref}</code></td><td><span class="bw">DEL</span></td></tr>
+          </tbody>
+        </table>
+        <h3>Content API</h3>
+        <table class="dt">
+          <thead><tr><th>Operation</th><th>Endpoint</th></tr></thead>
+          <tbody>
+            <tr><td>Hotels</td><td><code>/hotel-content-api/1.0/hotels</code></td></tr>
+            <tr><td>Hotel Detail</td><td><code>/hotel-content-api/1.0/hotels/{code}/details</code></td></tr>
+            <tr><td>Rate Comments</td><td><code>/hotel-content-api/1.0/types/ratecomments</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h3>Platform Screenshots</h3>
+        <table class="dt">
+          <thead><tr><th>#</th><th>Screen</th><th>Demonstrates</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>Hotel Search</td><td>Destination, dates, rooms, children ages</td></tr>
+            <tr><td>2</td><td>Search Results</td><td>Listings, prices, categories, pagination</td></tr>
+            <tr><td>3</td><td>Hotel Detail</td><td>Facilities, gallery, room selection</td></tr>
+            <tr><td>4</td><td>Rate Selection</td><td>Cancellation policies, rate comments</td></tr>
+            <tr><td>5</td><td>Booking Form</td><td>Guest details, holder, pax per room</td></tr>
+            <tr><td>6</td><td>Confirmation</td><td>HB reference, voucher download</td></tr>
+            <tr><td>7</td><td>Voucher</td><td>All mandatory fields</td></tr>
+            <tr><td>8</td><td>Cancellation</td><td>Fee preview, simulation</td></tr>
+            <tr><td>9</td><td>Transfers</td><td>Search, vehicle, booking</td></tr>
+            <tr><td>10</td><td>Activities</td><td>Search, detail, booking</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer"><div class="sf-left">Confidential</div><div class="sf-center">www.telitrip.com</div><div class="sf-right">Page 11</div></div>
+</div>
+
+<!-- ══════════ SLIDE 12: CLOSING ══════════ -->
+<div class="slide slide-cover">
+  <div class="slide-body">
+    <div class="cover-label">Ready for Certification</div>
+    <div class="cover-title" style="font-size:38px;">Thank You</div>
+    <div class="cover-sub">We look forward to completing the certification process and going live.</div>
+    <div class="cover-grid">
+      <div class="cover-item"><div class="ci-label">Managing Director</div><div class="ci-value">Rahil Teli</div></div>
+      <div class="cover-item"><div class="ci-label">Email</div><div class="ci-value">teligroupllc@gmail.com</div></div>
+      <div class="cover-item"><div class="ci-label">Certification URL</div><div class="ci-value">www.telitrip.com</div></div>
+    </div>
+    <div style="margin-top:36px;padding-top:24px;border-top:1px solid rgba(255,255,255,0.1);">
+      <div style="font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(255,255,255,0.3);margin-bottom:8px;">Development Team</div>
+      <div style="font-size:13px;font-weight:600;color:rgba(255,255,255,0.8);">Zeeshan Javed</div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:3px;">zeeshan@tmrhino.com &middot; +92 321 2950 780</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
