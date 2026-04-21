@@ -1210,29 +1210,18 @@ const AccountDashboard = () => {
     loadTabData("payments", newFilters);
   };
 
-  // Authentication check
+  // Authentication check — show AuthModal (same working form as Join Us button)
   if (!user || !user.email) {
     return (
       <div className="min-h-screen bg-gray-50">
         <Header />
-        <div className="pt-16 flex items-center justify-center min-h-screen px-4">
-          <div className="w-full max-w-md">
-            <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-              {/* Header with gradient */}
-              <div className="relative overflow-hidden">
-                <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full opacity-20" style={{ background: 'radial-gradient(circle, #3b82f6, #8b5cf6)', filter: 'blur(40px)' }} />
-                <div className="relative px-6 pt-8 pb-5 text-center">
-                  <img src={logo} alt="Telitrip" className="h-10 mx-auto mb-4 opacity-90" />
-                  <h1 className="text-xl font-bold text-gray-900" style={{ letterSpacing: '-0.03em' }}>Welcome to Telitrip</h1>
-                  <p className="text-gray-500 text-sm mt-1">Sign in to manage your bookings and account</p>
-                </div>
-              </div>
-              <div className="px-6 pb-6">
-                <_InlineAuthForm />
-              </div>
-            </div>
-          </div>
-        </div>
+        <AuthModal
+          isOpen={true}
+          onClose={() => window.location.href = '/home'}
+          onAuthSuccess={() => window.location.reload()}
+          defaultTab="login"
+          returnUrl="/account"
+        />
       </div>
     );
   }
