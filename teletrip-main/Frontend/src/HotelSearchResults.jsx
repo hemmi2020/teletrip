@@ -1693,7 +1693,7 @@ if (children > 0 && childAges.length > 0) {
                       <div className="flex justify-between items-start gap-2 mb-1">
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-1.5 flex-wrap">
-                            <h2 className="text-[14px] font-semibold text-gray-900 truncate leading-tight">{hotel.name}</h2>
+                            <h2 className="text-[14px] font-semibold text-gray-900 line-clamp-2 leading-tight">{hotel.name}</h2>
                             <div className="flex items-center gap-0.5 flex-shrink-0">
                               {[...Array(hotel.stars)].map((_, i) => <Star key={i} className="w-2.5 h-2.5 text-amber-400 fill-current" />)}
                             </div>
@@ -1788,7 +1788,7 @@ if (children > 0 && childAges.length > 0) {
               <div className="flex items-start gap-3">
                 {/* Title + meta */}
                 <div className="flex-1 min-w-0">
-                  <h2 className="text-[15px] font-bold text-gray-900 leading-tight truncate pr-2">{selectedHotel.name}</h2>
+                  <h2 className="text-[15px] font-bold text-gray-900 leading-tight line-clamp-2 pr-2">{selectedHotel.name}</h2>
                   <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
                     <div className="flex">{[...Array(selectedHotel.stars)].map((_, i) => <Star key={i} className="w-3 h-3 text-amber-400 fill-current" />)}</div>
                     <span className="text-[11px] text-gray-400">·</span>

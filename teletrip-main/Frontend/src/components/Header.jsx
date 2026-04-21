@@ -4,7 +4,7 @@ import logo from "../images/Telitrip-Logo.png";
 import { SlideOutCart, AuthModal, useCart } from './CartSystem';
 import { UserDataContext } from './CartSystem';
 import BottomNavBar from './BottomNavBar';
-import { X, ShoppingCart, Phone, User, LogOut } from 'lucide-react';
+import { X, ShoppingCart, Phone, User, LogOut, Globe, MessageSquare } from 'lucide-react';
 
 const Header = () => {
   const navigate = useNavigate();
@@ -194,14 +194,52 @@ const Header = () => {
             <X className="w-4.5 h-4.5 text-white" />
           </button>
         </div>
-        <nav className="flex-1 overflow-y-auto px-6 pt-6 pb-4 space-y-1">
-          <NavLink to="/contact" onClick={() => setIsMobileMenuOpen(false)}
-            className={({ isActive }) => `flex items-center gap-3 px-5 py-4 rounded-2xl text-[15px] font-semibold tracking-wide uppercase transition-all ${isActive ? 'bg-white/15 text-white' : 'text-white/70 hover:text-white hover:bg-white/10'}`}
-            style={{ letterSpacing: '0.06em' }}
-          >
-            <Phone className="w-4 h-4" />
-            Contact
-          </NavLink>
+        <nav className="flex-1 overflow-y-auto px-6 pt-8 pb-4">
+          {/* Brand tagline */}
+          <div className="mb-8">
+            <p className="text-2xl font-bold text-white leading-tight" style={{ letterSpacing: '-0.03em' }}>
+              Hotels. Transfers.<br />Experiences.
+            </p>
+            <p className="text-white/40 text-sm mt-2">All in one place, at the best price.</p>
+          </div>
+
+          {/* Quick links */}
+          <div className="space-y-1">
+            <NavLink to="/contact" onClick={() => setIsMobileMenuOpen(false)}
+              className={({ isActive }) => `flex items-center gap-3 px-4 py-3.5 rounded-xl text-[14px] font-medium transition-all ${isActive ? 'bg-white/15 text-white' : 'text-white/60 hover:text-white hover:bg-white/8'}`}
+            >
+              <Phone className="w-4 h-4" />
+              Contact Us
+            </NavLink>
+            <NavLink to="/about" onClick={() => setIsMobileMenuOpen(false)}
+              className={({ isActive }) => `flex items-center gap-3 px-4 py-3.5 rounded-xl text-[14px] font-medium transition-all ${isActive ? 'bg-white/15 text-white' : 'text-white/60 hover:text-white hover:bg-white/8'}`}
+            >
+              <Globe className="w-4 h-4" />
+              About Telitrip
+            </NavLink>
+            <NavLink to="/faqs" onClick={() => setIsMobileMenuOpen(false)}
+              className={({ isActive }) => `flex items-center gap-3 px-4 py-3.5 rounded-xl text-[14px] font-medium transition-all ${isActive ? 'bg-white/15 text-white' : 'text-white/60 hover:text-white hover:bg-white/8'}`}
+            >
+              <MessageSquare className="w-4 h-4" />
+              FAQs
+            </NavLink>
+          </div>
+
+          {/* Stats */}
+          <div className="mt-8 grid grid-cols-3 gap-3">
+            <div className="text-center">
+              <div className="text-xl font-bold text-white">250K+</div>
+              <div className="text-[10px] text-white/30 uppercase tracking-wider">Hotels</div>
+            </div>
+            <div className="text-center">
+              <div className="text-xl font-bold text-white">190+</div>
+              <div className="text-[10px] text-white/30 uppercase tracking-wider">Countries</div>
+            </div>
+            <div className="text-center">
+              <div className="text-xl font-bold text-white">24/7</div>
+              <div className="text-[10px] text-white/30 uppercase tracking-wider">Support</div>
+            </div>
+          </div>
         </nav>
         <div className="flex-shrink-0 px-6 pb-24 pt-4 space-y-3">
           {user?.email ? (

@@ -758,8 +758,15 @@ const ActivitySearchResults = () => {
         <div className="fixed inset-0 z-[150] flex items-end sm:items-center justify-center" onClick={() => setSelectedActivity(null)}>
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
           <div className="relative bg-white w-full sm:max-w-3xl rounded-t-2xl sm:rounded-2xl max-h-[92vh] overflow-hidden flex flex-col shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            {/* Image collage — same layout as hotel modal */}
-            <div className="relative flex-shrink-0 bg-gray-200 overflow-hidden">
+            {/* Sticky title bar — just name + close button */}
+            <div className="flex items-center gap-3 px-5 py-3 border-b border-gray-100 flex-shrink-0">
+              <h2 className="text-[15px] font-bold text-gray-900 leading-tight line-clamp-2 flex-1 min-w-0">{selectedActivity.name}</h2>
+              <button onClick={() => setSelectedActivity(null)} className="flex-shrink-0 w-8 h-8 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors"><X className="w-4 h-4 text-gray-600" /></button>
+            </div>
+            {/* Scrollable body — gallery + info + details */}
+            <div className="overflow-y-auto flex-1" style={{scrollbarWidth:'thin'}}>
+            {/* Image collage */}
+            <div className="relative bg-gray-200 overflow-hidden">
               {selectedActivity.images && selectedActivity.images.length >= 3 ? (
                 <>
                   {/* Desktop: grid collage */}
@@ -794,13 +801,12 @@ const ActivitySearchResults = () => {
                   <img src={selectedActivity.images?.[0] || 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}} />
                 </div>
               )}
-              <button onClick={() => setSelectedActivity(null)} className="absolute top-3 right-3 w-8 h-8 bg-black/40 hover:bg-black/60 rounded-full flex items-center justify-center transition-colors z-10"><X className="w-4 h-4 text-white" /></button>
               {selectedActivity.activityFactsheetType && (
                 <div className="absolute bottom-3 left-3 bg-blue-600/90 text-white px-2.5 py-1 rounded-lg text-[12px] font-medium">{selectedActivity.activityFactsheetType}</div>
               )}
             </div>
             {/* Info header */}
-            <div className="px-5 py-4 border-b border-gray-100 flex-shrink-0">
+            <div className="px-5 py-4 border-b border-gray-100">
               <h2 className="text-lg font-semibold text-gray-900 mb-1.5">{selectedActivity.name}</h2>
               <div className="flex items-center gap-2 text-[12px] text-gray-500 mb-2 flex-wrap">
                 {selectedActivity.destination && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{selectedActivity.destination}{selectedActivity.country ? `, ${selectedActivity.country}` : ''}</span>}
@@ -838,7 +844,7 @@ const ActivitySearchResults = () => {
               </div>
             </div>
             {/* Scrollable details */}
-            <div className="overflow-y-auto flex-1 px-5 py-4 space-y-4" style={{scrollbarWidth:'thin'}}>
+            <div className="px-5 py-4 space-y-4">
               {/* Select Date */}
               <div>
                 <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Select Date</div>
@@ -1030,6 +1036,7 @@ const ActivitySearchResults = () => {
                   ))}
                 </div>
               )}
+            </div>
             </div>
           </div>
         </div>
