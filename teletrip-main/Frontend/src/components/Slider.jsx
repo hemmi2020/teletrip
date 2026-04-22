@@ -42,10 +42,10 @@ const Slider = () => {
   }, [active, images.length]);
 
   return (
-    <section className="sticky top-0 w-full bg-gray-900 z-0" style={{ margin: 0, padding: 0 }}>
+    <section className="sticky top-0 w-full bg-gray-900 z-[1] overflow-hidden" style={{ margin: 0, padding: 0 }}>
       <style>{heroAnimationStyles}</style>
-      {/* Photo slideshow — fixed to viewport so it covers even when section grows */}
-      <div className="fixed inset-0 z-0">
+      {/* Photo slideshow — absolute within section */}
+      <div className="absolute inset-0 z-0">
         {images.map((img, i) => (
           <div key={i} className={`absolute inset-0 transition-all duration-[1500ms] ease-in-out ${i === active ? 'opacity-100 scale-100' : 'opacity-0 scale-105'}`}>
             <img src={img} alt="" className="w-full h-full object-cover" />
