@@ -132,6 +132,13 @@ const [reviewsModal, setReviewsModal] = useState({
   const [galleryIndex, setGalleryIndex] = useState(0);
   const [galleryImages, setGalleryImages] = useState([]);
 
+  // Multi-room tab state
+  const [activeRoomTab, setActiveRoomTab] = useState(0);
+  const [roomSelections, setRoomSelections] = useState({});
+
+  // Room detail modal state
+  const [selectedRoomDetail, setSelectedRoomDetail] = useState(null);
+
   // Available amenities and accommodation types
   const availableAmenities = [
     { id: "WIFI", name: "WiFi", icon: Wifi },
@@ -593,6 +600,45 @@ const [reviewsModal, setReviewsModal] = useState({
     });
     setNotification({ show: true, message: `${room.name} added to cart!`, type: 'success' });
     setSelectedHotel(null);
+    setTimeout(() => setNotification({ show: false, message: '', type: 'success' }), 3000);
+    window.dispatchEvent(new CustomEvent('openCart'));
+  };
+
+  const handleMultiRoomAddToCart = (hotel, selections, roomConfigsList) => {
+    const checkIn = searchParams.get("checkIn");
+    const checkOut = searchParams.get("checkOut");
+    const nights = Math.ceil((new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60 * 24));
+
+    Object.entries(selections).forEach(([tabIdx, sel]) => {
+      const config = roomConfigsList[parseInt(tabIdx)];
+      const totalFromAPI = parseFloat(sel.rate.net);
+      const pricePerNight = nights > 0 ? (totalFromAPI / nights) : totalFromAPI;
+
+      addToCart({
+        id: `${hotel.id}-${sel.room.code}-${sel.rate.rateKey || sel.rate.net}-room${parseInt(tabIdx) + 1}`,
+        hotelId: hotel.id, hotelName: hotel.name, hotelCode: hotel.code,
+        roomCode: sel.room.code, roomName: `${sel.room.name} (Room ${parseInt(tabIdx) + 1})`, rateKey: sel.rate.rateKey,
+        price: pricePerNight, pricePerNight, currency: hotel.currency || 'EUR',
+        checkIn, checkOut, nights, guests: (config.adults || 2) + (config.children || 0),
+        adults: config.adults || 2, children: config.children || 0, rooms: 1,
+        location: `${hotel.zoneName}, ${hotel.destinationName}`,
+        boardName: sel.rate.boardName, rateClass: sel.rate.rateClass, paymentType: sel.rate.paymentType,
+        cancellationPolicies: sel.rate.cancellationPolicies || [],
+        cancellationPolicy: sel.rate.cancellationPolicies ? formatCancellationPolicy(sel.rate.cancellationPolicies) : "No cancellation policy",
+        promotions: sel.rate.promotions || [], offers: sel.rate.offers || [],
+        thumbnail: hotel.thumbnail, allotment: sel.rate.allotment,
+        packaging: sel.rate.packaging, taxes: sel.rate.taxes,
+        city: hotel.destinationName, zone: hotel.zoneName,
+        category: hotel.categoryName, totalPrice: totalFromAPI, net: totalFromAPI,
+        addedAt: new Date().toISOString(),
+      });
+    });
+
+    const roomCount = Object.keys(selections).length;
+    setNotification({ show: true, message: `${roomCount} room${roomCount > 1 ? 's' : ''} added to cart!`, type: 'success' });
+    setSelectedHotel(null);
+    setRoomSelections({});
+    setActiveRoomTab(0);
     setTimeout(() => setNotification({ show: false, message: '', type: 'success' }), 3000);
     window.dispatchEvent(new CustomEvent('openCart'));
   };
@@ -1794,6 +1840,11 @@ const closeReviewsModal = () => {
 
         const openGallery = (idx) => { setGalleryImages(allImages); setGalleryIndex(idx); setGalleryOpen(true); };
 
+        // Multi-room config parsing
+        const roomConfigsParam = searchParams.get("roomConfigs");
+        const roomConfigs = roomConfigsParam ? (() => { try { return JSON.parse(roomConfigsParam); } catch(e) { return [{ adults: parseInt(searchParams.get("adults") || "2"), children: 0 }]; } })() : [{ adults: parseInt(searchParams.get("adults") || "2"), children: 0 }];
+        const isMultiRoom = roomConfigs.length > 1;
+
         return (
         <div className="fixed inset-0 z-[150] flex items-end sm:items-center justify-center" onClick={() => setSelectedHotel(null)}>
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
@@ -1898,6 +1949,22 @@ const closeReviewsModal = () => {
                 </div>
               </div>
 
+              {/* Multi-room tab bar */}
+              {isMultiRoom && (
+                <div className="px-4 py-2 border-b border-gray-100 flex gap-1 overflow-x-auto" style={{scrollbarWidth:'none'}}>
+                  {roomConfigs.map((config, idx) => (
+                    <button key={idx} onClick={() => setActiveRoomTab(idx)}
+                      className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                        activeRoomTab === idx ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      }`} style={{minHeight:'unset'}}>
+                      Room {idx + 1}
+                      <span className="text-[10px] ml-1 opacity-70">({config.adults}A{config.children > 0 ? `+${config.children}C` : ''})</span>
+                      {roomSelections[idx] && <span className="ml-1 text-[10px]">✓</span>}
+                    </button>
+                  ))}
+                </div>
+              )}
+
               {/* Rooms list */}
               <div className="px-4 py-3 space-y-3">
                 {selectedHotel.rooms && selectedHotel.rooms.length > 0 ? (
@@ -1927,6 +1994,9 @@ const closeReviewsModal = () => {
                       <div className="flex items-center gap-2">
                         <Bed className="w-4 h-4 text-gray-400" />
                         <span className="text-[13px] font-semibold text-gray-800">{room.name}</span>
+                        <button onClick={(e) => { e.stopPropagation(); setSelectedRoomDetail(room); }} className="p-1 hover:bg-blue-50 rounded transition-colors" title="Room details" style={{minHeight:'unset'}}>
+                          <Info className="w-3.5 h-3.5 text-blue-500" />
+                        </button>
                       </div>
                       <span className="text-[11px] text-gray-400">{filteredRates.length} rate{filteredRates.length !== 1 ? 's' : ''}</span>
                     </div>
@@ -1935,9 +2005,10 @@ const closeReviewsModal = () => {
                         const total = parseFloat(rate.net);
                         const perNight = nights > 0 ? total / nights : total;
                         const hasFreeCancellation = rate.cancellationPolicies?.length > 0 && parseFloat(rate.cancellationPolicies[0]?.amount || 0) === 0;
+                        const isSelectedForTab = isMultiRoom && roomSelections[activeRoomTab]?.room?.code === room.code && roomSelections[activeRoomTab]?.rate?.rateKey === rate.rateKey;
 
                         return (
-                          <div key={idx} className="px-4 py-3 hover:bg-blue-50/30 transition-colors">
+                          <div key={idx} className={`px-4 py-3 hover:bg-blue-50/30 transition-colors ${isSelectedForTab ? 'bg-blue-50 ring-1 ring-blue-200' : ''}`}>
                             <div className="flex justify-between items-start gap-4">
                               <div className="min-w-0 flex-1 space-y-1.5">
                                 {/* Tags row */}
@@ -1949,6 +2020,7 @@ const closeReviewsModal = () => {
                                     <span className="text-[11px] px-2 py-0.5 bg-green-50 text-green-600 rounded-full font-medium flex items-center gap-0.5"><CheckCircle className="w-2.5 h-2.5" />Free Cancellation</span>
                                   ) : null}
                                   {rate.packaging && <span className="text-[11px] px-2 py-0.5 bg-purple-50 text-purple-600 rounded-full font-medium">Package</span>}
+                                  {isSelectedForTab && <span className="text-[11px] px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full font-medium">✓ Selected</span>}
                                 </div>
                                 {/* Details row */}
                                 <div className="flex items-center gap-2 text-[11px] text-gray-400">
@@ -1977,12 +2049,29 @@ const closeReviewsModal = () => {
                                 <div className="text-[11px] text-gray-400">{formatPKR(perNight) || `${selectedHotel.currency} ${perNight.toFixed(0)}`} / night</div>
                                 <div className="text-lg font-bold text-blue-600">{formatPKR(total) || `${selectedHotel.currency} ${total.toFixed(2)}`}</div>
                                 <div className="text-[11px] text-gray-400 mb-2">total for {nights}n</div>
-                                <button
-                                  onClick={(e) => { e.stopPropagation(); handleAddToCart(selectedHotel, room, rate); }}
-                                  className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-[12px] font-semibold"
-                                >
-                                  <ShoppingCart className="w-3.5 h-3.5" />Add to Cart
-                                </button>
+                                {isMultiRoom ? (
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setRoomSelections(prev => ({ ...prev, [activeRoomTab]: { room, rate } }));
+                                      // Auto-advance to next unselected tab
+                                      const nextUnselected = roomConfigs.findIndex((_, i) => i > activeRoomTab && !roomSelections[i]);
+                                      if (nextUnselected !== -1) setActiveRoomTab(nextUnselected);
+                                    }}
+                                    className={`w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg transition-colors text-[12px] font-semibold ${
+                                      isSelectedForTab ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-blue-600 text-white hover:bg-blue-700'
+                                    }`}
+                                  >
+                                    {isSelectedForTab ? <><CheckCircle className="w-3.5 h-3.5" />Selected</> : <>Select for Room {activeRoomTab + 1}</>}
+                                  </button>
+                                ) : (
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); handleAddToCart(selectedHotel, room, rate); }}
+                                    className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-[12px] font-semibold"
+                                  >
+                                    <ShoppingCart className="w-3.5 h-3.5" />Add to Cart
+                                  </button>
+                                )}
                               </div>
                             </div>
                           </div>
@@ -1996,11 +2085,106 @@ const closeReviewsModal = () => {
                 <div className="text-center py-8 text-gray-500 text-sm">No rooms available</div>
               )}
             </div>
+
+            {/* Multi-room summary bar */}
+            {isMultiRoom && Object.keys(roomSelections).length > 0 && (
+              <div className="flex-shrink-0 border-t border-gray-200 bg-gray-50 px-4 py-3">
+                <div className="space-y-1.5 mb-3">
+                  {roomConfigs.map((config, idx) => {
+                    const sel = roomSelections[idx];
+                    return (
+                      <div key={idx} className="flex items-center justify-between text-[12px]">
+                        <span className="text-gray-600">
+                          Room {idx + 1} <span className="text-gray-400">({config.adults}A{config.children > 0 ? `+${config.children}C` : ''})</span>
+                        </span>
+                        {sel ? (
+                          <span className="text-gray-800 font-medium">
+                            {sel.room.name} · {sel.rate.boardName} · {formatPKR(parseFloat(sel.rate.net)) || `${selectedHotel.currency} ${parseFloat(sel.rate.net).toFixed(2)}`}
+                          </span>
+                        ) : (
+                          <span className="text-gray-400 italic">Not selected</span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-[11px] text-gray-400">Total for {roomConfigs.length} rooms</div>
+                    <div className="text-lg font-bold text-blue-600">
+                      {formatPKR(Object.values(roomSelections).reduce((sum, sel) => sum + parseFloat(sel.rate.net), 0)) || `${selectedHotel.currency} ${Object.values(roomSelections).reduce((sum, sel) => sum + parseFloat(sel.rate.net), 0).toFixed(2)}`}
+                    </div>
+                  </div>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleMultiRoomAddToCart(selectedHotel, roomSelections, roomConfigs); }}
+                    disabled={Object.keys(roomSelections).length < roomConfigs.length}
+                    className={`inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-lg text-[13px] font-semibold transition-colors ${
+                      Object.keys(roomSelections).length >= roomConfigs.length
+                        ? 'bg-blue-600 text-white hover:bg-blue-700'
+                        : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                    }`}
+                  >
+                    <ShoppingCart className="w-4 h-4" />
+                    Add All {roomConfigs.length} Rooms
+                    {Object.keys(roomSelections).length < roomConfigs.length && (
+                      <span className="text-[10px] opacity-70">({Object.keys(roomSelections).length}/{roomConfigs.length})</span>
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
+
             </div>{/* end scrollable body */}
           </div>
         </div>
         );
       })()}
+
+      {/* Room Detail Modal */}
+      {selectedRoomDetail && (
+        <div className="fixed inset-0 z-[160] flex items-end sm:items-center justify-center" onClick={() => setSelectedRoomDetail(null)}>
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+          <div className="relative bg-white w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl max-h-[85vh] overflow-hidden flex flex-col shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            {/* Header */}
+            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 flex-shrink-0">
+              <h3 className="text-[15px] font-bold text-gray-900 line-clamp-2 flex-1 pr-2">{selectedRoomDetail.name}</h3>
+              <button onClick={() => setSelectedRoomDetail(null)} className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center"><X className="w-4 h-4 text-gray-600" /></button>
+            </div>
+            {/* Scrollable body */}
+            <div className="overflow-y-auto flex-1 p-4" style={{scrollbarWidth:'thin'}}>
+              {/* Room images */}
+              {(() => {
+                const roomImages = (selectedHotel?.images || [])
+                  .filter(img => img.roomCode === selectedRoomDetail.code)
+                  .map(img => img.path ? `https://photos.hotelbeds.com/giata/original/${img.path}` : null)
+                  .filter(Boolean);
+                return roomImages.length > 0 ? (
+                  <div className="grid grid-cols-2 gap-1 mb-4 rounded-xl overflow-hidden">
+                    {roomImages.slice(0, 4).map((img, i) => (
+                      <div key={i} className="aspect-video overflow-hidden cursor-pointer" onClick={() => { setGalleryImages(roomImages); setGalleryIndex(i); setGalleryOpen(true); }}>
+                        <img src={img} alt="" className="w-full h-full object-cover hover:scale-105 transition-transform" onError={(e) => e.target.style.display='none'} />
+                      </div>
+                    ))}
+                  </div>
+                ) : null;
+              })()}
+              {/* Room code */}
+              <p className="text-xs text-gray-400 mb-3">Room code: {selectedRoomDetail.code}</p>
+              {/* Facilities from room data */}
+              {selectedHotel?.facilities?.length > 0 && (
+                <div>
+                  <h4 className="text-sm font-semibold text-gray-800 mb-2">Room Facilities</h4>
+                  <div className="flex flex-wrap gap-1.5">
+                    {selectedHotel.facilities.filter(f => f.roomCode === selectedRoomDetail.code || !f.roomCode).slice(0, 20).map((f, i) => (
+                      <span key={i} className="text-[11px] px-2 py-1 bg-gray-50 text-gray-600 rounded-full">{f.description || f.facilityName || `Facility ${f.facilityCode}`}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Image Gallery Lightbox */}
       {galleryOpen && galleryImages.length > 0 && (
