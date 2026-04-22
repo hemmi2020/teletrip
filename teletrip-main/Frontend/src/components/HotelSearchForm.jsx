@@ -1204,8 +1204,9 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
                     <ChevronDown className="text-gray-400 flex-shrink-0" size={18} />
                   </div>
 
-                  {showTravellerDropdown && (
-                    <div className="absolute left-0 right-0 top-full mt-1 z-[200] bg-white border border-gray-300 rounded-xl shadow-2xl p-4 max-h-[70vh] overflow-y-auto">
+                  {showTravellerDropdown && createPortal(
+                    <div style={{position:"fixed",inset:0,zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.3)"}} onClick={(e) => { if (e.target === e.currentTarget) setShowTravellerDropdown(false); }}>
+                    <div className="bg-white border border-gray-200 rounded-2xl shadow-2xl p-4 max-h-[80vh] overflow-y-auto w-full" style={{maxWidth:420,margin:16}} onClick={(e) => e.stopPropagation()}>
                       {roomConfigs.map((room, roomIdx) => (
                         <div key={roomIdx} className={`${roomIdx > 0 ? 'mt-4 pt-4 border-t border-gray-200' : ''}`}>
                           {/* Room header */}
@@ -1271,7 +1272,8 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
                         Done
                       </button>
                     </div>
-                  )}
+                    </div>
+                  , document.body)}
                 </div>
               </div>
 
