@@ -100,6 +100,7 @@ const TransfersTab = ({ variant = 'dark' }) => {
         setShowDropoffDropdown(false);
       }
       if (travellerRef.current && !travellerRef.current.contains(event.target)) {
+        if (event.target.closest('[data-traveller-portal]')) return;
         setShowTravellerDropdown(false);
       }
       if (calendarRef.current && !calendarRef.current.contains(event.target)) {
@@ -434,35 +435,37 @@ const TransfersTab = ({ variant = 'dark' }) => {
             </span>
             <ChevronDown className="text-gray-400 flex-shrink-0" size={18} />
           </div>
-          {showTravellerDropdown && (
-            <div className="absolute left-0 right-0 top-full mt-1 z-[200] bg-white border border-gray-300 rounded-xl shadow-2xl p-4 space-y-3 max-h-[70vh] overflow-y-auto">
-              <div className="flex items-center justify-between">
-                <span className="text-gray-700 font-medium text-sm sm:text-base">Adults</span>
-                <div className="flex items-center space-x-2 sm:space-x-3">
-                  <button type="button" onClick={() => setAdults(Math.max(1, adults - 1))} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Minus size={14} /></button>
-                  <span className="w-6 sm:w-8 text-center font-medium text-sm sm:text-base">{adults}</span>
-                  <button type="button" onClick={() => setAdults(Math.min(20, adults + 1))} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Plus size={14} /></button>
+          {showTravellerDropdown && createPortal(
+            <div data-traveller-portal style={{position:"fixed",inset:0,zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.3)"}} onClick={(e) => { if (e.target === e.currentTarget) setShowTravellerDropdown(false); }}>
+              <div className="bg-white border border-gray-200 rounded-2xl shadow-2xl p-4 max-h-[80vh] overflow-y-auto w-full" style={{maxWidth:420,margin:16}} onClick={(e) => e.stopPropagation()}>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-700 font-medium text-sm sm:text-base">Adults</span>
+                  <div className="flex items-center space-x-2 sm:space-x-3">
+                    <button type="button" onClick={() => setAdults(Math.max(1, adults - 1))} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Minus size={14} /></button>
+                    <span className="w-6 sm:w-8 text-center font-medium text-sm sm:text-base">{adults}</span>
+                    <button type="button" onClick={() => setAdults(Math.min(20, adults + 1))} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Plus size={14} /></button>
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-700 font-medium text-sm sm:text-base">Children</span>
-                <div className="flex items-center space-x-2 sm:space-x-3">
-                  <button type="button" onClick={() => setChildren(Math.max(0, children - 1))} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Minus size={14} /></button>
-                  <span className="w-6 sm:w-8 text-center font-medium text-sm sm:text-base">{children}</span>
-                  <button type="button" onClick={() => setChildren(Math.min(10, children + 1))} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Plus size={14} /></button>
+                <div className="flex items-center justify-between mt-3">
+                  <span className="text-gray-700 font-medium text-sm sm:text-base">Children</span>
+                  <div className="flex items-center space-x-2 sm:space-x-3">
+                    <button type="button" onClick={() => setChildren(Math.max(0, children - 1))} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Minus size={14} /></button>
+                    <span className="w-6 sm:w-8 text-center font-medium text-sm sm:text-base">{children}</span>
+                    <button type="button" onClick={() => setChildren(Math.min(10, children + 1))} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Plus size={14} /></button>
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-700 font-medium text-sm sm:text-base">Infants</span>
-                <div className="flex items-center space-x-2 sm:space-x-3">
-                  <button type="button" onClick={() => setInfants(Math.max(0, infants - 1))} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Minus size={14} /></button>
-                  <span className="w-6 sm:w-8 text-center font-medium text-sm sm:text-base">{infants}</span>
-                  <button type="button" onClick={() => setInfants(Math.min(5, infants + 1))} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Plus size={14} /></button>
+                <div className="flex items-center justify-between mt-3">
+                  <span className="text-gray-700 font-medium text-sm sm:text-base">Infants</span>
+                  <div className="flex items-center space-x-2 sm:space-x-3">
+                    <button type="button" onClick={() => setInfants(Math.max(0, infants - 1))} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Minus size={14} /></button>
+                    <span className="w-6 sm:w-8 text-center font-medium text-sm sm:text-base">{infants}</span>
+                    <button type="button" onClick={() => setInfants(Math.min(5, infants + 1))} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Plus size={14} /></button>
+                  </div>
                 </div>
+                <button type="button" onClick={() => setShowTravellerDropdown(false)} className="w-full mt-4 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm" style={{minHeight:'unset'}}>Done</button>
               </div>
-              <button type="button" onClick={() => setShowTravellerDropdown(false)} className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm sm:text-base">Done</button>
             </div>
-          )}
+          , document.body)}
         </div>
       </div>
 
@@ -554,7 +557,10 @@ const ExperiencesTab = ({ variant = 'dark' }) => {
         setShowCalendar(false);
       }
       if (locationRef.current && !locationRef.current.contains(event.target)) setShowLocationDropdown(false);
-      if (travellerRef.current && !travellerRef.current.contains(event.target)) setShowTravellerDropdown(false);
+      if (travellerRef.current && !travellerRef.current.contains(event.target)) {
+        if (event.target.closest('[data-traveller-portal]')) return;
+        setShowTravellerDropdown(false);
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -712,35 +718,37 @@ const ExperiencesTab = ({ variant = 'dark' }) => {
             </span>
             <ChevronDown className="text-gray-400 flex-shrink-0" size={18} />
           </div>
-          {showTravellerDropdown && (
-            <div className="absolute left-0 right-0 top-full mt-1 z-[200] bg-white border border-gray-300 rounded-xl shadow-2xl p-4 space-y-3 max-h-[70vh] overflow-y-auto">
-              <div className="flex items-center justify-between">
-                <span className="text-gray-700 font-medium text-sm sm:text-base">Adults</span>
-                <div className="flex items-center space-x-2 sm:space-x-3">
-                  <button type="button" onClick={() => setAdults(Math.max(1, adults - 1))} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Minus size={14} /></button>
-                  <span className="w-6 sm:w-8 text-center font-medium text-sm sm:text-base">{adults}</span>
-                  <button type="button" onClick={() => setAdults(Math.min(20, adults + 1))} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Plus size={14} /></button>
+          {showTravellerDropdown && createPortal(
+            <div data-traveller-portal style={{position:"fixed",inset:0,zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.3)"}} onClick={(e) => { if (e.target === e.currentTarget) setShowTravellerDropdown(false); }}>
+              <div className="bg-white border border-gray-200 rounded-2xl shadow-2xl p-4 max-h-[80vh] overflow-y-auto w-full" style={{maxWidth:420,margin:16}} onClick={(e) => e.stopPropagation()}>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-700 font-medium text-sm sm:text-base">Adults</span>
+                  <div className="flex items-center space-x-2 sm:space-x-3">
+                    <button type="button" onClick={() => setAdults(Math.max(1, adults - 1))} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Minus size={14} /></button>
+                    <span className="w-6 sm:w-8 text-center font-medium text-sm sm:text-base">{adults}</span>
+                    <button type="button" onClick={() => setAdults(Math.min(20, adults + 1))} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Plus size={14} /></button>
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-700 font-medium text-sm sm:text-base">Children</span>
-                <div className="flex items-center space-x-2 sm:space-x-3">
-                  <button type="button" onClick={() => setChildren(Math.max(0, children - 1))} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Minus size={14} /></button>
-                  <span className="w-6 sm:w-8 text-center font-medium text-sm sm:text-base">{children}</span>
-                  <button type="button" onClick={() => setChildren(Math.min(10, children + 1))} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Plus size={14} /></button>
+                <div className="flex items-center justify-between mt-3">
+                  <span className="text-gray-700 font-medium text-sm sm:text-base">Children</span>
+                  <div className="flex items-center space-x-2 sm:space-x-3">
+                    <button type="button" onClick={() => setChildren(Math.max(0, children - 1))} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Minus size={14} /></button>
+                    <span className="w-6 sm:w-8 text-center font-medium text-sm sm:text-base">{children}</span>
+                    <button type="button" onClick={() => setChildren(Math.min(10, children + 1))} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Plus size={14} /></button>
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-700 font-medium text-sm sm:text-base">Infants</span>
-                <div className="flex items-center space-x-2 sm:space-x-3">
-                  <button type="button" onClick={() => setInfants(Math.max(0, infants - 1))} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Minus size={14} /></button>
-                  <span className="w-6 sm:w-8 text-center font-medium text-sm sm:text-base">{infants}</span>
-                  <button type="button" onClick={() => setInfants(Math.min(5, infants + 1))} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Plus size={14} /></button>
+                <div className="flex items-center justify-between mt-3">
+                  <span className="text-gray-700 font-medium text-sm sm:text-base">Infants</span>
+                  <div className="flex items-center space-x-2 sm:space-x-3">
+                    <button type="button" onClick={() => setInfants(Math.max(0, infants - 1))} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Minus size={14} /></button>
+                    <span className="w-6 sm:w-8 text-center font-medium text-sm sm:text-base">{infants}</span>
+                    <button type="button" onClick={() => setInfants(Math.min(5, infants + 1))} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Plus size={14} /></button>
+                  </div>
                 </div>
+                <button type="button" onClick={() => setShowTravellerDropdown(false)} className="w-full mt-4 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm" style={{minHeight:'unset'}}>Done</button>
               </div>
-              <button type="button" onClick={() => setShowTravellerDropdown(false)} className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm sm:text-base">Done</button>
             </div>
-          )}
+          , document.body)}
         </div>
       </div>
 
