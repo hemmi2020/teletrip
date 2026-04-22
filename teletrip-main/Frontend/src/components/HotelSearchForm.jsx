@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { createPortal } from 'react-dom';
-import { MapPin, Calendar, Users, Search, ChevronDown, X, Plus, Minus, Loader2, Star, Clock, Tag, Plane, Building2, Hotel, Car, Compass } from 'lucide-react';
+import { MapPin, Calendar, Users, Search, ChevronDown, X, Plus, Minus, Loader2, Star, Clock, Tag, Plane, Building2, Hotel, Car, Compass, Trash2 } from 'lucide-react';
 import { addDays, format } from 'date-fns';
 import { searchTransfers } from '../services/transfersApi';
 import axios from 'axios';
@@ -843,12 +843,54 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
   const [hotelNameQuery, setHotelNameQuery] = useState('');
   const locationRef = useRef(null);
 
-  // Other states
-  const [rooms, setRooms] = useState(1);
-  const [adults, setAdults] = useState(2);
-  const [children, setChildren] = useState(0);
-  const [childAges, setChildAges] = useState([]);
+  // Per-room configuration (Bedsonline style)
+  const [roomConfigs, setRoomConfigs] = useState([
+    { adults: 2, children: 0, childAges: [] }
+  ]);
   const [activeTab, setActiveTab] = useState(initialTab);
+
+  // Room helper functions
+  const addRoom = () => {
+    if (roomConfigs.length < 6) {
+      setRoomConfigs([...roomConfigs, { adults: 2, children: 0, childAges: [] }]);
+    }
+  };
+
+  const removeRoom = (index) => {
+    if (roomConfigs.length > 1) {
+      setRoomConfigs(roomConfigs.filter((_, i) => i !== index));
+    }
+  };
+
+  const updateRoom = (index, field, value) => {
+    setRoomConfigs(roomConfigs.map((room, i) => {
+      if (i !== index) return room;
+      const updated = { ...room, [field]: value };
+      if (field === 'children') {
+        const count = Math.max(0, Math.min(4, value));
+        updated.children = count;
+        if (count > room.childAges.length) {
+          updated.childAges = [...room.childAges, ...Array(count - room.childAges.length).fill(5)];
+        } else {
+          updated.childAges = room.childAges.slice(0, count);
+        }
+      }
+      return updated;
+    }));
+  };
+
+  const updateChildAge = (roomIndex, childIndex, age) => {
+    setRoomConfigs(roomConfigs.map((room, i) => {
+      if (i !== roomIndex) return room;
+      const newAges = [...room.childAges];
+      newAges[childIndex] = parseInt(age);
+      return { ...room, childAges: newAges };
+    }));
+  };
+
+  const getTotalAdults = () => roomConfigs.reduce((sum, r) => sum + r.adults, 0);
+  const getTotalChildren = () => roomConfigs.reduce((sum, r) => sum + r.children, 0);
+  const getAllChildAges = () => roomConfigs.flatMap(r => r.childAges);
 
   // Debounced location search via API (cities + countries + hotels)
   useEffect(() => {
@@ -929,23 +971,6 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
     }
   };
 
-  const handleChildrenChange = (newValue) => {
-    const childCount = Math.max(0, Math.min(10, newValue));
-    setChildren(childCount);
-    
-    if (childCount > childAges.length) {
-      setChildAges([...childAges, ...Array(childCount - childAges.length).fill(0)]);
-    } else if (childCount < childAges.length) {
-      setChildAges(childAges.slice(0, childCount));
-    }
-  };
-
-  const handleChildAgeChange = (index, age) => {
-    const newAges = [...childAges];
-    newAges[index] = parseInt(age);
-    setChildAges(newAges);
-  };
-
   const handleSubmit = (e) => {
     e.preventDefault();
 
@@ -959,7 +984,10 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
 
     const city = selectedLocation.city || selectedLocation.name;
     const country = selectedLocation.country;
-    let url = `/hotel-search-results?checkIn=${checkIn}&checkOut=${checkOut}&rooms=${rooms}&adults=${adults}&children=${children}`;
+    const totalAdults = getTotalAdults();
+    const totalChildren = getTotalChildren();
+    const allChildAges = getAllChildAges();
+    let url = `/hotel-search-results?checkIn=${checkIn}&checkOut=${checkOut}&rooms=${roomConfigs.length}&adults=${totalAdults}&children=${totalChildren}`;
     url += `&country=${encodeURIComponent(country)}`;
     url += `&city=${encodeURIComponent(city)}`;
     if (hotelNameQuery.trim()) {
@@ -967,8 +995,8 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
     }
 
     // Add child ages if present
-    if (children > 0 && childAges.length > 0) {
-      url += `&childAges=${childAges.join(',')}`;
+    if (totalChildren > 0 && allChildAges.length > 0) {
+      url += `&childAges=${allChildAges.join(',')}`;
     }
 
     window.location.href = url;
@@ -983,11 +1011,13 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
   };
 
   const getTravellerSummary = () => {
-    let summary = `${adults} Adult${adults > 1 ? 's' : ''}`;
-    if (children > 0) {
-      summary += `, ${children} Child${children > 1 ? 'ren' : ''}`;
+    const totalAdults = getTotalAdults();
+    const totalChildren = getTotalChildren();
+    let summary = `${totalAdults} Adult${totalAdults > 1 ? 's' : ''}`;
+    if (totalChildren > 0) {
+      summary += `, ${totalChildren} Child${totalChildren > 1 ? 'ren' : ''}`;
     }
-    summary += ` • ${rooms} Room${rooms > 1 ? 's' : ''}`;
+    summary += ` · ${roomConfigs.length} Room${roomConfigs.length > 1 ? 's' : ''}`;
     return summary;
   };
 
@@ -1172,100 +1202,69 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
                   </div>
 
                   {showTravellerDropdown && (
-                      <div className="absolute left-0 right-0 top-full mt-1 z-[200] bg-white border border-gray-300 rounded-xl shadow-2xl p-4 space-y-3 max-h-[70vh] overflow-y-auto">
-                      {/* Rooms */}
-                      <div className="flex items-center justify-between">
-                        <span className="text-gray-700 font-medium text-sm sm:text-base">Rooms</span>
-                        <div className="flex items-center space-x-2 sm:space-x-3">
-                          <button
-                            type="button"
-                            onClick={() => setRooms(Math.max(1, rooms - 1))}
-                            className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"
-                          >
-                            <Minus size={14} />
-                          </button>
-                          <span className="w-6 sm:w-8 text-center font-medium text-sm sm:text-base">{rooms}</span>
-                          <button
-                            type="button"
-                            onClick={() => setRooms(Math.min(10, rooms + 1))}
-                            className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"
-                          >
-                            <Plus size={14} />
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Adults */}
-                      <div className="flex items-center justify-between">
-                        <span className="text-gray-700 font-medium text-sm sm:text-base">Adults</span>
-                        <div className="flex items-center space-x-2 sm:space-x-3">
-                          <button
-                            type="button"
-                            onClick={() => setAdults(Math.max(1, adults - 1))}
-                            className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"
-                          >
-                            <Minus size={14} />
-                          </button>
-                          <span className="w-6 sm:w-8 text-center font-medium text-sm sm:text-base">{adults}</span>
-                          <button
-                            type="button"
-                            onClick={() => setAdults(Math.min(20, adults + 1))}
-                            className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"
-                          >
-                            <Plus size={14} />
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Children */}
-                      <div className="flex items-center justify-between">
-                        <span className="text-gray-700 font-medium text-sm sm:text-base">Children</span>
-                        <div className="flex items-center space-x-2 sm:space-x-3">
-                          <button
-                            type="button"
-                            onClick={() => handleChildrenChange(children - 1)}
-                            className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"
-                          >
-                            <Minus size={14} />
-                          </button>
-                          <span className="w-6 sm:w-8 text-center font-medium text-sm sm:text-base">{children}</span>
-                          <button
-                            type="button"
-                            onClick={() => handleChildrenChange(children + 1)}
-                            className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"
-                          >
-                            <Plus size={14} />
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Child Ages */}
-                      {children > 0 && (
-                        <div className="pt-2 sm:pt-3 border-t border-gray-200">
-                          <p className="text-xs sm:text-sm text-gray-600 mb-2 sm:mb-3">Ages of children at check-out</p>
-                          <div className="grid grid-cols-2 gap-2">
-                            {childAges.map((age, index) => (
-                              <select
-                                key={index}
-                                value={age}
-                                onChange={(e) => handleChildAgeChange(index, e.target.value)}
-                                className="px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 rounded-lg text-xs sm:text-sm focus:ring-2 focus:ring-blue-500"
-                              >
-                                <option value={0}>Under 1</option>
-                                {[...Array(17)].map((_, i) => (
-                                  <option key={i + 1} value={i + 1}>{i + 1} year{i + 1 > 1 ? 's' : ''}</option>
-                                ))}
-                              </select>
-                            ))}
+                    <div className="absolute left-0 right-0 top-full mt-1 z-[200] bg-white border border-gray-300 rounded-xl shadow-2xl p-4 max-h-[70vh] overflow-y-auto">
+                      {roomConfigs.map((room, roomIdx) => (
+                        <div key={roomIdx} className={`${roomIdx > 0 ? 'mt-4 pt-4 border-t border-gray-200' : ''}`}>
+                          {/* Room header */}
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="text-sm font-semibold text-gray-900">Room {roomIdx + 1}</span>
+                            {roomConfigs.length > 1 && (
+                              <button type="button" onClick={() => removeRoom(roomIdx)} className="flex items-center gap-1 text-xs text-red-500 hover:text-red-700 transition-colors" style={{ minHeight: 'unset' }}>
+                                <Trash2 className="w-3 h-3" /> Remove
+                              </button>
+                            )}
                           </div>
+
+                          {/* Adults */}
+                          <div className="flex items-center justify-between py-2">
+                            <span className="text-sm text-gray-700">Adults</span>
+                            <div className="flex items-center gap-3">
+                              <button type="button" onClick={() => updateRoom(roomIdx, 'adults', Math.max(1, room.adults - 1))} className="w-7 h-7 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors" style={{ minHeight: 'unset' }}><Minus size={14} /></button>
+                              <span className="w-6 text-center font-medium text-sm">{room.adults}</span>
+                              <button type="button" onClick={() => updateRoom(roomIdx, 'adults', Math.min(6, room.adults + 1))} className="w-7 h-7 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors" style={{ minHeight: 'unset' }}><Plus size={14} /></button>
+                            </div>
+                          </div>
+
+                          {/* Children */}
+                          <div className="flex items-center justify-between py-2">
+                            <span className="text-sm text-gray-700">Children</span>
+                            <div className="flex items-center gap-3">
+                              <button type="button" onClick={() => updateRoom(roomIdx, 'children', room.children - 1)} className="w-7 h-7 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors" style={{ minHeight: 'unset' }}><Minus size={14} /></button>
+                              <span className="w-6 text-center font-medium text-sm">{room.children}</span>
+                              <button type="button" onClick={() => updateRoom(roomIdx, 'children', room.children + 1)} className="w-7 h-7 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors" style={{ minHeight: 'unset' }}><Plus size={14} /></button>
+                            </div>
+                          </div>
+
+                          {/* Child Ages */}
+                          {room.children > 0 && (
+                            <div className="mt-2 pt-2 border-t border-gray-100">
+                              <p className="text-xs text-gray-500 mb-2">Ages of children at check-out</p>
+                              <div className="grid grid-cols-2 gap-2">
+                                {room.childAges.map((age, childIdx) => (
+                                  <select key={childIdx} value={age} onChange={(e) => updateChildAge(roomIdx, childIdx, e.target.value)}
+                                    className="px-2 py-1.5 border border-gray-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500">
+                                    <option value={0}>Under 1</option>
+                                    {[...Array(17)].map((_, i) => (
+                                      <option key={i + 1} value={i + 1}>{i + 1} year{i + 1 > 1 ? 's' : ''}</option>
+                                    ))}
+                                  </select>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         </div>
+                      ))}
+
+                      {/* Add Room button */}
+                      {roomConfigs.length < 6 && (
+                        <button type="button" onClick={addRoom} className="mt-4 flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors" style={{ minHeight: 'unset' }}>
+                          <Plus size={14} /> Add room
+                        </button>
                       )}
 
-                      <button
-                        type="button"
-                        onClick={() => setShowTravellerDropdown(false)}
-                        className="w-full mt-2 sm:mt-3 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm sm:text-base"
-                      >
+                      {/* Apply button */}
+                      <button type="button" onClick={() => setShowTravellerDropdown(false)}
+                        className="w-full mt-4 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm" style={{ minHeight: 'unset' }}>
                         Done
                       </button>
                     </div>
