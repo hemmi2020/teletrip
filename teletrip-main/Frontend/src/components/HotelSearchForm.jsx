@@ -946,6 +946,7 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
         setShowCalendar(false);
       }
       if (travellerRef.current && !travellerRef.current.contains(event.target)) {
+        if (event.target.closest('[data-traveller-portal]')) return;
         setShowTravellerDropdown(false);
       }
       if (locationRef.current && !locationRef.current.contains(event.target)) {
@@ -1205,7 +1206,7 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
                   </div>
 
                   {showTravellerDropdown && createPortal(
-                    <div style={{position:"fixed",inset:0,zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.3)"}} onClick={(e) => { if (e.target === e.currentTarget) setShowTravellerDropdown(false); }}>
+                    <div data-traveller-portal style={{position:"fixed",inset:0,zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.3)"}} onClick={(e) => { if (e.target === e.currentTarget) setShowTravellerDropdown(false); }}>
                     <div className="bg-white border border-gray-200 rounded-2xl shadow-2xl p-4 max-h-[80vh] overflow-y-auto w-full" style={{maxWidth:420,margin:16}} onClick={(e) => e.stopPropagation()}>
                       {roomConfigs.map((room, roomIdx) => (
                         <div key={roomIdx} className={`${roomIdx > 0 ? 'mt-4 pt-4 border-t border-gray-200' : ''}`}>
