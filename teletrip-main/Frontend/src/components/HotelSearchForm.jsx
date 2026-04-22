@@ -999,6 +999,9 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
       url += `&childAges=${allChildAges.join(',')}`;
     }
 
+    // Pass per-room config for proper Hotelbeds occupancy
+    url += `&roomConfigs=${encodeURIComponent(JSON.stringify(roomConfigs))}`;
+
     window.location.href = url;
   };
 

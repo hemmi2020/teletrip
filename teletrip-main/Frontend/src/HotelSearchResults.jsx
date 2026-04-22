@@ -756,21 +756,37 @@ const closeReviewsModal = () => {
         }
 
 
-        const occupancy = { 
-  rooms, 
-  adults, 
-  children: children > 0 ? children : 0
-};
-
-if (children > 0 && childAges.length > 0) {
-  occupancy.paxes = childAges.map(age => ({ type: 'CH', age }));
-}
+        // Build per-room occupancies (Hotelbeds requires separate entries per room)
+        let occupancies;
+        const roomConfigsParam = searchParams.get("roomConfigs");
+        if (roomConfigsParam) {
+          try {
+            const configs = JSON.parse(roomConfigsParam);
+            occupancies = configs.map(room => {
+              const occ = { rooms: 1, adults: room.adults, children: room.children || 0 };
+              if (room.children > 0 && room.childAges?.length > 0) {
+                occ.paxes = room.childAges.map(age => ({ type: 'CH', age: parseInt(age) }));
+              }
+              return occ;
+            });
+          } catch (e) {
+            // Fallback to flat params
+            occupancies = [{ rooms, adults, children: children > 0 ? children : 0 }];
+            if (children > 0 && childAges.length > 0) {
+              occupancies[0].paxes = childAges.map(age => ({ type: 'CH', age }));
+            }
+          }
+        } else {
+          // Backward compatibility — flat params
+          occupancies = [{ rooms, adults, children: children > 0 ? children : 0 }];
+          if (children > 0 && childAges.length > 0) {
+            occupancies[0].paxes = childAges.map(age => ({ type: 'CH', age }));
+          }
+        }
 
         const requestBody = {
           stay: { checkIn, checkOut },
-          occupancies: [
-            occupancy,
-          ],
+          occupancies,
           geolocation: {
             latitude: parseFloat(lat),
             longitude: parseFloat(lon),
