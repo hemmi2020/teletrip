@@ -1800,7 +1800,7 @@ const closeReviewsModal = () => {
 
                     {/* Bottom row */}
                     <div className="flex items-center justify-end mt-2 pt-2 border-t border-gray-50">
-                      <button onClick={(e) => { e.stopPropagation(); setSelectedHotel(hotel); }} className="w-full sm:w-auto px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-[12px] font-medium inline-flex items-center justify-center gap-1" style={{ minHeight: '40px' }}>
+                      <button onClick={(e) => { e.stopPropagation(); setRoomSelections({}); setActiveRoomTab(0); setSelectedHotel(hotel); }} className="w-full sm:w-auto px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-[12px] font-medium inline-flex items-center justify-center gap-1" style={{ minHeight: '40px' }}>
                         <Bed className="w-3 h-3" />View Rooms
                       </button>
                     </div>
