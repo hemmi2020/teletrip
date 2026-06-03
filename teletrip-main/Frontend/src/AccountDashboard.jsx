@@ -563,6 +563,22 @@ const BookingCard = ({ booking, onCancel, onViewDetails, onPayNow, toPKR }) => {
           </div>
         </div>
 
+        {/* Cancellation info */}
+        {booking.status === 'cancelled' && (
+          <div className="bg-red-50 border border-red-100 rounded-lg p-3 mb-4">
+            <p className="text-sm font-medium text-red-800 mb-1">Booking Cancelled</p>
+            {booking.cancellationReason && (
+              <p className="text-xs text-red-600">Reason: {booking.cancellationReason}</p>
+            )}
+            {booking.cancelledAt && (
+              <p className="text-xs text-red-500 mt-0.5">Cancelled on: {formatDate(booking.cancelledAt)}</p>
+            )}
+            {booking.refundAmount > 0 && (
+              <p className="text-xs text-green-600 mt-0.5">Refund: {convertPKR(booking.refundAmount)}</p>
+            )}
+          </div>
+        )}
+
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 text-sm">
           <div>
             <p className="text-gray-500">Check-in</p>

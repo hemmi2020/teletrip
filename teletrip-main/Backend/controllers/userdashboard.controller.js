@@ -268,6 +268,12 @@ const transformBookingData = (booking) => {
     paymentMethod: booking.hotelBooking?.rooms?.[0]?.paymentType === 'AT_WEB' ? 'card' : 'pay_on_site',
     cancellationPolicies: booking.hotelBooking?.rooms?.[0]?.cancellationPolicies || [],
     
+    // Cancellation info
+    cancellationReason: booking.cancellationReason || booking.cancellation?.reason || null,
+    cancelledAt: booking.cancelledAt || booking.cancellation?.cancelledAt || null,
+    cancellationReference: booking.backup?.cancellationReference || booking.cancellation?.cancellationReference || null,
+    refundAmount: booking.cancellation?.refundAmount || null,
+    
     // Add other fields the frontend might need
     createdAt: booking.createdAt,
     bookedAt: booking.bookedAt,
