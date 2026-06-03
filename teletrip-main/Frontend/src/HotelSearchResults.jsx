@@ -2024,7 +2024,7 @@ const closeReviewsModal = () => {
                                 </div>
                                 {/* Details row */}
                                 <div className="flex items-center gap-2 text-[11px] text-gray-400">
-                                  <span>{rate.paymentType === 'AT_WEB' ? 'Pay Online' : rate.paymentType === 'AT_HOTEL' ? 'Pay at Hotel' : rate.paymentType}</span>
+                                  <span>{rate.paymentType === 'AT_WEB' ? 'Pay Online' : rate.paymentType === 'AT_HOTEL' ? 'Pay at Office' : rate.paymentType}</span>
                                   <span>·</span>
                                   <span>{rate.allotment} room{rate.allotment !== 1 ? 's' : ''} left</span>
                                   {rate.rooms && <><span>·</span><span>{rate.rooms} room(s)</span></>}

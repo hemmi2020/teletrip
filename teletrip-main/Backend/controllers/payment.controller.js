@@ -2486,11 +2486,96 @@ module.exports.createPayOnSiteBooking = asyncErrorHandler(async (req, res) => {
       }
     }
 
+    // ✅ CREATE A BOOKING RECORD so it shows in "My Bookings"
+    const Booking = require('../models/booking.model');
+
+    const checkInDate = bookingData.checkIn ? new Date(bookingData.checkIn) : null;
+    const checkOutDate = bookingData.checkOut ? new Date(bookingData.checkOut) : null;
+    const nights = (checkInDate && checkOutDate)
+      ? Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24))
+      : 1;
+
+    const bookingRefPrefix = 'H';
+    const bookingTimestamp = Date.now().toString().slice(-8);
+    const bookingRandom = Math.random().toString(36).substr(2, 4).toUpperCase();
+    const bookingReference = `${bookingRefPrefix}${bookingTimestamp}${bookingRandom}`;
+
+    const newBooking = await Booking.create({
+      user: userId,
+      bookingType: 'hotel',
+      bookingReference: bookingReference,
+      status: 'confirmed',
+      pricing: {
+        basePrice: paymentAmount,
+        totalAmount: paymentAmount,
+        currency: currency,
+        taxes: 0,
+        fees: 0,
+        discounts: 0
+      },
+      hotelBooking: {
+        hotelName: bookingData.hotelName || 'Hotel Booking',
+        checkIn: checkInDate,
+        checkOut: checkOutDate,
+        nights: nights,
+        rooms: [{
+          roomName: bookingData.items?.[0]?.name || 'Standard Room',
+          boardName: 'Room Only',
+          adults: bookingData.guests || 1,
+          children: 0,
+          netPrice: paymentAmount,
+          sellingPrice: paymentAmount,
+          paymentType: 'AT_HOTEL'
+        }],
+        hotelAddress: {
+          city: userData.city || ''
+        },
+        confirmationNumber: hotelbedsReference || null
+      },
+      guestInfo: {
+        primaryGuest: {
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          email: userData.email,
+          phone: userData.phone || ''
+        },
+        totalGuests: {
+          adults: bookingData.guests || 1,
+          children: 0,
+          infants: 0
+        }
+      },
+      payment: {
+        method: 'pay_on_site',
+        status: 'pending',
+        paidAmount: 0
+      },
+      travelDates: {
+        departureDate: checkInDate,
+        returnDate: checkOutDate,
+        duration: nights
+      },
+      source: {
+        platform: 'web'
+      },
+      backup: {
+        hotelbedsBookingData: hotelbedsReference ? { reference: hotelbedsReference } : null
+      }
+    });
+
+    console.log('📋 Booking record created for Pay on Site:', newBooking.bookingReference);
+
+    // Update payment with the new booking reference
+    await payment.updateOne({
+      bookingId: newBooking._id,
+      updatedAt: new Date()
+    });
+
     // ✅ RETURN SUCCESS RESPONSE
     return ApiResponse.success(res, {
       success: true,
-      bookingId: bookingId,
-      bookingReference: hotelbedsReference || bookingId,
+      bookingId: newBooking._id,
+      bookingReference: hotelbedsReference || newBooking.bookingReference,
       hotelbedsReference: hotelbedsReference,
       paymentId,
       orderId,
@@ -2498,10 +2583,10 @@ module.exports.createPayOnSiteBooking = asyncErrorHandler(async (req, res) => {
       currency,
       paymentMethod: 'pay_on_site',
       status: 'confirmed',
-      message: 'Booking confirmed with hotel! Payment will be collected on site.',
+      message: 'Booking confirmed with hotel! Payment will be collected at the Telitrip office.',
       instructions: [
         'Your booking is confirmed',
-        'Payment will be collected when you arrive',
+        'Payment will be collected at the Telitrip office',
         'Please bring a valid ID and payment method',
         'You can view this booking in your dashboard'
       ],

@@ -579,8 +579,8 @@ const handlePayOnSiteBooking = async () => {
           })),
           hotelbedsBookingRequest: hotelbedsBookingRequest
         },
-        amount: currencyConversion ? currencyConversion.totalPKR : parseFloat(totalAmount),
-        currency: 'PKR',
+        amount: parseFloat(totalAmount),
+        currency: 'EUR',
         currencyConversion: currencyConversion,
         bookingId: `HOTELBEDS_${Date.now()}`
       };
@@ -600,7 +600,7 @@ const handlePayOnSiteBooking = async () => {
     }
 
     if (bookingResponse.data.success) {
-      setSuccess('Booking confirmed! Payment will be collected on site.');
+      setSuccess('Booking confirmed! Payment will be collected at the Telitrip office.');
       clearCart();
 
       setTimeout(() => {
@@ -863,7 +863,7 @@ const handlePaymentSubmit = () => {
             </div>
             <div>
               <h3 className="font-semibold text-gray-900">Pay on Site</h3>
-              <p className="text-xs text-gray-500">Pay when you arrive</p>
+              <p className="text-xs text-gray-500">Pay at the office</p>
             </div>
           </div>
           <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
@@ -885,7 +885,7 @@ const handlePaymentSubmit = () => {
               <p className="font-semibold mb-1">✅ Pay on Site Benefits:</p>
               <ul className="space-y-0.5 list-disc list-inside">
                 <li>Booking confirmed instantly</li>
-                <li>Pay when you arrive at hotel</li>
+                <li>Pay when you arrive at the office</li>
                 <li>Cash or card accepted</li>
                 <li>No online payment needed</li>
               </ul>

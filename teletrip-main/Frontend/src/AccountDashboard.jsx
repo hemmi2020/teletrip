@@ -915,6 +915,9 @@ const AccountDashboard = () => {
     sortOrder: 'desc'
   });
 
+  // Receipt modal state
+  const [receiptPayment, setReceiptPayment] = useState(null);
+
   // Load initial data
   useEffect(() => {
     if (user?.email) {
@@ -1817,7 +1820,7 @@ const AccountDashboard = () => {
                               <div className="ml-4 text-right">
                                 <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
                                   <Clock className="w-3 h-3 mr-1" />
-                                  Pay on Arrival
+                                  Pay at Office
                                 </span>
                                 <p className="text-xs text-gray-500 mt-2">
                                   Created {formatDate(payment.createdAt)}
@@ -1827,7 +1830,7 @@ const AccountDashboard = () => {
                             <div className="mt-3 pt-3 border-t border-yellow-100">
                               <p className="text-xs text-yellow-800 flex items-center">
                                 <AlertCircle className="w-3 h-3 mr-1" />
-                                Payment will be collected when you arrive at the hotel
+                                Payment will be collected at the Telitrip office
                               </p>
                             </div>
                           </div>
@@ -1958,7 +1961,7 @@ const AccountDashboard = () => {
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                   <button 
-                                    onClick={() => console.log('View receipt for:', payment._id)}
+                                    onClick={() => setReceiptPayment(payment)}
                                     className="text-blue-600 hover:text-blue-900 flex items-center space-x-1"
                                   >
                                     <Eye className="w-4 h-4" />
@@ -2226,6 +2229,36 @@ const AccountDashboard = () => {
         </div>
       </div>
       
+      {/* Receipt Modal */}
+      {receiptPayment && (
+        <div className="fixed inset-0 z-[150] flex items-center justify-center" onClick={() => setReceiptPayment(null)}>
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+          <div className="relative bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+              <h3 className="text-lg font-bold text-gray-900">Payment Receipt</h3>
+              <button onClick={() => setReceiptPayment(null)} className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center"><X className="w-4 h-4" /></button>
+            </div>
+            <div className="px-6 py-5 space-y-4">
+              <div className="text-center mb-4">
+                <img src={logo} alt="Telitrip" className="h-8 mx-auto mb-2 opacity-80" />
+                <p className="text-xs text-gray-400">Payment Receipt</p>
+              </div>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between"><span className="text-gray-500">Transaction ID</span><span className="font-mono text-gray-900">{receiptPayment.transactionId || receiptPayment._id?.slice(-8)}</span></div>
+                <div className="flex justify-between"><span className="text-gray-500">Booking Ref</span><span className="text-gray-900">{receiptPayment.bookingId?.bookingReference || 'N/A'}</span></div>
+                <div className="flex justify-between"><span className="text-gray-500">Date</span><span className="text-gray-900">{formatDate(receiptPayment.createdAt)}</span></div>
+                <div className="flex justify-between"><span className="text-gray-500">Method</span><span className="text-gray-900">{receiptPayment.paymentMethod || 'Card'}</span></div>
+                <div className="flex justify-between"><span className="text-gray-500">Status</span><span className={`font-medium ${receiptPayment.status === 'completed' ? 'text-green-600' : 'text-yellow-600'}`}>{receiptPayment.status}</span></div>
+                <div className="border-t border-gray-200 pt-2 mt-2 flex justify-between"><span className="text-gray-700 font-medium">Amount</span><span className="text-lg font-bold text-gray-900">{toPKR(receiptPayment.amount)}</span></div>
+              </div>
+            </div>
+            <div className="px-6 pb-5">
+              <button onClick={() => { window.print(); }} className="w-full py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium">Print Receipt</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <Footer />
     </div>
   );
