@@ -787,6 +787,11 @@ export const SlideOutCart = ({ isOpen, onClose, onProceedToCheckout }) => {
                           {isActivity && item.modalityName && <p className="text-[11px] text-purple-600 font-medium">{item.modalityName}{item.selectedTime ? ` · ${item.selectedTime}` : ''}</p>}
                           {isTransfer && <p className="text-[11px] text-blue-600 font-medium">{item.from} → {item.to}</p>}
                           {!isActivity && !isTransfer && item.roomName && <p className="text-[11px] text-gray-500 truncate">{item.roomName}</p>}
+                          {!isActivity && !isTransfer && (item.adults || item.children) && (
+                            <p className="text-[11px] text-gray-500">{item.adults || 0} Adult{(item.adults || 0) !== 1 ? 's' : ''}{item.children > 0 ? `, ${item.children} Child${item.children !== 1 ? 'ren' : ''}` : ''}</p>
+                          )}
+                          {isTransfer && item.adults && <p className="text-[11px] text-gray-500">{item.adults} Traveller{item.adults !== 1 ? 's' : ''}</p>}
+                          {isActivity && item.guests && <p className="text-[11px] text-gray-500">{item.guests} Traveller{item.guests !== 1 ? 's' : ''}</p>}
                           {item.location && <p className="text-[11px] text-gray-400 truncate flex items-center gap-0.5"><MapPin className="w-3 h-3" />{item.location}</p>}
                         </div>
                       </div>
