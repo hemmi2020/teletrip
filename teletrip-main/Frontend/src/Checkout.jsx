@@ -610,8 +610,8 @@ const handlePayOnSiteBooking = async () => {
             bookingReference: bookingResponse.data.data.bookingReference || bookingResponse.data.data.hotelbedsReference,
             paymentId: bookingResponse.data.data.paymentId,
             orderId: bookingResponse.data.data.orderId,
-            amount: bookingResponse.data.data.amount,
-            currency: bookingResponse.data.data.currency,
+            amount: currencyConversion?.totalPKR || bookingResponse.data.data.amount,
+            currency: 'PKR',
             message: bookingResponse.data.data.message,
             instructions: bookingResponse.data.data.instructions,
             bookingDetails: {
