@@ -621,6 +621,7 @@ const [reviewsModal, setReviewsModal] = useState({
         price: pricePerNight, pricePerNight, currency: hotel.currency || 'EUR',
         checkIn, checkOut, nights, guests: (config.adults || 2) + (config.children || 0),
         adults: config.adults || 2, children: config.children || 0, rooms: 1,
+        childAges: config.childAges || [],
         location: `${hotel.zoneName}, ${hotel.destinationName}`,
         boardName: sel.rate.boardName, rateClass: sel.rate.rateClass, paymentType: sel.rate.paymentType,
         cancellationPolicies: sel.rate.cancellationPolicies || [],

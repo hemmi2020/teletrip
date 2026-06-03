@@ -331,24 +331,34 @@ const Checkout = () => {
             name: billingInfo.firstName,
             surname: billingInfo.lastName
           },
-          rooms: roomsWithFreshKeys.map(({ item, rateKey, roomId }) => ({
-            rateKey,
-            paxes: [
-              ...Array(item.adults || 2).fill(null).map((_, i) => ({
-                roomId,
-                type: 'AD',
-                name: i === 0 ? billingInfo.firstName : 'Guest',
-                surname: i === 0 ? billingInfo.lastName : 'Surname'
-              })),
-              ...Array(item.children || 0).fill(null).map((_, i) => ({
-                roomId,
-                type: 'CH',
-                age: item.childAges?.[i] || 10,
-                name: 'Child',
-                surname: 'Surname'
-              }))
-            ]
-          })),
+          rooms: roomsWithFreshKeys.map(({ item, rateKey, roomId }) => {
+            // Parse occupancy from rateKey format: ...||rooms~adults~children~childAge1,childAge2||...
+            const occupancyMatch = rateKey.match(/\|\|(\d+)~(\d+)~(\d+)(?:~([^|]*))?/);
+            const rateAdults = occupancyMatch ? parseInt(occupancyMatch[2]) : (item.adults || 2);
+            const rateChildren = occupancyMatch ? parseInt(occupancyMatch[3]) : (item.children || 0);
+            const rateChildAges = occupancyMatch && occupancyMatch[4]
+              ? occupancyMatch[4].split(',').map(a => parseInt(a)).filter(a => !isNaN(a))
+              : (item.childAges || []);
+            
+            return {
+              rateKey,
+              paxes: [
+                ...Array(rateAdults).fill(null).map((_, i) => ({
+                  roomId,
+                  type: 'AD',
+                  name: i === 0 ? billingInfo.firstName : 'Guest',
+                  surname: i === 0 ? billingInfo.lastName : 'Surname'
+                })),
+                ...Array(rateChildren).fill(null).map((_, i) => ({
+                  roomId,
+                  type: 'CH',
+                  age: rateChildAges[i] || item.childAges?.[i] || 10,
+                  name: 'Child',
+                  surname: 'Surname'
+                }))
+              ]
+            };
+          }),
           clientReference: `TELI_${Date.now()}`,
           remark: billingInfo?.specialRequests || 'Booking via TeleTrip',
           tolerance: 2.00
@@ -555,24 +565,34 @@ const handlePayOnSiteBooking = async () => {
           name: billingInfo.firstName,
           surname: billingInfo.lastName
         },
-        rooms: roomsWithFreshKeys.map(({ item, rateKey, roomId }) => ({
-          rateKey,
-          paxes: [
-            ...Array(item.adults || 2).fill(null).map((_, i) => ({
-              roomId,
-              type: 'AD',
-              name: i === 0 ? billingInfo.firstName : 'Guest',
-              surname: i === 0 ? billingInfo.lastName : 'Surname'
-            })),
-            ...Array(item.children || 0).fill(null).map((_, i) => ({
-              roomId,
-              type: 'CH',
-              age: item.childAges?.[i] || 10,
-              name: 'Child',
-              surname: 'Surname'
-            }))
-          ]
-        })),
+        rooms: roomsWithFreshKeys.map(({ item, rateKey, roomId }) => {
+          // Parse occupancy from rateKey format: ...||rooms~adults~children~childAge1,childAge2||...
+          const occupancyMatch = rateKey.match(/\|\|(\d+)~(\d+)~(\d+)(?:~([^|]*))?/);
+          const rateAdults = occupancyMatch ? parseInt(occupancyMatch[2]) : (item.adults || 2);
+          const rateChildren = occupancyMatch ? parseInt(occupancyMatch[3]) : (item.children || 0);
+          const rateChildAges = occupancyMatch && occupancyMatch[4] 
+            ? occupancyMatch[4].split(',').map(a => parseInt(a)).filter(a => !isNaN(a))
+            : (item.childAges || []);
+          
+          return {
+            rateKey,
+            paxes: [
+              ...Array(rateAdults).fill(null).map((_, i) => ({
+                roomId,
+                type: 'AD',
+                name: i === 0 ? billingInfo.firstName : 'Guest',
+                surname: i === 0 ? billingInfo.lastName : 'Surname'
+              })),
+              ...Array(rateChildren).fill(null).map((_, i) => ({
+                roomId,
+                type: 'CH',
+                age: rateChildAges[i] || item.childAges?.[i] || 10,
+                name: 'Child',
+                surname: 'Surname'
+              }))
+            ]
+          };
+        }),
         clientReference: `TELI_${Date.now()}`,
         remark: billingInfo?.specialRequests || 'Booking via TeleTrip',
         tolerance: 2.00
