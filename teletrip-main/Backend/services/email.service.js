@@ -45,18 +45,35 @@ function interpolate(template, variables) {
 class EmailService {
   constructor() {
     const smtpPort = parseInt(process.env.SMTP_PORT || '465');
+    const smtpHost = process.env.SMTP_HOST || 's11145.sgp1.stableserver.net';
+    const smtpUser = process.env.SMTP_USER || 'customer@telitrip.com';
+    
+    console.log(`[EMAIL] Initializing SMTP: host=${smtpHost}, port=${smtpPort}, user=${smtpUser}, secure=${smtpPort === 465}`);
+    
     this.transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST || 's11145.sgp1.stableserver.net',
+      host: smtpHost,
       port: smtpPort,
       secure: smtpPort === 465, // true for 465 (SSL), false for 587 (STARTTLS)
       auth: {
-        user: process.env.SMTP_USER || 'customer@telitrip.com',
+        user: smtpUser,
         pass: process.env.SMTP_PASS,
       },
       tls: {
-        rejectUnauthorized: false // Allow self-signed certs on shared hosting
-      }
+        rejectUnauthorized: false, // Allow self-signed certs on shared hosting
+        minVersion: 'TLSv1.2'
+      },
+      connectionTimeout: 15000, // 15s connection timeout
+      greetingTimeout: 15000,   // 15s greeting timeout
+      socketTimeout: 20000      // 20s socket timeout
     });
+    
+    // Verify connection on startup (non-blocking)
+    this.transporter.verify()
+      .then(() => console.log('[EMAIL] SMTP connection verified successfully'))
+      .catch(err => {
+        console.error('[EMAIL] SMTP connection verification FAILED:', err.message, '| Code:', err.code);
+        console.error('[EMAIL] Hint: If on Render, try SMTP_PORT=587 (STARTTLS) instead of 465 (SSL)');
+      });
   }
 
   async sendEmail({ to, subject, html, text }) {

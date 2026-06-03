@@ -297,4 +297,52 @@ router.get('/stats',
   emailController.getEmailStats
 );
 
+// ========== SMTP TEST ENDPOINT ==========
+/**
+ * @route   POST /api/v1/admin/email/test-smtp
+ * @desc    Test SMTP connection and send a test email
+ * @access  Private (Admin only)
+ */
+router.post('/test-smtp', ...requireAdmin, async (req, res) => {
+  const emailService = require('../services/email.service');
+  const results = { connection: null, send: null, config: {} };
+  
+  // Show config (without password)
+  results.config = {
+    host: process.env.SMTP_HOST || 's11145.sgp1.stableserver.net',
+    port: process.env.SMTP_PORT || '465',
+    user: process.env.SMTP_USER || 'customer@telitrip.com',
+    passSet: !!process.env.SMTP_PASS,
+    passLength: process.env.SMTP_PASS ? process.env.SMTP_PASS.length : 0,
+    fromName: process.env.FROM_NAME || 'Telitrip',
+    fromEmail: process.env.FROM_EMAIL || 'customer@telitrip.com'
+  };
+  
+  // Test 1: Verify SMTP connection
+  try {
+    await emailService.transporter.verify();
+    results.connection = { success: true, message: 'SMTP connection OK' };
+  } catch (err) {
+    results.connection = { success: false, error: err.message, code: err.code };
+  }
+  
+  // Test 2: Try sending a test email to the admin
+  const testEmail = req.body.to || process.env.ADMIN_EMAIL || req.user.email;
+  try {
+    const info = await emailService.transporter.sendMail({
+      from: `"Telitrip Test" <${process.env.FROM_EMAIL || process.env.SMTP_USER || 'customer@telitrip.com'}>`,
+      to: testEmail,
+      subject: 'Telitrip SMTP Test',
+      text: 'If you received this, SMTP is working correctly.',
+      html: '<p>If you received this, <strong>SMTP is working correctly</strong>.</p>'
+    });
+    results.send = { success: true, messageId: info.messageId, accepted: info.accepted, to: testEmail };
+  } catch (err) {
+    results.send = { success: false, error: err.message, code: err.code, command: err.command, to: testEmail };
+  }
+  
+  const statusCode = results.connection?.success && results.send?.success ? 200 : 500;
+  return res.status(statusCode).json({ success: statusCode === 200, data: results });
+});
+
 module.exports = router;
