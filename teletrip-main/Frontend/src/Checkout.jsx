@@ -344,13 +344,13 @@ const Checkout = () => {
               rateKey,
               paxes: [
                 ...Array(rateAdults).fill(null).map((_, i) => ({
-                  roomId,
+                  roomId: 1,
                   type: 'AD',
                   name: i === 0 ? billingInfo.firstName : 'Guest',
                   surname: i === 0 ? billingInfo.lastName : 'Surname'
                 })),
                 ...Array(rateChildren).fill(null).map((_, i) => ({
-                  roomId,
+                  roomId: 1,
                   type: 'CH',
                   age: rateChildAges[i] || item.childAges?.[i] || 10,
                   name: 'Child',
@@ -578,13 +578,13 @@ const handlePayOnSiteBooking = async () => {
             rateKey,
             paxes: [
               ...Array(rateAdults).fill(null).map((_, i) => ({
-                roomId,
+                roomId: 1,
                 type: 'AD',
                 name: i === 0 ? billingInfo.firstName : 'Guest',
                 surname: i === 0 ? billingInfo.lastName : 'Surname'
               })),
               ...Array(rateChildren).fill(null).map((_, i) => ({
-                roomId,
+                roomId: 1,
                 type: 'CH',
                 age: rateChildAges[i] || item.childAges?.[i] || 10,
                 name: 'Child',
