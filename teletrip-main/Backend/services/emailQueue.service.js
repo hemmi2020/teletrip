@@ -12,14 +12,18 @@ const emailQueue = new Bull('emailQueue', REDIS_URL);
 
 // Create a dedicated transporter for bulk sends
 function createTransporter() {
+  const smtpPort = parseInt(process.env.SMTP_PORT || '465');
   return nodemailer.createTransport({
-    host: process.env.SMTP_HOST || 'smtp.gmail.com',
-    port: process.env.SMTP_PORT || 587,
-    secure: false,
+    host: process.env.SMTP_HOST || 's11145.sgp1.stableserver.net',
+    port: smtpPort,
+    secure: smtpPort === 465,
     auth: {
-      user: process.env.SMTP_USER,
+      user: process.env.SMTP_USER || 'customer@telitrip.com',
       pass: process.env.SMTP_PASS,
     },
+    tls: {
+      rejectUnauthorized: false
+    }
   });
 }
 
@@ -75,7 +79,7 @@ emailQueue.process('sendBulk', async (job) => {
       const renderedSubject = interpolate(template.subject, variables);
       const renderedHtml = interpolate(template.htmlContent, variables);
 
-      const fromAddress = `"${process.env.FROM_NAME || 'Hotel Booking'}" <${process.env.FROM_EMAIL || process.env.SMTP_USER}>`;
+      const fromAddress = `"${process.env.FROM_NAME || 'Telitrip'}" <${process.env.FROM_EMAIL || process.env.SMTP_USER || 'customer@telitrip.com'}>`;
 
       await transporter.sendMail({
         from: fromAddress,

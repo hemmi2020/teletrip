@@ -600,7 +600,7 @@ const handlePayOnSiteBooking = async () => {
     }
 
     if (bookingResponse.data.success) {
-      setSuccess('Booking confirmed! Payment will be collected at the Telitrip office.');
+      setSuccess('Booking reserved! Please visit the Telitrip office to complete payment.');
       clearCart();
 
       setTimeout(() => {
@@ -862,8 +862,8 @@ const handlePaymentSubmit = () => {
               }`} />
             </div>
             <div>
-              <h3 className="font-semibold text-gray-900">Pay on Site</h3>
-              <p className="text-xs text-gray-500">Pay at the office</p>
+              <h3 className="font-semibold text-gray-900">Pay at Office</h3>
+              <p className="text-xs text-gray-500">Visit Telitrip office to pay</p>
             </div>
           </div>
           <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
@@ -876,18 +876,18 @@ const handlePaymentSubmit = () => {
         </div>
       </div>
 
-      {/* Pay on Site Instructions */}
+      {/* Pay at Office Instructions */}
       {paymentMethod === 'pay_on_site' && (
         <div className="bg-green-50 border border-green-200 rounded-lg p-3">
           <div className="flex items-start space-x-2">
             <AlertCircle className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
             <div className="text-xs text-green-800">
-              <p className="font-semibold mb-1">✅ Pay on Site Benefits:</p>
+              <p className="font-semibold mb-1">Pay at Office:</p>
               <ul className="space-y-0.5 list-disc list-inside">
-                <li>Booking confirmed instantly</li>
-                <li>Pay when you arrive at the office</li>
+                <li>Hotel room reserved instantly</li>
+                <li>Visit Telitrip office to complete payment before check-in</li>
                 <li>Cash or card accepted</li>
-                <li>No online payment needed</li>
+                <li>Booking confirmed once payment received</li>
               </ul>
             </div>
           </div>
@@ -1034,7 +1034,7 @@ const handlePaymentSubmit = () => {
             ) : (
               <>
                 <Wallet className="w-4 h-4" />
-                <span>Confirm Booking - Pay on Site</span>
+                <span>Reserve Booking - Pay at Office</span>
               </>
             )}
           </>

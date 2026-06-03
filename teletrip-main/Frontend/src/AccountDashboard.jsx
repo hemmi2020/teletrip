@@ -713,10 +713,10 @@ const BookingCard = ({ booking, onCancel, onViewDetails, onPayNow, toPKR }) => {
               <div className="bg-gray-50 rounded p-3">
                 <h5 className="font-semibold text-gray-900 mb-2">Payment</h5>
                 <p className="text-gray-600">
-                  Method: {booking.hotelBooking?.rooms?.[0]?.paymentType === 'AT_WEB' ? 'Card' : 'Pay on Site'}
+                  Method: {booking.hotelBooking?.rooms?.[0]?.paymentType === 'AT_WEB' ? 'Card' : 'Pay at Office'}
                 </p>
                 <p className="text-gray-600">
-                  Status: {booking.status === 'confirmed' ? 'Paid' : booking.status === 'pending' ? 'Pending' : booking.status}
+                  Status: {booking.status === 'confirmed' ? 'Paid' : booking.status === 'pending' ? 'Awaiting Payment' : booking.status}
                 </p>
               </div>
             </div>
@@ -1393,7 +1393,7 @@ const AccountDashboard = () => {
                         <AlertCircle className="w-5 h-5 text-yellow-600 mr-3" />
                         <div className="flex-1">
                           <h3 className="text-sm font-medium text-yellow-800">
-                            {dashboardStats.pendingPayOnSite.count} Booking{dashboardStats.pendingPayOnSite.count > 1 ? 's' : ''} with Pay on Site
+                            {dashboardStats.pendingPayOnSite.count} Booking{dashboardStats.pendingPayOnSite.count > 1 ? 's' : ''} Awaiting Payment at Office
                           </h3>
                           <p className="text-sm text-yellow-700 mt-1">
                             {dashboardStats.pendingPayOnSite.message}
@@ -1788,7 +1788,7 @@ const AccountDashboard = () => {
                       <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center space-x-2">
                           <Clock className="w-5 h-5 text-yellow-600" />
-                          <h3 className="text-lg font-semibold text-yellow-900">Pending Payments (Pay on Site)</h3>
+                          <h3 className="text-lg font-semibold text-yellow-900">Pending Payments (Pay at Office)</h3>
                         </div>
                         <span className="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded">
                           {pendingPayments.length} pending

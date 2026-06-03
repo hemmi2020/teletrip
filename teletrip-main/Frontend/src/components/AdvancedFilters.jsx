@@ -318,7 +318,7 @@ export const AdvancedFilterPanel = ({
   const paymentMethodOptions = [
     { value: 'credit_card', label: 'Credit Card' },
     { value: 'debit_card', label: 'Debit Card' },
-    { value: 'pay_on_site', label: 'Pay on Site' },
+    { value: 'pay_on_site', label: 'Pay at Office' },
     { value: 'bank_transfer', label: 'Bank Transfer' }
   ];
 

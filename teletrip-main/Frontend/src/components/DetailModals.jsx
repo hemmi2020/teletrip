@@ -382,7 +382,7 @@ export const BookingDetailsModal = ({ isOpen, onClose, booking }) => {
             <div className="flex justify-between">
               <span className="text-gray-600">Payment Method:</span>
               <span className="font-medium">
-                {bookingData.hotelBooking?.rooms?.[0]?.paymentType === 'AT_WEB' ? 'Credit Card' : 'Pay on Site'}
+                {bookingData.hotelBooking?.rooms?.[0]?.paymentType === 'AT_WEB' ? 'Credit Card' : 'Pay at Office'}
               </span>
             </div>
             <div className="flex justify-between">

@@ -31,10 +31,10 @@ const PaymentSuccessOnSite = () => {
               <CheckCircle className="w-12 h-12 text-green-600" />
             </div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Booking Confirmed!
+              Booking Reserved!
             </h1>
             <p className="text-lg text-gray-600">
-              {message || 'Your booking has been confirmed. Payment will be collected on site.'}
+              {message || 'Your hotel room is reserved. Please visit the Telitrip office to complete payment before check-in.'}
             </p>
           </div>
 
@@ -126,15 +126,19 @@ const PaymentSuccessOnSite = () => {
                 <>
                   <li className="flex items-start text-green-800">
                     <span className="text-green-600 mr-2">✓</span>
-                    <span>Your booking is confirmed</span>
+                    <span>Your hotel room is reserved</span>
                   </li>
                   <li className="flex items-start text-green-800">
                     <span className="text-green-600 mr-2">✓</span>
-                    <span>Payment will be collected when you arrive</span>
+                    <span>Please visit the Telitrip office to complete payment before check-in</span>
                   </li>
                   <li className="flex items-start text-green-800">
                     <span className="text-green-600 mr-2">✓</span>
-                    <span>Please bring a valid ID and payment method</span>
+                    <span>Bring a valid ID and payment method (cash or card accepted)</span>
+                  </li>
+                  <li className="flex items-start text-green-800">
+                    <span className="text-green-600 mr-2">✓</span>
+                    <span>Booking will be confirmed once payment is received</span>
                   </li>
                   <li className="flex items-start text-green-800">
                     <span className="text-green-600 mr-2">✓</span>

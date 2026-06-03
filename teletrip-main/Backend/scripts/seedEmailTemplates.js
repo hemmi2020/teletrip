@@ -640,11 +640,11 @@ ${ctaButton('Leave a Review', '{{reviewUrl}}')}
     name: 'Pay on Site Confirmation',
     slug: 'pay_on_site_confirmation',
     category: 'payment',
-    subject: 'Booking Confirmed - Pay at Hotel ({{bookingReference}})',
+    subject: 'Booking Confirmed - Pay at Office ({{bookingReference}})',
     htmlContent: wrapInBrand(`
 <h2 style="margin:0 0 16px 0;color:#28a745;font-size:22px;font-family:Arial,Helvetica,sans-serif;">Booking Confirmed!</h2>
 <p style="margin:0 0 16px 0;color:#333333;font-size:15px;line-height:1.6;font-family:Arial,Helvetica,sans-serif;">Hi {{userName}},</p>
-<p style="margin:0 0 16px 0;color:#333333;font-size:15px;line-height:1.6;font-family:Arial,Helvetica,sans-serif;">Your booking has been confirmed. Payment will be collected at the hotel.</p>
+<p style="margin:0 0 16px 0;color:#333333;font-size:15px;line-height:1.6;font-family:Arial,Helvetica,sans-serif;">Your booking has been confirmed. Payment will be collected at the Telitrip office.</p>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f8f9fa;border-radius:6px;padding:16px;margin:0 0 16px 0;">
 <tr><td style="padding:8px 16px;"><strong style="color:#333333;font-family:Arial,Helvetica,sans-serif;">Booking Reference:</strong></td><td style="padding:8px 16px;color:#333333;font-family:Arial,Helvetica,sans-serif;">{{bookingReference}}</td></tr>
 <tr><td style="padding:8px 16px;"><strong style="color:#333333;font-family:Arial,Helvetica,sans-serif;">Hotel:</strong></td><td style="padding:8px 16px;color:#333333;font-family:Arial,Helvetica,sans-serif;">{{hotelName}}</td></tr>
@@ -654,7 +654,7 @@ ${ctaButton('Leave a Review', '{{reviewUrl}}')}
 <tr><td style="padding:8px 16px;"><strong style="color:#333333;font-family:Arial,Helvetica,sans-serif;">Payment ID:</strong></td><td style="padding:8px 16px;color:#333333;font-family:Arial,Helvetica,sans-serif;">{{paymentId}}</td></tr>
 </table>
 <div style="background-color:#fff3cd;border-left:4px solid #ffc107;padding:12px 16px;margin:0 0 16px 0;">
-<p style="margin:0;color:#856404;font-size:14px;font-family:Arial,Helvetica,sans-serif;"><strong>Important:</strong> Please bring a valid ID and be prepared to pay {{currency}} {{totalAmount}} at the hotel reception. Cash and card accepted.</p>
+<p style="margin:0;color:#856404;font-size:14px;font-family:Arial,Helvetica,sans-serif;"><strong>Important:</strong> Please visit the Telitrip office to complete your payment of {{currency}} {{totalAmount}} before your check-in date. Bring a valid ID. Cash and card accepted.</p>
 </div>
 <p style="margin:0;color:#666666;font-size:14px;font-family:Arial,Helvetica,sans-serif;">Have a great trip!<br>The Telitrip Team</p>`),
     textContent: 'Hi {{userName}}, your booking {{bookingReference}} at {{hotelName}} is confirmed. Pay at hotel: {{currency}} {{totalAmount}}. Check-in: {{checkInDate}}, Check-out: {{checkOutDate}}. Payment ID: {{paymentId}}. Please bring a valid ID.',

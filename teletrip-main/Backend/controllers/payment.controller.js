@@ -2504,7 +2504,7 @@ module.exports.createPayOnSiteBooking = asyncErrorHandler(async (req, res) => {
       user: userId,
       bookingType: 'hotel',
       bookingReference: bookingReference,
-      status: 'confirmed',
+      status: 'pending',
       pricing: {
         basePrice: paymentAmount,
         totalAmount: paymentAmount,
@@ -2582,12 +2582,13 @@ module.exports.createPayOnSiteBooking = asyncErrorHandler(async (req, res) => {
       amount: paymentAmount,
       currency,
       paymentMethod: 'pay_on_site',
-      status: 'confirmed',
-      message: 'Booking confirmed with hotel! Payment will be collected at the Telitrip office.',
+      status: 'pending',
+      message: 'Booking reserved! Please visit the Telitrip office to complete payment.',
       instructions: [
-        'Your booking is confirmed',
-        'Payment will be collected at the Telitrip office',
+        'Your hotel room is reserved',
+        'Payment must be completed at the Telitrip office before check-in',
         'Please bring a valid ID and payment method',
+        'Booking will be confirmed once payment is received',
         'You can view this booking in your dashboard'
       ],
       expiresAt: payment.expiresAt,
@@ -2597,7 +2598,7 @@ module.exports.createPayOnSiteBooking = asyncErrorHandler(async (req, res) => {
         checkOut: bookingData.checkOut,
         guests: bookingData.guests
       }
-    }, 'Pay on Site booking created successfully', 201);
+    }, 'Pay at Office booking created successfully', 201);
 
   } catch (error) {
     console.error('❌ Pay on Site booking creation error:', error);

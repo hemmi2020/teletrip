@@ -5,13 +5,17 @@ const emailService = require('./email.service');
 
 class NotificationService {
   constructor() {
+    const smtpPort = parseInt(process.env.SMTP_PORT || '465');
     this.transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: process.env.SMTP_PORT,
-      secure: process.env.SMTP_SECURE === 'true',
+      host: process.env.SMTP_HOST || 's11145.sgp1.stableserver.net',
+      port: smtpPort,
+      secure: smtpPort === 465,
       auth: {
-        user: process.env.SMTP_USER,
+        user: process.env.SMTP_USER || 'customer@telitrip.com',
         pass: process.env.SMTP_PASS
+      },
+      tls: {
+        rejectUnauthorized: false
       }
     });
   }
@@ -20,7 +24,7 @@ class NotificationService {
   async sendEmail(to, subject, html, text = null) {
     try {
       const mailOptions = {
-        from: `${process.env.FROM_NAME} <${process.env.FROM_EMAIL}>`,
+        from: `"${process.env.FROM_NAME || 'Telitrip'}" <${process.env.FROM_EMAIL || 'customer@telitrip.com'}>`,
         to,
         subject,
         html,

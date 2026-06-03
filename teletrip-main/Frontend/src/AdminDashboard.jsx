@@ -336,7 +336,7 @@ const AdminDashboard = () => {
     // Payment method data
     const paymentMethodData = [
       { method: 'Credit Card', count: 120 },
-      { method: 'Pay on Site', count: 85 },
+      { method: 'Pay at Office', count: 85 },
       { method: 'Debit Card', count: 65 },
       { method: 'Bank Transfer', count: 30 }
     ];
@@ -1044,7 +1044,7 @@ Amount: ${voucher.currency} ${voucher.totalAmount}
                   <Clock className="w-6 h-6 text-yellow-600 mr-3" />
                   <div>
                     <h3 className="text-lg font-semibold text-yellow-800">
-                      {stats.payOnSite.pending.count} Pending Pay on Site Payment{stats.payOnSite.pending.count > 1 ? 's' : ''}
+                      {stats.payOnSite.pending.count} Pending Pay at Office Payment{stats.payOnSite.pending.count > 1 ? 's' : ''}
                     </h3>
                     <p className="text-sm text-yellow-700 mt-1">
                       Total Amount: PKR {stats.payOnSite.pending.totalAmount?.toLocaleString() || 0}
@@ -1105,7 +1105,7 @@ Amount: ${voucher.currency} ${voucher.totalAmount}
               loading={loading}
             />
             <StatCard 
-              title="Pay on Site Pending" 
+              title="Pay at Office Pending" 
               value={stats.payOnSite?.pending?.count?.toLocaleString() || 0}
               icon={Clock}
               trend="up"
@@ -1301,7 +1301,7 @@ Amount: ${voucher.currency} ${voucher.totalAmount}
                 </p>
                 <p className="text-xs text-gray-400 truncate">
                   Guest: {item.guestInfo?.primaryGuest?.firstName || item.user?.fullname?.firstname || 'N/A'} • 
-                  Payment: {item.hotelBooking?.rooms?.[0]?.paymentType === 'AT_WEB' ? 'Card' : 'Pay on Site'}
+                  Payment: {item.hotelBooking?.rooms?.[0]?.paymentType === 'AT_WEB' ? 'Card' : 'Pay at Office'}
                 </p>
                 {freeCancellation && (
                   <p className="text-xs text-green-600 mt-1">
