@@ -309,33 +309,46 @@ const Checkout = () => {
       // Step 2: Build Hotelbeds booking request for hotels
       let hotelbedsBookingRequest = null;
       if (!isActivity && !isTransfer && firstItem.rateKey) {
-        // Call checkRate to get fresh rateKey
-        const checkRateResponse = await hotelApi.checkRate(firstItem.rateKey);
-        const finalRateKey = checkRateResponse.data?.hotel?.rooms?.[0]?.rates?.[0]?.rateKey || firstItem.rateKey;
+        // Get all hotel items from cart (each is a separate room)
+        const hotelItems = checkoutItems.filter(item => item.type !== 'activity' && item.type !== 'transfer' && item.rateKey);
+        
+        // Call checkRate for each room to get fresh rateKeys
+        const roomsWithFreshKeys = await Promise.all(
+          hotelItems.map(async (item, idx) => {
+            try {
+              const checkRateResponse = await hotelApi.checkRate(item.rateKey);
+              const freshRateKey = checkRateResponse.data?.hotel?.rooms?.[0]?.rates?.[0]?.rateKey || item.rateKey;
+              return { item, rateKey: freshRateKey, roomId: idx + 1 };
+            } catch (err) {
+              console.warn(`CheckRate failed for room ${idx + 1}, using original rateKey`);
+              return { item, rateKey: item.rateKey, roomId: idx + 1 };
+            }
+          })
+        );
         
         hotelbedsBookingRequest = {
           holder: {
             name: billingInfo.firstName,
             surname: billingInfo.lastName
           },
-          rooms: [{
-            rateKey: finalRateKey,
+          rooms: roomsWithFreshKeys.map(({ item, rateKey, roomId }) => ({
+            rateKey,
             paxes: [
-              ...Array(firstItem.adults || 2).fill(null).map((_, i) => ({
-                roomId: 1,
+              ...Array(item.adults || 2).fill(null).map((_, i) => ({
+                roomId,
                 type: 'AD',
                 name: i === 0 ? billingInfo.firstName : 'Guest',
                 surname: i === 0 ? billingInfo.lastName : 'Surname'
               })),
-              ...Array(firstItem.children || 0).fill(null).map((_, i) => ({
-                roomId: 1,
+              ...Array(item.children || 0).fill(null).map((_, i) => ({
+                roomId,
                 type: 'CH',
-                age: 10,
+                age: item.childAges?.[i] || 10,
                 name: 'Child',
                 surname: 'Surname'
               }))
             ]
-          }],
+          })),
           clientReference: `TELI_${Date.now()}`,
           remark: billingInfo?.specialRequests || 'Booking via TeleTrip',
           tolerance: 2.00
@@ -514,47 +527,58 @@ const handlePayOnSiteBooking = async () => {
       
       console.log('📥 Activity booking response:', bookingResponse.data);
     } else {
-      // Always call CheckRate to get fresh rateKey
-      console.log('🔄 Calling CheckRate API to get fresh rateKey...');
-      const checkRateResponse = await hotelApi.checkRate(firstItem.rateKey);
+      // Get all hotel items from cart (each is a separate room)
+      const hotelItems = checkoutItems.filter(item => item.type !== 'activity' && item.type !== 'transfer' && item.rateKey);
       
-      if (!checkRateResponse.success) {
-        throw new Error('Rate validation failed. Room may no longer be available.');
-      }
+      // Call CheckRate for each room to get fresh rateKeys
+      console.log(`🔄 Calling CheckRate API for ${hotelItems.length} room(s)...`);
+      const roomsWithFreshKeys = await Promise.all(
+        hotelItems.map(async (item, idx) => {
+          try {
+            const checkRateResponse = await hotelApi.checkRate(item.rateKey);
+            if (!checkRateResponse.success) {
+              throw new Error(`Rate validation failed for room ${idx + 1}`);
+            }
+            const freshRateKey = checkRateResponse.data?.hotel?.rooms?.[0]?.rates?.[0]?.rateKey || item.rateKey;
+            console.log(`✅ Room ${idx + 1} rate validated`);
+            return { item, rateKey: freshRateKey, roomId: idx + 1 };
+          } catch (err) {
+            console.warn(`⚠️ CheckRate failed for room ${idx + 1}:`, err.message);
+            return { item, rateKey: item.rateKey, roomId: idx + 1 };
+          }
+        })
+      );
       
-      const finalRateKey = checkRateResponse.data?.hotel?.rooms?.[0]?.rates?.[0]?.rateKey || firstItem.rateKey;
-      console.log('✅ Rate validated, new rateKey:', finalRateKey);
-      
-      // Build Hotelbeds booking request
+      // Build Hotelbeds booking request with ALL rooms
       const hotelbedsBookingRequest = {
         holder: {
           name: billingInfo.firstName,
           surname: billingInfo.lastName
         },
-        rooms: [{
-          rateKey: finalRateKey,
+        rooms: roomsWithFreshKeys.map(({ item, rateKey, roomId }) => ({
+          rateKey,
           paxes: [
-            ...Array(firstItem.adults || 2).fill(null).map((_, i) => ({
-              roomId: 1,
+            ...Array(item.adults || 2).fill(null).map((_, i) => ({
+              roomId,
               type: 'AD',
               name: i === 0 ? billingInfo.firstName : 'Guest',
               surname: i === 0 ? billingInfo.lastName : 'Surname'
             })),
-            ...Array(firstItem.children || 0).fill(null).map((_, i) => ({
-              roomId: 1,
+            ...Array(item.children || 0).fill(null).map((_, i) => ({
+              roomId,
               type: 'CH',
-              age: 10,
+              age: item.childAges?.[i] || 10,
               name: 'Child',
               surname: 'Surname'
             }))
           ]
-        }],
+        })),
         clientReference: `TELI_${Date.now()}`,
         remark: billingInfo?.specialRequests || 'Booking via TeleTrip',
         tolerance: 2.00
       };
       
-      // Send to Pay on Site endpoint with Hotelbeds request
+      // Send to Pay at Office endpoint with Hotelbeds request
       const payOnSitePayload = {
         userData: {
           firstName: billingInfo.firstName.trim(),
@@ -571,9 +595,9 @@ const handlePayOnSiteBooking = async () => {
           hotelName: firstItem?.hotelName || 'Hotel Booking',
           checkIn: firstItem?.checkIn,
           checkOut: firstItem?.checkOut,
-          guests: firstItem?.guests || firstItem?.adults || 1,
+          guests: checkoutItems.reduce((sum, item) => sum + (item.adults || 0) + (item.children || 0), 0),
           items: checkoutItems.map(item => ({
-            name: item.hotelName || 'Hotel Booking',
+            name: item.hotelName || item.roomName || 'Hotel Booking',
             quantity: 1,
             price: parseFloat(item.price || item.totalPrice || 0)
           })),
