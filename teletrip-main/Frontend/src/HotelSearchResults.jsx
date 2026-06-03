@@ -490,7 +490,9 @@ const [reviewsModal, setReviewsModal] = useState({
     if (amount === 0) {
       return `✓ Free cancellation until ${fromDate}`;
     } else {
-      return `Cancellation fee: €${amount.toFixed(2)} from ${fromDate}`;
+      const pkrAmount = convert ? convert(amount) : null;
+      const displayAmount = pkrAmount ? `PKR ${Math.round(pkrAmount).toLocaleString()}` : `EUR ${amount.toFixed(2)}`;
+      return `Cancellation fee: ${displayAmount} from ${fromDate}`;
     }
   };
 
@@ -2034,7 +2036,7 @@ const closeReviewsModal = () => {
                                 {rate.offers && rate.offers.length > 0 && (
                                   <div className="flex gap-1 flex-wrap">
                                     {rate.offers.map((offer, oi) => (
-                                      <span key={oi} className="text-[10px] px-2 py-0.5 bg-green-50 text-green-700 rounded-full flex items-center gap-0.5"><Tag className="w-2.5 h-2.5" />{offer.name}{offer.amount ? `: €${Math.abs(parseFloat(offer.amount)).toFixed(0)} off` : ''}</span>
+                                      <span key={oi} className="text-[10px] px-2 py-0.5 bg-green-50 text-green-700 rounded-full flex items-center gap-0.5"><Tag className="w-2.5 h-2.5" />{offer.name}{offer.amount ? `: ${formatPKR(Math.abs(parseFloat(offer.amount))) || `PKR ${Math.round(convert(Math.abs(parseFloat(offer.amount))) || 0)}`} off` : ''}</span>
                                     ))}
                                   </div>
                                 )}

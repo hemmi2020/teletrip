@@ -63,6 +63,7 @@ import SpecialRequestHandling from './components/SpecialRequestHandling';
 import BookingTimelineView from './components/BookingTimelineView';
 import MobileTable from './components/MobileTable';
 import BookingReconfirmation from './components/BookingReconfirmation';
+import { useCurrency } from './context/CurrencyContext';
 import EmailManagementTab from './components/EmailManagement/EmailManagementTab';
 import DestinationManagement from './components/DestinationManagement';
 import './styles/admin-responsive.css';
@@ -125,6 +126,7 @@ const StatCard = ({ title, value, change, icon: Icon, trend, loading }) => (
 // Main Admin Dashboard Component
 const AdminDashboard = () => {
   const navigate = useNavigate();
+  const { formatPKR, convert } = useCurrency();
   const [activeTab, setActiveTab] = useState('overview');
   const [loading, setLoading] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -732,7 +734,7 @@ BOOKING VOUCHER
 Ref: ${voucher.bookingReference}
 Guest: ${voucher.guestName}
 Email: ${voucher.email}
-Amount: ${voucher.currency} ${voucher.totalAmount}
+Amount: PKR ${voucher.totalAmount}
           `;
           const blob = new Blob([voucherText], { type: 'text/plain' });
           const url = window.URL.createObjectURL(blob);
@@ -998,7 +1000,7 @@ Amount: ${voucher.currency} ${voucher.totalAmount}
             <RefundAmountPreview 
               booking={selectedItem}
               onConfirm={(amount) => {
-                showToast(`Refund of €${amount.toFixed(2)} processed`, 'success');
+                showToast(`Refund of PKR ${Math.round(amount).toLocaleString()} processed`, 'success');
               }}
             />
           </div>
@@ -1290,6 +1292,9 @@ Amount: ${voucher.currency} ${voucher.totalAmount}
               cancellationPolicies.length > 0 ? item.totalAmount - cancellationPolicies[0].amount : 0;
             
             const nights = item.nights || item.travelDates?.duration || 1;
+            const displayPrice = formatPKR ? formatPKR(item.pricing?.totalAmount || item.totalAmount || 0) : `PKR ${item.pricing?.totalAmount || item.totalAmount || 0}`;
+            const displayRefund = convert ? `PKR ${Math.round(convert(refundAmount)).toLocaleString()}` : `PKR ${refundAmount.toFixed(2)}`;
+            const displayFee = cancellationPolicies.length > 0 && convert ? `PKR ${Math.round(convert(cancellationPolicies[0].amount)).toLocaleString()}` : (cancellationPolicies.length > 0 ? `PKR ${cancellationPolicies[0].amount.toFixed(2)}` : '');
             
             displayDetails = (
               <div>
@@ -1310,7 +1315,7 @@ Amount: ${voucher.currency} ${voucher.totalAmount}
                 )}
                 {!freeCancellation && cancellationPolicies.length > 0 && (
                   <p className="text-xs text-yellow-600 mt-1">
-                    Refund: PKR {refundAmount.toFixed(2)} (Fee: PKR {cancellationPolicies[0].amount.toFixed(2)})
+                    Refund: {displayRefund} (Fee: {displayFee})
                   </p>
                 )}
               </div>
@@ -1344,7 +1349,7 @@ Amount: ${voucher.currency} ${voucher.totalAmount}
                   {userEmail || 'Guest Payment'}
                 </p>
                 <p className="text-sm text-gray-500 truncate">
-                  {bookingRef ? `Booking: ${bookingRef}` : paymentMethod} • PKR {item.amount?.toFixed(2) || 0}
+                  {bookingRef ? `Booking: ${bookingRef}` : paymentMethod} • {formatPKR ? formatPKR(item.amount || 0) : `PKR ${item.amount?.toFixed(2) || 0}`}
                 </p>
               </div>
             );
