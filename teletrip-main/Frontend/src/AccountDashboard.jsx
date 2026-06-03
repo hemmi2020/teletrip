@@ -589,16 +589,39 @@ const BookingCard = ({ booking, onCancel, onViewDetails, onPayNow, toPKR }) => {
             <p className="font-medium">{formatDate(booking.checkOutDate || booking.hotelBooking?.checkOut)}</p>
           </div>
           <div>
-            <p className="text-gray-500">Guests</p>
+            <p className="text-gray-500">Travelers</p>
             <p className="font-medium">
-              {booking.guests || booking.guestInfo?.totalGuests?.adults || 1} {(booking.guests || booking.guestInfo?.totalGuests?.adults || 1) === 1 ? 'guest' : 'guests'}
+              {(() => {
+                const rooms = booking.hotelBooking?.rooms || [];
+                const totalAdults = rooms.reduce((sum, r) => sum + (r.adults || 0), 0) || booking.guestInfo?.totalGuests?.adults || booking.guests || 1;
+                const totalChildren = rooms.reduce((sum, r) => sum + (r.children || 0), 0) || booking.guestInfo?.totalGuests?.children || 0;
+                return `${totalAdults} Adult${totalAdults !== 1 ? 's' : ''}${totalChildren > 0 ? `, ${totalChildren} Child${totalChildren !== 1 ? 'ren' : ''}` : ''}`;
+              })()}
             </p>
           </div>
           <div>
-            <p className="text-gray-500">Room Type</p>
-            <p className="font-medium">{booking.roomType || booking.hotelBooking?.rooms?.[0]?.roomName || 'Standard'}</p>
+            <p className="text-gray-500">Rooms</p>
+            <p className="font-medium">
+              {(booking.hotelBooking?.rooms?.length || 1)} Room{(booking.hotelBooking?.rooms?.length || 1) > 1 ? 's' : ''}
+            </p>
           </div>
         </div>
+
+        {/* Room Summary (shows all rooms) */}
+        {booking.hotelBooking?.rooms?.length > 0 && (
+          <div className="mb-4 space-y-1">
+            {booking.hotelBooking.rooms.map((room, idx) => (
+              <div key={idx} className="flex items-center justify-between text-sm bg-gray-50 rounded px-3 py-2">
+                <span className="text-gray-700 font-medium">
+                  {booking.hotelBooking.rooms.length > 1 ? `Room ${idx + 1}: ` : ''}{room.roomName || 'Standard Room'}
+                </span>
+                <span className="text-gray-500 text-xs">
+                  {room.adults || 0} Adult{(room.adults || 0) !== 1 ? 's' : ''}{room.children > 0 ? `, ${room.children} Child${room.children !== 1 ? 'ren' : ''}` : ''} · {room.boardName || 'Room Only'}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Traveler Information */}
         {booking.guestInfo?.primaryGuest && (

@@ -2518,15 +2518,24 @@ module.exports.createPayOnSiteBooking = asyncErrorHandler(async (req, res) => {
         checkIn: checkInDate,
         checkOut: checkOutDate,
         nights: nights,
-        rooms: [{
-          roomName: bookingData.items?.[0]?.name || 'Standard Room',
-          boardName: 'Room Only',
-          adults: bookingData.guests || 1,
-          children: 0,
-          netPrice: paymentAmount,
-          sellingPrice: paymentAmount,
-          paymentType: 'AT_HOTEL'
-        }],
+        rooms: (bookingData.hotelbedsBookingRequest?.rooms || []).map((room, idx) => {
+          // Parse occupancy from rateKey: ...||rooms~adults~children||...
+          const occMatch = room.rateKey?.match(/\|\|(\d+)~(\d+)~(\d+)/);
+          const adults = occMatch ? parseInt(occMatch[2]) : (bookingData.guests || 2);
+          const children = occMatch ? parseInt(occMatch[3]) : 0;
+          const itemName = bookingData.items?.[idx]?.name || `Room ${idx + 1}`;
+          const itemPrice = bookingData.items?.[idx]?.price || (paymentAmount / (bookingData.hotelbedsBookingRequest?.rooms?.length || 1));
+          
+          return {
+            roomName: itemName,
+            boardName: 'Room Only',
+            adults: adults,
+            children: children,
+            netPrice: itemPrice,
+            sellingPrice: itemPrice,
+            paymentType: 'AT_HOTEL'
+          };
+        }),
         hotelAddress: {
           city: userData.city || ''
         },
@@ -2540,8 +2549,14 @@ module.exports.createPayOnSiteBooking = asyncErrorHandler(async (req, res) => {
           phone: userData.phone || ''
         },
         totalGuests: {
-          adults: bookingData.guests || 1,
-          children: 0,
+          adults: (bookingData.hotelbedsBookingRequest?.rooms || []).reduce((sum, room) => {
+            const match = room.rateKey?.match(/\|\|(\d+)~(\d+)~(\d+)/);
+            return sum + (match ? parseInt(match[2]) : (bookingData.guests || 2));
+          }, 0) || bookingData.guests || 1,
+          children: (bookingData.hotelbedsBookingRequest?.rooms || []).reduce((sum, room) => {
+            const match = room.rateKey?.match(/\|\|(\d+)~(\d+)~(\d+)/);
+            return sum + (match ? parseInt(match[3]) : 0);
+          }, 0),
           infants: 0
         }
       },

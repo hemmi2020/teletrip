@@ -67,13 +67,15 @@ class EmailService {
       socketTimeout: 20000      // 20s socket timeout
     });
     
-    // Verify connection on startup (non-blocking)
-    this.transporter.verify()
-      .then(() => console.log('[EMAIL] SMTP connection verified successfully'))
-      .catch(err => {
-        console.error('[EMAIL] SMTP connection verification FAILED:', err.message, '| Code:', err.code);
-        console.error('[EMAIL] Hint: If on Render, try SMTP_PORT=587 (STARTTLS) instead of 465 (SSL)');
-      });
+    // Verify connection on startup (non-blocking, skip in test)
+    if (process.env.NODE_ENV !== 'test') {
+      this.transporter.verify()
+        .then(() => console.log('[EMAIL] SMTP connection verified successfully'))
+        .catch(err => {
+          console.error('[EMAIL] SMTP connection verification FAILED:', err.message, '| Code:', err.code);
+          console.error('[EMAIL] Hint: If on Render, try SMTP_PORT=587 (STARTTLS) instead of 465 (SSL)');
+        });
+    }
   }
 
   async sendEmail({ to, subject, html, text }) {
