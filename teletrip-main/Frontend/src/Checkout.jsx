@@ -660,11 +660,16 @@ const handlePayOnSiteBooking = async () => {
             instructions: bookingResponse.data.data.instructions,
             bookingDetails: {
               ...bookingResponse.data.data.bookingDetails,
-              roomName: firstItem.roomName || firstItem.modalityName,
-              guests: firstItem.guests || firstItem.adults || 1,
-              adults: firstItem.adults,
-              children: firstItem.children,
-              rooms: firstItem.rooms
+              roomName: checkoutItems.map(item => item.roomName || item.modalityName).join(', '),
+              guests: checkoutItems.reduce((sum, item) => sum + (item.adults || 0) + (item.children || 0), 0),
+              adults: checkoutItems.reduce((sum, item) => sum + (item.adults || 0), 0),
+              children: checkoutItems.reduce((sum, item) => sum + (item.children || 0), 0),
+              rooms: checkoutItems.length,
+              roomsList: checkoutItems.map((item, idx) => ({
+                name: item.roomName || `Room ${idx + 1}`,
+                adults: item.adults || 2,
+                children: item.children || 0
+              }))
             },
             bookingType: firstItem.type === 'activity' ? 'activity' : 'hotel'
           }

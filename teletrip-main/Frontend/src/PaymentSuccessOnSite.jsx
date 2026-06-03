@@ -97,11 +97,23 @@ const PaymentSuccessOnSite = () => {
                 </div>
               )}
 
+              {bookingDetails.roomsList && bookingDetails.roomsList.length > 1 && (
+                <div className="py-2 border-b">
+                  <span className="text-gray-600 block mb-2">Rooms ({bookingDetails.rooms})</span>
+                  {bookingDetails.roomsList.map((room, idx) => (
+                    <div key={idx} className="flex justify-between items-center text-sm ml-2 py-1">
+                      <span className="text-gray-500">Room {idx + 1}: {room.name}</span>
+                      <span className="text-gray-700">{room.adults} Adult{room.adults > 1 ? 's' : ''}{room.children > 0 ? `, ${room.children} Child${room.children > 1 ? 'ren' : ''}` : ''}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
               {bookingDetails.guests && (
                 <div className="flex justify-between items-center py-2">
-                  <span className="text-gray-600">Travelers</span>
+                  <span className="text-gray-600">Total Travelers</span>
                   <span className="font-medium text-gray-900">
-                    {bookingDetails.guests} Guest{bookingDetails.guests > 1 ? 's' : ''}
+                    {bookingDetails.guests} Guest{bookingDetails.guests > 1 ? 's' : ''}{bookingDetails.rooms > 1 ? ` (${bookingDetails.rooms} Rooms)` : ''}
                   </span>
                 </div>
               )}
