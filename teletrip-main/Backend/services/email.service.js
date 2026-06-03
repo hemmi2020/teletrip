@@ -44,21 +44,25 @@ function interpolate(template, variables) {
 
 class EmailService {
   constructor() {
+    const smtpPort = parseInt(process.env.SMTP_PORT || '465');
     this.transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST || 'smtp.gmail.com',
-      port: process.env.SMTP_PORT || 587,
-      secure: false,
+      host: process.env.SMTP_HOST || 's11145.sgp1.stableserver.net',
+      port: smtpPort,
+      secure: smtpPort === 465, // true for 465 (SSL), false for 587 (STARTTLS)
       auth: {
-        user: process.env.SMTP_USER,
+        user: process.env.SMTP_USER || 'customer@telitrip.com',
         pass: process.env.SMTP_PASS,
       },
+      tls: {
+        rejectUnauthorized: false // Allow self-signed certs on shared hosting
+      }
     });
   }
 
   async sendEmail({ to, subject, html, text }) {
     try {
       const info = await this.transporter.sendMail({
-        from: `"${process.env.FROM_NAME || 'Hotel Booking'}" <${process.env.FROM_EMAIL || process.env.SMTP_USER}>`,
+        from: `"${process.env.FROM_NAME || 'Telitrip'}" <${process.env.FROM_EMAIL || process.env.SMTP_USER || 'customer@telitrip.com'}>`,
         to,
         subject,
         text,
@@ -163,7 +167,7 @@ class EmailService {
     try {
       // Step 4: Send via SMTP
       const info = await this.transporter.sendMail({
-        from: `"${process.env.FROM_NAME || 'Hotel Booking'}" <${process.env.FROM_EMAIL || process.env.SMTP_USER}>`,
+        from: `"${process.env.FROM_NAME || 'Telitrip'}" <${process.env.FROM_EMAIL || process.env.SMTP_USER || 'customer@telitrip.com'}>`,
         to: recipientEmail,
         subject: renderedSubject,
         html: renderedHtml,
