@@ -3,6 +3,7 @@ const crypto = require('crypto');
 const { authUser } = require('../middlewares/auth.middleware'); 
 const router = express.Router();   
 const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
+const { addLog } = require('../services/certificationLogger');
 
 // Hotelbeds API configuration  
 const HOTELBEDS_API_KEY = process.env.HOTELBEDS_API_KEY || '106700a0f2f1e2aa1d4c2b16daae70b2';     
@@ -272,7 +273,8 @@ router.post('/hotels/search-auth', async (req, res) => {
 
         console.log('Hotel search (no auth required)');
 
-        const response = await fetch(`${HOTELBEDS_BASE_URL}/hotel-api/1.0/hotels`, {
+        const url = `${HOTELBEDS_BASE_URL}/hotel-api/1.0/hotels`;
+        const response = await fetch(url, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -295,6 +297,29 @@ router.post('/hotels/search-auth', async (req, res) => {
         } 
 
         const data = await response.json();
+
+        // Log for certification (only log summary, not full hotel list)
+        addLog({
+            step: 'Availability',
+            request: {
+                method: 'POST',
+                url,
+                headers: { 'Content-Type': 'application/json', 'Api-key': HOTELBEDS_API_KEY, 'X-Signature': signature, 'Accept': 'application/json' },
+                body: req.body
+            },
+            response: {
+                status: response.status,
+                body: {
+                    auditData: data.auditData,
+                    hotels: {
+                        total: data.hotels?.total,
+                        checkIn: data.hotels?.checkIn,
+                        checkOut: data.hotels?.checkOut,
+                        hotelsCount: data.hotels?.hotels?.length || 0
+                    }
+                }
+            }
+        });
 
         if (data.hotels && data.hotels.hotels) {
             data.hotels.hotels = await enhanceHotelsWithContent(data.hotels.hotels);
@@ -407,7 +432,8 @@ router.post('/hotels/checkrate', async (req, res) => {
         const timestamp = Math.floor(Date.now() / 1000);
         const signature = generateHotelbedsSignature(HOTELBEDS_API_KEY, HOTELBEDS_SECRET, timestamp);
 
-        const response = await fetch(`${HOTELBEDS_BASE_URL}/hotel-api/1.0/checkrates`, {
+        const url = `${HOTELBEDS_BASE_URL}/hotel-api/1.0/checkrates`;
+        const response = await fetch(url, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -430,6 +456,21 @@ router.post('/hotels/checkrate', async (req, res) => {
         }
 
         const data = await response.json();
+
+        // Log for certification
+        addLog({
+            step: 'CheckRate',
+            request: {
+                method: 'POST',
+                url,
+                headers: { 'Content-Type': 'application/json', 'Api-key': HOTELBEDS_API_KEY, 'X-Signature': signature, 'Accept': 'application/json' },
+                body: req.body
+            },
+            response: {
+                status: response.status,
+                body: data
+            }
+        });
 
         res.json({
             success: true,

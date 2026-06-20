@@ -3,6 +3,7 @@
 
 const crypto = require('crypto');
 const fetch = require('node-fetch');
+const { addLog } = require('./certificationLogger');
 
 // Hotelbeds API configuration
 const HOTELBEDS_API_KEY = process.env.HOTELBEDS_API_KEY || '106700a0f2f1e2aa1d4c2b16daae70b2';
@@ -30,15 +31,18 @@ async function confirmBookingWithHotelbeds(bookingRequest) {
     console.log('📞 [HOTELBEDS] Calling POST /bookings API...');
     console.log('📦 [HOTELBEDS] Request:', JSON.stringify(bookingRequest, null, 2));
 
-    const response = await fetch(`${HOTELBEDS_BASE_URL}/hotel-api/1.0/bookings`, {
+    const url = `${HOTELBEDS_BASE_URL}/hotel-api/1.0/bookings`;
+    const headers = {
+      'Content-Type': 'application/json',
+      'Api-key': HOTELBEDS_API_KEY,
+      'X-Signature': signature,
+      'Accept': 'application/json',
+      'Accept-Encoding': 'gzip'
+    };
+
+    const response = await fetch(url, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Api-key': HOTELBEDS_API_KEY,
-        'X-Signature': signature,
-        'Accept': 'application/json',
-        'Accept-Encoding': 'gzip'
-      },
+      headers,
       body: JSON.stringify(bookingRequest),
       timeout: 30000
     });
@@ -46,6 +50,21 @@ async function confirmBookingWithHotelbeds(bookingRequest) {
     const responseText = await response.text();
     console.log('📥 [HOTELBEDS] Response status:', response.status);
     console.log('📥 [HOTELBEDS] Response body:', responseText);
+
+    // Log for certification
+    addLog({
+      step: 'Booking',
+      request: {
+        method: 'POST',
+        url,
+        headers: { 'Content-Type': 'application/json', 'Api-key': HOTELBEDS_API_KEY, 'X-Signature': signature, 'Accept': 'application/json' },
+        body: bookingRequest
+      },
+      response: {
+        status: response.status,
+        body: JSON.parse(responseText)
+      }
+    });
 
     if (!response.ok) {
       console.error('❌ [HOTELBEDS] Booking failed:', response.status, responseText);
@@ -111,21 +130,35 @@ async function cancelBookingWithHotelbeds(bookingReference, cancellationFlag = '
 
     console.log('🚫 [HOTELBEDS] Cancelling booking:', bookingReference);
 
-    const response = await fetch(
-      `${HOTELBEDS_BASE_URL}/hotel-api/1.0/bookings/${bookingReference}?cancellationFlag=${cancellationFlag}`,
-      {
-        method: 'DELETE',
-        headers: {
-          'Api-key': HOTELBEDS_API_KEY,
-          'X-Signature': signature,
-          'Accept': 'application/json',
-          'Accept-Encoding': 'gzip'
-        },
-        timeout: 30000
-      }
-    );
+    const url = `${HOTELBEDS_BASE_URL}/hotel-api/1.0/bookings/${bookingReference}?cancellationFlag=${cancellationFlag}`;
+    const headers = {
+      'Api-key': HOTELBEDS_API_KEY,
+      'X-Signature': signature,
+      'Accept': 'application/json',
+      'Accept-Encoding': 'gzip'
+    };
+
+    const response = await fetch(url, {
+      method: 'DELETE',
+      headers,
+      timeout: 30000
+    });
 
     const responseText = await response.text();
+
+    // Log for certification
+    addLog({
+      step: 'Cancellation',
+      request: {
+        method: 'DELETE',
+        url,
+        headers: { 'Api-key': HOTELBEDS_API_KEY, 'X-Signature': signature, 'Accept': 'application/json' }
+      },
+      response: {
+        status: response.status,
+        body: responseText ? JSON.parse(responseText) : null
+      }
+    });
 
     if (!response.ok) {
       console.error('❌ [HOTELBEDS] Cancellation failed:', response.status, responseText);

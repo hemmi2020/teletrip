@@ -616,4 +616,29 @@ router.put('/settings/email',
   adminDashboardController.updateEmailSettings
 );
 
+// ========== CERTIFICATION LOGS ==========
+const { getLogs, clearLogs } = require('../services/certificationLogger');
+
+/**
+ * GET /api/admin/certification-logs
+ * Retrieve Hotelbeds API request/response logs for certification
+ */
+router.get('/certification-logs', ...requireAdmin, (req, res) => {
+  const logs = getLogs();
+  res.json({
+    success: true,
+    count: logs.length,
+    logs
+  });
+});
+
+/**
+ * DELETE /api/admin/certification-logs
+ * Clear certification logs
+ */
+router.delete('/certification-logs', ...requireAdmin, (req, res) => {
+  clearLogs();
+  res.json({ success: true, message: 'Certification logs cleared' });
+});
+
 module.exports = router;
