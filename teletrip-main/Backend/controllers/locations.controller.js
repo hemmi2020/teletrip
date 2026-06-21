@@ -106,17 +106,68 @@ async function getCountriesData() {
   if (countriesCache && Date.now() - countriesCacheTime < 3600000) return countriesCache;
   try {
     const fetch = (await import('node-fetch')).default;
-    const res = await fetch('https://countriesnow.space/api/v0.1/countries/');
+    const res = await fetch('https://countriesnow.space/api/v0.1/countries/', { timeout: 8000 });
     const data = await res.json();
-    if (!data.error) {
+    if (!data.error && data.data && data.data.length > 0) {
       countriesCache = data.data;
       countriesCacheTime = Date.now();
       return countriesCache;
     }
   } catch (err) {
-    console.error('Failed to fetch countries:', err.message);
+    console.error('Failed to fetch countries from API:', err.message);
+  }
+  // Fallback: use built-in destinations data
+  if (!countriesCache || countriesCache.length === 0) {
+    countriesCache = getBuiltInDestinations();
+    countriesCacheTime = Date.now();
   }
   return countriesCache || [];
+}
+
+function getBuiltInDestinations() {
+  return [
+    { country: 'United Arab Emirates', iso3: 'ARE', cities: ['Dubai', 'Abu Dhabi', 'Sharjah', 'Ajman', 'Ras Al Khaimah', 'Fujairah', 'Al Ain'] },
+    { country: 'Saudi Arabia', iso3: 'SAU', cities: ['Riyadh', 'Jeddah', 'Mecca', 'Medina', 'Dammam', 'Khobar', 'Abha', 'Taif', 'Tabuk'] },
+    { country: 'Pakistan', iso3: 'PAK', cities: ['Karachi', 'Lahore', 'Islamabad', 'Rawalpindi', 'Faisalabad', 'Multan', 'Peshawar', 'Quetta', 'Hyderabad', 'Murree', 'Naran', 'Swat', 'Hunza', 'Skardu'] },
+    { country: 'Turkey', iso3: 'TUR', cities: ['Istanbul', 'Ankara', 'Antalya', 'Izmir', 'Bodrum', 'Cappadocia', 'Trabzon', 'Bursa', 'Fethiye'] },
+    { country: 'Thailand', iso3: 'THA', cities: ['Bangkok', 'Phuket', 'Pattaya', 'Chiang Mai', 'Krabi', 'Koh Samui', 'Hua Hin'] },
+    { country: 'Malaysia', iso3: 'MYS', cities: ['Kuala Lumpur', 'Penang', 'Langkawi', 'Johor Bahru', 'Kota Kinabalu', 'Malacca'] },
+    { country: 'Indonesia', iso3: 'IDN', cities: ['Bali', 'Jakarta', 'Yogyakarta', 'Bandung', 'Surabaya', 'Lombok'] },
+    { country: 'Egypt', iso3: 'EGY', cities: ['Cairo', 'Sharm El Sheikh', 'Hurghada', 'Alexandria', 'Luxor', 'Aswan'] },
+    { country: 'United Kingdom', iso3: 'GBR', cities: ['London', 'Manchester', 'Birmingham', 'Edinburgh', 'Liverpool', 'Glasgow', 'Bristol', 'Leeds', 'Oxford', 'Cambridge'] },
+    { country: 'United States', iso3: 'USA', cities: ['New York', 'Los Angeles', 'Miami', 'Las Vegas', 'San Francisco', 'Chicago', 'Orlando', 'Houston', 'Dallas', 'Washington DC', 'Boston', 'Seattle'] },
+    { country: 'France', iso3: 'FRA', cities: ['Paris', 'Nice', 'Lyon', 'Marseille', 'Bordeaux', 'Toulouse', 'Strasbourg', 'Cannes'] },
+    { country: 'Spain', iso3: 'ESP', cities: ['Barcelona', 'Madrid', 'Malaga', 'Seville', 'Valencia', 'Ibiza', 'Palma de Mallorca', 'Granada', 'Marbella'] },
+    { country: 'Italy', iso3: 'ITA', cities: ['Rome', 'Milan', 'Venice', 'Florence', 'Naples', 'Amalfi', 'Sicily', 'Turin', 'Bologna'] },
+    { country: 'Germany', iso3: 'DEU', cities: ['Berlin', 'Munich', 'Frankfurt', 'Hamburg', 'Cologne', 'Dusseldorf', 'Stuttgart'] },
+    { country: 'Greece', iso3: 'GRC', cities: ['Athens', 'Santorini', 'Mykonos', 'Crete', 'Rhodes', 'Corfu', 'Thessaloniki'] },
+    { country: 'Maldives', iso3: 'MDV', cities: ['Male', 'Maafushi', 'Hulhumale'] },
+    { country: 'Sri Lanka', iso3: 'LKA', cities: ['Colombo', 'Kandy', 'Galle', 'Negombo', 'Ella', 'Sigiriya', 'Nuwara Eliya'] },
+    { country: 'India', iso3: 'IND', cities: ['Mumbai', 'Delhi', 'Goa', 'Jaipur', 'Agra', 'Bangalore', 'Chennai', 'Kolkata', 'Hyderabad', 'Udaipur', 'Kerala', 'Shimla', 'Manali'] },
+    { country: 'Singapore', iso3: 'SGP', cities: ['Singapore'] },
+    { country: 'Japan', iso3: 'JPN', cities: ['Tokyo', 'Osaka', 'Kyoto', 'Yokohama', 'Hiroshima', 'Fukuoka', 'Sapporo'] },
+    { country: 'South Korea', iso3: 'KOR', cities: ['Seoul', 'Busan', 'Jeju Island', 'Incheon'] },
+    { country: 'Australia', iso3: 'AUS', cities: ['Sydney', 'Melbourne', 'Brisbane', 'Perth', 'Gold Coast', 'Adelaide', 'Cairns'] },
+    { country: 'Oman', iso3: 'OMN', cities: ['Muscat', 'Salalah', 'Nizwa', 'Sur'] },
+    { country: 'Qatar', iso3: 'QAT', cities: ['Doha'] },
+    { country: 'Bahrain', iso3: 'BHR', cities: ['Manama'] },
+    { country: 'Kuwait', iso3: 'KWT', cities: ['Kuwait City'] },
+    { country: 'Jordan', iso3: 'JOR', cities: ['Amman', 'Petra', 'Aqaba', 'Dead Sea'] },
+    { country: 'Morocco', iso3: 'MAR', cities: ['Marrakech', 'Casablanca', 'Fez', 'Tangier', 'Agadir'] },
+    { country: 'South Africa', iso3: 'ZAF', cities: ['Cape Town', 'Johannesburg', 'Durban', 'Pretoria', 'Port Elizabeth'] },
+    { country: 'Kenya', iso3: 'KEN', cities: ['Nairobi', 'Mombasa', 'Diani Beach'] },
+    { country: 'Tanzania', iso3: 'TZA', cities: ['Zanzibar', 'Dar es Salaam', 'Arusha'] },
+    { country: 'Mexico', iso3: 'MEX', cities: ['Cancun', 'Mexico City', 'Playa del Carmen', 'Tulum', 'Puerto Vallarta', 'Los Cabos'] },
+    { country: 'Canada', iso3: 'CAN', cities: ['Toronto', 'Vancouver', 'Montreal', 'Calgary', 'Ottawa', 'Quebec City', 'Niagara Falls'] },
+    { country: 'Switzerland', iso3: 'CHE', cities: ['Zurich', 'Geneva', 'Lucerne', 'Bern', 'Interlaken', 'Zermatt'] },
+    { country: 'Netherlands', iso3: 'NLD', cities: ['Amsterdam', 'Rotterdam', 'The Hague', 'Utrecht'] },
+    { country: 'Portugal', iso3: 'PRT', cities: ['Lisbon', 'Porto', 'Faro', 'Madeira', 'Algarve'] },
+    { country: 'Azerbaijan', iso3: 'AZE', cities: ['Baku', 'Gabala', 'Sheki'] },
+    { country: 'Georgia', iso3: 'GEO', cities: ['Tbilisi', 'Batumi', 'Gudauri'] },
+    { country: 'China', iso3: 'CHN', cities: ['Beijing', 'Shanghai', 'Guangzhou', 'Shenzhen', 'Hong Kong', 'Macau', 'Hangzhou', 'Chengdu'] },
+    { country: 'Vietnam', iso3: 'VNM', cities: ['Ho Chi Minh City', 'Hanoi', 'Da Nang', 'Nha Trang', 'Hoi An', 'Phu Quoc'] },
+    { country: 'Philippines', iso3: 'PHL', cities: ['Manila', 'Cebu', 'Boracay', 'Palawan', 'Bohol'] },
+  ];
 }
 
 exports.searchLocations = async (req, res) => {
