@@ -44,6 +44,7 @@ const Checkout = () => {
   const [success, setSuccess] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('hblpay'); // 'hblpay' or 'pay_on_site'
   const [showOrderSummary, setShowOrderSummary] = useState(true);
+  const [rateComments, setRateComments] = useState([]);
 
 
   // Form data matching your backend validation
@@ -318,13 +319,21 @@ const Checkout = () => {
             try {
               const checkRateResponse = await hotelApi.checkRate(item.rateKey);
               const freshRateKey = checkRateResponse.data?.hotel?.rooms?.[0]?.rates?.[0]?.rateKey || item.rateKey;
-              return { item, rateKey: freshRateKey, roomId: idx + 1 };
+              return { item, rateKey: freshRateKey, roomId: idx + 1, rateComments: checkRateResponse.data?.hotel?.rooms?.[0]?.rates?.[0]?.rateComments || '' };
             } catch (err) {
               console.warn(`CheckRate failed for room ${idx + 1}, using original rateKey`);
-              return { item, rateKey: item.rateKey, roomId: idx + 1 };
+              return { item, rateKey: item.rateKey, roomId: idx + 1, rateComments: '' };
             }
           })
         );
+
+        // Collect and display rate comments (important hotel info)
+        const allRateComments = roomsWithFreshKeys
+          .map(r => r.rateComments)
+          .filter(Boolean);
+        if (allRateComments.length > 0) {
+          setRateComments(allRateComments);
+        }
         
         hotelbedsBookingRequest = {
           holder: {
@@ -551,13 +560,21 @@ const handlePayOnSiteBooking = async () => {
             }
             const freshRateKey = checkRateResponse.data?.hotel?.rooms?.[0]?.rates?.[0]?.rateKey || item.rateKey;
             console.log(`✅ Room ${idx + 1} rate validated`);
-            return { item, rateKey: freshRateKey, roomId: idx + 1 };
+            return { item, rateKey: freshRateKey, roomId: idx + 1, rateComments: checkRateResponse.data?.hotel?.rooms?.[0]?.rates?.[0]?.rateComments || '' };
           } catch (err) {
             console.warn(`⚠️ CheckRate failed for room ${idx + 1}:`, err.message);
-            return { item, rateKey: item.rateKey, roomId: idx + 1 };
+            return { item, rateKey: item.rateKey, roomId: idx + 1, rateComments: '' };
           }
         })
       );
+
+      // Collect and display rate comments (important hotel info)
+      const allRateComments = roomsWithFreshKeys
+        .map(r => r.rateComments)
+        .filter(Boolean);
+      if (allRateComments.length > 0) {
+        setRateComments(allRateComments);
+      }
       
       // Build Hotelbeds booking request with ALL rooms
       const hotelbedsBookingRequest = {
@@ -999,6 +1016,13 @@ const handlePaymentSubmit = () => {
                   return formatPKR(itemTotal) || `${item.currency || 'EUR'} ${itemTotal.toFixed(2)}`;
                 })()}
               </p>
+              {item.taxes?.taxes?.filter(t => !t.included).length > 0 && (
+                <div className="text-[10px] text-amber-600 mt-1">
+                  {item.taxes.taxes.filter(t => !t.included).map((tax, i) => (
+                    <span key={i}>{tax.subType || tax.type}: {tax.currency} {tax.amount} (payable on arrival){i < item.taxes.taxes.filter(t => !t.included).length - 1 ? ' · ' : ''}</span>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         ))}
@@ -1052,6 +1076,16 @@ const handlePaymentSubmit = () => {
               <p className="text-sm font-medium text-green-800">{success}</p>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Rate Comments - Important Hotel Information */}
+      {rateComments.length > 0 && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
+          <h4 className="text-sm font-semibold text-amber-900 mb-2">Important Hotel Information</h4>
+          {rateComments.map((comment, idx) => (
+            <p key={idx} className="text-xs text-amber-800 mb-1">{comment}</p>
+          ))}
         </div>
       )}
 

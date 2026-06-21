@@ -42,6 +42,7 @@ import {
 import { UserDataContext, AuthModal } from './components/CartSystem';
 import Header from './components/Header';
 import Footer from './components/Footer';
+import BookingVoucher from './components/BookingVoucher';
 import logo from './images/Telitrip-Logo.png';
 import { DashboardAPIService, handleApiError, validateForm, formatCurrency, formatDate } from './services/dashboardApi';
 
@@ -465,7 +466,7 @@ const ProfileForm = ({ profile, onSave, onCancel, loading }) => {
 };
 
 // Booking Card Component
-const BookingCard = ({ booking, onCancel, onViewDetails, onPayNow, toPKR }) => {
+const BookingCard = ({ booking, onCancel, onViewDetails, onPayNow, onVoucher, toPKR }) => {
   const convertPKR = toPKR || ((v) => formatCurrency(v));
   const [activityName, setActivityName] = React.useState(null);
   const [showDetails, setShowDetails] = React.useState(false);
@@ -690,6 +691,15 @@ const BookingCard = ({ booking, onCancel, onViewDetails, onPayNow, toPKR }) => {
             <Eye className="w-4 h-4" />
             <span>{showDetails ? 'Hide Details' : 'View Details'}</span>
           </button>
+          {(booking.status === 'confirmed' || booking.status === 'pending') && onVoucher && (
+            <button
+              onClick={() => onVoucher(booking)}
+              className="flex items-center space-x-2 px-4 py-2 text-purple-600 border border-purple-300 rounded-lg hover:bg-purple-50 transition-colors"
+            >
+              <Download className="w-4 h-4" />
+              <span>Voucher</span>
+            </button>
+          )}
           {booking.status === 'pending' && (
             <button
               onClick={() => onPayNow(booking)}
@@ -956,6 +966,7 @@ const AccountDashboard = () => {
 
   // Receipt modal state
   const [receiptPayment, setReceiptPayment] = useState(null);
+  const [voucherBooking, setVoucherBooking] = useState(null);
 
   // Load initial data
   useEffect(() => {
@@ -1738,6 +1749,7 @@ const AccountDashboard = () => {
                           onCancel={handleCancelBooking}
                           onViewDetails={handleViewBookingDetails}
                           onPayNow={handlePayNow}
+                          onVoucher={setVoucherBooking}
                           toPKR={toPKR}
                         />
                       ))}
@@ -2296,6 +2308,11 @@ const AccountDashboard = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Booking Voucher Modal */}
+      {voucherBooking && (
+        <BookingVoucher booking={voucherBooking} onClose={() => setVoucherBooking(null)} />
       )}
 
       <Footer />
