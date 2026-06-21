@@ -104,6 +104,57 @@ let countriesCacheTime = 0;
 
 async function getCountriesData() {
   if (countriesCache && Date.now() - countriesCacheTime < 3600000) return countriesCache;
+  
+  // Use Hotelbeds Content API for destinations
+  try {
+    const crypto = require('crypto');
+    const fetch = (await import('node-fetch')).default;
+    const apiKey = process.env.HOTELBEDS_API_KEY || '106700a0f2f1e2aa1d4c2b16daae70b2';
+    const secret = process.env.HOTELBEDS_SECRET || '018e478aa6';
+    const timestamp = Math.floor(Date.now() / 1000);
+    const signature = crypto.createHash('sha256').update(apiKey + secret + timestamp).digest('hex');
+
+    const res = await fetch('https://api.test.hotelbeds.com/hotel-content-api/1.0/locations/destinations?fields=all&language=ENG&from=1&to=1500', {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'Api-key': apiKey,
+        'X-Signature': signature
+      },
+      timeout: 15000
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      if (data.destinations && data.destinations.length > 0) {
+        // Transform Hotelbeds destinations into our format grouped by country
+        const countryMap = {};
+        data.destinations.forEach(dest => {
+          const countryCode = dest.countryCode || 'XX';
+          if (!countryMap[countryCode]) {
+            countryMap[countryCode] = {
+              country: dest.countryCode || 'Unknown',
+              iso3: countryCode,
+              cities: []
+            };
+          }
+          if (dest.name && dest.name.content) {
+            countryMap[countryCode].cities.push(dest.name.content);
+          }
+        });
+        countriesCache = Object.values(countryMap);
+        countriesCacheTime = Date.now();
+        console.log(`[LOCATIONS] Loaded ${data.destinations.length} destinations from Hotelbeds Content API`);
+        return countriesCache;
+      }
+    } else {
+      console.error('[LOCATIONS] Hotelbeds Content API error:', res.status);
+    }
+  } catch (err) {
+    console.error('[LOCATIONS] Failed to fetch from Hotelbeds Content API:', err.message);
+  }
+
+  // Fallback to countriesnow if Hotelbeds fails
   try {
     const fetch = (await import('node-fetch')).default;
     const res = await fetch('https://countriesnow.space/api/v0.1/countries/', { timeout: 8000 });
@@ -111,15 +162,18 @@ async function getCountriesData() {
     if (!data.error && data.data && data.data.length > 0) {
       countriesCache = data.data;
       countriesCacheTime = Date.now();
+      console.log('[LOCATIONS] Loaded countries from countriesnow.space');
       return countriesCache;
     }
   } catch (err) {
-    console.error('Failed to fetch countries from API:', err.message);
+    console.error('[LOCATIONS] countriesnow.space also failed:', err.message);
   }
-  // Fallback: use built-in destinations data
+
+  // Final fallback: built-in data
   if (!countriesCache || countriesCache.length === 0) {
     countriesCache = getBuiltInDestinations();
     countriesCacheTime = Date.now();
+    console.log('[LOCATIONS] Using built-in destinations fallback');
   }
   return countriesCache || [];
 }
