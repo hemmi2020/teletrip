@@ -2,7 +2,7 @@ const express = require('express');
 const crypto = require('crypto');
 const { authUser } = require('../middlewares/auth.middleware'); 
 const router = express.Router();   
-const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
+const fetch = require('node-fetch');
 const { addLog } = require('../services/certificationLogger');
 
 // Hotelbeds API configuration  
