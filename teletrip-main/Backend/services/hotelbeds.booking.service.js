@@ -37,7 +37,7 @@ async function confirmBookingWithHotelbeds(bookingRequest) {
       'Api-key': HOTELBEDS_API_KEY,
       'X-Signature': signature,
       'Accept': 'application/json',
-      'Accept-Encoding': 'gzip'
+      // 'Accept-Encoding': handled automatically by node-fetch
     };
 
     const response = await fetch(url, {
@@ -135,7 +135,7 @@ async function cancelBookingWithHotelbeds(bookingReference, cancellationFlag = '
       'Api-key': HOTELBEDS_API_KEY,
       'X-Signature': signature,
       'Accept': 'application/json',
-      'Accept-Encoding': 'gzip'
+      // 'Accept-Encoding': handled automatically by node-fetch
     };
 
     const response = await fetch(url, {
@@ -205,7 +205,7 @@ async function getBookingDetails(bookingReference) {
           'Api-key': HOTELBEDS_API_KEY,
           'X-Signature': signature,
           'Accept': 'application/json',
-          'Accept-Encoding': 'gzip'
+          // 'Accept-Encoding': handled automatically by node-fetch
         },
         timeout: 30000
       }

@@ -229,7 +229,7 @@ router.post('/hotels/search', async (req, res) => {
                 'Api-key': HOTELBEDS_API_KEY,
                 'X-Signature': signature,
                 'Accept': 'application/json',
-                'Accept-Encoding': 'gzip'
+                // 'Accept-Encoding': handled automatically by node-fetch
             },
             body: JSON.stringify(req.body)
         });
@@ -281,7 +281,7 @@ router.post('/hotels/search-auth', async (req, res) => {
                 'Api-key': HOTELBEDS_API_KEY,
                 'X-Signature': signature,
                 'Accept': 'application/json',
-                'Accept-Encoding': 'gzip'
+                // 'Accept-Encoding': handled automatically by node-fetch
             },
             body: JSON.stringify(req.body)
         });
@@ -380,7 +380,7 @@ router.post('/hotels/book', authUser, async (req, res) => {
                 'Api-key': HOTELBEDS_API_KEY,
                 'X-Signature': signature,
                 'Accept': 'application/json',
-                'Accept-Encoding': 'gzip'
+                // 'Accept-Encoding': handled automatically by node-fetch
             },
             body: JSON.stringify(req.body)
         });
@@ -440,7 +440,7 @@ router.post('/hotels/checkrate', async (req, res) => {
                 'Api-key': HOTELBEDS_API_KEY,
                 'X-Signature': signature,
                 'Accept': 'application/json',
-                'Accept-Encoding': 'gzip'
+                // 'Accept-Encoding': handled automatically by node-fetch
             },
             body: JSON.stringify(req.body)
         });
@@ -709,7 +709,7 @@ router.get('/hotels/bookings', authUser, async (req, res) => {
                 'Api-key': HOTELBEDS_API_KEY,
                 'X-Signature': signature,
                 'Accept': 'application/json',
-                'Accept-Encoding': 'gzip'
+                // 'Accept-Encoding': handled automatically by node-fetch
             }
         });
 
@@ -741,7 +741,7 @@ router.get('/hotels/bookings/:bookingId', authUser, async (req, res) => {
                 'Api-key': HOTELBEDS_API_KEY,
                 'X-Signature': signature,
                 'Accept': 'application/json',
-                'Accept-Encoding': 'gzip'
+                // 'Accept-Encoding': handled automatically by node-fetch
             }
         });
 
@@ -771,7 +771,7 @@ router.put('/hotels/bookings/:bookingId', authUser, async (req, res) => {
                 'Api-key': HOTELBEDS_API_KEY,
                 'X-Signature': signature,
                 'Accept': 'application/json',
-                'Accept-Encoding': 'gzip'
+                // 'Accept-Encoding': handled automatically by node-fetch
             },
             body: JSON.stringify(req.body)
         });
@@ -806,7 +806,7 @@ router.delete('/hotels/bookings/:bookingId', authUser, async (req, res) => {
                 'Api-key': HOTELBEDS_API_KEY,
                 'X-Signature': signature,
                 'Accept': 'application/json',
-                'Accept-Encoding': 'gzip'
+                // 'Accept-Encoding': handled automatically by node-fetch
             }
         });
 
@@ -845,7 +845,7 @@ router.get('/hotels/bookings/reconfirmations', authUser, async (req, res) => {
                 'Api-key': HOTELBEDS_API_KEY,
                 'X-Signature': signature,
                 'Accept': 'application/json',
-                'Accept-Encoding': 'gzip'
+                // 'Accept-Encoding': handled automatically by node-fetch
             }
         });
 
