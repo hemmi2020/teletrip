@@ -623,22 +623,30 @@ const { getLogs, clearLogs } = require('../services/certificationLogger');
  * GET /api/admin/certification-logs
  * Retrieve Hotelbeds API request/response logs for certification
  */
-router.get('/certification-logs', ...requireAdmin, (req, res) => {
-  const logs = getLogs();
-  res.json({
-    success: true,
-    count: logs.length,
-    logs
-  });
+router.get('/certification-logs', ...requireAdmin, async (req, res) => {
+  try {
+    const logs = await getLogs();
+    res.json({
+      success: true,
+      count: logs.length,
+      logs
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to retrieve certification logs' });
+  }
 });
 
 /**
  * DELETE /api/admin/certification-logs
  * Clear certification logs
  */
-router.delete('/certification-logs', ...requireAdmin, (req, res) => {
-  clearLogs();
-  res.json({ success: true, message: 'Certification logs cleared' });
+router.delete('/certification-logs', ...requireAdmin, async (req, res) => {
+  try {
+    await clearLogs();
+    res.json({ success: true, message: 'Certification logs cleared' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to clear certification logs' });
+  }
 });
 
 module.exports = router;
