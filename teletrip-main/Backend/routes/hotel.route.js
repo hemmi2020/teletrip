@@ -298,7 +298,7 @@ router.post('/hotels/search-auth', async (req, res) => {
 
         const data = await response.json();
 
-        // Log for certification (only log summary, not full hotel list)
+        // Log for certification (store first 3 hotels with full details for certification)
         addLog({
             step: 'Availability',
             request: {
@@ -315,7 +315,7 @@ router.post('/hotels/search-auth', async (req, res) => {
                         total: data.hotels?.total,
                         checkIn: data.hotels?.checkIn,
                         checkOut: data.hotels?.checkOut,
-                        hotelsCount: data.hotels?.hotels?.length || 0
+                        hotels: (data.hotels?.hotels || []).slice(0, 3)
                     }
                 }
             }
@@ -800,23 +800,38 @@ router.delete('/hotels/bookings/:bookingId', authUser, async (req, res) => {
         if (cancellationFlag) params.append('cancellationFlag', cancellationFlag);
         if (language) params.append('language', language);
 
-        const response = await fetch(`${HOTELBEDS_BASE_URL}/hotel-api/1.0/bookings/${bookingId}?${params}`, {
+        const url = `${HOTELBEDS_BASE_URL}/hotel-api/1.0/bookings/${bookingId}?${params}`;
+        const response = await fetch(url, {
             method: 'DELETE',
             headers: {
                 'Api-key': HOTELBEDS_API_KEY,
                 'X-Signature': signature,
                 'Accept': 'application/json',
-                // 'Accept-Encoding': handled automatically by node-fetch
+            }
+        });
+
+        const responseText = await response.text();
+        const responseData = responseText ? JSON.parse(responseText) : null;
+
+        // Log for certification
+        addLog({
+            step: 'Cancellation',
+            request: {
+                method: 'DELETE',
+                url,
+                headers: { 'Api-key': HOTELBEDS_API_KEY, 'X-Signature': signature, 'Accept': 'application/json' }
+            },
+            response: {
+                status: response.status,
+                body: responseData
             }
         });
 
         if (!response.ok) {
-            const errorText = await response.text();
-            return res.status(response.status).json({ success: false, error: 'Failed to cancel booking', details: errorText });
+            return res.status(response.status).json({ success: false, error: 'Failed to cancel booking', details: responseText });
         }
 
-        const data = await response.json();
-        res.json({ success: true, data });
+        res.json({ success: true, data: responseData });
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
     }
