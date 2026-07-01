@@ -767,6 +767,7 @@ export const SlideOutCart = ({ isOpen, onClose, onProceedToCheckout }) => {
             ) : (
               <div className="p-4 space-y-3">
                 {items.map((item, index) => {
+                  console.log(`🛒 Cart item ${index}:`, { hotelName: item.hotelName, roomName: item.roomName, id: item.id });
                   const nights = calculateNights(item.checkIn, item.checkOut);
                   const totalPrice = item.type === 'activity' ? (item.price || 0) : (item.totalPrice || item.net || (item.price * nights));
                   const isActivity = item.type === 'activity';

@@ -574,6 +574,12 @@ const [reviewsModal, setReviewsModal] = useState({
   };
 
   const handleAddToCart = (hotel, room, rate) => {
+    console.log('🏨 handleAddToCart called with:', { 
+      hotelId: hotel.id, 
+      hotelName: hotel.name, 
+      roomName: room.name 
+    });
+    
     const checkIn = searchParams.get("checkIn");
     const checkOut = searchParams.get("checkOut");
     const adults = parseInt(searchParams.get("adults") || "2");
@@ -583,7 +589,11 @@ const [reviewsModal, setReviewsModal] = useState({
     const totalFromAPI = parseFloat(rate.net);
     const pricePerNight = nights > 0 ? (totalFromAPI / nights) : totalFromAPI;
 
-    addToCart({
+    const cartItem = {
+      type: 'hotel', // Add explicit type
+      id: `${hotel.id}-${room.code}-${rate.rateKey || rate.net}`,
+      hotelId: hotel.id, hotelName: hotel.name, hotelCode: hotel.code,
+    const cartItem = {
       id: `${hotel.id}-${room.code}-${rate.rateKey || rate.net}`,
       hotelId: hotel.id, hotelName: hotel.name, hotelCode: hotel.code,
       roomCode: room.code, roomName: room.name, rateKey: rate.rateKey,
@@ -599,7 +609,10 @@ const [reviewsModal, setReviewsModal] = useState({
       city: hotel.destinationName, zone: hotel.zoneName,
       category: hotel.categoryName, totalPrice: totalFromAPI, net: totalFromAPI,
       addedAt: new Date().toISOString(),
-    });
+    };
+    
+    console.log('🛒 Adding to cart:', cartItem);
+    addToCart(cartItem);
     setNotification({ show: true, message: `${room.name} added to cart!`, type: 'success' });
     setSelectedHotel(null);
     setTimeout(() => setNotification({ show: false, message: '', type: 'success' }), 3000);
@@ -607,6 +620,12 @@ const [reviewsModal, setReviewsModal] = useState({
   };
 
   const handleMultiRoomAddToCart = (hotel, selections, roomConfigsList) => {
+    console.log('🏨🏨 handleMultiRoomAddToCart called with:', { 
+      hotelId: hotel.id, 
+      hotelName: hotel.name, 
+      roomCount: Object.keys(selections).length 
+    });
+    
     const checkIn = searchParams.get("checkIn");
     const checkOut = searchParams.get("checkOut");
     const nights = Math.ceil((new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60 * 24));
@@ -617,6 +636,7 @@ const [reviewsModal, setReviewsModal] = useState({
       const pricePerNight = nights > 0 ? (totalFromAPI / nights) : totalFromAPI;
 
       addToCart({
+        type: 'hotel', // Add explicit type
         id: `${hotel.id}-${sel.room.code}-${sel.rate.rateKey || sel.rate.net}-room${parseInt(tabIdx) + 1}`,
         hotelId: hotel.id, hotelName: hotel.name, hotelCode: hotel.code,
         roomCode: sel.room.code, roomName: `${sel.room.name} (Room ${parseInt(tabIdx) + 1})`, rateKey: sel.rate.rateKey,
@@ -1802,7 +1822,13 @@ const closeReviewsModal = () => {
 
                     {/* Bottom row */}
                     <div className="flex items-center justify-end mt-2 pt-2 border-t border-gray-50">
-                      <button onClick={(e) => { e.stopPropagation(); setRoomSelections({}); setActiveRoomTab(0); setSelectedHotel(hotel); }} className="w-full sm:w-auto px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-[12px] font-medium inline-flex items-center justify-center gap-1" style={{ minHeight: '40px' }}>
+                      <button onClick={(e) => { 
+                        e.stopPropagation(); 
+                        console.log('👀 View Rooms clicked for hotel:', { id: hotel.id, name: hotel.name });
+                        setRoomSelections({}); 
+                        setActiveRoomTab(0); 
+                        setSelectedHotel(hotel); 
+                      }} className="w-full sm:w-auto px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-[12px] font-medium inline-flex items-center justify-center gap-1" style={{ minHeight: '40px' }}>
                         <Bed className="w-3 h-3" />View Rooms
                       </button>
                     </div>
