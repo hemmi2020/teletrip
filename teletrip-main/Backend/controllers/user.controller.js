@@ -412,8 +412,11 @@ module.exports.cancelBooking = asyncErrorHandler(async (req, res) => {
   let cancellationReference = null;
   let refundAmount = 0;
   
-  if (booking.backup?.hotelbedsBookingData?.booking?.reference) {
-    const hotelbedsReference = booking.backup.hotelbedsBookingData.booking.reference;
+  const hotelbedsReference = booking.backup?.hotelbedsBookingData?.booking?.reference
+    || booking.backup?.hotelbedsBookingData?.reference
+    || booking.hotelBooking?.confirmationNumber;
+
+  if (hotelbedsReference) {
     console.log('🚫 Cancelling Hotelbeds booking:', hotelbedsReference);
     
     const { cancelBookingWithHotelbeds } = require('../services/hotelbeds.booking.service');
