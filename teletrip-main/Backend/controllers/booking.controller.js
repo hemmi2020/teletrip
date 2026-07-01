@@ -4,6 +4,7 @@ const ApiResponse = require('../utils/response.util');
 const DateUtil = require('../utils/date.util');
 const { asyncErrorHandler } = require('../middlewares/errorHandler.middleware');
 const notificationService = require('../services/notification.service');
+const { addLog } = require('../services/certificationLogger');
 const crypto = require('crypto');
 const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 
@@ -531,12 +532,17 @@ module.exports.cancelBooking = asyncErrorHandler(async (req, res) => {
 
   // ⚠️ STEP 1: Cancel with Hotelbeds API
   let hotelbedsResponse = null;
-  if (booking.hotelbedsReference) {
+  const hotelbedsReference = booking.backup?.hotelbedsBookingData?.booking?.reference
+    || booking.backup?.hotelbedsBookingData?.reference
+    || booking.hotelBooking?.confirmationNumber;
+
+  if (hotelbedsReference) {
     try {
       const timestamp = Math.floor(Date.now() / 1000);
       const signature = generateHotelbedsSignature(HOTELBEDS_API_KEY, HOTELBEDS_SECRET, timestamp);
 
-      const response = await fetch(`${HOTELBEDS_BASE_URL}/hotel-api/1.0/bookings/${booking.hotelbedsReference}`, {
+      const url = `${HOTELBEDS_BASE_URL}/hotel-api/1.0/bookings/${hotelbedsReference}?cancellationFlag=CANCELLATION`;
+      const response = await fetch(url, {
         method: 'DELETE',
         headers: {
           'Api-key': HOTELBEDS_API_KEY,
@@ -546,13 +552,29 @@ module.exports.cancelBooking = asyncErrorHandler(async (req, res) => {
         }
       });
 
+      const responseText = await response.text();
+      const responseBody = responseText ? JSON.parse(responseText) : null;
+
+      // Log for certification
+      addLog({
+        step: 'Cancellation',
+        request: {
+          method: 'DELETE',
+          url,
+          headers: { 'Api-key': HOTELBEDS_API_KEY, 'X-Signature': signature, 'Accept': 'application/json' }
+        },
+        response: {
+          status: response.status,
+          body: responseBody
+        }
+      });
+
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Hotelbeds cancellation failed:', errorText);
+        console.error('Hotelbeds cancellation failed:', responseText);
         return ApiResponse.error(res, 'Failed to cancel booking with hotel provider', 500);
       }
 
-      hotelbedsResponse = await response.json();
+      hotelbedsResponse = responseBody;
       console.log('✅ Hotelbeds booking cancelled:', hotelbedsResponse);
     } catch (error) {
       console.error('Hotelbeds cancellation error:', error);
