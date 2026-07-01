@@ -593,9 +593,6 @@ const [reviewsModal, setReviewsModal] = useState({
       type: 'hotel', // Add explicit type
       id: `${hotel.id}-${room.code}-${rate.rateKey || rate.net}`,
       hotelId: hotel.id, hotelName: hotel.name, hotelCode: hotel.code,
-    const cartItem = {
-      id: `${hotel.id}-${room.code}-${rate.rateKey || rate.net}`,
-      hotelId: hotel.id, hotelName: hotel.name, hotelCode: hotel.code,
       roomCode: room.code, roomName: room.name, rateKey: rate.rateKey,
       price: pricePerNight, pricePerNight, currency: hotel.currency || 'EUR',
       checkIn, checkOut, nights, guests: adults + children, adults, children, rooms,
