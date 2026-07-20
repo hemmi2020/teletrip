@@ -88,11 +88,12 @@ const BookingVoucher = ({ booking, onClose }) => {
   const hotelName = hb.hotelName || hbHotel.name || 'Hotel';
 
   // Total in EUR from Hotelbeds
-  const totalNetEUR = parseFloat(hbBooking?.totalNet) || parseFloat(hb.totalNet) || parseFloat(hbHotel?.totalNet) || 0;
+  const totalNetEUR = parseFloat(hbBooking?.totalNet) || parseFloat(hb.totalNet) || parseFloat(hbHotel?.totalNet) || parseFloat(booking.totalAmount) || 0;
   // Total in PKR from our pricing
-  const totalPKR = booking.pricing?.totalAmount || booking.totalAmount || 0;
-  // Display amount: prefer PKR if available, fallback to EUR conversion
-  const displayTotal = totalPKR > 0 ? `PKR ${Math.round(totalPKR).toLocaleString()}` : (formatPKR(totalNetEUR) || `${bookingCurrency} ${totalNetEUR.toFixed(2)}`);
+  const totalPKR = booking.pricing?.totalAmount || 0;
+  // Display amount: prefer PKR conversion from EUR, fallback to stored PKR
+  const pkrConverted = formatPKR(totalNetEUR);
+  const displayTotal = totalPKR > 100 ? `PKR ${Math.round(totalPKR).toLocaleString()}` : (pkrConverted || `PKR ${Math.round(totalNetEUR * 310).toLocaleString()}`);
 
   // Payment method
   const paymentMethod = booking.payment?.method || booking.paymentMethod ||
@@ -103,8 +104,8 @@ const BookingVoucher = ({ booking, onClose }) => {
   const fullAddress = addressParts.length > 0 ? addressParts[0] : (hb.hotelAddress?.city || '');
 
   // Supplier notice (mandatory per Hotelbeds)
-  const supplierName = supplier?.name || invoiceCompany?.company || hbBooking?.invoiceCompany?.company || 'the service provider';
-  const supplierVAT = supplier?.vatNumber || invoiceCompany?.registrationNumber || hbBooking?.invoiceCompany?.registrationNumber || '';
+  const supplierName = supplier?.name || invoiceCompany?.company || hbBooking?.invoiceCompany?.company || 'HOTELBEDS DMCC';
+  const supplierVAT = supplier?.vatNumber || invoiceCompany?.registrationNumber || hbBooking?.invoiceCompany?.registrationNumber || '100035906500003';
   const supplierNotice = `Payable through ${supplierName}, acting as agent for the service operating company, details of which can be provided upon request. VAT: ${supplierVAT} Reference: ${confirmationNumber}`;
 
   return (
