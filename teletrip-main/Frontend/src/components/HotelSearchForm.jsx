@@ -849,6 +849,11 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [isLoadingLocations, setIsLoadingLocations] = useState(false);
   const [hotelNameQuery, setHotelNameQuery] = useState('');
+  const [hotelSuggestions, setHotelSuggestions] = useState([]);
+  const [showHotelDropdown, setShowHotelDropdown] = useState(false);
+  const [selectedHotelCode, setSelectedHotelCode] = useState(null);
+  const [isLoadingHotels, setIsLoadingHotels] = useState(false);
+  const hotelNameRef = useRef(null);
   const locationRef = useRef(null);
 
   // Per-room configuration (Bedsonline style)
@@ -946,6 +951,34 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
+  // Debounced hotel name search from local index
+  useEffect(() => {
+    if (hotelNameQuery.trim().length < 2) {
+      setHotelSuggestions([]);
+      setSelectedHotelCode(null);
+      return;
+    }
+    setIsLoadingHotels(true);
+    const timer = setTimeout(async () => {
+      try {
+        const API_BASE = import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
+        const res = await fetch(`${API_BASE}/api/hotels/search-by-name?q=${encodeURIComponent(hotelNameQuery.trim())}&limit=10`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success) {
+            setHotelSuggestions(data.data || []);
+            setShowHotelDropdown(true);
+          }
+        }
+      } catch (err) {
+        console.warn('Hotel name search failed:', err.message);
+      } finally {
+        setIsLoadingHotels(false);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [hotelNameQuery]);
+
   // Handle clicks outside dropdowns
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -959,6 +992,9 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
       }
       if (locationRef.current && !locationRef.current.contains(event.target)) {
         setShowLocationDropdown(false);
+      }
+      if (hotelNameRef.current && !hotelNameRef.current.contains(event.target)) {
+        setShowHotelDropdown(false);
       }
     };
 
@@ -1001,6 +1037,9 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
     url += `&city=${encodeURIComponent(city)}`;
     if (hotelNameQuery.trim()) {
       url += `&hotelName=${encodeURIComponent(hotelNameQuery.trim())}`;
+    }
+    if (selectedHotelCode) {
+      url += `&hotelCode=${selectedHotelCode}`;
     }
 
     // Add child ages if present
@@ -1117,26 +1156,58 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
                   )}
                 </div>
 
-                {/* Hotel Name Filter */}
-                <div>
+                {/* Hotel Name Filter with Autocomplete */}
+                <div className="relative" ref={hotelNameRef}>
                   <label className={`block text-xs sm:text-sm font-medium ${lbl} mb-1.5 sm:mb-2 text-left`}>
-                    Hotel Name <span className="text-gray-400 text-xs font-normal">(filter)</span>
+                    Hotel Name <span className="text-gray-400 text-xs font-normal">(optional)</span>
                   </label>
                   <div className="flex items-center w-full border border-gray-300 bg-white rounded-lg focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent px-3 py-2.5 sm:py-3 gap-2">
                     <Building2 className="text-gray-400 flex-shrink-0" size={18} />
                     <input
                       type="text"
                       value={hotelNameQuery}
-                      onChange={(e) => setHotelNameQuery(e.target.value)}
+                      onChange={(e) => { setHotelNameQuery(e.target.value); setSelectedHotelCode(null); }}
+                      onFocus={() => { if (hotelSuggestions.length > 0) setShowHotelDropdown(true); }}
                       placeholder="e.g. Hilton, Marriott..."
                       className="flex-1 min-w-0 outline-none bg-transparent text-gray-700 text-sm sm:text-base placeholder-gray-400"
                     />
                     {hotelNameQuery && (
-                      <button type="button" onClick={() => setHotelNameQuery('')} className="text-gray-400 hover:text-gray-600 flex-shrink-0"><X size={16} /></button>
+                      <button type="button" onClick={() => { setHotelNameQuery(''); setSelectedHotelCode(null); setHotelSuggestions([]); }} className="text-gray-400 hover:text-gray-600 flex-shrink-0"><X size={16} /></button>
                     )}
                   </div>
-                  {hotelNameQuery.trim().length > 0 && (
-                    <p className="text-[11px] text-gray-400 mt-1 px-1">Results will be filtered by this name</p>
+                  {selectedHotelCode && (
+                    <p className="text-[11px] text-green-600 mt-1 px-1">✓ Will search this specific hotel</p>
+                  )}
+                  {!selectedHotelCode && hotelNameQuery.trim().length > 0 && (
+                    <p className="text-[11px] text-gray-400 mt-1 px-1">Results will be filtered by name</p>
+                  )}
+                  {/* Hotel suggestions dropdown */}
+                  {showHotelDropdown && hotelSuggestions.length > 0 && (
+                    <div className="absolute left-0 right-0 top-full mt-1 z-[210] bg-white border border-gray-200 rounded-xl shadow-2xl max-h-[50vh] overflow-y-auto" style={{scrollbarWidth:'thin'}}>
+                      <div className="px-3 pt-2.5 pb-1.5 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Hotels</div>
+                      {hotelSuggestions.map((hotel, idx) => (
+                        <div
+                          key={idx}
+                          onClick={() => {
+                            setHotelNameQuery(hotel.name);
+                            setSelectedHotelCode(hotel.code);
+                            setShowHotelDropdown(false);
+                          }}
+                          className="px-3 py-2 hover:bg-blue-50 cursor-pointer transition-colors flex items-center gap-2.5"
+                        >
+                          <Building2 size={15} className="text-blue-600 flex-shrink-0" />
+                          <div className="min-w-0 flex-1">
+                            <div className="text-[13px] font-medium text-gray-800 truncate">{hotel.name}</div>
+                            <div className="text-[11px] text-gray-400 truncate">{hotel.destinationCode || ''} · {hotel.countryCode || ''}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {showHotelDropdown && isLoadingHotels && (
+                    <div className="absolute left-0 right-0 top-full mt-1 z-[210] bg-white border border-gray-200 rounded-xl shadow-lg p-3 text-center text-sm text-gray-400">
+                      Searching hotels...
+                    </div>
                   )}
                 </div>
               </div>

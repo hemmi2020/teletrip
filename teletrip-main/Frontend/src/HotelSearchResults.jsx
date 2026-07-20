@@ -887,35 +887,50 @@ const closeReviewsModal = () => {
             unit: "km",
           },
         };
+
+        // If a specific hotel code is provided, use hotel-by-ID search
+        const hotelCode = searchParams.get("hotelCode");
+        let searchEndpoint = `${API_BASE_URL}/hotels/search`;
+        let searchBody = requestBody;
         
-        console.log('🔍 Hotel Search Request:', JSON.stringify(requestBody, null, 2));
+        if (hotelCode) {
+          searchEndpoint = `${API_BASE_URL}/hotels/search-by-hotels`;
+          searchBody = {
+            stay: { checkIn, checkOut },
+            occupancies,
+            hotels: [parseInt(hotelCode)]
+          };
+          console.log('🏨 Searching specific hotel by ID:', hotelCode);
+        }
+        
+        console.log('🔍 Hotel Search Request:', JSON.stringify(searchBody, null, 2));
 
         let hotelResponse;
         let isAuthenticated = false;
 
         try {
           hotelResponse = await makeAuthenticatedRequest(
-            `${API_BASE_URL}/hotels/search-auth`,
+            hotelCode ? searchEndpoint : `${API_BASE_URL}/hotels/search-auth`,
             {
               method: "POST",
-              body: JSON.stringify(requestBody),
+              body: JSON.stringify(searchBody),
             }
           );
 
           if (hotelResponse.ok) {
             isAuthenticated = true;
           } else {
-            hotelResponse = await fetch(`${API_BASE_URL}/hotels/search`, {
+            hotelResponse = await fetch(searchEndpoint, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(requestBody),
+              body: JSON.stringify(searchBody),
             });
           }
         } catch {
-          hotelResponse = await fetch(`${API_BASE_URL}/hotels/search`, {
+          hotelResponse = await fetch(searchEndpoint, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(requestBody),
+            body: JSON.stringify(searchBody),
           });
         }
 
