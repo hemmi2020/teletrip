@@ -2500,6 +2500,14 @@ module.exports.createPayOnSiteBooking = asyncErrorHandler(async (req, res) => {
     const bookingRandom = Math.random().toString(36).substr(2, 4).toUpperCase();
     const bookingReference = `${bookingRefPrefix}${bookingTimestamp}${bookingRandom}`;
 
+    // Extract rich data from Hotelbeds response for voucher display
+    const hbData = hotelbedsResult?.hotelbedsData;
+    const hbBooking = hbData?.booking;
+    const hbHotel = hbBooking?.hotel;
+    const hbSupplier = hbHotel?.supplier || hbBooking?.supplier;
+    const hbInvoice = hbBooking?.invoiceCompany;
+    const bookingCurrency = hbBooking?.currency || currency;
+
     const newBooking = await Booking.create({
       user: userId,
       bookingType: 'hotel',
@@ -2507,39 +2515,58 @@ module.exports.createPayOnSiteBooking = asyncErrorHandler(async (req, res) => {
       status: 'pending',
       pricing: {
         basePrice: paymentAmount,
-        totalAmount: paymentAmount,
-        currency: currency,
+        totalAmount: parseFloat(hbBooking?.totalNet) || paymentAmount,
+        currency: bookingCurrency,
         taxes: 0,
         fees: 0,
         discounts: 0
       },
       hotelBooking: {
-        hotelName: bookingData.hotelName || 'Hotel Booking',
+        hotelName: hbHotel?.name || bookingData.hotelName || 'Hotel Booking',
+        hotelCode: hbHotel?.code || null,
+        categoryCode: hbHotel?.categoryCode || null,
+        categoryName: hbHotel?.categoryName || null,
+        destinationCode: hbHotel?.destinationCode || null,
+        destinationName: hbHotel?.destinationName || null,
+        zoneName: hbHotel?.zoneName || null,
+        latitude: hbHotel?.latitude || null,
+        longitude: hbHotel?.longitude || null,
         checkIn: checkInDate,
         checkOut: checkOutDate,
         nights: nights,
-        rooms: (bookingData.hotelbedsBookingRequest?.rooms || []).map((room, idx) => {
-          // Parse occupancy from rateKey: ...||rooms~adults~children||...
-          const occMatch = room.rateKey?.match(/\|\|(\d+)~(\d+)~(\d+)/);
-          const adults = occMatch ? parseInt(occMatch[2]) : (bookingData.guests || 2);
-          const children = occMatch ? parseInt(occMatch[3]) : 0;
-          const itemName = bookingData.items?.[idx]?.name || `Room ${idx + 1}`;
-          const itemPrice = bookingData.items?.[idx]?.price || (paymentAmount / (bookingData.hotelbedsBookingRequest?.rooms?.length || 1));
+        rooms: (hbHotel?.rooms || []).map((hbRoom, idx) => {
+          const hbRate = hbRoom.rates?.[0] || {};
+          const paxes = hbRoom.paxes || [];
+          const childAges = paxes.filter(p => p.type === 'CH').map(p => p.age);
           
           return {
-            roomName: itemName,
-            boardName: 'Room Only',
-            adults: adults,
-            children: children,
-            netPrice: itemPrice,
-            sellingPrice: itemPrice,
-            paymentType: 'AT_HOTEL'
+            roomName: hbRoom.name || `Room ${idx + 1}`,
+            roomCode: hbRoom.code || null,
+            boardCode: hbRate.boardCode || null,
+            boardName: hbRate.boardName || 'Room Only',
+            rateComments: hbRate.rateComments || null,
+            adults: hbRate.adults || paxes.filter(p => p.type === 'AD').length || 1,
+            children: hbRate.children || paxes.filter(p => p.type === 'CH').length || 0,
+            childAges: childAges,
+            netPrice: parseFloat(hbRate.net) || 0,
+            sellingPrice: parseFloat(hbRate.net) || 0,
+            paymentType: hbRate.paymentType || 'AT_HOTEL',
+            cancellationPolicies: hbRate.cancellationPolicies || [],
+            taxes: hbRate.taxes || null,
+            rateClass: hbRate.rateClass || null,
+            paxes: paxes
           };
         }),
         hotelAddress: {
-          city: userData.city || ''
+          city: hbHotel?.destinationName || userData.city || '',
+          zone: hbHotel?.zoneName || ''
         },
-        confirmationNumber: hotelbedsReference || null
+        confirmationNumber: hotelbedsReference || null,
+        supplier: hbSupplier ? { name: hbSupplier.name, vatNumber: hbSupplier.vatNumber } : null,
+        invoiceCompany: hbInvoice ? { code: hbInvoice.code, company: hbInvoice.company, registrationNumber: hbInvoice.registrationNumber } : null,
+        totalNet: hbBooking?.totalNet || null,
+        currency: bookingCurrency,
+        remark: hbBooking?.remark || null
       },
       guestInfo: {
         primaryGuest: {
@@ -2574,7 +2601,7 @@ module.exports.createPayOnSiteBooking = asyncErrorHandler(async (req, res) => {
         platform: 'web'
       },
       backup: {
-        hotelbedsBookingData: hotelbedsReference ? { reference: hotelbedsReference } : null
+        hotelbedsBookingData: hotelbedsReference ? hotelbedsResult.hotelbedsData : null
       }
     });
 
