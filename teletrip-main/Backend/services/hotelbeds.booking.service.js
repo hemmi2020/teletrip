@@ -4,6 +4,7 @@
 const crypto = require('crypto');
 const fetch = require('node-fetch');
 const { addLog } = require('./certificationLogger');
+const { getMTLSAgent } = require('../config/mtls.config');
 
 // Hotelbeds API configuration
 const HOTELBEDS_API_KEY = process.env.HOTELBEDS_API_KEY || '106700a0f2f1e2aa1d4c2b16daae70b2';
@@ -31,6 +32,15 @@ async function confirmBookingWithHotelbeds(bookingRequest) {
     console.log('📞 [HOTELBEDS] Calling POST /bookings API...');
     console.log('📦 [HOTELBEDS] Request:', JSON.stringify(bookingRequest, null, 2));
 
+    // Add source marker for distribution management (Hotelbeds recommendation)
+    if (!bookingRequest.source) {
+      bookingRequest.source = {
+        channel: 'B2C',
+        device: 'WEB',
+        deviceInfo: 'TeleTrip Web Application'
+      };
+    }
+
     const url = `${HOTELBEDS_BASE_URL}/hotel-api/1.0/bookings`;
     const headers = {
       'Content-Type': 'application/json',
@@ -40,11 +50,13 @@ async function confirmBookingWithHotelbeds(bookingRequest) {
       // 'Accept-Encoding': handled automatically by node-fetch
     };
 
+    const agent = getMTLSAgent();
     const response = await fetch(url, {
       method: 'POST',
       headers,
       body: JSON.stringify(bookingRequest),
-      timeout: 30000
+      timeout: 30000,
+      ...(agent && { agent })
     });
 
     const responseText = await response.text();
@@ -138,10 +150,12 @@ async function cancelBookingWithHotelbeds(bookingReference, cancellationFlag = '
       // 'Accept-Encoding': handled automatically by node-fetch
     };
 
+    const agent = getMTLSAgent();
     const response = await fetch(url, {
       method: 'DELETE',
       headers,
-      timeout: 30000
+      timeout: 30000,
+      ...(agent && { agent })
     });
 
     const responseText = await response.text();
@@ -197,6 +211,7 @@ async function getBookingDetails(bookingReference) {
     const timestamp = Math.floor(Date.now() / 1000);
     const signature = generateHotelbedsSignature(HOTELBEDS_API_KEY, HOTELBEDS_SECRET, timestamp);
 
+    const agent = getMTLSAgent();
     const response = await fetch(
       `${HOTELBEDS_BASE_URL}/hotel-api/1.0/bookings/${bookingReference}`,
       {
@@ -207,7 +222,8 @@ async function getBookingDetails(bookingReference) {
           'Accept': 'application/json',
           // 'Accept-Encoding': handled automatically by node-fetch
         },
-        timeout: 30000
+        timeout: 30000,
+        ...(agent && { agent })
       }
     );
 

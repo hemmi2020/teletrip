@@ -4,6 +4,7 @@ const { authUser } = require('../middlewares/auth.middleware');
 const router = express.Router();   
 const fetch = require('node-fetch');
 const { addLog } = require('../services/certificationLogger');
+const { getHotelContent } = require('../services/hotelbeds.content.service');
 
 // Hotelbeds API configuration  
 const HOTELBEDS_API_KEY = process.env.HOTELBEDS_API_KEY || '106700a0f2f1e2aa1d4c2b16daae70b2';     
@@ -216,6 +217,22 @@ async function enhanceHotelsWithContent(hotels) {
     }
 }
 
+// Get hotel content details (phone, address, facilities) from Content API
+router.get('/hotels/content/:hotelCode', async (req, res) => {
+    try {
+        const { hotelCode } = req.params;
+        const content = await getHotelContent(hotelCode);
+        
+        if (!content) {
+            return res.status(404).json({ success: false, error: 'Hotel content not found' });
+        }
+        
+        res.json({ success: true, data: content });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 // Public hotel search route (enhanced with images)
 router.post('/hotels/search', async (req, res) => { 
     try {
@@ -372,6 +389,15 @@ router.post('/hotels/book', authUser, async (req, res) => {
     try {
         const timestamp = Math.floor(Date.now() / 1000);
         const signature = generateHotelbedsSignature(HOTELBEDS_API_KEY, HOTELBEDS_SECRET, timestamp);
+
+        // Add source marker for distribution management (Hotelbeds recommendation)
+        if (!req.body.source) {
+          req.body.source = {
+            channel: 'B2C',
+            device: 'WEB',
+            deviceInfo: 'TeleTrip Web Application'
+          };
+        }
 
         const response = await fetch(`${HOTELBEDS_BASE_URL}/hotel-api/1.0/bookings`, {
             method: 'POST',
