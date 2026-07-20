@@ -400,6 +400,23 @@ if (children > 0 && childAges.length > 0) {
         };
 
         setHotel(transformedHotel);
+
+        // Fetch hotel description and detailed content from Content API (Hotelbeds Certification)
+        try {
+          const contentRes = await fetch(`${API_BASE_URL}/hotels/content/${foundHotel.code}`);
+          if (contentRes.ok) {
+            const contentData = await contentRes.json();
+            if (contentData.success && contentData.data) {
+              setHotel(prev => ({
+                ...prev,
+                description: contentData.data.description || '',
+                hotelFacilities: contentData.data.facilities || [],
+              }));
+            }
+          }
+        } catch (contentErr) {
+          console.warn('Could not fetch hotel content:', contentErr.message);
+        }
       } catch (err) {
         setError(err.message || "An error occurred while fetching hotel details");
       } finally {
@@ -526,6 +543,24 @@ if (children > 0 && childAges.length > 0) {
           <div className="text-sm text-gray-600">/night</div>
         </div>
       </div>
+      {/* Hotel Description - Hotelbeds Certification Recommended */}
+      {hotel.description && (
+        <div className="mt-4 text-sm text-gray-600 leading-relaxed">
+          <h4 className="font-semibold text-gray-800 mb-1">About this hotel</h4>
+          <p>{hotel.description}</p>
+        </div>
+      )}
+      {/* Hotel Facilities - Hotelbeds Certification Recommended */}
+      {hotel.hotelFacilities && hotel.hotelFacilities.length > 0 && (
+        <div className="mt-4">
+          <h4 className="text-sm font-semibold text-gray-800 mb-2">Facilities</h4>
+          <div className="flex flex-wrap gap-1.5">
+            {hotel.hotelFacilities.map((f, i) => (
+              <span key={i} className="text-xs px-2.5 py-1 bg-gray-100 text-gray-600 rounded-full">{f.description || `Facility ${f.code}`}</span>
+            ))}
+          </div>
+        </div>
+      )}
       {/* Amenities */}
       {hotel.amenities && hotel.amenities.length > 0 && (
         <div className="flex gap-3 flex-wrap">

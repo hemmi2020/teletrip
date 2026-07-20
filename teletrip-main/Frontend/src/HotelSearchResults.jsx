@@ -131,6 +131,8 @@ const [reviewsModal, setReviewsModal] = useState({
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [galleryIndex, setGalleryIndex] = useState(0);
   const [galleryImages, setGalleryImages] = useState([]);
+  const [hotelContentData, setHotelContentData] = useState(null);
+  const [loadingContent, setLoadingContent] = useState(false);
 
   // Multi-room tab state
   const [activeRoomTab, setActiveRoomTab] = useState(0);
@@ -731,6 +733,31 @@ const closeReviewsModal = () => {
     });
   }
 }, [hotels]);
+
+  // Fetch hotel content (description, facilities) when a hotel is selected - Hotelbeds Certification
+  useEffect(() => {
+    if (!selectedHotel) {
+      setHotelContentData(null);
+      return;
+    }
+    const fetchContent = async () => {
+      setLoadingContent(true);
+      try {
+        const res = await fetch(`${API_BASE_URL}/hotels/content/${selectedHotel.code || selectedHotel.id}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.data) {
+            setHotelContentData(data.data);
+          }
+        }
+      } catch (err) {
+        console.warn('Could not fetch hotel content:', err.message);
+      } finally {
+        setLoadingContent(false);
+      }
+    };
+    fetchContent();
+  }, [selectedHotel]);
 
   // HELPER FUNCTION
   const getRatingColor = (rating) => {
@@ -1946,6 +1973,27 @@ const closeReviewsModal = () => {
 
               {/* Hotel details */}
               <div className="px-4 py-3 border-b border-gray-100 space-y-2">
+                {/* Hotel Description - Hotelbeds Certification Recommended */}
+                {hotelContentData?.description && (
+                  <div className="text-[12px] text-gray-600 leading-relaxed">
+                    <h4 className="text-xs font-semibold text-gray-700 mb-1">About this hotel</h4>
+                    <p className="line-clamp-3">{hotelContentData.description}</p>
+                  </div>
+                )}
+                {/* Facilities - Hotelbeds Certification Recommended */}
+                {hotelContentData?.facilities && hotelContentData.facilities.length > 0 && (
+                  <div>
+                    <h4 className="text-xs font-semibold text-gray-500 uppercase mb-1.5">Facilities</h4>
+                    <div className="flex flex-wrap gap-1.5">
+                      {hotelContentData.facilities.slice(0, 15).map((f, i) => (
+                        <span key={i} className="text-[10px] px-2 py-0.5 bg-gray-50 text-gray-600 rounded-full">{f.description || `Facility ${f.code}`}</span>
+                      ))}
+                      {hotelContentData.facilities.length > 15 && (
+                        <span className="text-[10px] px-2 py-0.5 text-gray-400">+{hotelContentData.facilities.length - 15} more</span>
+                      )}
+                    </div>
+                  </div>
+                )}
                 {/* Amenities — clearly below image */}
                 {[...new Set(selectedHotel.amenities)].length > 0 && (
                   <div className="flex gap-1.5 flex-wrap">

@@ -57,7 +57,8 @@ const Checkout = () => {
     city: '',
     country: 'PK',
     state: 'SD', // Default to Sindh
-    postalCode: ''
+    postalCode: '',
+    specialRequests: ''
   });
 
   // Authentication check function
@@ -369,7 +370,7 @@ const Checkout = () => {
             };
           }),
           clientReference: `TELI_${Date.now()}`,
-          remark: billingInfo?.specialRequests || 'Booking via TeleTrip',
+          remark: billingInfo?.specialRequests ? `${billingInfo.specialRequests} | Booking via TeleTrip` : 'Booking via TeleTrip',
           tolerance: 2.00
         };
       }
@@ -611,7 +612,7 @@ const handlePayOnSiteBooking = async () => {
           };
         }),
         clientReference: `TELI_${Date.now()}`,
-        remark: billingInfo?.specialRequests || 'Booking via TeleTrip',
+        remark: billingInfo?.specialRequests ? `${billingInfo.specialRequests} | Booking via TeleTrip` : 'Booking via TeleTrip',
         tolerance: 2.00
       };
       
@@ -869,6 +870,22 @@ const handlePaymentSubmit = () => {
               <option value="SD">Sindh</option>
             </select>
           </div>
+        </div>
+
+        {/* Special Requests - Hotelbeds Certification Recommended */}
+        <div className="mt-4">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Special Requests (optional)
+          </label>
+          <textarea
+            value={billingInfo.specialRequests}
+            onChange={(e) => handleInputChange('specialRequests', e.target.value)}
+            placeholder="E.g. late check-in, extra pillows, high floor, etc."
+            className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+            rows={3}
+            maxLength={500}
+          />
+          <p className="text-xs text-gray-400 mt-1">These requests will be sent to the hotel (not guaranteed).</p>
         </div>
       </div>
     </div>

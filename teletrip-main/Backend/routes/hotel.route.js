@@ -902,4 +902,68 @@ router.get('/hotels/bookings/reconfirmations', authUser, async (req, res) => {
     }
 });
 
+// Search availability by hotel IDs (recommended by Hotelbeds - up to 2000 per request)
+router.post('/hotels/search-by-hotels', authUser, async (req, res) => {
+    try {
+        const timestamp = Math.floor(Date.now() / 1000);
+        const signature = generateHotelbedsSignature(HOTELBEDS_API_KEY, HOTELBEDS_SECRET, timestamp);
+
+        const { hotels, stay, occupancies, filter } = req.body;
+
+        if (!hotels || !Array.isArray(hotels) || hotels.length === 0) {
+            return res.status(400).json({ success: false, error: 'hotels array is required (hotel codes)' });
+        }
+
+        if (hotels.length > 2000) {
+            return res.status(400).json({ success: false, error: 'Maximum 2000 hotel codes per request' });
+        }
+
+        const searchBody = {
+            stay,
+            occupancies,
+            hotels: { hotel: hotels.map(code => ({ code: parseInt(code) })) },
+            ...(filter && { filter })
+        };
+
+        const { getMTLSAgent } = require('../config/mtls.config');
+        const agent = getMTLSAgent();
+
+        const response = await fetch(`${HOTELBEDS_BASE_URL}/hotel-api/1.0/hotels`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Api-key': HOTELBEDS_API_KEY,
+                'X-Signature': signature,
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(searchBody),
+            timeout: 60000,
+            ...(agent && { agent })
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            return res.status(response.status).json({ success: false, error: 'Search failed', details: errorText });
+        }
+
+        const data = await response.json();
+        
+        // Log for certification
+        addLog({
+            step: 'Availability',
+            request: { method: 'POST', url: `${HOTELBEDS_BASE_URL}/hotel-api/1.0/hotels`, headers: { 'Content-Type': 'application/json', 'Api-key': HOTELBEDS_API_KEY, 'X-Signature': signature, 'Accept': 'application/json' }, body: searchBody },
+            response: { status: response.status, body: { auditData: data.auditData, hotels: { total: data.hotels?.total || 0, checkIn: data.hotels?.checkIn, checkOut: data.hotels?.checkOut, hotelsCount: data.hotels?.hotels?.length || 0 } } }
+        });
+
+        // Enhance with content images
+        if (data.hotels && data.hotels.hotels) {
+            data.hotels.hotels = await enhanceHotelsWithContent(data.hotels.hotels);
+        }
+
+        res.json({ success: true, data });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 module.exports = router;
