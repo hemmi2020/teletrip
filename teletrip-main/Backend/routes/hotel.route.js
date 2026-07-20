@@ -27,7 +27,7 @@ function generateHotelbedsSignature(apiKey, secret, timestamp) {
 // Hotel name search - autocomplete from local index (uses synced Content API data)
 router.get('/hotels/search-by-name', async (req, res) => {
     try {
-        const { q, destination, limit = 20 } = req.query;
+        const { q, destination, city, limit = 20 } = req.query;
         
         if (!q || q.length < 2) {
             return res.json({ success: true, data: [] });
@@ -38,13 +38,19 @@ router.get('/hotels/search-by-name', async (req, res) => {
         // Text search on name
         query.name = { $regex: q, $options: 'i' };
         
-        // Optional destination filter
+        // Optional destination filter (by code or by city/destination name)
         if (destination) {
             query.destinationCode = destination.toUpperCase();
+        } else if (city) {
+            query.$or = [
+                { destinationCode: { $regex: city, $options: 'i' } },
+                { destinationName: { $regex: city, $options: 'i' } },
+                { zoneName: { $regex: city, $options: 'i' } }
+            ];
         }
 
         const hotels = await HotelIndex.find(query)
-            .select('code name destinationCode countryCode categoryCode zoneName')
+            .select('code name destinationCode destinationName countryCode categoryCode zoneName')
             .limit(parseInt(limit))
             .lean();
 

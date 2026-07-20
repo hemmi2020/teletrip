@@ -962,7 +962,14 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
     const timer = setTimeout(async () => {
       try {
         const API_BASE = import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
-        const res = await fetch(`${API_BASE}/api/hotels/search-by-name?q=${encodeURIComponent(hotelNameQuery.trim())}&limit=10`);
+        // If destination is already selected, filter hotel suggestions by that destination
+        let destFilter = '';
+        if (selectedLocation?.destinationCode) {
+          destFilter = `&destination=${selectedLocation.destinationCode}`;
+        } else if (selectedLocation?.city || selectedLocation?.name) {
+          destFilter = `&city=${encodeURIComponent(selectedLocation.city || selectedLocation.name)}`;
+        }
+        const res = await fetch(`${API_BASE}/api/hotels/search-by-name?q=${encodeURIComponent(hotelNameQuery.trim())}&limit=10${destFilter}`);
         if (res.ok) {
           const data = await res.json();
           if (data.success) {
@@ -977,7 +984,7 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
       }
     }, 300);
     return () => clearTimeout(timer);
-  }, [hotelNameQuery]);
+  }, [hotelNameQuery, selectedLocation]);
 
   // Handle clicks outside dropdowns
   useEffect(() => {
@@ -1192,13 +1199,26 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
                             setHotelNameQuery(hotel.name);
                             setSelectedHotelCode(hotel.code);
                             setShowHotelDropdown(false);
+                            // Auto-fill destination if not already set
+                            if (!selectedLocation && hotel.destinationCode) {
+                              const destName = hotel.destinationName || hotel.destinationCode;
+                              setSearchQuery(destName);
+                              setSelectedLocation({
+                                type: 'city',
+                                name: destName,
+                                city: destName,
+                                country: hotel.countryCode || '',
+                                destinationCode: hotel.destinationCode,
+                                displayName: destName
+                              });
+                            }
                           }}
                           className="px-3 py-2 hover:bg-blue-50 cursor-pointer transition-colors flex items-center gap-2.5"
                         >
                           <Building2 size={15} className="text-blue-600 flex-shrink-0" />
                           <div className="min-w-0 flex-1">
                             <div className="text-[13px] font-medium text-gray-800 truncate">{hotel.name}</div>
-                            <div className="text-[11px] text-gray-400 truncate">{hotel.destinationCode || ''} · {hotel.countryCode || ''}</div>
+                            <div className="text-[11px] text-gray-400 truncate">{hotel.destinationName || hotel.destinationCode || ''}{hotel.countryCode ? ` · ${hotel.countryCode}` : ''}</div>
                           </div>
                         </div>
                       ))}
