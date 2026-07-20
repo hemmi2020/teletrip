@@ -9,7 +9,12 @@ const { getHotelContent } = require('../services/hotelbeds.content.service');
 // Hotelbeds API configuration  
 const HOTELBEDS_API_KEY = process.env.HOTELBEDS_API_KEY || '106700a0f2f1e2aa1d4c2b16daae70b2';     
 const HOTELBEDS_SECRET = process.env.HOTELBEDS_SECRET || '018e478aa6'; 
-const HOTELBEDS_BASE_URL = 'https://api.test.hotelbeds.com';
+// Use MTLS endpoint when certificate is configured (mandatory for production)
+const HOTELBEDS_BASE_URL = process.env.HOTELBEDS_BASE_URL || (
+  process.env.HOTELBEDS_MTLS_CERT_PATH 
+    ? 'https://api-mtls.test.hotelbeds.com' 
+    : 'https://api.test.hotelbeds.com'
+);
 const HOTELBEDS_CONTENT_URL = 'https://api.test.hotelbeds.com/hotel-content-api/1.0';   
 const TRIPADVISOR_API_KEY = process.env.TRIPADVISOR_API_KEY ;
 
