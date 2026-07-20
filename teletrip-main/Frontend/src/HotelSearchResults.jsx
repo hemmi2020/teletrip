@@ -2117,6 +2117,15 @@ const closeReviewsModal = () => {
                                     {formatCancellationPolicy(rate.cancellationPolicies)}
                                   </div>
                                 )}
+                                {/* Excluded Taxes - mandatory display alongside rates */}
+                                {rate.taxes && rate.taxes.taxes && rate.taxes.taxes.length > 0 && !rate.taxes.allIncluded && (
+                                  <div className="text-[10px] text-amber-700 bg-amber-50 px-2 py-1 rounded">
+                                    {rate.taxes.taxes.map((tax, ti) => (
+                                      <span key={ti}>{ti > 0 ? ' + ' : '⚠ Excluded: '}{tax.subType || tax.type || 'Tax'} {tax.currency} {parseFloat(tax.amount).toFixed(2)}</span>
+                                    ))}
+                                    <span className="text-amber-600"> (payable locally)</span>
+                                  </div>
+                                )}
                               </div>
                               {/* Price + CTA */}
                               <div className="text-right flex-shrink-0 min-w-[120px]">
