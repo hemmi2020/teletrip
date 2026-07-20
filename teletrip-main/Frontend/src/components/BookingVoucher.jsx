@@ -1,8 +1,40 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { Printer } from 'lucide-react';
 
 const BookingVoucher = ({ booking, onClose }) => {
   const voucherRef = useRef(null);
+  const [pkrRate, setPkrRate] = useState(null);
+
+  // Fetch PKR conversion rate
+  useEffect(() => {
+    const fetchRate = async () => {
+      try {
+        const API = (import.meta.env.VITE_BASE_URL || 'http://localhost:3000') + '/api';
+        const res = await fetch(`${API}/currency/rate`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success) {
+            setPkrRate(data.data);
+          }
+        }
+      } catch (e) { /* silent */ }
+    };
+    fetchRate();
+  }, []);
+
+  const toPKR = (eurAmount) => {
+    if (!pkrRate || !eurAmount) return null;
+    const base = eurAmount * (pkrRate.exchangeRate || 310);
+    const markup = eurAmount * (pkrRate.markupPerEuro || 0);
+    const subtotal = base + markup;
+    const fee = (subtotal * (pkrRate.transactionFeePercentage || 0)) / 100;
+    return Math.round(subtotal + fee);
+  };
+
+  const formatPKR = (eurAmount) => {
+    const pkr = toPKR(eurAmount);
+    return pkr ? `PKR ${pkr.toLocaleString()}` : null;
+  };
 
   const handlePrint = () => {
     const printContent = voucherRef.current.innerHTML;
@@ -19,8 +51,6 @@ const BookingVoucher = ({ booking, onClose }) => {
             .section { margin-bottom: 24px; }
             .section h3 { color: #1a73e8; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; border-bottom: 1px solid #eee; padding-bottom: 8px; }
             .detail-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f5f5f5; }
-            .detail-row .label { color: #666; font-size: 13px; }
-            .detail-row .value { font-weight: 600; font-size: 13px; }
             .room-card { background: #f8f9fa; border-radius: 8px; padding: 16px; margin-bottom: 12px; }
             .room-card h4 { margin: 0 0 8px; font-size: 14px; }
             .rate-comments { background: #f0f7ff; border-left: 3px solid #1a73e8; padding: 10px 14px; margin-top: 10px; font-size: 11px; color: #555; line-height: 1.5; }
@@ -38,6 +68,7 @@ const BookingVoucher = ({ booking, onClose }) => {
     printWindow.print();
   };
 
+  // Data extraction
   const hb = booking.hotelBooking || {};
   const backup = booking.backup?.hotelbedsBookingData;
   const hbBooking = backup?.booking;
@@ -56,19 +87,22 @@ const BookingVoucher = ({ booking, onClose }) => {
   const zoneName = hb.zoneName || hbHotel.zoneName || '';
   const hotelName = hb.hotelName || hbHotel.name || 'Hotel';
 
-  // Total amount - try multiple paths
-  const totalNet = parseFloat(hbBooking?.totalNet) || parseFloat(hb.totalNet) || parseFloat(hbHotel?.totalNet) || 0;
-  const totalAmount = totalNet > 0 ? totalNet : (booking.pricing?.totalAmount || booking.totalAmount || 0);
+  // Total in EUR from Hotelbeds
+  const totalNetEUR = parseFloat(hbBooking?.totalNet) || parseFloat(hb.totalNet) || parseFloat(hbHotel?.totalNet) || 0;
+  // Total in PKR from our pricing
+  const totalPKR = booking.pricing?.totalAmount || booking.totalAmount || 0;
+  // Display amount: prefer PKR if available, fallback to EUR conversion
+  const displayTotal = totalPKR > 0 ? `PKR ${Math.round(totalPKR).toLocaleString()}` : (formatPKR(totalNetEUR) || `${bookingCurrency} ${totalNetEUR.toFixed(2)}`);
 
-  // Payment method - check multiple paths
-  const paymentMethod = booking.payment?.method || booking.paymentMethod || 
+  // Payment method
+  const paymentMethod = booking.payment?.method || booking.paymentMethod ||
     (hb.rooms?.[0]?.paymentType === 'AT_HOTEL' || hbHotel.rooms?.[0]?.rates?.[0]?.paymentType === 'AT_HOTEL' ? 'pay_on_site' : 'card');
 
-  // Build full address from available data
-  const addressParts = [zoneName, destinationName].filter(Boolean);
-  const fullAddress = hb.hotelAddress?.fullAddress || addressParts.join(', ') || hb.hotelAddress?.city || '';
+  // Address
+  const addressParts = [hb.hotelAddress?.street, hb.hotelAddress?.fullAddress, zoneName, destinationName].filter(Boolean);
+  const fullAddress = addressParts.length > 0 ? addressParts[0] : (hb.hotelAddress?.city || '');
 
-  // Supplier notice text (mandatory per Hotelbeds)
+  // Supplier notice (mandatory per Hotelbeds)
   const supplierName = supplier?.name || invoiceCompany?.company || hbBooking?.invoiceCompany?.company || 'the service provider';
   const supplierVAT = supplier?.vatNumber || invoiceCompany?.registrationNumber || hbBooking?.invoiceCompany?.registrationNumber || '';
   const supplierNotice = `Payable through ${supplierName}, acting as agent for the service operating company, details of which can be provided upon request. VAT: ${supplierVAT} Reference: ${confirmationNumber}`;
@@ -76,7 +110,6 @@ const BookingVoucher = ({ booking, onClose }) => {
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
       <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-        {/* Actions */}
         <div className="sticky top-0 bg-white border-b px-6 py-3 flex items-center justify-between z-10">
           <h2 className="text-lg font-semibold text-gray-900">Booking Voucher</h2>
           <div className="flex items-center gap-2">
@@ -87,14 +120,14 @@ const BookingVoucher = ({ booking, onClose }) => {
           </div>
         </div>
 
-        {/* Voucher Content */}
         <div ref={voucherRef} className="p-6">
+          {/* Header */}
           <div style={{ textAlign: 'center', borderBottom: '2px solid #1a73e8', paddingBottom: '20px', marginBottom: '30px' }}>
             <h1 style={{ color: '#1a73e8', margin: 0, fontSize: '28px' }}>Telitrip</h1>
             <p style={{ color: '#666', margin: '5px 0 0' }}>Booking Confirmation Voucher</p>
           </div>
 
-          {/* Hotel Information Section */}
+          {/* Hotel Information */}
           <div style={{ marginBottom: '24px' }}>
             <h3 style={{ color: '#1a73e8', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px', borderBottom: '1px solid #eee', paddingBottom: '8px' }}>Hotel Information</h3>
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid #f5f5f5' }}>
@@ -103,15 +136,14 @@ const BookingVoucher = ({ booking, onClose }) => {
             </div>
             {categoryName && (
               <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid #f5f5f5' }}>
-                <span style={{ color: '#666', fontSize: '13px' }}>Category / Type</span>
-                <span style={{ fontWeight: 600, fontSize: '13px' }}>{categoryName}{categoryCode ? ` (${categoryCode})` : ''}</span>
+                <span style={{ color: '#666', fontSize: '13px' }}>Category</span>
+                <span style={{ fontWeight: 600, fontSize: '13px' }}>{categoryName}</span>
               </div>
             )}
-            {/* Accommodation type - same as category for Hotelbeds */}
             {categoryCode && (
               <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid #f5f5f5' }}>
                 <span style={{ color: '#666', fontSize: '13px' }}>Accommodation Type</span>
-                <span style={{ fontWeight: 600, fontSize: '13px' }}>{categoryCode === '4EST' ? '4 Star Hotel' : categoryCode === '5EST' ? '5 Star Hotel' : categoryCode === '3EST' ? '3 Star Hotel' : categoryCode === 'STD' ? 'Standard' : categoryName}</span>
+                <span style={{ fontWeight: 600, fontSize: '13px' }}>{categoryCode === '4EST' ? '4 Star Hotel' : categoryCode === '5EST' ? '5 Star Hotel' : categoryCode === '3EST' ? '3 Star Hotel' : categoryCode === 'STD' ? 'Standard Hotel' : categoryName}</span>
               </div>
             )}
             {fullAddress && (
@@ -120,10 +152,9 @@ const BookingVoucher = ({ booking, onClose }) => {
                 <span style={{ fontWeight: 600, fontSize: '13px' }}>{fullAddress}</span>
               </div>
             )}
-            {/* Hotel phone - from content API data if available */}
             {(hb.hotelPhone || hbHotel.phones?.[0]?.phoneNumber) && (
               <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid #f5f5f5' }}>
-                <span style={{ color: '#666', fontSize: '13px' }}>Hotel Phone</span>
+                <span style={{ color: '#666', fontSize: '13px' }}>Phone</span>
                 <span style={{ fontWeight: 600, fontSize: '13px' }}>{hb.hotelPhone || hbHotel.phones?.[0]?.phoneNumber}</span>
               </div>
             )}
@@ -135,7 +166,7 @@ const BookingVoucher = ({ booking, onClose }) => {
             )}
           </div>
 
-          {/* Booking Details Section */}
+          {/* Booking Details */}
           <div style={{ marginBottom: '24px' }}>
             <h3 style={{ color: '#1a73e8', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px', borderBottom: '1px solid #eee', paddingBottom: '8px' }}>Booking Details</h3>
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid #f5f5f5' }}>
@@ -155,16 +186,16 @@ const BookingVoucher = ({ booking, onClose }) => {
               <span style={{ fontWeight: 600, fontSize: '13px' }}>{hb.nights || 1}</span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid #f5f5f5' }}>
-              <span style={{ color: '#666', fontSize: '13px' }}>Currency</span>
+              <span style={{ color: '#666', fontSize: '13px' }}>Booking Currency</span>
               <span style={{ fontWeight: 600, fontSize: '13px' }}>{bookingCurrency}</span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid #f5f5f5' }}>
               <span style={{ color: '#666', fontSize: '13px' }}>Status</span>
-              <span style={{ fontWeight: 600, fontSize: '13px', color: booking.status === 'confirmed' ? '#28a745' : '#f59e0b' }}>{booking.status === 'confirmed' ? 'CONFIRMED' : 'PENDING PAYMENT'}</span>
+              <span style={{ fontWeight: 600, fontSize: '13px', color: booking.status === 'confirmed' ? '#28a745' : '#f59e0b' }}>{booking.status === 'confirmed' ? 'CONFIRMED' : 'PENDING'}</span>
             </div>
           </div>
 
-          {/* Room Details Section */}
+          {/* Room Details */}
           <div style={{ marginBottom: '24px' }}>
             <h3 style={{ color: '#1a73e8', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px', borderBottom: '1px solid #eee', paddingBottom: '8px' }}>Room Details</h3>
             {rooms.map((room, idx) => {
@@ -174,9 +205,9 @@ const BookingVoucher = ({ booking, onClose }) => {
               const childAges = room.childAges || room.paxes?.filter(p => p.type === 'CH').map(p => p.age) || [];
               const adults = rate.adults || room.adults || 1;
               const children = rate.children || room.children || 0;
-              const netPrice = rate.net || room.netPrice || 0;
+              const netPrice = parseFloat(rate.net || room.netPrice || 0);
               const boardName = rate.boardName || room.boardName || 'Room Only';
-              const paymentType = rate.paymentType || room.paymentType || '';
+              const payType = rate.paymentType || room.paymentType || '';
 
               return (
                 <div key={idx} style={{ background: '#f8f9fa', borderRadius: '8px', padding: '16px', marginBottom: '12px' }}>
@@ -185,25 +216,22 @@ const BookingVoucher = ({ booking, onClose }) => {
                   </h4>
                   <p style={{ margin: '2px 0', fontSize: '12px', color: '#666' }}>Board: {boardName}</p>
                   <p style={{ margin: '2px 0', fontSize: '12px', color: '#666' }}>
-                    Guests: {adults} Adult{adults !== 1 ? 's' : ''}
-                    {children > 0 ? `, ${children} Child${children !== 1 ? 'ren' : ''}` : ''}
+                    Guests: {adults} Adult{adults !== 1 ? 's' : ''}{children > 0 ? `, ${children} Child${children !== 1 ? 'ren' : ''}` : ''}
                   </p>
-                  {/* Children ages - mandatory */}
                   {childAges.length > 0 && (
-                    <p style={{ margin: '2px 0', fontSize: '12px', color: '#666' }}>
-                      Children Ages: {childAges.join(', ')}
-                    </p>
+                    <p style={{ margin: '2px 0', fontSize: '12px', color: '#666' }}>Children Ages: {childAges.join(', ')}</p>
                   )}
-                  <p style={{ margin: '2px 0', fontSize: '12px', color: '#666' }}>
-                    Net Rate: {bookingCurrency} {parseFloat(netPrice).toFixed(2)}
+                  <p style={{ margin: '2px 0', fontSize: '12px', color: '#555', fontWeight: 500 }}>
+                    Rate: {formatPKR(netPrice) || `PKR ${Math.round(netPrice * 310).toLocaleString()}`}
+                    <span style={{ color: '#999', fontSize: '11px' }}> ({bookingCurrency} {netPrice.toFixed(2)})</span>
                   </p>
-                  {paymentType && (
+                  {payType && (
                     <p style={{ margin: '2px 0', fontSize: '12px', color: '#666' }}>
-                      Payment: {paymentType === 'AT_WEB' ? 'Prepaid' : paymentType === 'AT_HOTEL' ? 'Pay at Hotel' : paymentType}
+                      Payment: {payType === 'AT_WEB' ? 'Prepaid' : payType === 'AT_HOTEL' ? 'Pay at Hotel' : payType}
                     </p>
                   )}
 
-                  {/* Excluded Taxes - mandatory display by subtype */}
+                  {/* Excluded Taxes */}
                   {taxes && taxes.taxes && taxes.taxes.length > 0 && (
                     <div style={{ marginTop: '8px', padding: '8px 12px', background: '#fffbeb', borderRadius: '6px', fontSize: '11px' }}>
                       <strong>Excluded Taxes & Fees (payable locally):</strong>
@@ -219,8 +247,7 @@ const BookingVoucher = ({ booking, onClose }) => {
                   {/* Rate Comments - mandatory */}
                   {rateComments && (
                     <div style={{ background: '#f0f7ff', borderLeft: '3px solid #1a73e8', padding: '10px 14px', marginTop: '10px', fontSize: '11px', color: '#555', lineHeight: '1.5' }}>
-                      <strong>Rate Comments:</strong><br />
-                      {rateComments}
+                      <strong>Rate Comments:</strong><br />{rateComments}
                     </div>
                   )}
                 </div>
@@ -228,7 +255,7 @@ const BookingVoucher = ({ booking, onClose }) => {
             })}
           </div>
 
-          {/* Guest Information Section */}
+          {/* Guest Information */}
           <div style={{ marginBottom: '24px' }}>
             <h3 style={{ color: '#1a73e8', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px', borderBottom: '1px solid #eee', paddingBottom: '8px' }}>Guest Information</h3>
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid #f5f5f5' }}>
@@ -247,13 +274,19 @@ const BookingVoucher = ({ booking, onClose }) => {
             )}
           </div>
 
-          {/* Payment Section */}
+          {/* Payment */}
           <div style={{ marginBottom: '24px' }}>
             <h3 style={{ color: '#1a73e8', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px', borderBottom: '1px solid #eee', paddingBottom: '8px' }}>Payment</h3>
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid #f5f5f5' }}>
               <span style={{ color: '#666', fontSize: '13px' }}>Total Amount</span>
-              <span style={{ fontWeight: 600, fontSize: '13px' }}>{bookingCurrency} {totalAmount.toFixed(2)}</span>
+              <span style={{ fontWeight: 600, fontSize: '15px', color: '#1a73e8' }}>{displayTotal}</span>
             </div>
+            {totalNetEUR > 0 && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid #f5f5f5' }}>
+                <span style={{ color: '#666', fontSize: '13px' }}>Booking Amount ({bookingCurrency})</span>
+                <span style={{ fontWeight: 500, fontSize: '13px', color: '#666' }}>{bookingCurrency} {totalNetEUR.toFixed(2)}</span>
+              </div>
+            )}
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid #f5f5f5' }}>
               <span style={{ color: '#666', fontSize: '13px' }}>Payment Method</span>
               <span style={{ fontWeight: 600, fontSize: '13px' }}>{paymentMethod === 'pay_on_site' ? 'Pay at Hotel/Office' : 'Prepaid (Credit Card)'}</span>
