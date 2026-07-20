@@ -56,13 +56,21 @@ const BookingVoucher = ({ booking, onClose }) => {
   const zoneName = hb.zoneName || hbHotel.zoneName || '';
   const hotelName = hb.hotelName || hbHotel.name || 'Hotel';
 
+  // Total amount - try multiple paths
+  const totalNet = parseFloat(hbBooking?.totalNet) || parseFloat(hb.totalNet) || parseFloat(hbHotel?.totalNet) || 0;
+  const totalAmount = totalNet > 0 ? totalNet : (booking.pricing?.totalAmount || booking.totalAmount || 0);
+
+  // Payment method - check multiple paths
+  const paymentMethod = booking.payment?.method || booking.paymentMethod || 
+    (hb.rooms?.[0]?.paymentType === 'AT_HOTEL' || hbHotel.rooms?.[0]?.rates?.[0]?.paymentType === 'AT_HOTEL' ? 'pay_on_site' : 'card');
+
   // Build full address from available data
   const addressParts = [zoneName, destinationName].filter(Boolean);
   const fullAddress = hb.hotelAddress?.fullAddress || addressParts.join(', ') || hb.hotelAddress?.city || '';
 
   // Supplier notice text (mandatory per Hotelbeds)
-  const supplierName = supplier?.name || invoiceCompany?.company || 'the service provider';
-  const supplierVAT = supplier?.vatNumber || invoiceCompany?.registrationNumber || '';
+  const supplierName = supplier?.name || invoiceCompany?.company || hbBooking?.invoiceCompany?.company || 'the service provider';
+  const supplierVAT = supplier?.vatNumber || invoiceCompany?.registrationNumber || hbBooking?.invoiceCompany?.registrationNumber || '';
   const supplierNotice = `Payable through ${supplierName}, acting as agent for the service operating company, details of which can be provided upon request. VAT: ${supplierVAT} Reference: ${confirmationNumber}`;
 
   return (
@@ -244,11 +252,11 @@ const BookingVoucher = ({ booking, onClose }) => {
             <h3 style={{ color: '#1a73e8', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px', borderBottom: '1px solid #eee', paddingBottom: '8px' }}>Payment</h3>
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid #f5f5f5' }}>
               <span style={{ color: '#666', fontSize: '13px' }}>Total Amount</span>
-              <span style={{ fontWeight: 600, fontSize: '13px' }}>{bookingCurrency} {(parseFloat(hbBooking?.totalNet) || booking.pricing?.totalAmount || 0).toFixed(2)}</span>
+              <span style={{ fontWeight: 600, fontSize: '13px' }}>{bookingCurrency} {totalAmount.toFixed(2)}</span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid #f5f5f5' }}>
               <span style={{ color: '#666', fontSize: '13px' }}>Payment Method</span>
-              <span style={{ fontWeight: 600, fontSize: '13px' }}>{booking.payment?.method === 'pay_on_site' ? 'Pay at Office' : 'Credit Card'}</span>
+              <span style={{ fontWeight: 600, fontSize: '13px' }}>{paymentMethod === 'pay_on_site' ? 'Pay at Hotel/Office' : 'Prepaid (Credit Card)'}</span>
             </div>
           </div>
 

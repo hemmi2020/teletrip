@@ -265,6 +265,7 @@ const transformBookingData = (booking) => {
     // Add Hotelbeds-specific fields
     hotelBooking: booking.hotelBooking, // Include full hotel booking data
     guestInfo: booking.guestInfo, // Include guest information
+    backup: booking.backup, // Include Hotelbeds booking data for voucher display
     paymentMethod: booking.hotelBooking?.rooms?.[0]?.paymentType === 'AT_WEB' ? 'card' : 'pay_on_site',
     cancellationPolicies: booking.hotelBooking?.rooms?.[0]?.cancellationPolicies || [],
     
