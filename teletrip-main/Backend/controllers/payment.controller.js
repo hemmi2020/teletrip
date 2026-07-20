@@ -2488,6 +2488,19 @@ module.exports.createPayOnSiteBooking = asyncErrorHandler(async (req, res) => {
 
     // ✅ CREATE A BOOKING RECORD so it shows in "My Bookings"
     const Booking = require('../models/booking.model');
+    const { getHotelContent } = require('../services/hotelbeds.content.service');
+
+    // Fetch hotel phone/address from Content API for voucher display
+    let hotelContent = null;
+    const hbHotelCode = hotelbedsResult?.hotelbedsData?.booking?.hotel?.code;
+    if (hbHotelCode) {
+      try {
+        hotelContent = await getHotelContent(hbHotelCode);
+        console.log('📋 [CONTENT-API] Hotel details fetched for code:', hbHotelCode);
+      } catch (contentErr) {
+        console.warn('⚠️ [CONTENT-API] Failed to fetch hotel content:', contentErr.message);
+      }
+    }
 
     const checkInDate = bookingData.checkIn ? new Date(bookingData.checkIn) : null;
     const checkOutDate = bookingData.checkOut ? new Date(bookingData.checkOut) : null;
@@ -2559,8 +2572,14 @@ module.exports.createPayOnSiteBooking = asyncErrorHandler(async (req, res) => {
         }),
         hotelAddress: {
           city: hbHotel?.destinationName || userData.city || '',
-          zone: hbHotel?.zoneName || ''
+          zone: hbHotel?.zoneName || '',
+          street: hotelContent?.address?.content || hotelContent?.address?.street || '',
+          fullAddress: hotelContent ? [hotelContent.address?.content || hotelContent.address?.street, hotelContent.city, hotelContent.postalCode].filter(Boolean).join(', ') : ''
         },
+        hotelPhone: hotelContent?.phones?.[0]?.phoneNumber || null,
+        hotelEmail: hotelContent?.email || null,
+        accommodationTypeCode: hotelContent?.accommodationTypeCode || null,
+        description: hotelContent?.description || null,
         confirmationNumber: hotelbedsReference || null,
         supplier: hbSupplier ? { name: hbSupplier.name, vatNumber: hbSupplier.vatNumber } : null,
         invoiceCompany: hbInvoice ? { code: hbInvoice.code, company: hbInvoice.company, registrationNumber: hbInvoice.registrationNumber } : null,
