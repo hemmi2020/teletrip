@@ -5,7 +5,7 @@ const router = express.Router();
 const fetch = require('node-fetch');
 const { addLog } = require('../services/certificationLogger');
 const { getHotelContent } = require('../services/hotelbeds.content.service');
-
+const HotelIndex = require('../models/hotelIndex.model');
 // Hotelbeds API configuration  
 const HOTELBEDS_API_KEY = process.env.HOTELBEDS_API_KEY || '106700a0f2f1e2aa1d4c2b16daae70b2';     
 const HOTELBEDS_SECRET = process.env.HOTELBEDS_SECRET || '018e478aa6'; 
@@ -23,6 +23,40 @@ function generateHotelbedsSignature(apiKey, secret, timestamp) {
     const stringToSign = apiKey + secret + timestamp;
     return crypto.createHash('sha256').update(stringToSign).digest('hex');      
 } 
+
+// Hotel name search - autocomplete from local index (uses synced Content API data)
+router.get('/hotels/search-by-name', async (req, res) => {
+    try {
+        const { q, destination, limit = 20 } = req.query;
+        
+        if (!q || q.length < 2) {
+            return res.json({ success: true, data: [] });
+        }
+
+        const query = {};
+        
+        // Text search on name
+        query.name = { $regex: q, $options: 'i' };
+        
+        // Optional destination filter
+        if (destination) {
+            query.destinationCode = destination.toUpperCase();
+        }
+
+        const hotels = await HotelIndex.find(query)
+            .select('code name destinationCode countryCode categoryCode zoneName')
+            .limit(parseInt(limit))
+            .lean();
+
+        res.json({ success: true, data: hotels });
+    } catch (error) {
+        // If collection doesn't exist yet, return empty
+        if (error.message?.includes('ns not found') || error.code === 26) {
+            return res.json({ success: true, data: [] });
+        }
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
 
 // NEW: Hotel search suggestions endpoint for autocomplete 
 // === NEW UNIFIED SEARCH ENDPOINT ===
