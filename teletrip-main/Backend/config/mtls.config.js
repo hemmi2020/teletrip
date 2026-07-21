@@ -33,11 +33,19 @@ function getMTLSAgent() {
 
   // Option 1: Read from environment variable content directly (for Render)
   if (process.env.HOTELBEDS_MTLS_CERT && process.env.HOTELBEDS_MTLS_KEY) {
-    cert = process.env.HOTELBEDS_MTLS_CERT.replace(/\\n/g, '\n');
-    key = process.env.HOTELBEDS_MTLS_KEY.replace(/\\n/g, '\n');
+    // Handle both formats: literal \n in string OR actual newlines
+    cert = process.env.HOTELBEDS_MTLS_CERT.includes('\\n') 
+      ? process.env.HOTELBEDS_MTLS_CERT.replace(/\\n/g, '\n')
+      : process.env.HOTELBEDS_MTLS_CERT;
+    key = process.env.HOTELBEDS_MTLS_KEY.includes('\\n')
+      ? process.env.HOTELBEDS_MTLS_KEY.replace(/\\n/g, '\n')
+      : process.env.HOTELBEDS_MTLS_KEY;
     if (process.env.HOTELBEDS_MTLS_CA) {
-      ca = process.env.HOTELBEDS_MTLS_CA.replace(/\\n/g, '\n');
+      ca = process.env.HOTELBEDS_MTLS_CA.includes('\\n')
+        ? process.env.HOTELBEDS_MTLS_CA.replace(/\\n/g, '\n')
+        : process.env.HOTELBEDS_MTLS_CA;
     }
+    console.log('[MTLS] Reading cert from env vars. Cert starts with:', cert.substring(0, 30));
   }
   // Option 2: Read from file paths (for local development)
   else if (process.env.HOTELBEDS_MTLS_CERT_PATH && process.env.HOTELBEDS_MTLS_KEY_PATH) {

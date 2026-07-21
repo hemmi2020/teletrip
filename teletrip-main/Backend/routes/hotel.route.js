@@ -971,8 +971,7 @@ router.post('/hotels/search-by-hotels', async (req, res) => {
         };
 
         const { getMTLSAgent } = require('../config/mtls.config');
-        const https = require('https');
-        const agent = getMTLSAgent() || new https.Agent({ rejectUnauthorized: false });
+        const agent = getMTLSAgent();
 
         const fetchOptions = {
             method: 'POST',
@@ -983,9 +982,9 @@ router.post('/hotels/search-by-hotels', async (req, res) => {
                 'Accept': 'application/json'
             },
             body: JSON.stringify(searchBody),
-            timeout: 60000,
-            agent
+            timeout: 60000
         };
+        if (agent) fetchOptions.agent = agent;
 
         const response = await fetch(`${HOTELBEDS_BASE_URL}/hotel-api/1.0/hotels`, fetchOptions);
 
