@@ -971,9 +971,10 @@ router.post('/hotels/search-by-hotels', async (req, res) => {
         };
 
         const { getMTLSAgent } = require('../config/mtls.config');
-        const agent = getMTLSAgent();
+        const https = require('https');
+        const agent = getMTLSAgent() || new https.Agent({ rejectUnauthorized: false });
 
-        const response = await fetch(`${HOTELBEDS_BASE_URL}/hotel-api/1.0/hotels`, {
+        const fetchOptions = {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -983,8 +984,10 @@ router.post('/hotels/search-by-hotels', async (req, res) => {
             },
             body: JSON.stringify(searchBody),
             timeout: 60000,
-            ...(agent && { agent })
-        });
+            agent
+        };
+
+        const response = await fetch(`${HOTELBEDS_BASE_URL}/hotel-api/1.0/hotels`, fetchOptions);
 
         if (!response.ok) {
             const errorText = await response.text();
