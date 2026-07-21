@@ -948,7 +948,7 @@ router.get('/hotels/bookings/reconfirmations', authUser, async (req, res) => {
 });
 
 // Search availability by hotel IDs (recommended by Hotelbeds - up to 2000 per request)
-router.post('/hotels/search-by-hotels', authUser, async (req, res) => {
+router.post('/hotels/search-by-hotels', async (req, res) => {
     try {
         const timestamp = Math.floor(Date.now() / 1000);
         const signature = generateHotelbedsSignature(HOTELBEDS_API_KEY, HOTELBEDS_SECRET, timestamp);
