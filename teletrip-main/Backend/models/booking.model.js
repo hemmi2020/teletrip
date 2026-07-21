@@ -95,7 +95,7 @@ const bookingSchema = new mongoose.Schema({
       rateComments: String,
       netPrice: Number,
       sellingPrice: Number,
-      taxes: Number,
+      taxes: mongoose.Schema.Types.Mixed,
       allotment: Number,
       paymentType: String,
       packaging: Boolean,
