@@ -966,7 +966,7 @@ router.post('/hotels/search-by-hotels', async (req, res) => {
         const searchBody = {
             stay,
             occupancies,
-            hotels: { hotel: hotels.map(code => ({ code: parseInt(code) })) },
+            hotels: { hotel: hotels.map(code => parseInt(code)) },
             ...(filter && { filter })
         };
 
