@@ -1125,14 +1125,14 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
                   <label className={`block text-xs sm:text-sm font-medium ${lbl} mb-1.5 sm:mb-2 text-left`}>
                     Destination <span className="text-red-500">*</span>
                   </label>
-                  <div className="flex items-center w-full border border-gray-300 bg-white rounded-lg focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent px-3 py-2.5 sm:py-3 gap-2">
-                    <MapPin className="text-gray-400 flex-shrink-0" size={18} />
+                  <div className={`flex items-center w-full border bg-white rounded-lg focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent px-3 py-2.5 sm:py-3 gap-2 ${selectedLocation ? 'border-green-300 bg-green-50/30' : 'border-gray-300'}`}>
+                    <MapPin className={`flex-shrink-0 ${selectedLocation ? 'text-green-500' : 'text-gray-400'}`} size={18} />
                     <input
                       type="text"
                       value={searchQuery}
                       onChange={handleSearchInputChange}
                       onFocus={() => setShowLocationDropdown(true)}
-                      placeholder="City or country, e.g: London"
+                      placeholder="Dubai, Makkah, Istanbul..."
                       className="flex-1 min-w-0 outline-none bg-transparent text-gray-700 text-sm sm:text-base placeholder-gray-400"
                     />
                     {searchQuery && (
@@ -1140,7 +1140,7 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
                     )}
                   </div>
                   {showLocationDropdown && searchQuery.trim() !== '' && (
-                    <div className="absolute left-0 right-0 top-full mt-1 z-[210] bg-white border border-gray-200 rounded-xl shadow-2xl max-h-[60vh] overflow-y-auto" style={{scrollbarWidth:'thin'}}>
+                    <div className="absolute left-0 right-0 top-full mt-1 z-[220] bg-white border border-gray-200 rounded-xl shadow-2xl max-h-[60vh] overflow-y-auto" style={{scrollbarWidth:'thin'}}>
                       {isLoadingLocations ? (
                         <div className="p-4 text-center text-gray-400 text-sm">Searching...</div>
                       ) : filteredLocations.length > 0 ? (
@@ -1163,19 +1163,19 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
                   )}
                 </div>
 
-                {/* Hotel Name Filter with Autocomplete */}
+                {/* Hotel Name Search with Autocomplete */}
                 <div className="relative" ref={hotelNameRef}>
                   <label className={`block text-xs sm:text-sm font-medium ${lbl} mb-1.5 sm:mb-2 text-left`}>
                     Hotel Name <span className="text-gray-400 text-xs font-normal">(optional)</span>
                   </label>
-                  <div className="flex items-center w-full border border-gray-300 bg-white rounded-lg focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent px-3 py-2.5 sm:py-3 gap-2">
-                    <Building2 className="text-gray-400 flex-shrink-0" size={18} />
+                  <div className={`flex items-center w-full border bg-white rounded-lg focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent px-3 py-2.5 sm:py-3 gap-2 ${selectedHotelCode ? 'border-green-300 bg-green-50/30' : 'border-gray-300'}`}>
+                    <Building2 className={`flex-shrink-0 ${selectedHotelCode ? 'text-green-500' : 'text-gray-400'}`} size={18} />
                     <input
                       type="text"
                       value={hotelNameQuery}
                       onChange={(e) => { setHotelNameQuery(e.target.value); setSelectedHotelCode(null); }}
                       onFocus={() => { if (hotelSuggestions.length > 0) setShowHotelDropdown(true); }}
-                      placeholder="e.g. Hilton, Marriott..."
+                      placeholder="Search by hotel name..."
                       className="flex-1 min-w-0 outline-none bg-transparent text-gray-700 text-sm sm:text-base placeholder-gray-400"
                     />
                     {hotelNameQuery && (
@@ -1183,15 +1183,19 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
                     )}
                   </div>
                   {selectedHotelCode && (
-                    <p className="text-[11px] text-green-600 mt-1 px-1">✓ Will search this specific hotel</p>
+                    <p className="text-[11px] text-green-600 mt-1 px-1 flex items-center gap-1">
+                      <span>✓</span> Direct search for this hotel
+                    </p>
                   )}
-                  {!selectedHotelCode && hotelNameQuery.trim().length > 0 && (
-                    <p className="text-[11px] text-gray-400 mt-1 px-1">Results will be filtered by name</p>
+                  {!selectedHotelCode && hotelNameQuery.trim().length >= 2 && !isLoadingHotels && hotelSuggestions.length === 0 && !showHotelDropdown && (
+                    <p className="text-[11px] text-gray-400 mt-1 px-1">No matching hotels found. Results will filter by name.</p>
                   )}
                   {/* Hotel suggestions dropdown */}
                   {showHotelDropdown && hotelSuggestions.length > 0 && (
                     <div className="absolute left-0 right-0 top-full mt-1 z-[210] bg-white border border-gray-200 rounded-xl shadow-2xl max-h-[50vh] overflow-y-auto" style={{scrollbarWidth:'thin'}}>
-                      <div className="px-3 pt-2.5 pb-1.5 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Hotels</div>
+                      <div className="px-3 pt-2.5 pb-1.5 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+                        Hotels {selectedLocation ? `in ${selectedLocation.city || selectedLocation.name}` : ''}
+                      </div>
                       {hotelSuggestions.map((hotel, idx) => (
                         <div
                           key={idx}
@@ -1216,12 +1220,12 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
                               });
                             }
                           }}
-                          className="px-3 py-2 hover:bg-blue-50 cursor-pointer transition-colors flex items-center gap-2.5"
+                          className="px-3 py-2.5 hover:bg-blue-50 cursor-pointer transition-colors flex items-center gap-2.5 border-b border-gray-50 last:border-0"
                         >
                           <Building2 size={15} className="text-blue-600 flex-shrink-0" />
                           <div className="min-w-0 flex-1">
                             <div className="text-[13px] font-medium text-gray-800 truncate">{hotel.name}</div>
-                            <div className="text-[11px] text-gray-400 truncate">{hotel.zoneName || hotel.destinationName || hotel.destinationCode || ''}{hotel.countryCode ? ` · ${hotel.countryCode}` : ''}</div>
+                            <div className="text-[11px] text-gray-400 truncate">{hotel.zoneName || hotel.destinationName || hotel.destinationCode || ''}{hotel.countryCode ? ` · ${hotel.countryCode}` : ''}{hotel.categoryCode ? ` · ${hotel.categoryCode}` : ''}</div>
                           </div>
                         </div>
                       ))}
@@ -1229,7 +1233,7 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
                   )}
                   {showHotelDropdown && isLoadingHotels && (
                     <div className="absolute left-0 right-0 top-full mt-1 z-[210] bg-white border border-gray-200 rounded-xl shadow-lg p-3 text-center text-sm text-gray-400">
-                      Searching hotels...
+                      <span className="animate-pulse">Searching hotels...</span>
                     </div>
                   )}
                 </div>
