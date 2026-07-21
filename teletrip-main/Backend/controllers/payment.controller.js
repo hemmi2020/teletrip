@@ -2450,11 +2450,12 @@ module.exports.createPayOnSiteBooking = asyncErrorHandler(async (req, res) => {
     // ✅ CALL HOTELBEDS BOOKING API IMMEDIATELY
     let hotelbedsReference = null;
     let hotelbedsError = null;
+    let hotelbedsResult = null;
 
     if (bookingData.hotelbedsBookingRequest) {
       console.log('🏨 [PAY-ON-SITE] Confirming booking with Hotelbeds...');
       
-      const hotelbedsResult = await confirmBookingWithHotelbeds(
+      hotelbedsResult = await confirmBookingWithHotelbeds(
         bookingData.hotelbedsBookingRequest
       );
 
