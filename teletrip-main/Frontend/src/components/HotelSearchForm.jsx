@@ -1026,22 +1026,22 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    if (!selectedLocation) {
-      alert('Please select a destination');
+    if (!selectedLocation && !selectedHotelCode) {
+      alert('Please select a destination or a specific hotel');
       return;
     }
 
     const checkIn = format(dateRange[0].startDate, 'yyyy-MM-dd');
     const checkOut = format(dateRange[0].endDate, 'yyyy-MM-dd');
 
-    const city = selectedLocation.city || selectedLocation.name;
-    const country = selectedLocation.country;
+    const city = selectedLocation?.city || selectedLocation?.name || '';
+    const country = selectedLocation?.country || selectedLocation?.countryCode || '';
     const totalAdults = getTotalAdults();
     const totalChildren = getTotalChildren();
     const allChildAges = getAllChildAges();
     let url = `/hotel-search-results?checkIn=${checkIn}&checkOut=${checkOut}&rooms=${roomConfigs.length}&adults=${totalAdults}&children=${totalChildren}`;
-    url += `&country=${encodeURIComponent(country)}`;
-    url += `&city=${encodeURIComponent(city)}`;
+    if (country) url += `&country=${encodeURIComponent(country)}`;
+    if (city) url += `&city=${encodeURIComponent(city)}`;
     if (hotelNameQuery.trim()) {
       url += `&hotelName=${encodeURIComponent(hotelNameQuery.trim())}`;
     }
@@ -1199,17 +1199,20 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
                             setHotelNameQuery(hotel.name);
                             setSelectedHotelCode(hotel.code);
                             setShowHotelDropdown(false);
-                            // Auto-fill destination if not already set
-                            if (!selectedLocation && hotel.destinationCode) {
-                              const destName = hotel.destinationName || hotel.destinationCode;
-                              setSearchQuery(destName);
+                            // Auto-fill destination from hotel data
+                            if (!selectedLocation) {
+                              const cityName = hotel.zoneName || hotel.destinationName || hotel.destinationCode || '';
+                              const countryCode = hotel.countryCode || '';
+                              const displayName = cityName + (countryCode ? `, ${countryCode}` : '');
+                              setSearchQuery(displayName);
                               setSelectedLocation({
                                 type: 'city',
-                                name: destName,
-                                city: destName,
-                                country: hotel.countryCode || '',
-                                destinationCode: hotel.destinationCode,
-                                displayName: destName
+                                name: cityName,
+                                city: cityName,
+                                country: countryCode,
+                                countryCode: countryCode,
+                                destinationCode: hotel.destinationCode || '',
+                                displayName: displayName
                               });
                             }
                           }}
@@ -1218,7 +1221,7 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
                           <Building2 size={15} className="text-blue-600 flex-shrink-0" />
                           <div className="min-w-0 flex-1">
                             <div className="text-[13px] font-medium text-gray-800 truncate">{hotel.name}</div>
-                            <div className="text-[11px] text-gray-400 truncate">{hotel.destinationName || hotel.destinationCode || ''}{hotel.countryCode ? ` · ${hotel.countryCode}` : ''}</div>
+                            <div className="text-[11px] text-gray-400 truncate">{hotel.zoneName || hotel.destinationName || hotel.destinationCode || ''}{hotel.countryCode ? ` · ${hotel.countryCode}` : ''}</div>
                           </div>
                         </div>
                       ))}

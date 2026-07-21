@@ -814,7 +814,10 @@ const closeReviewsModal = () => {
           throw new Error("Missing required search parameters");
         }
 
-        if (!city || !country) {
+        // If searching by specific hotel code, skip geocoding
+        const hotelCode = searchParams.get("hotelCode");
+        
+        if (!hotelCode && (!city || !country)) {
           throw new Error("Please provide a destination");
         }
 
@@ -844,7 +847,7 @@ const closeReviewsModal = () => {
           } catch (nomErr) { console.warn('Direct Nominatim fallback failed:', nomErr.message); }
         }
         
-        if (!lat || !lon || (parseFloat(lat) === 0 && parseFloat(lon) === 0)) {
+        if (!hotelCode && (!lat || !lon || (parseFloat(lat) === 0 && parseFloat(lon) === 0))) {
           throw new Error(`Unable to find coordinates for ${city}`);
         }
 
@@ -889,7 +892,6 @@ const closeReviewsModal = () => {
         };
 
         // If a specific hotel code is provided, use hotel-by-ID search
-        const hotelCode = searchParams.get("hotelCode");
         let searchEndpoint = `${API_BASE_URL}/hotels/search`;
         let searchBody = requestBody;
         
