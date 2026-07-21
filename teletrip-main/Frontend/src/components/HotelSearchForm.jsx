@@ -1191,7 +1191,7 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
                     <p className="text-[11px] text-gray-400 mt-1 px-1">No matching hotels found. Results will filter by name.</p>
                   )}
                   {/* Hotel suggestions dropdown */}
-                  {showHotelDropdown && hotelSuggestions.length > 0 && (
+                  {showHotelDropdown && !selectedHotelCode && hotelSuggestions.length > 0 && (
                     <div className="absolute left-0 right-0 top-full mt-1 z-[210] bg-white border border-gray-200 rounded-xl shadow-2xl max-h-[50vh] overflow-y-auto" style={{scrollbarWidth:'thin'}}>
                       <div className="px-3 pt-2.5 pb-1.5 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
                         Hotels {selectedLocation ? `in ${selectedLocation.city || selectedLocation.name}` : ''}
@@ -1231,7 +1231,7 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
                       ))}
                     </div>
                   )}
-                  {showHotelDropdown && isLoadingHotels && (
+                  {showHotelDropdown && !selectedHotelCode && isLoadingHotels && (
                     <div className="absolute left-0 right-0 top-full mt-1 z-[210] bg-white border border-gray-200 rounded-xl shadow-lg p-3 text-center text-sm text-gray-400">
                       <span className="animate-pulse">Searching hotels...</span>
                     </div>
