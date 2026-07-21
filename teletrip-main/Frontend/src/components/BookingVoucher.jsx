@@ -153,10 +153,15 @@ const BookingVoucher = ({ booking, onClose }) => {
                 <span style={{ fontWeight: 600, fontSize: '13px' }}>{fullAddress}</span>
               </div>
             )}
-            {(hb.hotelPhone || hbHotel.phones?.[0]?.phoneNumber) && (
+            {(hb.hotelPhone || hbHotel.phones?.[0]?.phoneNumber) ? (
               <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid #f5f5f5' }}>
                 <span style={{ color: '#666', fontSize: '13px' }}>Phone</span>
                 <span style={{ fontWeight: 600, fontSize: '13px' }}>{hb.hotelPhone || hbHotel.phones?.[0]?.phoneNumber}</span>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid #f5f5f5' }}>
+                <span style={{ color: '#666', fontSize: '13px' }}>Phone</span>
+                <span style={{ fontWeight: 500, fontSize: '13px', color: '#999' }}>Contact hotel directly</span>
               </div>
             )}
             {destinationName && (
