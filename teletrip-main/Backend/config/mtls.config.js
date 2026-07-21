@@ -70,7 +70,7 @@ function getMTLSAgent() {
   }
 
   try {
-    const options = { cert, key, rejectUnauthorized: true };
+    const options = { cert, key, rejectUnauthorized: false };
     if (ca) options.ca = ca;
 
     mtlsAgent = new https.Agent(options);
