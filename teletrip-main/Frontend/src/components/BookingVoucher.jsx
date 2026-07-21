@@ -228,7 +228,7 @@ const BookingVoucher = ({ booking, onClose }) => {
                   </p>
                   {payType && (
                     <p style={{ margin: '2px 0', fontSize: '12px', color: '#666' }}>
-                      Payment: {payType === 'AT_WEB' ? 'Prepaid' : payType === 'AT_HOTEL' ? 'Pay at Hotel' : payType}
+                      Payment: {paymentMethod === 'pay_on_site' ? 'Pay at Hotel/Office' : payType === 'AT_WEB' ? 'Prepaid' : payType === 'AT_HOTEL' ? 'Pay at Hotel' : payType}
                     </p>
                   )}
 
