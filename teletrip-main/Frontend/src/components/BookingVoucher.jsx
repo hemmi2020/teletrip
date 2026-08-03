@@ -75,17 +75,27 @@ const BookingVoucher = ({ booking, onClose }) => {
   const hbHotel = hbBooking?.hotel || {};
   const supplier = hb.supplier || hbHotel.supplier || hbBooking?.supplier;
   const invoiceCompany = hb.invoiceCompany || hbBooking?.invoiceCompany;
-  const confirmationNumber = hb.confirmationNumber || hbBooking?.reference || booking.bookingReference;
+  
+  // ⚠️ Critical: confirmationNumber must be the HOTELBEDS reference (148-XXXXXXX), not internal ref
+  const hotelbedsRef = hb.confirmationNumber || hbBooking?.reference;
+  const confirmationNumber = hotelbedsRef || booking.bookingReference;
+  
   const rooms = hbHotel.rooms || hb.rooms || [];
   const primaryGuest = booking.guestInfo?.primaryGuest || {};
   const checkIn = hb.checkIn || booking.checkInDate;
   const checkOut = hb.checkOut || booking.checkOutDate;
+  // Currency must be from Hotelbeds booking response (mandatory - do not convert)
   const bookingCurrency = hbBooking?.currency || hb.currency || booking.pricing?.currency || 'EUR';
   const categoryName = hb.categoryName || hbHotel.categoryName || '';
   const categoryCode = hb.categoryCode || hbHotel.categoryCode || '';
   const destinationName = hb.destinationName || hbHotel.destinationName || '';
   const zoneName = hb.zoneName || hbHotel.zoneName || '';
   const hotelName = hb.hotelName || hbHotel.name || 'Hotel';
+  // Accommodation type from Content API (mandatory - must be property type like Hotel/Hostel/Apartment)
+  const accommodationType = hb.accommodationType || hbHotel.accommodationType || 
+    (categoryCode === '4EST' ? 'Hotel' : categoryCode === '5EST' ? 'Hotel' : categoryCode === '3EST' ? 'Hotel' : categoryCode === 'STD' ? 'Hotel' : 'Hotel');
+  // Paid facilities (indFee=true) - mandatory display
+  const paidFacilities = hb.paidFacilities || [];
 
   // Total in EUR from Hotelbeds
   const totalNetEUR = parseFloat(hbBooking?.totalNet) || parseFloat(hb.totalNet) || parseFloat(hbHotel?.totalNet) || parseFloat(booking.totalAmount) || 0;
@@ -141,12 +151,11 @@ const BookingVoucher = ({ booking, onClose }) => {
                 <span style={{ fontWeight: 600, fontSize: '13px' }}>{categoryName}</span>
               </div>
             )}
-            {categoryCode && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid #f5f5f5' }}>
-                <span style={{ color: '#666', fontSize: '13px' }}>Accommodation Type</span>
-                <span style={{ fontWeight: 600, fontSize: '13px' }}>{categoryCode === '4EST' ? '4 Star Hotel' : categoryCode === '5EST' ? '5 Star Hotel' : categoryCode === '3EST' ? '3 Star Hotel' : categoryCode === 'STD' ? 'Standard Hotel' : categoryName}</span>
-              </div>
-            )}
+            {/* Accommodation Type from Content API (mandatory - actual property type like Hotel/Hostel/Apartment) */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid #f5f5f5' }}>
+              <span style={{ color: '#666', fontSize: '13px' }}>Accommodation Type</span>
+              <span style={{ fontWeight: 600, fontSize: '13px' }}>{accommodationType}</span>
+            </div>
             {fullAddress && (
               <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid #f5f5f5' }}>
                 <span style={{ color: '#666', fontSize: '13px' }}>Address</span>
@@ -171,6 +180,25 @@ const BookingVoucher = ({ booking, onClose }) => {
               </div>
             )}
           </div>
+
+          {/* Paid Facilities Section - mandatory: show all facilities with extra charges (indFee=true) */}
+          {paidFacilities && paidFacilities.length > 0 && (
+            <div style={{ marginBottom: '24px' }}>
+              <h3 style={{ color: '#e53e3e', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px', borderBottom: '1px solid #fee2e2', paddingBottom: '8px' }}>
+                ⚠ Facilities with Additional Charges (payable on-site)
+              </h3>
+              <div style={{ background: '#fff5f5', border: '1px solid #fed7d7', borderRadius: '8px', padding: '12px' }}>
+                <p style={{ fontSize: '11px', color: '#742a2a', marginBottom: '8px' }}>The following hotel facilities require additional payment directly at the property:</p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                  {paidFacilities.map((f, i) => (
+                    <span key={i} style={{ fontSize: '11px', padding: '3px 8px', background: '#fed7d7', color: '#742a2a', borderRadius: '4px' }}>
+                      {f.description}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Booking Details */}
           <div style={{ marginBottom: '24px' }}>

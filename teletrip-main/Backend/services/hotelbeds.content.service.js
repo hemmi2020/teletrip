@@ -59,12 +59,26 @@ async function getHotelContent(hotelCode) {
       categoryCode: hotel.categoryCode || '',
       categoryGroupCode: hotel.categoryGroupCode || '',
       accommodationTypeCode: hotel.accommodationTypeCode || '',
+      // Accommodation type description from Content API (mandatory Hotelbeds requirement)
+      accommodationType: hotel.accommodationType?.typeDescription?.content || hotel.accommodationTypeCode || '',
       email: hotel.email || '',
       web: hotel.web || '',
+      // Facilities with paid charges (indFee=true means extra charge on-site) - mandatory display
+      paidFacilities: (hotel.facilities || [])
+        .filter(f => f.indFee === true)
+        .slice(0, 30)
+        .map(f => ({
+          code: f.facilityCode,
+          groupCode: f.facilityGroupCode,
+          description: f.description?.content || `Facility ${f.facilityCode}`,
+          fee: true
+        })),
+      // All facilities
       facilities: (hotel.facilities || []).slice(0, 50).map(f => ({
         code: f.facilityCode,
         groupCode: f.facilityGroupCode,
-        description: f.description?.content || ''
+        description: f.description?.content || '',
+        indFee: f.indFee || false
       })),
       images: (hotel.images || []).slice(0, 10).map(img => ({
         path: img.path,
