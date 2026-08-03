@@ -1826,8 +1826,9 @@ const closeReviewsModal = () => {
                           </div>
                         </div>
                         <div className="text-right flex-shrink-0">
-                          <div className="text-lg font-bold text-blue-600 leading-tight">{formatPKR(totalPrice) || `${hotel.currency} ${totalPrice.toFixed(0)}`}</div>
-                          <div className="text-[10px] text-gray-400">{formatPKR(pricePerNight) || `${pricePerNight.toFixed(0)}`}/night · {nights}n</div>
+                          <div className="text-lg font-bold text-blue-600 leading-tight">{hotel.currency || 'EUR'} {totalPrice.toFixed(0)}</div>
+                          {formatPKR(totalPrice) && <div className="text-[11px] text-gray-400">≈ {formatPKR(totalPrice)}</div>}
+                          <div className="text-[10px] text-gray-400">{hotel.currency || 'EUR'} {pricePerNight.toFixed(0)}/night · {nights}n</div>
                           {hotelReviews[hotel.id] && hotelReviews[hotel.id].numReviews > 0 && (
                             <div className="flex items-center gap-1 mt-0.5 justify-end">
                               <RatingCircles rating={hotelReviews[hotel.id].rating} size="w-2 h-2" />
@@ -1951,7 +1952,8 @@ const closeReviewsModal = () => {
                   </button>
                   <div className="text-right">
                     <div className="text-[10px] text-gray-400">from</div>
-                    <div className="text-base font-bold text-blue-600 leading-tight">{formatPKR(parseFloat(selectedHotel.price)) || `${selectedHotel.currency} ${parseFloat(selectedHotel.price).toFixed(0)}`}</div>
+                    <div className="text-base font-bold text-blue-600 leading-tight">{selectedHotel.currency || 'EUR'} {parseFloat(selectedHotel.price).toFixed(0)}</div>
+                    {formatPKR(parseFloat(selectedHotel.price)) && <div className="text-[10px] text-gray-400">≈ {formatPKR(parseFloat(selectedHotel.price))}</div>}
                     <div className="text-[10px] text-gray-400">{nights} {nights === 1 ? 'night' : 'nights'}</div>
                   </div>
                 </div>
@@ -2146,8 +2148,9 @@ const closeReviewsModal = () => {
                               </div>
                               {/* Price + CTA */}
                               <div className="text-right flex-shrink-0 min-w-[120px]">
-                                <div className="text-[11px] text-gray-400">{formatPKR(perNight) || `${selectedHotel.currency} ${perNight.toFixed(0)}`} / night</div>
-                                <div className="text-lg font-bold text-blue-600">{formatPKR(total) || `${selectedHotel.currency} ${total.toFixed(2)}`}</div>
+                                <div className="text-[11px] text-gray-400">{selectedHotel.currency || 'EUR'} {perNight.toFixed(0)} / night</div>
+                                <div className="text-lg font-bold text-blue-600">{selectedHotel.currency || 'EUR'} {total.toFixed(2)}</div>
+                                {formatPKR(total) && <div className="text-[10px] text-gray-400">≈ {formatPKR(total)}</div>}
                                 <div className="text-[11px] text-gray-400 mb-2">total for {nights}n</div>
                                 {isMultiRoom ? (
                                   <button
@@ -2199,7 +2202,7 @@ const closeReviewsModal = () => {
                         </span>
                         {sel ? (
                           <span className="text-gray-800 font-medium">
-                            {sel.room.name} · {sel.rate.boardName} · {formatPKR(parseFloat(sel.rate.net)) || `${selectedHotel.currency} ${parseFloat(sel.rate.net).toFixed(2)}`}
+                            {sel.room.name} · {sel.rate.boardName} · {selectedHotel.currency || 'EUR'} {parseFloat(sel.rate.net).toFixed(2)}{formatPKR(parseFloat(sel.rate.net)) ? ` (≈ ${formatPKR(parseFloat(sel.rate.net))})` : ''}
                           </span>
                         ) : (
                           <span className="text-gray-400 italic">Not selected</span>
@@ -2212,8 +2215,11 @@ const closeReviewsModal = () => {
                   <div>
                     <div className="text-[11px] text-gray-400">Total for {roomConfigs.length} rooms</div>
                     <div className="text-lg font-bold text-blue-600">
-                      {formatPKR(Object.values(roomSelections).reduce((sum, sel) => sum + parseFloat(sel.rate.net), 0)) || `${selectedHotel.currency} ${Object.values(roomSelections).reduce((sum, sel) => sum + parseFloat(sel.rate.net), 0).toFixed(2)}`}
+                      {selectedHotel.currency || 'EUR'} {Object.values(roomSelections).reduce((sum, sel) => sum + parseFloat(sel.rate.net), 0).toFixed(2)}
                     </div>
+                    {formatPKR(Object.values(roomSelections).reduce((sum, sel) => sum + parseFloat(sel.rate.net), 0)) && (
+                      <div className="text-[11px] text-gray-400">≈ {formatPKR(Object.values(roomSelections).reduce((sum, sel) => sum + parseFloat(sel.rate.net), 0))} (charged amount)</div>
+                    )}
                   </div>
                   <button
                     onClick={(e) => { e.stopPropagation(); handleMultiRoomAddToCart(selectedHotel, roomSelections, roomConfigs); }}

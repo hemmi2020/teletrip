@@ -1030,7 +1030,9 @@ const handlePaymentSubmit = () => {
                   const itemTotal = item.type === 'activity'
                     ? parseFloat(item.price || 0)
                     : parseFloat(item.totalPrice || item.net || item.price || 0);
-                  return formatPKR(itemTotal) || `${item.currency || 'EUR'} ${itemTotal.toFixed(2)}`;
+                  const eurStr = `${item.currency || 'EUR'} ${itemTotal.toFixed(2)}`;
+                  const pkrStr = formatPKR(itemTotal);
+                  return pkrStr ? `${eurStr} (≈ ${pkrStr})` : eurStr;
                 })()}
               </p>
               {item.taxes?.taxes?.filter(t => !t.included).length > 0 && (
@@ -1052,14 +1054,11 @@ const handlePaymentSubmit = () => {
         <div className="flex justify-between items-center text-lg font-bold">
           <span>Total Amount:</span>
           <span className="text-blue-600">
-            {formatPKR(totalAmount) || (isLoadingConversion ? (
-              <span className="text-sm">Converting...</span>
-            ) : currencyConversion ? (
-              `PKR ${currencyConversion.totalPKR.toFixed(0)}`
-            ) : (
-              `${checkoutItems[0]?.currency || 'EUR'} ${parseFloat(totalAmount).toFixed(2)}`
-            ))}
-          </span>
+              <div className="font-bold">{checkoutItems[0]?.currency || 'EUR'} {parseFloat(totalAmount).toFixed(2)}</div>
+              {(formatPKR(totalAmount) || currencyConversion?.totalPKR) && (
+                <div className="text-sm text-gray-500">≈ {formatPKR(totalAmount) || `PKR ${Math.round(currencyConversion.totalPKR).toLocaleString()}`} (charged at office)</div>
+              )}
+            </span>
         </div>
       </div>
 
@@ -1129,7 +1128,7 @@ const handlePaymentSubmit = () => {
             {paymentMethod === 'hblpay' ? (
               <>
                 <Lock className="w-4 h-4" />
-                <span>Pay with HBLPay - {formatPKR(totalAmount) || (currencyConversion ? `PKR ${currencyConversion.totalPKR.toFixed(0)}` : `PKR ${parseFloat(totalAmount).toFixed(0)}`)}</span>
+                <span>Pay with HBLPay - {checkoutItems[0]?.currency || 'EUR'} {parseFloat(totalAmount).toFixed(2)}</span>
               </>
             ) : (
               <>

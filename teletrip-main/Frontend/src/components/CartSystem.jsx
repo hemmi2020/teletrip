@@ -815,8 +815,9 @@ export const SlideOutCart = ({ isOpen, onClose, onProceedToCheckout }) => {
                       <div className="px-3 pb-3 flex items-center justify-between">
                         <span className="text-[11px] text-gray-400">{formatShortDate(item.checkIn)} → {formatShortDate(item.checkOut)}</span>
                         <div className="text-right">
-                          <span className="text-[14px] font-bold text-gray-900">{fmtPKR(totalPrice) || `${item.currency || 'EUR'} ${totalPrice.toFixed(0)}`}</span>
-                          {!isActivity && !isTransfer && <span className="text-[10px] text-gray-400 block">{fmtPKR(item.price) || `${item.currency || 'EUR'} ${item.price.toFixed(0)}`}/night</span>}
+                          <span className="text-[14px] font-bold text-gray-900">{item.currency || 'EUR'} {totalPrice.toFixed(0)}</span>
+                          {fmtPKR(totalPrice) && <span className="text-[11px] text-gray-400 block">≈ {fmtPKR(totalPrice)}</span>}
+                          {!isActivity && !isTransfer && <span className="text-[10px] text-gray-400 block">{item.currency || 'EUR'} {item.price?.toFixed(0)}/night</span>}
                         </div>
                       </div>
                     </div>
@@ -831,7 +832,10 @@ export const SlideOutCart = ({ isOpen, onClose, onProceedToCheckout }) => {
             <div className="sticky bottom-0 border-t border-gray-100 bg-white px-5 py-4 space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-[13px] text-gray-500">Total</span>
-                <span className="text-xl font-bold text-gray-900">{fmtPKR(getTotalPrice()) || `${items[0]?.currency || 'EUR'} ${getTotalPrice().toFixed(0)}`}</span>
+                <div className="text-right">
+                  <div className="text-xl font-bold text-gray-900">{items[0]?.currency || 'EUR'} {getTotalPrice().toFixed(2)}</div>
+                  {fmtPKR(getTotalPrice()) && <div className="text-[11px] text-gray-400">≈ {fmtPKR(getTotalPrice())} (charged amount)</div>}
+                </div>
               </div>
               <button onClick={handleCheckoutClick} className="w-full bg-blue-600 text-white py-2.5 rounded-lg font-semibold hover:bg-blue-700 transition-colors text-[14px]">
                 Checkout
