@@ -9,16 +9,25 @@ let rateCache = {
 };
 
 /**
- * Get EUR to PKR exchange rate from Frankfurter API
+ * Get EUR to PKR exchange rate
+ * Priority: 1) Admin setting, 2) Cached external API, 3) Fresh external API, 4) Fallback
  */
 async function getExchangeRate() {
   try {
-    // Check cache first
+    // Priority 1: Check admin-configured exchange rate
+    const settings = await CurrencySettings.findOne({ isActive: true });
+    if (settings && settings.exchangeRate && settings.exchangeRate > 0) {
+      console.log('💰 Using admin-configured exchange rate:', settings.exchangeRate);
+      return settings.exchangeRate;
+    }
+
+    // Priority 2: Check cache
     if (rateCache.rate && rateCache.timestamp && (Date.now() - rateCache.timestamp < rateCache.ttl)) {
       console.log('💰 Using cached exchange rate:', rateCache.rate);
       return rateCache.rate;
     }
 
+    // Priority 3: Fetch fresh from external API
     console.log('💰 Fetching fresh exchange rate from ExchangeRate-API...');
     const response = await fetch('https://api.exchangerate-api.com/v4/latest/EUR');
     
@@ -158,6 +167,37 @@ async function convertEURtoPKR(amountInEUR) {
 }
 
 /**
+ * Update exchange rate (Admin only)
+ * Set to null to auto-fetch from external API
+ */
+async function updateExchangeRate(newRate, adminId) {
+  try {
+    let settings = await CurrencySettings.findOne({ isActive: true });
+    
+    if (!settings) {
+      settings = new CurrencySettings({
+        exchangeRate: newRate,
+        markupPerEuro: 20,
+        transactionFeePercentage: 1,
+        isActive: true,
+        lastUpdatedBy: adminId
+      });
+    } else {
+      settings.exchangeRate = newRate;
+      settings.lastUpdatedBy = adminId;
+    }
+
+    await settings.save();
+    console.log(`✅ Exchange rate updated to ${newRate} PKR per EUR by admin ${adminId}`);
+    
+    return settings;
+  } catch (error) {
+    console.error('❌ Error updating exchange rate:', error.message);
+    throw error;
+  }
+}
+
+/**
  * Update markup per EUR (Admin only)
  */
 async function updateMarkup(newMarkup, adminId) {
@@ -226,9 +266,11 @@ async function getCurrencySettings() {
     ]);
 
     return {
+      exchangeRate: settings?.exchangeRate || null,
+      autoFetchRate: !settings?.exchangeRate,
+      currentEffectiveRate: exchangeRate,
       markupPerEuro: settings?.markupPerEuro || 20,
       transactionFeePercentage: settings?.transactionFeePercentage || 1,
-      currentExchangeRate: exchangeRate,
       lastUpdated: settings?.updatedAt,
       lastUpdatedBy: settings?.lastUpdatedBy
     };
@@ -243,6 +285,7 @@ module.exports = {
   getExchangeRate,
   getMarkupPerEuro,
   getTransactionFeePercentage,
+  updateExchangeRate,
   updateMarkup,
   updateTransactionFee,
   getCurrencySettings

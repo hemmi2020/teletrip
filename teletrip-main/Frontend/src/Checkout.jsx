@@ -1053,13 +1053,17 @@ const handlePaymentSubmit = () => {
       <div className="border-t pt-4 mb-6">
         <div className="flex justify-between items-center text-lg font-bold">
           <span>Total Amount:</span>
-          <span className="text-blue-600">
+          <span className="text-blue-600 text-right">
+              <div className="text-xs text-gray-500 font-normal">Hotelbeds Booking Currency</div>
               <div className="font-bold">{checkoutItems[0]?.currency || 'EUR'} {parseFloat(totalAmount).toFixed(2)}</div>
               {(formatPKR(totalAmount) || currencyConversion?.totalPKR) && (
-                <div className="text-sm text-gray-500">≈ {formatPKR(totalAmount) || `PKR ${Math.round(currencyConversion.totalPKR).toLocaleString()}`} (charged at office)</div>
+                <div className="text-sm text-green-600">≈ {formatPKR(totalAmount) || `PKR ${Math.round(currencyConversion.totalPKR).toLocaleString()}`} <span className="text-xs text-gray-500">(for local payment)</span></div>
               )}
             </span>
         </div>
+        <p className="text-xs text-gray-500 mt-2">
+          Rates are provided by Hotelbeds in EUR. PKR amount is an estimate for local payment reference only. Actual booking is confirmed in EUR.
+        </p>
       </div>
 
       {/* Error/Success Messages */}

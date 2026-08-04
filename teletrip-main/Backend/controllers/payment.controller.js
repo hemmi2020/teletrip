@@ -2447,44 +2447,20 @@ module.exports.createPayOnSiteBooking = asyncErrorHandler(async (req, res) => {
     await payment.save();
     console.log('💾 Pay on Site payment record created:', paymentId);
 
-    // ✅ CALL HOTELBEDS BOOKING API IMMEDIATELY
+    // ✅ PAY-ON-SITE WORKFLOW: Reserve locally, do NOT book with Hotelbeds yet
+    // Hotelbeds booking will be triggered when admin confirms payment received
     let hotelbedsReference = null;
-    let hotelbedsError = null;
-    let hotelbedsResult = null;
+    let hotelbedsBookingRequest = bookingData.hotelbedsBookingRequest || null;
 
-    if (bookingData.hotelbedsBookingRequest) {
-      console.log('🏨 [PAY-ON-SITE] Confirming booking with Hotelbeds...');
+    if (hotelbedsBookingRequest) {
+      console.log('🏨 [PAY-ON-SITE] Booking reserved locally. Hotelbeds confirmation pending admin payment verification.');
       
-      hotelbedsResult = await confirmBookingWithHotelbeds(
-        bookingData.hotelbedsBookingRequest
-      );
-
-      if (hotelbedsResult.success) {
-        console.log('✅ [PAY-ON-SITE] Hotelbeds booking confirmed:', hotelbedsResult.hotelbedsReference);
-        hotelbedsReference = hotelbedsResult.hotelbedsReference;
-        
-        // Update payment with Hotelbeds reference
-        await payment.updateOne({
-          'metadata.hotelbedsReference': hotelbedsReference,
-          'metadata.hotelbedsBookingData': hotelbedsResult.hotelbedsData,
-          updatedAt: new Date()
-        });
-      } else {
-        console.error('❌ [PAY-ON-SITE] Hotelbeds booking failed:', hotelbedsResult.error);
-        hotelbedsError = hotelbedsResult.error;
-        
-        // Update payment with error
-        await payment.updateOne({
-          'metadata.hotelbedsError': hotelbedsError,
-          updatedAt: new Date()
-        });
-        
-        // Return error to user - don't create booking if Hotelbeds fails
-        return ApiResponse.error(res, 
-          `Hotel booking failed: ${hotelbedsError}. Please try again or contact support.`, 
-          400
-        );
-      }
+      // Store the Hotelbeds request in payment metadata for admin confirmation later
+      await payment.updateOne({
+        'metadata.hotelbedsBookingRequest': hotelbedsBookingRequest,
+        'metadata.pendingHotelbedsConfirmation': true,
+        updatedAt: new Date()
+      });
     }
 
     // ✅ CREATE A BOOKING RECORD so it shows in "My Bookings"
@@ -2526,7 +2502,7 @@ module.exports.createPayOnSiteBooking = asyncErrorHandler(async (req, res) => {
       user: userId,
       bookingType: 'hotel',
       bookingReference: bookingReference,
-      status: 'pending',
+      status: 'pending_payment',
       pricing: {
         basePrice: paymentAmount,
         totalAmount: parseFloat(hbBooking?.totalNet) || paymentAmount,
@@ -2623,7 +2599,8 @@ module.exports.createPayOnSiteBooking = asyncErrorHandler(async (req, res) => {
         platform: 'web'
       },
       backup: {
-        hotelbedsBookingData: hotelbedsReference ? hotelbedsResult.hotelbedsData : null
+        hotelbedsBookingRequest: hotelbedsBookingRequest,
+        hotelbedsBookingData: null // Will be populated when admin confirms payment
       }
     });
 
@@ -2646,8 +2623,8 @@ module.exports.createPayOnSiteBooking = asyncErrorHandler(async (req, res) => {
       amount: paymentAmount,
       currency,
       paymentMethod: 'pay_on_site',
-      status: 'pending',
-      message: 'Booking reserved! Please visit the Telitrip office to complete payment.',
+      status: 'pending_payment',
+      message: 'Booking reserved! Please visit the Telitrip office to complete payment. Your room will be confirmed once payment is received.',
       instructions: [
         'Your hotel room is reserved',
         'Payment must be completed at the Telitrip office before check-in',

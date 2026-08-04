@@ -95,10 +95,12 @@ module.exports.createBooking = asyncErrorHandler(async (req, res) => {
     checkIn,
     checkOut,
     guests,
+    children = 0,
+    childAges = [],
     totalAmount,
     boardType = 'Room Only',
     rateClass = 'NOR',
-    rateKey, // ⚠️ CRITICAL: Must be passed from frontend
+    rateKey,
     specialRequests,
     items = []
   } = req.body;
@@ -149,7 +151,8 @@ module.exports.createBooking = asyncErrorHandler(async (req, res) => {
         boardName: boardType,
         rateClass: rateClass,
         adults: guests || 1,
-        children: 0,
+        children: children,
+        childAges: childAges,
         netPrice: totalAmount,
         sellingPrice: totalAmount
       }],
@@ -169,7 +172,7 @@ module.exports.createBooking = asyncErrorHandler(async (req, res) => {
       },
       totalGuests: {
         adults: guests || 1,
-        children: 0,
+        children: children,
         infants: 0
       }
     },
@@ -203,9 +206,71 @@ module.exports.createBooking = asyncErrorHandler(async (req, res) => {
     console.log('📞 Calling Hotelbeds Booking API...');
     const hotelbedsResponse = await confirmHotelbedsBooking(bookingData, rateKey);
     
-    // ⚠️ STEP 2: Store Hotelbeds booking reference
-    bookingData.hotelbedsReference = hotelbedsResponse.booking.reference;
-    bookingData.status = 'confirmed'; // Update status to confirmed
+    // ⚠️ STEP 2: Store Hotelbeds booking reference and certification data
+    const hbBooking = hotelbedsResponse.booking;
+    const hbHotel = hbBooking.hotel || {};
+    const hbSupplier = hbHotel.supplier || hbBooking.supplier || {};
+    const hbInvoice = hbBooking.invoiceCompany || {};
+    const hbRooms = hbHotel.rooms || [];
+    const hbRate = hbRooms[0]?.rates?.[0] || {};
+    const hbPaxes = hbRooms[0]?.paxes || [];
+    const hbChildAges = hbPaxes.filter(p => p.type === 'CH').map(p => p.age);
+    
+    bookingData.hotelbedsReference = hbBooking.reference;
+    bookingData.status = 'confirmed';
+    bookingData.pricing.currency = hbBooking.currency || 'EUR';
+    
+    // Extract certification-required fields from Hotelbeds response
+    bookingData.hotelBooking.hotelCode = hbHotel.code || null;
+    bookingData.hotelBooking.categoryCode = hbHotel.categoryCode || null;
+    bookingData.hotelBooking.categoryName = hbHotel.categoryName || null;
+    bookingData.hotelBooking.destinationCode = hbHotel.destinationCode || null;
+    bookingData.hotelBooking.destinationName = hbHotel.destinationName || null;
+    bookingData.hotelBooking.zoneName = hbHotel.zoneName || null;
+    bookingData.hotelBooking.latitude = hbHotel.latitude || null;
+    bookingData.hotelBooking.longitude = hbHotel.longitude || null;
+    bookingData.hotelBooking.confirmationNumber = hbBooking.reference || null;
+    bookingData.hotelBooking.currency = hbBooking.currency || 'EUR';
+    bookingData.hotelBooking.totalNet = hbBooking.totalNet || null;
+    bookingData.hotelBooking.supplier = hbSupplier ? {
+      name: hbSupplier.name,
+      vatNumber: hbSupplier.vatNumber
+    } : null;
+    bookingData.hotelBooking.invoiceCompany = hbInvoice ? {
+      code: hbInvoice.code,
+      company: hbInvoice.company,
+      registrationNumber: hbInvoice.registrationNumber
+    } : null;
+    
+    // Update room details from actual Hotelbeds response
+    if (hbRooms.length > 0) {
+      bookingData.hotelBooking.rooms = hbRooms.map((hbRoom, idx) => {
+        const roomRate = hbRoom.rates?.[0] || {};
+        const roomPaxes = hbRoom.paxes || [];
+        const roomChildAges = roomPaxes.filter(p => p.type === 'CH').map(p => p.age);
+        return {
+          roomName: hbRoom.name || roomName,
+          roomCode: hbRoom.code || null,
+          boardCode: roomRate.boardCode || null,
+          boardName: roomRate.boardName || boardType,
+          rateComments: roomRate.rateComments || null,
+          adults: roomRate.adults || roomPaxes.filter(p => p.type === 'AD').length || guests || 1,
+          children: roomRate.children || roomPaxes.filter(p => p.type === 'CH').length || children,
+          childAges: roomChildAges.length > 0 ? roomChildAges : childAges,
+          netPrice: parseFloat(roomRate.net) || totalAmount,
+          sellingPrice: parseFloat(roomRate.net) || totalAmount,
+          paymentType: roomRate.paymentType || null,
+          cancellationPolicies: roomRate.cancellationPolicies || [],
+          taxes: roomRate.taxes || null,
+          rateClass: roomRate.rateClass || rateClass,
+          paxes: roomPaxes
+        };
+      });
+    }
+    
+    // Update guest info with actual paxes from Hotelbeds
+    bookingData.guestInfo.totalGuests.children = hbPaxes.filter(p => p.type === 'CH').length || children;
+    
     bookingData.backup = {
       hotelbedsResponse: hotelbedsResponse
     };

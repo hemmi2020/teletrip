@@ -113,4 +113,30 @@ router.put('/settings/transaction-fee', [
   }
 });
 
+/**
+ * @route   PUT /api/currency/settings/exchange-rate
+ * @desc    Update exchange rate (set to null to auto-fetch)
+ * @access  Private (Admin)
+ */
+router.put('/settings/exchange-rate', [
+  authUser,
+  body('exchangeRate').optional({ nullable: true }).isFloat({ min: 0 }).withMessage('Exchange rate must be a positive number or null')
+], validateRequest, async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return ApiResponse.error(res, 'Unauthorized. Admin access required.', 403);
+    }
+
+    const { exchangeRate } = req.body;
+    const settings = await currencyService.updateExchangeRate(exchangeRate || null, req.user._id);
+    
+    return ApiResponse.success(res, settings, exchangeRate 
+      ? 'Exchange rate updated successfully' 
+      : 'Exchange rate reset to auto-fetch mode');
+  } catch (error) {
+    console.error('Exchange rate update error:', error);
+    return ApiResponse.error(res, 'Failed to update exchange rate', 500);
+  }
+});
+
 module.exports = router;

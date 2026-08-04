@@ -6,7 +6,7 @@ import {
   LayoutDashboard, Users, Hotel, CreditCard, Package, MessageSquare, 
   Settings, TrendingUp, TrendingDown, DollarSign, Calendar, Search,
   Filter, Download, RefreshCw, Eye, Edit, Trash2, Check, X,
-  Bell, Star, MapPin, Phone, Mail, BarChart3, PieChart, Activity,
+  Bell, Building2, Star, MapPin, Phone, Mail, BarChart3, PieChart, Activity,
   FileText, Shield, Lock, LogOut, ChevronDown, Plus, AlertCircle,
   Clock, CheckCircle, XCircle, Loader2, ArrowUpRight, ArrowDownRight,
   Menu, XCircle as CloseIcon, Save, Camera, User, Globe, Zap
@@ -66,6 +66,7 @@ import BookingReconfirmation from './components/BookingReconfirmation';
 import { useCurrency } from './context/CurrencyContext';
 import EmailManagementTab from './components/EmailManagement/EmailManagementTab';
 import DestinationManagement from './components/DestinationManagement';
+import PayOnSiteManagement from './components/PayOnSiteManagement';
 import './styles/admin-responsive.css';
 
 // Toast Component
@@ -1134,6 +1135,10 @@ Amount: PKR ${voucher.totalAmount}
       );
     }
 
+    if (activeTab === 'pay-on-site') {
+      return <PayOnSiteManagement showToast={showToast} />;
+    }
+
     // Render data tables for other tabs
     return (
       <div className="space-y-4">
@@ -1522,6 +1527,7 @@ Amount: PKR ${voucher.totalAmount}
     { id: 'hotel-management', label: 'Hotel Mgmt', icon: Settings },
     { id: 'destinations', label: 'Destinations', icon: MapPin },
     { id: 'payments', label: 'Payments', icon: CreditCard },
+    { id: 'pay-on-site', label: 'Pay on Site', icon: Building2 },
     { id: 'support', label: 'Support', icon: MessageSquare },
     { id: 'reports', label: 'Reports', icon: FileText },
     { id: 'financial', label: 'Financial', icon: DollarSign },

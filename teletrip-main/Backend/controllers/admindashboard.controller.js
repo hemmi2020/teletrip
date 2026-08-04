@@ -1260,7 +1260,78 @@ const markPayOnSiteAsPaid = asyncErrorHandler(async (req, res) => {
       return ApiResponse.error(res, 'Payment is already marked as paid', 400);
     }
 
-    // Update payment
+    // ✅ STEP 1: If there's a pending Hotelbeds booking request, confirm it NOW
+    let hotelbedsResult = null;
+    let hotelbedsReference = null;
+    const hbBookingRequest = payment.metadata?.hotelbedsBookingRequest;
+    
+    if (hbBookingRequest && payment.metadata?.pendingHotelbedsConfirmation) {
+      console.log('🏨 [ADMIN] Confirming Hotelbeds booking for pay-on-site payment...');
+      
+      const { confirmBookingWithHotelbeds } = require('../services/hotelbeds.booking.service');
+      hotelbedsResult = await confirmBookingWithHotelbeds(hbBookingRequest);
+      
+      if (hotelbedsResult.success) {
+        console.log('✅ [ADMIN] Hotelbeds booking confirmed:', hotelbedsResult.hotelbedsReference);
+        hotelbedsReference = hotelbedsResult.hotelbedsReference;
+        
+        // Update payment with Hotelbeds reference
+        await payment.updateOne({
+          'metadata.hotelbedsReference': hotelbedsReference,
+          'metadata.hotelbedsBookingData': hotelbedsResult.hotelbedsData,
+          'metadata.pendingHotelbedsConfirmation': false,
+          updatedAt: new Date()
+        });
+        
+        // Update booking with Hotelbeds reference and certification data
+        if (payment.bookingId) {
+          const booking = await Booking.findById(payment.bookingId);
+          if (booking) {
+            const hbData = hotelbedsResult.hotelbedsData;
+            const hbBooking = hbData?.booking;
+            const hbHotel = hbBooking?.hotel;
+            const hbSupplier = hbHotel?.supplier || hbBooking?.supplier;
+            const hbInvoice = hbBooking?.invoiceCompany;
+            const bookingCurrency = hbBooking?.currency || 'EUR';
+            
+            booking.status = 'confirmed';
+            booking.paymentStatus = 'paid';
+            booking.pricing.currency = bookingCurrency;
+            booking.hotelBooking.confirmationNumber = hbBooking?.reference || null;
+            booking.hotelBooking.currency = bookingCurrency;
+            booking.hotelBooking.totalNet = hbBooking?.totalNet || null;
+            booking.hotelBooking.supplier = hbSupplier ? {
+              name: hbSupplier.name,
+              vatNumber: hbSupplier.vatNumber
+            } : null;
+            booking.hotelBooking.invoiceCompany = hbInvoice ? {
+              code: hbInvoice.code,
+              company: hbInvoice.company,
+              registrationNumber: hbInvoice.registrationNumber
+            } : null;
+            booking.backup.hotelbedsBookingData = hbData;
+            await booking.save();
+          }
+        }
+      } else {
+        console.error('❌ [ADMIN] Hotelbeds booking failed:', hotelbedsResult.error);
+        return ApiResponse.error(res, 
+          `Payment marked as received, but Hotelbeds booking failed: ${hotelbedsResult.error}. Please retry or contact Hotelbeds support.`, 
+          502
+        );
+      }
+    } else {
+      // No Hotelbeds booking needed (activity/transfer) - just update status
+      if (payment.bookingId) {
+        await Booking.findByIdAndUpdate(payment.bookingId, {
+          status: 'confirmed',
+          paymentStatus: 'paid',
+          updatedAt: new Date()
+        });
+      }
+    }
+
+    // Update payment status
     await payment.updateOne({
       status: 'completed',
       completedAt: new Date(),
@@ -1270,17 +1341,6 @@ const markPayOnSiteAsPaid = asyncErrorHandler(async (req, res) => {
       updatedBy: adminId,
       updatedAt: new Date()
     });
-
-    // Update booking
-    if (payment.bookingId) {
-      await Booking.findByIdAndUpdate(payment.bookingId, {
-        status: 'confirmed',
-        paymentStatus: 'paid',
-        'payment.status': 'paid',
-        'payment.paidAt': new Date(),
-        updatedAt: new Date()
-      });
-    }
 
     console.log('✅ Payment marked as paid successfully');
 
@@ -1304,7 +1364,10 @@ const markPayOnSiteAsPaid = asyncErrorHandler(async (req, res) => {
     return ApiResponse.success(res, {
       paymentId,
       status: 'completed',
-      message: 'Payment marked as paid successfully'
+      hotelbedsReference: hotelbedsReference,
+      message: hotelbedsReference 
+        ? 'Payment marked as paid and Hotelbeds booking confirmed successfully'
+        : 'Payment marked as paid successfully'
     }, 'Payment updated successfully');
 
   } catch (error) {

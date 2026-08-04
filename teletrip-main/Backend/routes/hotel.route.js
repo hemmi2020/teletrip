@@ -293,7 +293,14 @@ router.post('/hotels/search', async (req, res) => {
                 'Accept': 'application/json',
                 // 'Accept-Encoding': handled automatically by node-fetch
             },
-            body: JSON.stringify(req.body)
+            body: JSON.stringify({
+                ...req.body,
+                source: {
+                    channel: 'B2C',
+                    device: 'WEB',
+                    deviceInfo: 'TeleTrip Web Application'
+                }
+            })
         });
 
         if (!response.ok) {
@@ -345,7 +352,14 @@ router.post('/hotels/search-auth', async (req, res) => {
                 'Accept': 'application/json',
                 // 'Accept-Encoding': handled automatically by node-fetch
             },
-            body: JSON.stringify(req.body)
+            body: JSON.stringify({
+                ...req.body,
+                source: {
+                    channel: 'B2C',
+                    device: 'WEB',
+                    deviceInfo: 'TeleTrip Web Application'
+                }
+            })
         });
 
         if (!response.ok) {
@@ -513,7 +527,14 @@ router.post('/hotels/checkrate', async (req, res) => {
                 'Accept': 'application/json',
                 // 'Accept-Encoding': handled automatically by node-fetch
             },
-            body: JSON.stringify(req.body)
+            body: JSON.stringify({
+                ...req.body,
+                source: {
+                    channel: 'B2C',
+                    device: 'WEB',
+                    deviceInfo: 'TeleTrip Web Application'
+                }
+            })
         });
 
         if (!response.ok) {
@@ -981,7 +1002,14 @@ router.post('/hotels/search-by-hotels', async (req, res) => {
                 'X-Signature': signature,
                 'Accept': 'application/json'
             },
-            body: JSON.stringify(searchBody),
+            body: JSON.stringify({
+                ...searchBody,
+                source: {
+                    channel: 'B2C',
+                    device: 'WEB',
+                    deviceInfo: 'TeleTrip Web Application'
+                }
+            }),
             timeout: 60000
         });
 

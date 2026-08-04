@@ -1,6 +1,6 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { CheckCircle, Calendar, MapPin, CreditCard, Home, FileText } from 'lucide-react';
+import { CheckCircle, Calendar, MapPin, CreditCard, Home, FileText, Building2 } from 'lucide-react';
 import Header from './components/Header';
 
 const PaymentSuccessOnSite = () => {
@@ -19,6 +19,12 @@ const PaymentSuccessOnSite = () => {
     bookingDetails = {},
     bookingType = 'hotel'
   } = bookingData;
+
+  // Supplier notice (mandatory per Hotelbeds certification)
+  const supplierName = bookingDetails.supplierName || bookingDetails.invoiceCompany || 'HOTELBEDS DMCC';
+  const supplierVAT = bookingDetails.supplierVAT || bookingDetails.registrationNumber || '100035906500003';
+  const confirmationRef = bookingReference || bookingDetails.bookingReference || 'N/A';
+  const supplierNotice = `Payable through ${supplierName}, acting as agent for the service operating company, details of which can be provided upon request. VAT: ${supplierVAT} Reference: ${confirmationRef}`;
 
   return (
     <>
@@ -159,6 +165,16 @@ const PaymentSuccessOnSite = () => {
                 </>
               )}
             </ul>
+          </div>
+
+          {/* Supplier Notice - Mandatory per Hotelbeds */}
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
+            <h3 className="text-sm font-semibold text-gray-700 mb-2 flex items-center">
+              <Building2 className="w-4 h-4 mr-2" />
+              Supplier Information
+            </h3>
+            <p className="text-xs text-gray-600 leading-relaxed">{supplierNotice}</p>
+            <p className="text-xs text-gray-500 mt-1 italic">Full supplier details will appear on your voucher after payment confirmation.</p>
           </div>
 
           {/* Action Buttons */}

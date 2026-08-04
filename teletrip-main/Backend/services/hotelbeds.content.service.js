@@ -1,5 +1,11 @@
 const crypto = require('crypto');
 const fetch = require('node-fetch');
+const { getMTLSAgent } = require('../config/mtls.config');
+
+const HOTELBEDS_API_KEY = process.env.HOTELBEDS_API_KEY || '106700a0f2f1e2aa1d4c2b16daae70b2';
+const HOTELBEDS_SECRET = process.env.HOTELBEDS_SECRET || '018e478aa6';
+const CONTENT_BASE_URL = 'https://api.test.hotelbeds.com/hotel-content-api/1.0';
+const fetch = require('node-fetch');
 
 const HOTELBEDS_API_KEY = process.env.HOTELBEDS_API_KEY || '106700a0f2f1e2aa1d4c2b16daae70b2';
 const HOTELBEDS_SECRET = process.env.HOTELBEDS_SECRET || '018e478aa6';
@@ -20,6 +26,15 @@ async function getHotelContent(hotelCode) {
 
     const url = `${CONTENT_BASE_URL}/hotels/${hotelCode}/details?language=ENG&useSecondaryLanguage=false`;
     const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Api-key': HOTELBEDS_API_KEY,
+        'X-Signature': signature,
+        'Accept': 'application/json'
+      },
+      agent: getMTLSAgent(),
+      timeout: 15000
+    });
       method: 'GET',
       headers: {
         'Api-key': HOTELBEDS_API_KEY,
@@ -101,6 +116,15 @@ async function getHotelsBulk(from = 1, to = 100) {
 
     const url = `${CONTENT_BASE_URL}/hotels?fields=all&language=ENG&from=${from}&to=${to}`;
     const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Api-key': HOTELBEDS_API_KEY,
+        'X-Signature': signature,
+        'Accept': 'application/json'
+      },
+      agent: getMTLSAgent(),
+      timeout: 15000
+    });
       method: 'GET',
       headers: {
         'Api-key': HOTELBEDS_API_KEY,

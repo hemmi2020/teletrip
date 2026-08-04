@@ -29,6 +29,7 @@ import {
   ChevronDown,
   X,
   ShoppingCart,
+  AlertCircle,
 } from "lucide-react";
 
 // Cart Notification Component
@@ -550,7 +551,39 @@ if (children > 0 && childAges.length > 0) {
           <p>{hotel.description}</p>
         </div>
       )}
-      {/* Hotel Facilities - Hotelbeds Certification Recommended */}
+      {/* Hotel Facilities - Hotelbeds Certification: separate paid (indFee=true) */}
+      {hotel.hotelFacilities && hotel.hotelFacilities.length > 0 && (
+        <div className="mt-4">
+          {/* Paid Facilities - mandatory display with warning */}
+          {hotel.hotelFacilities.filter(f => f.indFee === true).length > 0 && (
+            <div className="mb-3">
+              <h4 className="text-sm font-semibold text-orange-700 mb-2 flex items-center">
+                <AlertCircle className="w-4 h-4 mr-1" />
+                Facilities with Additional Charges (payable on-site)
+              </h4>
+              <div className="flex flex-wrap gap-1.5">
+                {hotel.hotelFacilities.filter(f => f.indFee === true).map((f, i) => (
+                  <span key={`paid-${i}`} className="text-xs px-2.5 py-1 bg-orange-100 text-orange-700 border border-orange-200 rounded-full font-medium">
+                    {f.description || `Facility ${f.code}`}
+                  </span>
+                ))}
+              </div>
+              <p className="text-xs text-orange-600 mt-1">These facilities require additional payment directly at the property.</p>
+            </div>
+          )}
+          {/* Free Facilities */}
+          {hotel.hotelFacilities.filter(f => f.indFee !== true).length > 0 && (
+            <div>
+              <h4 className="text-sm font-semibold text-gray-800 mb-2">Facilities</h4>
+              <div className="flex flex-wrap gap-1.5">
+                {hotel.hotelFacilities.filter(f => f.indFee !== true).map((f, i) => (
+                  <span key={`free-${i}`} className="text-xs px-2.5 py-1 bg-gray-100 text-gray-600 rounded-full">{f.description || `Facility ${f.code}`}</span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
       {hotel.hotelFacilities && hotel.hotelFacilities.length > 0 && (
         <div className="mt-4">
           <h4 className="text-sm font-semibold text-gray-800 mb-2">Facilities</h4>
