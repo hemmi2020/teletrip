@@ -2503,7 +2503,7 @@ module.exports.createPayOnSiteBooking = asyncErrorHandler(async (req, res) => {
       user: userId,
       bookingType: 'hotel',
       bookingReference: bookingReference,
-      status: 'pending_payment',
+      status: 'pending',
       pricing: {
         basePrice: paymentAmount,
         totalAmount: parseFloat(hbBooking?.totalNet) || paymentAmount,
@@ -2624,7 +2624,7 @@ module.exports.createPayOnSiteBooking = asyncErrorHandler(async (req, res) => {
       amount: paymentAmount,
       currency,
       paymentMethod: 'pay_on_site',
-      status: 'pending_payment',
+      status: 'pending',
       message: 'Booking reserved! Please visit the Telitrip office to complete payment. Your room will be confirmed once payment is received.',
       instructions: [
         'Your hotel room is reserved',
