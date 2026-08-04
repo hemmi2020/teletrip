@@ -2450,6 +2450,7 @@ module.exports.createPayOnSiteBooking = asyncErrorHandler(async (req, res) => {
     // ✅ PAY-ON-SITE WORKFLOW: Reserve locally, do NOT book with Hotelbeds yet
     // Hotelbeds booking will be triggered when admin confirms payment received
     let hotelbedsReference = null;
+    let hotelbedsResult = null;
     let hotelbedsBookingRequest = bookingData.hotelbedsBookingRequest || null;
 
     if (hotelbedsBookingRequest) {
