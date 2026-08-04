@@ -412,10 +412,6 @@ paymentSchema.statics.getUserPayments = function(userId, options = {}) {
     sort,
     populate: [
       {
-        path: 'bookingId',
-        select: 'bookingReference hotelName checkInDate checkOutDate status'
-      },
-      {
         path: 'userId',
         select: 'fullname email phone'
       }

@@ -756,7 +756,6 @@ const getAllPayments = asyncErrorHandler(async (req, res) => {
     Payment
       .find(query)
       .populate('userId', 'fullname email')
-      .populate('bookingId', 'bookingId hotelName')
       .sort(sort)
       .skip(skip)
       .limit(limitNum)
@@ -785,8 +784,7 @@ const getPaymentDetails = asyncErrorHandler(async (req, res) => {
   const { paymentId } = req.params;
 
   const payment = await Payment.findById(paymentId).populate([
-    { path: 'userId', select: 'firstName lastName email phone' },
-    { path: 'bookingId', select: 'bookingReference hotelId checkInDate checkOutDate' }
+    { path: 'userId', select: 'firstName lastName email phone' }
   ]);
 
   if (!payment) {
@@ -1180,10 +1178,6 @@ const getPayOnSiteBookings = asyncErrorHandler(async (req, res) => {
         .populate({
           path: 'userId',
           select: 'fullname email phone'
-        })
-        .populate({
-          path: 'bookingId',
-          select: 'bookingReference hotelName checkInDate checkOutDate status hotelBooking'
         })
         .sort(sort)
         .skip(skip)
