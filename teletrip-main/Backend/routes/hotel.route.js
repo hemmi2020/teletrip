@@ -298,9 +298,10 @@ router.post('/hotels/search', async (req, res) => {
                 source: {
                     channel: 'B2C',
                     device: 'WEB',
-                    deviceInfo: 'TeleTrip Web Application'
+                    deviceInfo: 'TeleTrip Web Application',
+                    sourceMarket: 'PK'
                 }
-            })
+})
         });
 
         if (!response.ok) {
@@ -357,7 +358,8 @@ router.post('/hotels/search-auth', async (req, res) => {
                 source: {
                     channel: 'B2C',
                     device: 'WEB',
-                    deviceInfo: 'TeleTrip Web Application'
+                    deviceInfo: 'TeleTrip Web Application',
+                    sourceMarket: 'PK'
                 }
             })
         });
@@ -532,7 +534,8 @@ router.post('/hotels/checkrate', async (req, res) => {
                 source: {
                     channel: 'B2C',
                     device: 'WEB',
-                    deviceInfo: 'TeleTrip Web Application'
+                    deviceInfo: 'TeleTrip Web Application',
+                    sourceMarket: 'PK'
                 }
             })
         });
@@ -1007,7 +1010,8 @@ router.post('/hotels/search-by-hotels', async (req, res) => {
                 source: {
                     channel: 'B2C',
                     device: 'WEB',
-                    deviceInfo: 'TeleTrip Web Application'
+                    deviceInfo: 'TeleTrip Web Application',
+                    sourceMarket: 'PK'
                 }
             }),
             timeout: 60000

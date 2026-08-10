@@ -2558,7 +2558,10 @@ module.exports.createPayOnSiteBooking = asyncErrorHandler(async (req, res) => {
         hotelEmail: hotelContent?.email || null,
         accommodationTypeCode: hotelContent?.accommodationTypeCode || null,
         accommodationType: hotelContent?.accommodationType || null,
-        paidFacilities: hotelContent?.paidFacilities || [],
+        paidFacilities: [
+          ...(hotelContent?.paidFacilities || []),
+          ...(hotelContent?.roomPaidFacilities || [])
+        ],
         description: hotelContent?.description || null,
         confirmationNumber: hotelbedsReference || null,
         supplier: hbSupplier ? { name: hbSupplier.name, vatNumber: hbSupplier.vatNumber } : null,

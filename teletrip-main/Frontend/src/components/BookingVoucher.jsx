@@ -192,6 +192,10 @@ const BookingVoucher = ({ booking, onClose }) => {
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                   {paidFacilities.map((f, i) => (
                     <span key={i} style={{ fontSize: '11px', padding: '3px 8px', background: '#fed7d7', color: '#742a2a', borderRadius: '4px' }}>
+                      {f.description}{f.roomName ? ` (${f.roomName})` : ''}
+                    </span>
+                  ))}
+                    <span key={i} style={{ fontSize: '11px', padding: '3px 8px', background: '#fed7d7', color: '#742a2a', borderRadius: '4px' }}>
                       {f.description}
                     </span>
                   ))}

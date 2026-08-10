@@ -43,6 +43,14 @@ async function confirmBookingWithHotelbeds(bookingRequest) {
       bookingRequest.source = {
         channel: 'B2C',
         device: 'WEB',
+        deviceInfo: 'TeleTrip Web Application',
+        sourceMarket: 'PK'
+      };
+    }
+    if (!bookingRequest.source) {
+      bookingRequest.source = {
+        channel: 'B2C',
+        device: 'WEB',
         deviceInfo: 'TeleTrip Web Application'
       };
     }
