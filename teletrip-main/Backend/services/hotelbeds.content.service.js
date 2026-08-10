@@ -3,7 +3,11 @@ const { getMTLSAgent } = require('../config/mtls.config');
 
 const HOTELBEDS_API_KEY = process.env.HOTELBEDS_API_KEY || '106700a0f2f1e2aa1d4c2b16daae70b2';
 const HOTELBEDS_SECRET = process.env.HOTELBEDS_SECRET || '018e478aa6';
-const CONTENT_BASE_URL = 'https://api.test.hotelbeds.com/hotel-content-api/1.0';
+const CONTENT_BASE_URL = process.env.HOTELBEDS_CONTENT_URL || (
+  process.env.HOTELBEDS_MTLS_CERT || process.env.HOTELBEDS_MTLS_CERT_PATH
+    ? 'https://api-mtls.test.hotelbeds.com/hotel-content-api/1.0'
+    : 'https://api.test.hotelbeds.com/hotel-content-api/1.0'
+);
 
 function generateSignature(apiKey, secret, timestamp) {
   return crypto.createHash('sha256').update(apiKey + secret + timestamp).digest('hex');
@@ -81,6 +85,18 @@ async function getHotelContent(hotelCode) {
         description: f.description?.content || '',
         indFee: f.indFee || false
       })),
+      // Room-level facilities with paid charges (indFee=true)
+      roomPaidFacilities: (hotel.rooms || []).flatMap(room => 
+        (room.facilities || [])
+          .filter(f => f.indFee === true)
+          .map(f => ({
+            roomName: room.roomDescription || room.name || 'Room',
+            code: f.facilityCode,
+            groupCode: f.facilityGroupCode,
+            description: f.description?.content || `Facility ${f.facilityCode}`,
+            fee: true
+          }))
+      ).slice(0, 30),
       images: (hotel.images || []).slice(0, 10).map(img => ({
         path: img.path,
         type: img.type?.description?.content || img.imageTypeCode || ''

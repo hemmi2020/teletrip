@@ -70,6 +70,7 @@ const bookingSchema = new mongoose.Schema({
   hotelBooking: {
     hotelId: String, // Hotelbeds hotel ID
     hotelName: String,
+    hotelPhone: String,
     hotelCode: String,
     checkIn: {
       type: Date,
@@ -122,8 +123,15 @@ const bookingSchema = new mongoose.Schema({
     category: String,
     rating: Number,
     specialRequests: String,
-    confirmationNumber: String
+    confirmationNumber: String,
+    paidFacilities: [{
+      code: Number,
+      groupCode: Number,
+      description: String,
+      fee: { type: Boolean, default: true }
+    }]
   },
+
   
   // Transfer booking details
   transferBooking: {

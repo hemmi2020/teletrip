@@ -5,9 +5,10 @@ const DateUtil = require('../utils/date.util');
 const { asyncErrorHandler } = require('../middlewares/errorHandler.middleware');
 const notificationService = require('../services/notification.service');
 const { addLog } = require('../services/certificationLogger');
+const { getMTLSAgent } = require('../config/mtls.config');
+const { getHotelContent } = require('../services/hotelbeds.content.service');
 const crypto = require('crypto');
 const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
-
 // Hotelbeds API configuration
 const HOTELBEDS_API_KEY = process.env.HOTELBEDS_API_KEY;
 const HOTELBEDS_SECRET = process.env.HOTELBEDS_SECRET;
@@ -63,10 +64,19 @@ async function confirmHotelbedsBooking(bookingData, rateKey) {
         }],
         clientReference: bookingData.bookingReference,
         remark: bookingData.specialRequests || "",
-        tolerance: 2.00
+        tolerance: 2.00,
+        // ✅ MANDATORY: Source marker for distribution management
+        source: {
+            channel: 'B2C',
+            device: 'WEB',
+            deviceInfo: 'TeleTrip Web Application',
+            sourceMarket: 'PK'
+        }
     };
 
-    const response = await fetch(`${HOTELBEDS_BASE_URL}/hotel-api/1.0/bookings`, {
+    // ✅ MANDATORY: Use MTLS agent for booking flow
+    const agent = getMTLSAgent();
+    const fetchOptions = {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -76,7 +86,10 @@ async function confirmHotelbedsBooking(bookingData, rateKey) {
             'Accept-Encoding': 'gzip'
         },
         body: JSON.stringify(hotelbedsRequest)
-    });
+    };
+    if (agent) fetchOptions.agent = agent;
+
+    const response = await fetch(`${HOTELBEDS_BASE_URL}/hotel-api/1.0/bookings`, fetchOptions);
 
     if (!response.ok) {
         const errorText = await response.text();
@@ -231,6 +244,37 @@ module.exports.createBooking = asyncErrorHandler(async (req, res) => {
     bookingData.hotelBooking.longitude = hbHotel.longitude || null;
     bookingData.hotelBooking.confirmationNumber = hbBooking.reference || null;
     bookingData.hotelBooking.currency = hbBooking.currency || 'EUR';
+
+    // ✅ MANDATORY: Fetch hotel phone from Content API for voucher display
+    try {
+        const hotelContent = await getHotelContent(hbHotel.code);
+        if (hotelContent && hotelContent.phones && hotelContent.phones.length > 0) {
+            const phoneNumber = hotelContent.phones[0].phoneNumber;
+            bookingData.hotelBooking.hotelPhone = phoneNumber;
+            console.log('📞 Hotel phone fetched for voucher:', phoneNumber);
+        }
+        // ✅ MANDATORY: Store paid facilities (hotel + room) for voucher display
+        const allPaidFacilities = [
+            ...(hotelContent?.paidFacilities || []),
+            ...(hotelContent?.roomPaidFacilities || [])
+        ];
+        if (allPaidFacilities.length > 0) {
+            bookingData.hotelBooking.paidFacilities = allPaidFacilities;
+            console.log('💰 Paid facilities stored for voucher:', allPaidFacilities.length);
+        }
+    } catch (phoneErr) {
+        console.warn('⚠️ Could not fetch hotel content for voucher:', phoneErr.message);
+    }
+    try {
+        const hotelContent = await getHotelContent(hbHotel.code);
+        if (hotelContent && hotelContent.phones && hotelContent.phones.length > 0) {
+            const phoneNumber = hotelContent.phones[0].phoneNumber;
+            bookingData.hotelBooking.hotelPhone = phoneNumber;
+            console.log('📞 Hotel phone fetched for voucher:', phoneNumber);
+        }
+    } catch (phoneErr) {
+        console.warn('⚠️ Could not fetch hotel phone for voucher:', phoneErr.message);
+    }
     bookingData.hotelBooking.totalNet = hbBooking.totalNet || null;
     bookingData.hotelBooking.supplier = hbSupplier ? {
       name: hbSupplier.name,
