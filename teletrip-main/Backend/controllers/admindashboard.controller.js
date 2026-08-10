@@ -8,6 +8,7 @@ const Notification = require('../models/notification.model');
 const ApiResponse = require('../utils/response.util');
 const { asyncErrorHandler } = require('../middlewares/errorHandler.middleware');
 const notificationService = require('../services/notification.service');
+const { runHotelContentSync, getLatestSyncStatus, getSyncJobs } = require('../services/hotelSync.service');
 const moment = require('moment');
 
 const user = userModel; 
@@ -1418,6 +1419,84 @@ const updateEmailSettings = asyncErrorHandler(async (req, res) => {
   return ApiResponse.success(res, { updated: results.length }, 'Email settings updated successfully');
 });
 
+// ========== HOTEL CONTENT SYNC (Hotelbeds 90% mapping) ==========
+const startHotelSync = asyncErrorHandler(async (req, res) => {
+  const { batchSize = 1000 } = req.body;
+
+  // Check if a sync is already running
+  const latest = await getLatestSyncStatus();
+  if (latest && latest.status === 'running') {
+    return ApiResponse.success(res, {
+      jobId: latest._id,
+      status: latest.status,
+      message: 'A sync job is already running',
+      progress: {
+        processed: latest.processedItems,
+        total: latest.totalItems,
+        percentage: latest.totalItems > 0 ? Math.round((latest.processedItems / latest.totalItems) * 100) : 0
+      }
+    }, 'Sync already in progress');
+  }
+
+  // Create a new sync job and start it in background
+  const SyncJob = require('../models/syncJob.model');
+  const job = await SyncJob.create({
+    jobType: 'hotel_content_full',
+    status: 'pending',
+    batchSize: parseInt(batchSize) || 1000,
+    logs: [{ message: 'Job created via admin API' }]
+  });
+
+  // Fire and forget — respond immediately, sync runs async
+  runHotelContentSync({ jobId: job._id }).catch(err => {
+    console.error('[AdminSync] Background sync error:', err.message);
+  });
+
+  return ApiResponse.success(res, {
+    jobId: job._id,
+    status: 'started',
+    message: 'Hotel content sync started in background. Check status endpoint for progress.',
+    estimatedTime: '~5-10 minutes for full portfolio'
+  }, 'Hotel sync started', 202);
+});
+
+const getHotelSyncStatus = asyncErrorHandler(async (req, res) => {
+  const latest = await getLatestSyncStatus();
+  if (!latest) {
+    return ApiResponse.success(res, { status: 'none', message: 'No sync jobs found' }, 'Sync status');
+  }
+
+  const percentage = latest.totalItems > 0
+    ? Math.round((latest.processedItems / latest.totalItems) * 100)
+    : 0;
+
+  return ApiResponse.success(res, {
+    jobId: latest._id,
+    status: latest.status,
+    progress: {
+      processed: latest.processedItems,
+      total: latest.totalItems,
+      failed: latest.failedItems,
+      percentage,
+      currentFrom: latest.currentFrom
+    },
+    timing: {
+      startedAt: latest.startedAt,
+      completedAt: latest.completedAt,
+      durationMinutes: latest.startedAt && latest.completedAt
+        ? Math.round((new Date(latest.completedAt) - new Date(latest.startedAt)) / 60000)
+        : null
+    },
+    recentLogs: latest.logs?.slice(-10) || []
+  }, 'Sync status retrieved');
+});
+
+const getHotelSyncHistory = asyncErrorHandler(async (req, res) => {
+  const { limit = 10 } = req.query;
+  const jobs = await getSyncJobs(parseInt(limit));
+  return ApiResponse.success(res, { jobs, count: jobs.length }, 'Sync history retrieved');
+});
+
 
 // Bulk Actions
 const bulkActions = require('./bulkActions.controller');
@@ -1454,5 +1533,8 @@ module.exports = {
   bulkExport: bulkActions.bulkExport,
   bulkEmail: bulkActions.bulkEmail,
   getEmailSettings,
-  updateEmailSettings
+  updateEmailSettings,
+  startHotelSync,
+  getHotelSyncStatus,
+  getHotelSyncHistory
 };
