@@ -432,7 +432,42 @@ export const AdminDashboardAPI = {
     }
   },
 
-  // ========== BULK ACTIONS ==========
+  // ========== CONTENT SYNC (Hotelbeds 90% mapping) ==========
+  startHotelSync: async (batchSize = 1000) => {
+    try {
+      const response = await adminApi.post('/api/admin/sync-hotels', { batchSize });
+      return { success: true, data: response.data.data };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.response?.data?.message || 'Failed to start sync' 
+      };
+    }
+  },
+
+  getHotelSyncStatus: async () => {
+    try {
+      const response = await adminApi.get('/api/admin/sync-hotels/status');
+      return { success: true, data: response.data.data };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.response?.data?.message || 'Failed to get sync status' 
+      };
+    }
+  },
+
+  getHotelSyncHistory: async (limit = 10) => {
+    try {
+      const response = await adminApi.get(`/api/admin/sync-hotels/history?limit=${limit}`);
+      return { success: true, data: response.data.data };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.response?.data?.message || 'Failed to get sync history' 
+      };
+    }
+  },
   bulkUpdateUsers: async (userIds, action, data = {}) => {
     try {
       const response = await adminApi.post(`/api/admin/users/bulk/${action}`, {
