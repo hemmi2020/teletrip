@@ -9,14 +9,11 @@ import {
   Bell, Building2, Star, MapPin, Phone, Mail, BarChart3, PieChart, Activity,
   FileText, Shield, Lock, LogOut, ChevronDown, Plus, AlertCircle,
   Clock, CheckCircle, XCircle, Loader2, ArrowUpRight, ArrowDownRight,
-  FileText, Shield, Lock, LogOut, ChevronDown, Plus, AlertCircle,
-  Clock, CheckCircle, XCircle, Loader2, ArrowUpRight, ArrowDownRight,
   Menu, XCircle as CloseIcon, Save, Camera, User, Globe, Zap, Database
-} from 'lucide-react';
 } from 'lucide-react';
 import { AdminDashboardAPI } from './services/adminApi';
 import {
-  RevenueTrendChart,
+RevenueTrendChart,
   BookingStatusChart,
   UserGrowthChart,
   PaymentMethodChart,
@@ -69,7 +66,6 @@ import BookingReconfirmation from './components/BookingReconfirmation';
 import { useCurrency } from './context/CurrencyContext';
 import EmailManagementTab from './components/EmailManagement/EmailManagementTab';
 import DestinationManagement from './components/DestinationManagement';
-import PayOnSiteManagement from './components/PayOnSiteManagement';
 import HotelContentSyncTab from './components/HotelContentSyncTab';
 import PayOnSiteManagement from './components/PayOnSiteManagement';
 import './styles/admin-responsive.css';
