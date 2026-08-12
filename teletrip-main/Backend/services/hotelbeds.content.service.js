@@ -1,13 +1,9 @@
 const crypto = require('crypto');
-const { getMTLSAgent } = require('../config/mtls.config');
 
 const HOTELBEDS_API_KEY = process.env.HOTELBEDS_API_KEY || '106700a0f2f1e2aa1d4c2b16daae70b2';
 const HOTELBEDS_SECRET = process.env.HOTELBEDS_SECRET || '018e478aa6';
-const CONTENT_BASE_URL = process.env.HOTELBEDS_CONTENT_URL || (
-  process.env.HOTELBEDS_MTLS_CERT || process.env.HOTELBEDS_MTLS_CERT_PATH
-    ? 'https://api-mtls.test.hotelbeds.com/hotel-content-api/1.0'
-    : 'https://api.test.hotelbeds.com/hotel-content-api/1.0'
-);
+// Content API uses the regular test endpoint — MTLS is only required for the booking flow
+const CONTENT_BASE_URL = process.env.HOTELBEDS_CONTENT_URL || 'https://api.test.hotelbeds.com/hotel-content-api/1.0';
 
 function generateSignature(apiKey, secret, timestamp) {
   return crypto.createHash('sha256').update(apiKey + secret + timestamp).digest('hex');
@@ -30,7 +26,6 @@ async function getHotelContent(hotelCode) {
         'X-Signature': signature,
         'Accept': 'application/json'
       },
-      agent: getMTLSAgent(),
       timeout: 15000
     });
 
@@ -124,7 +119,6 @@ async function getHotelsBulk(from = 1, to = 100) {
         'X-Signature': signature,
         'Accept': 'application/json'
       },
-      agent: getMTLSAgent(),
       timeout: 60000
     });
 
