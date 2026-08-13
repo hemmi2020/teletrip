@@ -38,13 +38,13 @@ const HotelContent = mongoose.models.HotelContent || mongoose.model('HotelConten
  * Run a full hotel content sync job
  * @param {Object} options
  * @param {string} options.jobId - Existing SyncJob ID (optional)
- * @param {number} options.batchSize - Hotels per API call (default 1000)
- * @param {number} options.delayMs - Delay between batches in ms (default 2000)
+ * @param {number} options.batchSize - Hotels per API call (default 100)
+ * @param {number} options.delayMs - Delay between batches in ms (default 3000)
  * @param {function} options.onProgress - Callback(current, total, message)
  * @returns {Promise<Object>} Sync result
  */
 async function runHotelContentSync(options = {}) {
-  const { jobId, batchSize = 1000, delayMs = 2000, onProgress } = options;
+  const { jobId, batchSize = 100, delayMs = 3000, onProgress } = options;
 
   let job;
   if (jobId) {
@@ -69,10 +69,13 @@ async function runHotelContentSync(options = {}) {
   let totalSynced = job.processedItems || 0;
   let totalFailed = job.failedItems || 0;
   let totalInPortfolio = job.totalItems || 0;
+  let consecutiveEmptyBatches = 0;
+  const MAX_EMPTY_BATCHES = 10; // Stop after 10 empty batches in a row
 
   try {
     // If we don't know total yet, fetch first batch
     if (totalInPortfolio === 0) {
+      console.log(`[SyncService] Fetching first batch: ${from}-${from + batchSize - 1}`);
       const firstResult = await getHotelsBulk(from, from + batchSize - 1);
       totalInPortfolio = firstResult.total || 0;
       job.totalItems = totalInPortfolio;
@@ -84,17 +87,27 @@ async function runHotelContentSync(options = {}) {
         totalSynced += firstResult.hotels.length;
         job.processedItems = totalSynced;
         await job.save();
+        consecutiveEmptyBatches = 0;
         if (onProgress) onProgress(totalSynced, totalInPortfolio, `Synced batch ${from}-${from + batchSize - 1}`);
+        console.log(`[SyncService] First batch synced: ${firstResult.hotels.length} hotels`);
+      } else {
+        consecutiveEmptyBatches++;
+        console.log(`[SyncService] First batch empty. Consecutive empty: ${consecutiveEmptyBatches}`);
       }
       from += batchSize;
     }
 
     // Continue syncing remaining batches
-    while (from <= totalInPortfolio) {
-      const to = Math.min(from + batchSize - 1, totalInPortfolio);
+    // Safety cap: don't iterate beyond a reasonable max code range
+    const MAX_CODE_RANGE = 999999;
+    while (from <= Math.min(totalInPortfolio, MAX_CODE_RANGE)) {
+      const to = Math.min(from + batchSize - 1, totalInPortfolio, MAX_CODE_RANGE);
+
+      console.log(`[SyncService] Fetching batch: ${from}-${to}`);
 
       try {
         const result = await getHotelsBulk(from, to);
+        
         if (result.hotels.length > 0) {
           await upsertHotels(result.hotels);
           totalSynced += result.hotels.length;
@@ -103,6 +116,24 @@ async function runHotelContentSync(options = {}) {
           job.logs.push({ message: `Synced batch ${from}-${to} (${totalSynced}/${totalInPortfolio})` });
           await job.save();
           if (onProgress) onProgress(totalSynced, totalInPortfolio, `Synced batch ${from}-${to}`);
+          console.log(`[SyncService] Batch ${from}-${to} synced: ${result.hotels.length} hotels (total: ${totalSynced})`);
+          consecutiveEmptyBatches = 0;
+        } else {
+          consecutiveEmptyBatches++;
+          job.logs.push({ message: `Empty batch ${from}-${to} (${consecutiveEmptyBatches}/${MAX_EMPTY_BATCHES} consecutive)` });
+          await job.save();
+          console.log(`[SyncService] Batch ${from}-${to} empty. Consecutive empty: ${consecutiveEmptyBatches}/${MAX_EMPTY_BATCHES}`);
+          
+          // If too many empty batches, jump ahead to find hotels faster
+          if (consecutiveEmptyBatches >= MAX_EMPTY_BATCHES) {
+            const jump = batchSize * 10;
+            console.log(`[SyncService] Too many empty batches. Jumping ahead by ${jump}...`);
+            job.logs.push({ message: `Jumping ahead by ${jump} due to empty batches` });
+            await job.save();
+            from += jump;
+            consecutiveEmptyBatches = 0;
+            continue;
+          }
         }
       } catch (err) {
         totalFailed += batchSize;
@@ -113,7 +144,7 @@ async function runHotelContentSync(options = {}) {
       }
 
       from += batchSize;
-      if (from <= totalInPortfolio) {
+      if (from <= totalInPortfolio && from <= MAX_CODE_RANGE) {
         await sleep(delayMs);
       }
     }
@@ -123,6 +154,8 @@ async function runHotelContentSync(options = {}) {
     job.message = `Sync complete. Total: ${totalSynced}, Failed: ${totalFailed}`;
     job.logs.push({ message: `Sync complete. Total: ${totalSynced}, Failed: ${totalFailed}` });
     await job.save();
+
+    console.log(`[SyncService] Sync complete. Total synced: ${totalSynced}, Failed: ${totalFailed}`);
 
     return {
       success: true,
@@ -136,6 +169,7 @@ async function runHotelContentSync(options = {}) {
     job.errorMessage = error.message;
     job.logs.push({ message: `Fatal error: ${error.message}` });
     await job.save();
+    console.error(`[SyncService] Fatal error:`, error.message);
     throw error;
   }
 }
