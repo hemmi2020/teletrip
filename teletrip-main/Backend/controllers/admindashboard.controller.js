@@ -1573,11 +1573,6 @@ const getHCNSummary = asyncErrorHandler(async (req, res) => {
 });
 
 
-const getHCNSummary = asyncErrorHandler(async (req, res) => {
-  const summary = await getHCNStatusSummary();
-  return ApiResponse.success(res, summary, 'HCN status summary retrieved');
-});
-
 // ========== SYNC SETTINGS (Auto-sync schedule) ==========
 const SystemSettings = require('../models/systemsetting.model');
 
@@ -1660,11 +1655,4 @@ module.exports = {
   getHCNSummary,
   getSyncSettings,
   updateSyncSettings
-};
-  resetHotelSync,
-  getHotelSyncStatus,
-  getHotelSyncHistory,
-  reconcileBookings,
-  pollHCN,
-  getHCNSummary
 };
