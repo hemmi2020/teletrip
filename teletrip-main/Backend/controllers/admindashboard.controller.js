@@ -1424,17 +1424,20 @@ const updateEmailSettings = asyncErrorHandler(async (req, res) => {
 const startHotelSync = asyncErrorHandler(async (req, res) => {
   const { batchSize = 100, force = false } = req.body;
 
-  // Check if a sync is already running
+  // Check if a sync is already running or can be resumed
   const latest = await getLatestSyncStatus();
   
   if (latest && latest.status === 'running') {
-    // Auto-detect stale jobs: if running > 30 min with no update, treat as dead
-    const thirtyMinAgo = new Date(Date.now() - 30 * 60 * 1000);
-    const lastUpdate = latest.logs?.length > 0 
-      ? new Date(latest.logs[latest.logs.length - 1].timestamp)
-      : latest.startedAt;
+    // Auto-detect stale jobs: if no activity > 15 min, treat as dead
+    // Use lastActivityAt if available, fall back to log timestamps
+    const fifteenMinAgo = new Date(Date.now() - 15 * 60 * 1000);
+    const lastActivity = latest.lastActivityAt 
+      ? new Date(latest.lastActivityAt)
+      : (latest.logs?.length > 0 
+          ? new Date(latest.logs[latest.logs.length - 1].timestamp)
+          : latest.startedAt);
     
-    const isStale = !lastUpdate || lastUpdate < thirtyMinAgo;
+    const isStale = !lastActivity || lastActivity < fifteenMinAgo;
     
     if (!force && !isStale) {
       return ApiResponse.success(res, {
@@ -1460,26 +1463,49 @@ const startHotelSync = asyncErrorHandler(async (req, res) => {
     }
   }
 
+  // Check if there's an incomplete job we can resume (pending or failed with progress)
+  let jobToResume = null;
+  if (!force && latest && latest.status !== 'completed') {
+    const hasProgress = (latest.processedItems || 0) > 0 && (latest.currentFrom || 0) > 1;
+    if (hasProgress) {
+      jobToResume = latest;
+      console.log(`[AdminSync] Resuming existing job ${jobToResume._id} from ${jobToResume.currentFrom}`);
+    }
+  }
 
-  // Create a new sync job and start it in background
-  const job = await SyncJob.create({
-    jobType: 'hotel_content_full',
-    status: 'pending',
-    batchSize: parseInt(batchSize) || 100,
-    logs: [{ message: 'Job created via admin API' }]
-  });
+  let job;
+  if (jobToResume) {
+    // Resume existing job
+    job = await SyncJob.findByIdAndUpdate(jobToResume._id, {
+      status: 'pending',
+      logs: [...(jobToResume.logs || []), { message: 'Resumed by admin', timestamp: new Date() }]
+    }, { new: true });
+  } else {
+    // Create a new sync job
+    job = await SyncJob.create({
+      jobType: 'hotel_content_full',
+      status: 'pending',
+      batchSize: parseInt(batchSize) || 100,
+      logs: [{ message: 'Job created via admin API' }]
+    });
+  }
 
   // Fire and forget — respond immediately, sync runs async
   runHotelContentSync({ jobId: job._id }).catch(err => {
     console.error('[AdminSync] Background sync error:', err.message);
   });
 
+  const isResume = !!jobToResume;
   return ApiResponse.success(res, {
     jobId: job._id,
     status: 'started',
-    message: 'Hotel content sync started in background. Check status endpoint for progress.',
-    estimatedTime: '~10-20 minutes for full portfolio'
-  }, 'Hotel sync started', 202);
+    message: isResume 
+      ? `Hotel content sync resumed from ${job.currentFrom || 1}. Check status endpoint for progress.`
+      : 'Hotel content sync started in background. Check status endpoint for progress.',
+    estimatedTime: isResume ? '~5-10 minutes remaining' : '~15-25 minutes for full portfolio',
+    resumed: isResume,
+    startingFrom: job.currentFrom || 1
+  }, isResume ? 'Hotel sync resumed' : 'Hotel sync started', 202);
 });
 
 const resetHotelSync = asyncErrorHandler(async (req, res) => {

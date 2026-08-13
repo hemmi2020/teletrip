@@ -34,17 +34,24 @@ const HotelContentSchema = new mongoose.Schema({
 // Register model only if not already registered
 const HotelContent = mongoose.models.HotelContent || mongoose.model('HotelContent', HotelContentSchema);
 
+// Configuration
+const SAVE_INTERVAL_BATCHES = 10;     // Save job state every N batches
+const SAVE_INTERVAL_MS = 30000;       // Or every 30 seconds, whichever comes first
+const MAX_LOG_ENTRIES = 100;          // Trim logs to last 100 entries
+const MAX_CODE_RANGE = 999999;        // Safety cap on hotel code range
+const MAX_EMPTY_BATCHES = 10;         // Jump ahead after this many empty batches
+
 /**
  * Run a full hotel content sync job
  * @param {Object} options
  * @param {string} options.jobId - Existing SyncJob ID (optional)
  * @param {number} options.batchSize - Hotels per API call (default 100)
- * @param {number} options.delayMs - Delay between batches in ms (default 3000)
+ * @param {number} options.delayMs - Delay between batches in ms (default 2000)
  * @param {function} options.onProgress - Callback(current, total, message)
  * @returns {Promise<Object>} Sync result
  */
 async function runHotelContentSync(options = {}) {
-  const { jobId, batchSize = 100, delayMs = 3000, onProgress } = options;
+  const { jobId, batchSize = 100, delayMs = 2000, onProgress } = options;
 
   let job;
   if (jobId) {
@@ -62,15 +69,17 @@ async function runHotelContentSync(options = {}) {
   // Update job to running
   job.status = 'running';
   job.startedAt = new Date();
+  job.lastActivityAt = new Date();
   job.logs.push({ message: 'Sync started' });
-  await job.save();
+  await saveJobTrimmed(job);
 
   let from = job.currentFrom || 1;
   let totalSynced = job.processedItems || 0;
   let totalFailed = job.failedItems || 0;
   let totalInPortfolio = job.totalItems || 0;
   let consecutiveEmptyBatches = 0;
-  const MAX_EMPTY_BATCHES = 10; // Stop after 10 empty batches in a row
+  let batchesSinceSave = 0;
+  let lastSaveTime = Date.now();
 
   try {
     // If we don't know total yet, fetch first batch
@@ -80,13 +89,13 @@ async function runHotelContentSync(options = {}) {
       totalInPortfolio = firstResult.total || 0;
       job.totalItems = totalInPortfolio;
       job.logs.push({ message: `Total hotels in portfolio: ${totalInPortfolio}` });
-      await job.save();
+      await saveJobTrimmed(job);
 
       if (firstResult.hotels.length > 0) {
         await upsertHotels(firstResult.hotels);
         totalSynced += firstResult.hotels.length;
         job.processedItems = totalSynced;
-        await job.save();
+        await saveJobTrimmed(job);
         consecutiveEmptyBatches = 0;
         if (onProgress) onProgress(totalSynced, totalInPortfolio, `Synced batch ${from}-${from + batchSize - 1}`);
         console.log(`[SyncService] First batch synced: ${firstResult.hotels.length} hotels`);
@@ -98,8 +107,6 @@ async function runHotelContentSync(options = {}) {
     }
 
     // Continue syncing remaining batches
-    // Safety cap: don't iterate beyond a reasonable max code range
-    const MAX_CODE_RANGE = 999999;
     while (from <= Math.min(totalInPortfolio, MAX_CODE_RANGE)) {
       const to = Math.min(from + batchSize - 1, totalInPortfolio, MAX_CODE_RANGE);
 
@@ -114,14 +121,12 @@ async function runHotelContentSync(options = {}) {
           job.processedItems = totalSynced;
           job.currentFrom = from + batchSize;
           job.logs.push({ message: `Synced batch ${from}-${to} (${totalSynced}/${totalInPortfolio})` });
-          await job.save();
           if (onProgress) onProgress(totalSynced, totalInPortfolio, `Synced batch ${from}-${to}`);
           console.log(`[SyncService] Batch ${from}-${to} synced: ${result.hotels.length} hotels (total: ${totalSynced})`);
           consecutiveEmptyBatches = 0;
         } else {
           consecutiveEmptyBatches++;
           job.logs.push({ message: `Empty batch ${from}-${to} (${consecutiveEmptyBatches}/${MAX_EMPTY_BATCHES} consecutive)` });
-          await job.save();
           console.log(`[SyncService] Batch ${from}-${to} empty. Consecutive empty: ${consecutiveEmptyBatches}/${MAX_EMPTY_BATCHES}`);
           
           // If too many empty batches, jump ahead to find hotels faster
@@ -129,7 +134,6 @@ async function runHotelContentSync(options = {}) {
             const jump = batchSize * 10;
             console.log(`[SyncService] Too many empty batches. Jumping ahead by ${jump}...`);
             job.logs.push({ message: `Jumping ahead by ${jump} due to empty batches` });
-            await job.save();
             from += jump;
             consecutiveEmptyBatches = 0;
             continue;
@@ -139,21 +143,34 @@ async function runHotelContentSync(options = {}) {
         totalFailed += batchSize;
         job.failedItems = totalFailed;
         job.logs.push({ message: `Error batch ${from}-${to}: ${err.message}`, timestamp: new Date() });
-        await job.save();
         console.error(`[SyncService] Error batch ${from}-${to}:`, err.message);
       }
 
       from += batchSize;
+      batchesSinceSave++;
+
+      // Save job state periodically (every N batches or every X seconds)
+      const shouldSave = batchesSinceSave >= SAVE_INTERVAL_BATCHES || (Date.now() - lastSaveTime) >= SAVE_INTERVAL_MS;
+      if (shouldSave) {
+        job.lastActivityAt = new Date();
+        await saveJobTrimmed(job);
+        batchesSinceSave = 0;
+        lastSaveTime = Date.now();
+        console.log(`[SyncService] Checkpoint saved at ${totalSynced}/${totalInPortfolio}`);
+      }
+
       if (from <= totalInPortfolio && from <= MAX_CODE_RANGE) {
         await sleep(delayMs);
       }
     }
 
+    // Final save
     job.status = 'completed';
     job.completedAt = new Date();
+    job.lastActivityAt = new Date();
     job.message = `Sync complete. Total: ${totalSynced}, Failed: ${totalFailed}`;
     job.logs.push({ message: `Sync complete. Total: ${totalSynced}, Failed: ${totalFailed}` });
-    await job.save();
+    await saveJobTrimmed(job);
 
     console.log(`[SyncService] Sync complete. Total synced: ${totalSynced}, Failed: ${totalFailed}`);
 
@@ -167,11 +184,22 @@ async function runHotelContentSync(options = {}) {
   } catch (error) {
     job.status = 'failed';
     job.errorMessage = error.message;
+    job.lastActivityAt = new Date();
     job.logs.push({ message: `Fatal error: ${error.message}` });
-    await job.save();
+    await saveJobTrimmed(job);
     console.error(`[SyncService] Fatal error:`, error.message);
     throw error;
   }
+}
+
+/**
+ * Save job document with trimmed logs to prevent document bloat
+ */
+async function saveJobTrimmed(job) {
+  if (job.logs && job.logs.length > MAX_LOG_ENTRIES) {
+    job.logs = job.logs.slice(-MAX_LOG_ENTRIES);
+  }
+  await job.save();
 }
 
 /**
