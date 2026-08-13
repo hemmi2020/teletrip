@@ -114,6 +114,16 @@ app.get('/health', (req, res) => {
         message: 'Server is running',
         timestamp: new Date().toISOString(),
         uptime: process.uptime(),
+        environment: process.env.NODE_ENV || 'development',
+        version: '2026-08-13-hcn-reconcile-fix'
+    });
+});
+app.get('/health', (req, res) => {
+    res.status(200).json({ 
+        status: 'OK', 
+        message: 'Server is running',
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
         environment: process.env.NODE_ENV || 'development'
     });
 });
@@ -130,6 +140,7 @@ app.use('/api/locations', locationsRoutes);
 app.use('/api/cities', citiesRoutes);
 app.use('/api/user', userDashboardRoutes);
 app.use('/api/admin', adminDashboardRoutes);
+console.log('[Routes] Admin dashboard routes mounted at /api/admin');
 app.use('/api/v1/admin/email', emailRoutes);
 app.use('/api/reports', reportsRoutes);
 app.use('/api/financial', financialRoutes);

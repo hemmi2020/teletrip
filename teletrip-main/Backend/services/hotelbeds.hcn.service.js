@@ -4,7 +4,6 @@
  */
 
 const crypto = require('crypto');
-const fetch = require('node-fetch');
 const bookingModel = require('../models/booking.model');
 const { getMTLSAgent } = require('../config/mtls.config');
 
