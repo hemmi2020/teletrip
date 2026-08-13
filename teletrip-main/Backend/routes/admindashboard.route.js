@@ -662,6 +662,54 @@ router.delete('/certification-logs', ...requireAdmin, async (req, res) => {
 router.post('/sync-hotels',
   ...requireAdmin,
   [
+    body('batchSize').optional().isInt({ min: 50, max: 1000 }).withMessage('Batch size must be 50-1000'),
+    body('force').optional().isBoolean().withMessage('Force must be boolean')
+  ],
+  validateRequest,
+  adminDashboardController.startHotelSync
+);
+
+/**
+ * POST /api/admin/sync-hotels/reset
+ * Reset a stuck sync job so a new one can be started
+ * @access Private (Admin only)
+ */
+router.post('/sync-hotels/reset',
+  ...requireAdmin,
+  adminDashboardController.resetHotelSync
+);
+
+/**
+ * GET /api/admin/sync-hotels/status
+ * Get latest hotel sync status and progress
+ * @access Private (Admin only)
+ */
+router.get('/sync-hotels/status',
+  ...requireAdmin,
+  adminDashboardController.getHotelSyncStatus
+);
+
+/**
+ * GET /api/admin/sync-hotels/history
+ * Get sync job history
+ * @access Private (Admin only)
+ */
+router.get('/sync-hotels/history',
+  ...requireAdmin,
+  [
+    query('limit').optional().isInt({ min: 1, max: 50 }).withMessage('Limit must be 1-50')
+  ],
+  validateRequest,
+  adminDashboardController.getHotelSyncHistory
+);
+/**
+ * POST /api/admin/sync-hotels
+ * Start full hotel content sync from Hotelbeds Content API
+ * @access Private (Admin only)
+ */
+router.post('/sync-hotels',
+  ...requireAdmin,
+  [
     body('batchSize').optional().isInt({ min: 100, max: 1000 }).withMessage('Batch size must be 100-1000')
   ],
   validateRequest,

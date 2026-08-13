@@ -1421,21 +1421,42 @@ const updateEmailSettings = asyncErrorHandler(async (req, res) => {
 
 // ========== HOTEL CONTENT SYNC (Hotelbeds 90% mapping) ==========
 const startHotelSync = asyncErrorHandler(async (req, res) => {
-  const { batchSize = 1000 } = req.body;
+  const { batchSize = 100, force = false } = req.body;
 
   // Check if a sync is already running
   const latest = await getLatestSyncStatus();
+  
   if (latest && latest.status === 'running') {
-    return ApiResponse.success(res, {
-      jobId: latest._id,
-      status: latest.status,
-      message: 'A sync job is already running',
-      progress: {
-        processed: latest.processedItems,
-        total: latest.totalItems,
-        percentage: latest.totalItems > 0 ? Math.round((latest.processedItems / latest.totalItems) * 100) : 0
-      }
-    }, 'Sync already in progress');
+    // Auto-detect stale jobs: if running > 30 min with no update, treat as dead
+    const thirtyMinAgo = new Date(Date.now() - 30 * 60 * 1000);
+    const lastUpdate = latest.logs?.length > 0 
+      ? new Date(latest.logs[latest.logs.length - 1].timestamp)
+      : latest.startedAt;
+    
+    const isStale = !lastUpdate || lastUpdate < thirtyMinAgo;
+    
+    if (!force && !isStale) {
+      return ApiResponse.success(res, {
+        jobId: latest._id,
+        status: latest.status,
+        message: 'A sync job is already running',
+        progress: {
+          processed: latest.processedItems,
+          total: latest.totalItems,
+          percentage: latest.totalItems > 0 ? Math.round((latest.processedItems / latest.totalItems) * 100) : 0
+        }
+      }, 'Sync already in progress');
+    }
+    
+    // Mark stale job as failed
+    if (isStale) {
+      console.log(`[AdminSync] Detected stale job ${latest._id}. Marking as failed.`);
+      await SyncJob.findByIdAndUpdate(latest._id, {
+        status: 'failed',
+        errorMessage: 'Auto-marked as failed: sync stalled or process restarted',
+        logs: [...(latest.logs || []), { message: 'Auto-marked as failed: sync stalled or process restarted', timestamp: new Date() }]
+      });
+    }
   }
 
   // Create a new sync job and start it in background
@@ -1443,7 +1464,7 @@ const startHotelSync = asyncErrorHandler(async (req, res) => {
   const job = await SyncJob.create({
     jobType: 'hotel_content_full',
     status: 'pending',
-    batchSize: parseInt(batchSize) || 1000,
+    batchSize: parseInt(batchSize) || 100,
     logs: [{ message: 'Job created via admin API' }]
   });
 
@@ -1456,8 +1477,27 @@ const startHotelSync = asyncErrorHandler(async (req, res) => {
     jobId: job._id,
     status: 'started',
     message: 'Hotel content sync started in background. Check status endpoint for progress.',
-    estimatedTime: '~5-10 minutes for full portfolio'
+    estimatedTime: '~10-20 minutes for full portfolio'
   }, 'Hotel sync started', 202);
+});
+
+const resetHotelSync = asyncErrorHandler(async (req, res) => {
+  const latest = await getLatestSyncStatus();
+  
+  if (!latest) {
+    return ApiResponse.success(res, { message: 'No sync jobs to reset' }, 'No jobs found');
+  }
+  
+  if (latest.status === 'running') {
+    await SyncJob.findByIdAndUpdate(latest._id, {
+      status: 'failed',
+      errorMessage: 'Manually reset by admin',
+      logs: [...(latest.logs || []), { message: 'Manually reset by admin', timestamp: new Date() }]
+    });
+    return ApiResponse.success(res, { jobId: latest._id, status: 'failed', message: 'Sync job reset successfully' }, 'Sync job reset');
+  }
+  
+  return ApiResponse.success(res, { jobId: latest._id, status: latest.status, message: 'Job was not running, no reset needed' }, 'No reset needed');
 });
 
 const getHotelSyncStatus = asyncErrorHandler(async (req, res) => {
@@ -1535,6 +1575,7 @@ module.exports = {
   getEmailSettings,
   updateEmailSettings,
   startHotelSync,
+  resetHotelSync,
   getHotelSyncStatus,
   getHotelSyncHistory
 };

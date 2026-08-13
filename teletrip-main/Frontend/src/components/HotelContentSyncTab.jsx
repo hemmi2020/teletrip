@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Database, Play, RefreshCw, Loader2, CheckCircle, XCircle, AlertCircle, Clock, History } from 'lucide-react';
+import { Database, Play, RefreshCw, Loader2, CheckCircle, XCircle, AlertCircle, Clock, History, RotateCcw } from 'lucide-react';
 import { AdminDashboardAPI } from '../services/adminApi';
 
 const HotelContentSyncTab = ({ showToast }) => {
   const [syncStatus, setSyncStatus] = useState(null);
   const [history, setHistory] = useState([]);
   const [isStarting, setIsStarting] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
   const [polling, setPolling] = useState(false);
 
   const fetchStatus = useCallback(async () => {
@@ -43,21 +44,49 @@ const HotelContentSyncTab = ({ showToast }) => {
     return () => clearInterval(interval);
   }, [syncStatus?.status, fetchStatus, fetchHistory]);
 
-  const handleStartSync = async () => {
-    if (!window.confirm('Start full hotel content sync? This will download all hotels from Hotelbeds and may take 5-10 minutes.')) return;
+  const handleStartSync = async (force = false) => {
+    const msg = force 
+      ? 'Force restart sync? This will reset any stuck job and start fresh.'
+      : 'Start full hotel content sync? This will download all hotels from Hotelbeds and may take 10-20 minutes.';
+    if (!window.confirm(msg)) return;
     
     setIsStarting(true);
-    const result = await AdminDashboardAPI.startHotelSync(1000);
+    const result = await AdminDashboardAPI.startHotelSync(100, force);
     setIsStarting(false);
 
     if (result.success) {
-      showToast('Sync started in background', 'success');
+      showToast(force ? 'Sync force-restarted' : 'Sync started in background', 'success');
       setSyncStatus(result.data);
       fetchHistory();
     } else {
       showToast(result.error || 'Failed to start sync', 'error');
     }
   };
+
+  const handleResetSync = async () => {
+    if (!window.confirm('Reset stuck sync job? This will mark the current running job as failed so you can start a new one.')) return;
+    
+    setIsResetting(true);
+    const result = await AdminDashboardAPI.resetHotelSync();
+    setIsResetting(false);
+
+    if (result.success) {
+      showToast('Sync job reset successfully', 'success');
+      fetchStatus();
+      fetchHistory();
+    } else {
+      showToast(result.error || 'Failed to reset sync', 'error');
+    }
+  };
+
+  // Detect stale jobs client-side (running > 30 min)
+  const isStale = (() => {
+    if (syncStatus?.status !== 'running') return false;
+    const started = syncStatus?.timing?.startedAt;
+    if (!started) return false;
+    const minutesRunning = (Date.now() - new Date(started).getTime()) / 60000;
+    return minutesRunning > 30;
+  })();
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -93,23 +122,47 @@ const HotelContentSyncTab = ({ showToast }) => {
               </p>
             </div>
           </div>
-          <button
-            onClick={handleStartSync}
-            disabled={isStarting || syncStatus?.status === 'running'}
-            className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition ${
-              isStarting || syncStatus?.status === 'running'
-                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                : 'bg-blue-600 text-white hover:bg-blue-700'
-            }`}
-          >
-            {isStarting ? (
-              <Loader2 className="w-5 h-5 animate-spin" />
-            ) : (
-              <Play className="w-5 h-5" />
+          <div className="flex items-center gap-2">
+            {syncStatus?.status === 'running' && (
+              <button
+                onClick={handleResetSync}
+                disabled={isResetting}
+                className="flex items-center gap-2 px-4 py-3 rounded-lg font-medium transition bg-orange-50 text-orange-600 hover:bg-orange-100 border border-orange-200"
+                title="Reset stuck job"
+              >
+                {isResetting ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <RotateCcw className="w-5 h-5" />
+                )}
+                Reset
+              </button>
             )}
-            {syncStatus?.status === 'running' ? 'Sync Running...' : 'Start Full Sync'}
-          </button>
+            <button
+              onClick={() => handleStartSync(isStale)}
+              disabled={isStarting || (syncStatus?.status === 'running' && !isStale)}
+              className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition ${
+                isStarting || (syncStatus?.status === 'running' && !isStale)
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : 'bg-blue-600 text-white hover:bg-blue-700'
+              }`}
+            >
+              {isStarting ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <Play className="w-5 h-5" />
+              )}
+              {syncStatus?.status === 'running' && !isStale ? 'Sync Running...' : isStale ? 'Force Restart Sync' : 'Start Full Sync'}
+            </button>
+          </div>
         </div>
+        
+        {isStale && (
+          <div className="mt-4 p-3 bg-orange-50 border border-orange-200 rounded-lg flex items-center gap-2 text-sm text-orange-700">
+            <AlertCircle className="w-4 h-4 flex-shrink-0" />
+            This sync job appears stuck (running for over 30 minutes). Click "Force Restart Sync" to start fresh.
+          </div>
+        )}
       </div>
 
       {/* Current Status */}

@@ -433,6 +433,29 @@ export const AdminDashboardAPI = {
   },
 
   // ========== CONTENT SYNC (Hotelbeds 90% mapping) ==========
+  startHotelSync: async (batchSize = 100, force = false) => {
+    try {
+      const response = await adminApi.post('/api/admin/sync-hotels', { batchSize, force });
+      return { success: true, data: response.data.data };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.response?.data?.message || 'Failed to start sync' 
+      };
+    }
+  },
+
+  resetHotelSync: async () => {
+    try {
+      const response = await adminApi.post('/api/admin/sync-hotels/reset');
+      return { success: true, data: response.data.data };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.response?.data?.message || 'Failed to reset sync' 
+      };
+    }
+  },
   startHotelSync: async (batchSize = 1000) => {
     try {
       const response = await adminApi.post('/api/admin/sync-hotels', { batchSize });
