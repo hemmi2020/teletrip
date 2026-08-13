@@ -101,6 +101,18 @@ export const AdminDashboardAPI = {
     }
   },
 
+  updateUser: async (userId, userData) => {
+    try {
+      const response = await adminApi.put(`/api/admin/users/${userId}`, userData);
+      return { success: true, data: response.data.data };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.response?.data?.message || 'Failed to update user' 
+      };
+    }
+  },
+
   deleteUser: async (userId, reason) => {
     try {
       const response = await adminApi.delete(`/api/admin/users/${userId}`, {
@@ -155,12 +167,7 @@ export const AdminDashboardAPI = {
 
   cancelBooking: async (bookingId) => {
     try {
-      const token = localStorage.getItem('adminToken');
-      const response = await axios.put(
-        `${API_BASE_URL}/api/bookings/${bookingId}/cancel`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const response = await adminApi.put(`/api/admin/bookings/${bookingId}/cancel`);
       return { success: true, data: response.data.data };
     } catch (error) {
       return { 
@@ -172,11 +179,7 @@ export const AdminDashboardAPI = {
 
   generateVoucher: async (bookingId) => {
     try {
-      const token = localStorage.getItem('adminToken');
-      const response = await axios.get(
-        `${API_BASE_URL}/api/bookings/${bookingId}/voucher`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const response = await adminApi.get(`/api/admin/bookings/${bookingId}/voucher`);
       return { success: true, data: response.data.data };
     } catch (error) {
       return { 

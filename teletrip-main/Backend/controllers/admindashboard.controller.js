@@ -365,7 +365,7 @@ const updateUserStatus = asyncErrorHandler(async (req, res) => {
   const { userId } = req.params;
   const { isActive, reason } = req.body;
 
-  const user = await User.findByIdAndUpdate(
+  const user = await userModel.findByIdAndUpdate(
     userId,
     { 
       isActive,
@@ -404,13 +404,13 @@ const deleteUser = asyncErrorHandler(async (req, res) => {
     return ApiResponse.error(res, 'Cannot delete user with active bookings', 400);
   }
 
-  const user = await User.findById(userId);
+  const user = await userModel.findById(userId);
   if (!user) {
     return ApiResponse.error(res, 'User not found', 404);
   }
 
   // Soft delete - mark as deleted instead of removing
-  await user.findByIdAndUpdate(userId, {
+  await userModel.findByIdAndUpdate(userId, {
     isDeleted: true,
     deletedAt: new Date(),
     deletedBy: req.user.id,
@@ -1042,7 +1042,7 @@ const getBookingAnalytics = async (startDate, endDate) => {
 };
 
 const getUserAnalytics = async (startDate, endDate) => {
-  const userData = await User.aggregate([
+  const userData = await userModel.aggregate([
     {
       $match: {
         createdAt: { $gte: startDate, $lte: endDate }
@@ -1086,7 +1086,7 @@ const getHotelAnalytics = async (startDate, endDate) => {
           $size: {
             $filter: {
               input: '$bookings',
-              cond: { $eq: ['$this.status', 'completed'] }
+              cond: { $eq: ['$$this.status', 'completed'] }
             }
           }
         },
@@ -1096,11 +1096,11 @@ const getHotelAnalytics = async (startDate, endDate) => {
               input: {
                 $filter: {
                   input: '$bookings',
-                  cond: { $eq: ['$this.status', 'completed'] }
+                  cond: { $eq: ['$$this.status', 'completed'] }
                 }
               },
               as: 'booking',
-              in: '$booking.totalAmount'
+              in: '$$booking.totalAmount'
             }
           }
         }

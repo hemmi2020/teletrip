@@ -118,14 +118,6 @@ app.get('/health', (req, res) => {
         version: '2026-08-13-hcn-reconcile-fix'
     });
 });
-app.get('/health', (req, res) => {
-    res.status(200).json({ 
-        status: 'OK', 
-        message: 'Server is running',
-        timestamp: new Date().toISOString(),
-        uptime: process.uptime(),
-        environment: process.env.NODE_ENV || 'development'
-    });
 });
 
 // Routes 
