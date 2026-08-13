@@ -82,6 +82,7 @@ async function runReconciliation({ startDate, endDate, filterType = 'CHECKIN' } 
     missingLocally: [],      // In Hotelbeds but not in our DB
     missingInHotelbeds: [],  // In our DB but not in Hotelbeds
     statusMismatches: [],
+    apiError: null,
     summary: {
       totalHotelbedsBookings: 0,
       totalLocalBookings: 0,
@@ -95,17 +96,26 @@ async function runReconciliation({ startDate, endDate, filterType = 'CHECKIN' } 
   // Format dates for Hotelbeds API (YYYY-MM-DD)
   const formatDate = (d) => d ? d.toISOString().split('T')[0] : undefined;
 
-  // 1. Fetch from Hotelbeds
-  const hbData = await fetchHotelbedsBookings({
-    startDate: formatDate(startDate),
-    endDate: formatDate(endDate),
-    filterType,
-    from: 1,
-    to: 1000
-  });
-
-  const hbBookings = hbData.bookings;
-  results.summary.totalHotelbedsBookings = hbData.total;
+  // 1. Fetch from Hotelbeds (with error handling)
+  let hbBookings = [];
+  try {
+    const hbData = await fetchHotelbedsBookings({
+      startDate: formatDate(startDate),
+      endDate: formatDate(endDate),
+      filterType,
+      from: 1,
+      to: 1000
+    });
+    hbBookings = hbData.bookings;
+    results.summary.totalHotelbedsBookings = hbData.total;
+  } catch (error) {
+    console.error('[Reconciliation] Hotelbeds API call failed:', error.message);
+    results.apiError = {
+      message: error.message,
+      note: 'Local bookings were still fetched for comparison. Hotelbeds API may be unavailable or credentials invalid.'
+    };
+    // Continue with local bookings only - don't crash the entire request
+  }
 
   // Build map by reference
   const hbMap = new Map();

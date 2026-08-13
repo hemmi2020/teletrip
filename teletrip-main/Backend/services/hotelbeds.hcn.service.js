@@ -77,9 +77,9 @@ async function pollHCNForBookings({ maxAgeDays = 30, batchSize = 50 } = {}) {
     bookingType: 'hotel',
     createdAt: { $gte: cutoffDate },
     $or: [
-      { 'hotelBooking.hotelConfirmationNumber': { $exists: false } },
-      { 'hotelBooking.hotelConfirmationNumber': null },
-      { 'hotelBooking.hotelConfirmationNumber': '' }
+      { 'hotelBooking.confirmationNumber': { $exists: false } },
+      { 'hotelBooking.confirmationNumber': null },
+      { 'hotelBooking.confirmationNumber': '' }
     ]
   })
   .select('bookingReference hotelBooking.confirmationNumber hotelBooking.hotelName')
@@ -113,10 +113,9 @@ async function pollHCNForBookings({ maxAgeDays = 30, batchSize = 50 } = {}) {
       const hcn = hotelData.supplierReference || hotelData.confirmationNumber || null;
       
       if (hcn) {
-        // Update local booking with HCN
+        // Update local booking with HCN (stored in hotelBooking.confirmationNumber per schema)
         await bookingModel.findByIdAndUpdate(booking._id, {
-          'hotelBooking.hotelConfirmationNumber': hcn,
-          'hotelBooking.hcnUpdatedAt': new Date(),
+          'hotelBooking.confirmationNumber': hcn,
           'backup.hotelbedsBookingData': hbBooking
         });
 
@@ -161,16 +160,16 @@ async function getHCNStatusSummary() {
   const withHCN = await bookingModel.countDocuments({
     status: { $in: ['confirmed', 'completed'] },
     bookingType: 'hotel',
-    'hotelBooking.hotelConfirmationNumber': { $exists: true, $ne: null, $ne: '' }
+    'hotelBooking.confirmationNumber': { $exists: true, $ne: null, $ne: '' }
   });
 
   const withoutHCN = await bookingModel.countDocuments({
     status: { $in: ['confirmed', 'completed'] },
     bookingType: 'hotel',
     $or: [
-      { 'hotelBooking.hotelConfirmationNumber': { $exists: false } },
-      { 'hotelBooking.hotelConfirmationNumber': null },
-      { 'hotelBooking.hotelConfirmationNumber': '' }
+      { 'hotelBooking.confirmationNumber': { $exists: false } },
+      { 'hotelBooking.confirmationNumber': null },
+      { 'hotelBooking.confirmationNumber': '' }
     ]
   });
 
