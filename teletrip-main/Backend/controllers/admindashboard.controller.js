@@ -4,7 +4,8 @@ const Payment = require('../models/payment.model');
 const Hotel = require('../models/hotel.model');
 const Review = require('../models/review.model');
 const SupportTicket = require('../models/supportticket.model');
-const Notification = require('../models/notification.model');  
+const Notification = require('../models/notification.model');
+const SyncJob = require('../models/syncJob.model');
 const ApiResponse = require('../utils/response.util');
 const { asyncErrorHandler } = require('../middlewares/errorHandler.middleware');
 const notificationService = require('../services/notification.service');
@@ -1459,8 +1460,8 @@ const startHotelSync = asyncErrorHandler(async (req, res) => {
     }
   }
 
+
   // Create a new sync job and start it in background
-  const SyncJob = require('../models/syncJob.model');
   const job = await SyncJob.create({
     jobType: 'hotel_content_full',
     status: 'pending',
