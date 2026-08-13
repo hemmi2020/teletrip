@@ -8,7 +8,7 @@ const HotelContentSyncTab = ({ showToast }) => {
   const [isStarting, setIsStarting] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
   const [polling, setPolling] = useState(false);
-  const [syncSettings, setSyncSettings] = useState({ autoSyncEnabled: false, intervalDays: 7 });
+  const [syncSettings, setSyncSettings] = useState({ autoSyncEnabled: false, autoSyncIntervalDays: 7 });
   const [isSavingSettings, setIsSavingSettings] = useState(false);
 
   const fetchSyncSettings = useCallback(async () => {
@@ -16,7 +16,7 @@ const HotelContentSyncTab = ({ showToast }) => {
     if (result.success && result.data) {
       setSyncSettings({
         autoSyncEnabled: result.data.autoSyncEnabled ?? false,
-        intervalDays: result.data.intervalDays ?? 7
+        autoSyncIntervalDays: result.data.autoSyncIntervalDays ?? 7
       });
     }
   }, []);
@@ -217,8 +217,8 @@ const HotelContentSyncTab = ({ showToast }) => {
           <div>
             <label className="block text-xs font-medium text-gray-500 mb-1">Sync interval</label>
             <select
-              value={syncSettings.intervalDays}
-              onChange={(e) => setSyncSettings(prev => ({ ...prev, intervalDays: parseInt(e.target.value) }))}
+              value={syncSettings.autoSyncIntervalDays}
+              onChange={(e) => setSyncSettings(prev => ({ ...prev, autoSyncIntervalDays: parseInt(e.target.value) }))}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value={1}>Every 1 day</option>
