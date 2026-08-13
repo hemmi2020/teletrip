@@ -1574,7 +1574,6 @@ const getHCNSummary = asyncErrorHandler(async (req, res) => {
 
 
 // ========== SYNC SETTINGS (Auto-sync schedule) ==========
-const SystemSettings = require('../models/systemsetting.model');
 
 const getSyncSettings = asyncErrorHandler(async (req, res) => {
   const settings = await SystemSettings.find({ category: 'general', key: /^sync_/ }).lean();
