@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Database, Play, RefreshCw, Loader2, CheckCircle, XCircle, AlertCircle, Clock, History, RotateCcw } from 'lucide-react';
+import { Database, Play, RefreshCw, Loader2, CheckCircle, XCircle, AlertCircle, Clock, History, RotateCcw, Settings, Save } from 'lucide-react';
 import { AdminDashboardAPI } from '../services/adminApi';
 
 const HotelContentSyncTab = ({ showToast }) => {
@@ -8,6 +8,18 @@ const HotelContentSyncTab = ({ showToast }) => {
   const [isStarting, setIsStarting] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
   const [polling, setPolling] = useState(false);
+  const [syncSettings, setSyncSettings] = useState({ autoSyncEnabled: false, intervalDays: 7 });
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
+
+  const fetchSyncSettings = useCallback(async () => {
+    const result = await AdminDashboardAPI.getSyncSettings();
+    if (result.success && result.data) {
+      setSyncSettings({
+        autoSyncEnabled: result.data.autoSyncEnabled ?? false,
+        intervalDays: result.data.intervalDays ?? 7
+      });
+    }
+  }, []);
 
   const fetchStatus = useCallback(async () => {
     const result = await AdminDashboardAPI.getHotelSyncStatus();
@@ -27,7 +39,8 @@ const HotelContentSyncTab = ({ showToast }) => {
   useEffect(() => {
     fetchStatus();
     fetchHistory();
-  }, [fetchStatus, fetchHistory]);
+    fetchSyncSettings();
+  }, [fetchStatus, fetchHistory, fetchSyncSettings]);
 
   // Poll every 5 seconds when sync is running
   useEffect(() => {
@@ -76,6 +89,18 @@ const HotelContentSyncTab = ({ showToast }) => {
       fetchHistory();
     } else {
       showToast(result.error || 'Failed to reset sync', 'error');
+    }
+  };
+
+
+  const handleSaveSyncSettings = async () => {
+    setIsSavingSettings(true);
+    const result = await AdminDashboardAPI.updateSyncSettings(syncSettings);
+    setIsSavingSettings(false);
+    if (result.success) {
+      showToast('Sync settings saved', 'success');
+    } else {
+      showToast(result.error || 'Failed to save settings', 'error');
     }
   };
 
@@ -165,6 +190,59 @@ const HotelContentSyncTab = ({ showToast }) => {
         )}
       </div>
 
+
+      {/* Auto-Sync Settings */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Settings className="w-5 h-5 text-gray-500" />
+          <h3 className="text-lg font-semibold text-gray-900">Auto-Sync Settings</h3>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+          <div>
+            <label className="flex items-center gap-3 cursor-pointer">
+              <div className={`relative w-12 h-6 rounded-full transition ${syncSettings.autoSyncEnabled ? 'bg-blue-600' : 'bg-gray-300'}`}>
+                <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${syncSettings.autoSyncEnabled ? 'translate-x-6' : 'translate-x-0'}`} />
+                <input
+                  type="checkbox"
+                  className="sr-only"
+                  checked={syncSettings.autoSyncEnabled}
+                  onChange={(e) => setSyncSettings(prev => ({ ...prev, autoSyncEnabled: e.target.checked }))}
+                />
+              </div>
+              <span className="text-sm font-medium text-gray-700">
+                {syncSettings.autoSyncEnabled ? 'Auto-sync enabled' : 'Auto-sync disabled'}
+              </span>
+            </label>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1">Sync interval</label>
+            <select
+              value={syncSettings.intervalDays}
+              onChange={(e) => setSyncSettings(prev => ({ ...prev, intervalDays: parseInt(e.target.value) }))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value={1}>Every 1 day</option>
+              <option value={3}>Every 3 days</option>
+              <option value={7}>Every 7 days</option>
+              <option value={14}>Every 14 days</option>
+              <option value={30}>Every 30 days</option>
+            </select>
+          </div>
+          <div>
+            <button
+              onClick={handleSaveSyncSettings}
+              disabled={isSavingSettings}
+              className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition disabled:opacity-50"
+            >
+              {isSavingSettings ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+              Save Settings
+            </button>
+          </div>
+        </div>
+        <p className="mt-3 text-xs text-gray-500">
+          Auto-sync requires an external scheduler (e.g., Render cron job) to trigger <code>/api/admin/sync-hotels</code> automatically.
+        </p>
+      </div>
       {/* Current Status */}
       {syncStatus && (
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">

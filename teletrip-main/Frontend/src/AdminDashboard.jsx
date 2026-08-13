@@ -9,7 +9,7 @@ import {
   Bell, Building2, Star, MapPin, Phone, Mail, BarChart3, PieChart, Activity,
   FileText, Shield, Lock, LogOut, ChevronDown, Plus, AlertCircle,
   Clock, CheckCircle, XCircle, Loader2, ArrowUpRight, ArrowDownRight,
-  Menu, XCircle as CloseIcon, Save, Camera, User, Globe, Zap, Database
+  Menu, XCircle as CloseIcon, Save, Camera, User, Globe, Zap, Database, GitCompare
 } from 'lucide-react';
 import { AdminDashboardAPI } from './services/adminApi';
 import {
@@ -67,6 +67,7 @@ import { useCurrency } from './context/CurrencyContext';
 import EmailManagementTab from './components/EmailManagement/EmailManagementTab';
 import DestinationManagement from './components/DestinationManagement';
 import HotelContentSyncTab from './components/HotelContentSyncTab';
+import HotelbedsToolsTab from './components/HotelbedsToolsTab';
 import PayOnSiteManagement from './components/PayOnSiteManagement';
 import './styles/admin-responsive.css';
 
@@ -1032,10 +1033,8 @@ Amount: PKR ${voucher.totalAmount}
       return <HotelContentSyncTab showToast={showToast} />;
     }
 
-    if (activeTab === 'settings') {
-      return (
-        <EmailManagementTab showToast={showToast} />
-      );
+    if (activeTab === 'hotelbeds-tools') {
+      return <HotelbedsToolsTab showToast={showToast} />;
     }
 
     if (activeTab === 'settings') {
@@ -1544,7 +1543,7 @@ Amount: PKR ${voucher.totalAmount}
     { id: 'financial', label: 'Financial', icon: DollarSign },
     { id: 'email', label: 'Email', icon: Mail },
     { id: 'content-sync', label: 'Content Sync', icon: Database },
-    { id: 'settings', label: 'Settings', icon: Settings },
+    { id: 'hotelbeds-tools', label: 'Hotelbeds Tools', icon: GitCompare },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
 

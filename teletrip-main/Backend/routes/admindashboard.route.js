@@ -740,4 +740,73 @@ router.get('/sync-hotels/history',
   adminDashboardController.getHotelSyncHistory
 );
 
+// ========== HOTELBEDS RECONCILIATION & HCN (Recommended items) ==========
+/**
+ * POST /api/admin/reconcile-bookings
+ * Reconcile local bookings with Hotelbeds booking list
+ * @access Private (Admin only)
+ */
+router.post('/reconcile-bookings',
+  ...requireAdmin,
+  [
+    body('startDate').optional().isISO8601(),
+    body('endDate').optional().isISO8601(),
+    body('filterType').optional().isIn(['CHECKIN', 'CREATION', 'MODIFICATION'])
+  ],
+  validateRequest,
+  adminDashboardController.reconcileBookings
+);
+
+/**
+ * POST /api/admin/poll-hcn
+ * Poll Hotelbeds for Hotel Confirmation Numbers
+ * @access Private (Admin only)
+ */
+router.post('/poll-hcn',
+  ...requireAdmin,
+  [
+    body('maxAgeDays').optional().isInt({ min: 1, max: 90 }),
+    body('batchSize').optional().isInt({ min: 1, max: 100 })
+  ],
+  validateRequest,
+  adminDashboardController.pollHCN
+);
+
+/**
+ * GET /api/admin/hcn-summary
+ * Get HCN coverage summary
+ * @access Private (Admin only)
+ */
+router.get('/hcn-summary',
+  ...requireAdmin,
+  adminDashboardController.getHCNSummary
+);
+
+// ========== SYNC SETTINGS (Auto-sync schedule) ==========
+/**
+ * GET /api/admin/sync-settings
+ * Get auto-sync configuration
+ * @access Private (Admin only)
+ */
+router.get('/sync-settings',
+  ...requireAdmin,
+  adminDashboardController.getSyncSettings
+);
+
+/**
+ * PUT /api/admin/sync-settings
+ * Update auto-sync configuration
+ * @access Private (Admin only)
+ */
+router.put('/sync-settings',
+  ...requireAdmin,
+  [
+    body('autoSyncEnabled').optional().isBoolean(),
+    body('autoSyncIntervalDays').optional().isInt({ min: 1, max: 30 }),
+    body('notifyOnComplete').optional().isBoolean()
+  ],
+  validateRequest,
+  adminDashboardController.updateSyncSettings
+);
+
 module.exports = router;

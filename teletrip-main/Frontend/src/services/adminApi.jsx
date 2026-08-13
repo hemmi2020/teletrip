@@ -456,17 +456,6 @@ export const AdminDashboardAPI = {
       };
     }
   },
-  startHotelSync: async (batchSize = 1000) => {
-    try {
-      const response = await adminApi.post('/api/admin/sync-hotels', { batchSize });
-      return { success: true, data: response.data.data };
-    } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.message || 'Failed to start sync' 
-      };
-    }
-  },
 
   getHotelSyncStatus: async () => {
     try {
@@ -488,6 +477,68 @@ export const AdminDashboardAPI = {
       return { 
         success: false, 
         error: error.response?.data?.message || 'Failed to get sync history' 
+      };
+    }
+  },
+
+  // ========== HOTELBEDS RECONCILIATION & HCN ==========
+  reconcileBookings: async (params = {}) => {
+    try {
+      const response = await adminApi.post('/api/admin/reconcile-bookings', params);
+      return { success: true, data: response.data.data };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.response?.data?.message || 'Failed to run reconciliation' 
+      };
+    }
+  },
+
+  pollHCN: async (params = {}) => {
+    try {
+      const response = await adminApi.post('/api/admin/poll-hcn', params);
+      return { success: true, data: response.data.data };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.response?.data?.message || 'Failed to poll HCN' 
+      };
+    }
+  },
+
+  getHCNSummary: async () => {
+    try {
+      const response = await adminApi.get('/api/admin/hcn-summary');
+      return { success: true, data: response.data.data };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.response?.data?.message || 'Failed to get HCN summary' 
+      };
+    }
+  },
+
+  // ========== SYNC SETTINGS ==========
+  getSyncSettings: async () => {
+    try {
+      const response = await adminApi.get('/api/admin/sync-settings');
+      return { success: true, data: response.data.data };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.response?.data?.message || 'Failed to get sync settings' 
+      };
+    }
+  },
+
+  updateSyncSettings: async (settings) => {
+    try {
+      const response = await adminApi.put('/api/admin/sync-settings', settings);
+      return { success: true, data: response.data.data };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.response?.data?.message || 'Failed to update sync settings' 
       };
     }
   },

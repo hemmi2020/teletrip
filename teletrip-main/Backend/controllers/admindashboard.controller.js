@@ -1538,6 +1538,82 @@ const getHotelSyncHistory = asyncErrorHandler(async (req, res) => {
   return ApiResponse.success(res, { jobs, count: jobs.length }, 'Sync history retrieved');
 });
 
+// ========== HOTELBEDS RECONCILIATION (Recommended) ==========
+const { runReconciliation } = require('../services/hotelbeds.reconciliation.service');
+
+const reconcileBookings = asyncErrorHandler(async (req, res) => {
+  const { startDate, endDate, filterType = 'CHECKIN' } = req.body;
+
+  const start = startDate ? new Date(startDate) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  const end = endDate ? new Date(endDate) : new Date();
+
+  console.log(`[AdminReconcile] Starting reconciliation: ${start.toISOString()} to ${end.toISOString()}`);
+
+  const result = await runReconciliation({ startDate: start, endDate: end, filterType });
+
+  return ApiResponse.success(res, result, 'Reconciliation completed');
+});
+
+// ========== HCN POLLING (Recommended) ==========
+const { pollHCNForBookings, getHCNStatusSummary } = require('../services/hotelbeds.hcn.service');
+
+const pollHCN = asyncErrorHandler(async (req, res) => {
+  const { maxAgeDays = 30, batchSize = 50 } = req.body;
+
+  console.log(`[AdminHCN] Starting HCN poll: maxAgeDays=${maxAgeDays}, batchSize=${batchSize}`);
+
+  const result = await pollHCNForBookings({ maxAgeDays, batchSize });
+
+  return ApiResponse.success(res, result, 'HCN poll completed');
+});
+
+const getHCNSummary = asyncErrorHandler(async (req, res) => {
+  const summary = await getHCNStatusSummary();
+  return ApiResponse.success(res, summary, 'HCN status summary retrieved');
+});
+
+
+const getHCNSummary = asyncErrorHandler(async (req, res) => {
+  const summary = await getHCNStatusSummary();
+  return ApiResponse.success(res, summary, 'HCN status summary retrieved');
+});
+
+// ========== SYNC SETTINGS (Auto-sync schedule) ==========
+const SystemSettings = require('../models/systemsetting.model');
+
+const getSyncSettings = asyncErrorHandler(async (req, res) => {
+  const settings = await SystemSettings.find({ category: 'general', key: /^sync_/ }).lean();
+  const result = {};
+  settings.forEach(s => { result[s.key] = s.value; });
+  return ApiResponse.success(res, {
+    autoSyncEnabled: result.sync_auto_enabled || false,
+    autoSyncIntervalDays: result.sync_auto_interval_days || 7,
+    lastAutoSyncCheck: result.sync_last_auto_check || null,
+    notifyOnComplete: result.sync_notify_on_complete !== false
+  }, 'Sync settings retrieved');
+});
+
+const updateSyncSettings = asyncErrorHandler(async (req, res) => {
+  const { autoSyncEnabled, autoSyncIntervalDays, notifyOnComplete } = req.body;
+  const adminId = req.user._id || req.user.id;
+
+  const updates = [
+    { key: 'sync_auto_enabled', value: autoSyncEnabled, category: 'general', lastModifiedBy: adminId },
+    { key: 'sync_auto_interval_days', value: autoSyncIntervalDays || 7, category: 'general', lastModifiedBy: adminId },
+    { key: 'sync_notify_on_complete', value: notifyOnComplete !== false, category: 'general', lastModifiedBy: adminId }
+  ];
+
+  for (const u of updates) {
+    await SystemSettings.findOneAndUpdate(
+      { key: u.key },
+      { ...u, isActive: true },
+      { upsert: true, new: true }
+    );
+  }
+
+  return ApiResponse.success(res, { updated: true }, 'Sync settings updated');
+});
+
 
 // Bulk Actions
 const bulkActions = require('./bulkActions.controller');
@@ -1578,5 +1654,17 @@ module.exports = {
   startHotelSync,
   resetHotelSync,
   getHotelSyncStatus,
-  getHotelSyncHistory
+  getHotelSyncHistory,
+  reconcileBookings,
+  pollHCN,
+  getHCNSummary,
+  getSyncSettings,
+  updateSyncSettings
+};
+  resetHotelSync,
+  getHotelSyncStatus,
+  getHotelSyncHistory,
+  reconcileBookings,
+  pollHCN,
+  getHCNSummary
 };
