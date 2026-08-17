@@ -181,7 +181,7 @@ const AdminDashboard = () => {
   const [viewMode, setViewMode] = useState(() => localStorage.getItem('adminViewMode') || 'list');
   const [visibleColumns, setVisibleColumns] = useState(() => {
     const saved = localStorage.getItem('adminVisibleColumns');
-    return saved ? JSON.parse(saved) : ['id', 'details', 'status', 'date', 'actions'];
+    return saved ? JSON.parse(saved) : ['checkbox', 'id', 'details', 'status', 'date', 'actions'];
   });
   const [dashboardWidgets, setDashboardWidgets] = useState(() => {
     const saved = localStorage.getItem('adminDashboardWidgets');
@@ -868,7 +868,7 @@ Amount: PKR ${voucher.totalAmount}
           showToast(result.error, 'error');
         }
       }
-    } catch  {
+    } catch (error) {
       showToast('Ticket action failed', 'error');
     }
   };

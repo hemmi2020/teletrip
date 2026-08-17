@@ -88,10 +88,11 @@ const getDashboardOverview = asyncErrorHandler(async (req, res) => {
     
     // ✅ FIXED: Revenue from ALL payments (including failed ones for total calculation)
     Payment.aggregate([
+      { $match: { status: { $in: ['completed', 'refunded', 'partially_refunded'] } } },
       { $group: { _id: null, total: { $sum: '$amount' } } }
     ]),
     Payment.aggregate([
-      { $match: { createdAt: { $gte: startDate } } },
+      { $match: { createdAt: { $gte: startDate }, status: { $in: ['completed', 'refunded', 'partially_refunded'] } } },
       { $group: { _id: null, total: { $sum: '$amount' } } }
     ]),
     // Hotel Statistics
@@ -274,7 +275,7 @@ const getAllUsers = asyncErrorHandler(async (req, res) => {
 
   // Filters
   if (status && status.trim()) {
-    query.status = status;
+    query.isActive = status === 'active';
   }
   if (role && role.trim()) {
     query.role = role;
@@ -448,7 +449,7 @@ const getAllBookings = asyncErrorHandler(async (req, res) => {
 
   // Filters
   if (status && status.trim()) {
-    query.status = status;
+    query.isActive = status === 'active';
   }
   if (hotelId && hotelId.trim()) {
     query.hotel = hotelId;
@@ -546,8 +547,8 @@ const updateBookingStatus = asyncErrorHandler(async (req, res) => {
     },
     { new: true }
   ).populate([
-    { path: 'userId', select: 'firstName lastName email' },
-    { path: 'hotelId', select: 'name location' }
+    { path: 'user', select: 'fullname email' },
+    { path: 'hotel', select: 'name location' }
   ]);
 
   if (!booking) {
@@ -810,16 +811,24 @@ const processRefund = asyncErrorHandler(async (req, res) => {
   }
 
   // Process refund (integrate with payment gateway)
+  const refundAmount = parseFloat(amount) || (payment.amount - (payment.refundedAmount || 0));
+  if (isNaN(refundAmount) || refundAmount <= 0) {
+    return ApiResponse.error(res, 'Invalid refund amount', 400);
+  }
+  if (refundAmount > (payment.amount - (payment.refundedAmount || 0))) {
+    return ApiResponse.error(res, 'Refund amount exceeds remaining balance', 400);
+  }
+
   payment.refunds = payment.refunds || [];
   payment.refunds.push({
-    amount,
+    amount: refundAmount,
     reason,
     processedBy: req.user.id,
     processedAt: new Date(),
     status: 'processed'
   });
 
-  payment.refundedAmount = (payment.refundedAmount || 0) + amount;
+  payment.refundedAmount = (payment.refundedAmount || 0) + refundAmount;
   
   if (payment.refundedAmount >= payment.amount) {
     payment.status = 'refunded';
@@ -857,7 +866,7 @@ const getAllSupportTickets = asyncErrorHandler(async (req, res) => {
     limit: parseInt(limit),
     sort: { [sortBy]: sortOrder === 'desc' ? -1 : 1 },
     populate: [
-      { path: 'userId', select: 'firstName lastName email' },
+      { path: 'user', select: 'fullname email' },
       { path: 'assignedTo', select: 'firstName lastName email' },
       { path: 'bookingId', select: 'bookingReference' }
     ]
@@ -903,7 +912,7 @@ const updateSupportTicket = asyncErrorHandler(async (req, res) => {
     updates,
     { new: true }
   ).populate([
-    { path: 'userId', select: 'firstName lastName email' },
+    { path: 'user', select: 'fullname email' },
     { path: 'assignedTo', select: 'firstName lastName email' }
   ]);
 
@@ -943,7 +952,7 @@ const addTicketResponse = asyncErrorHandler(async (req, res) => {
   await ticket.save();
 
   await ticket.populate([
-    { path: 'userId', select: 'firstName lastName email' },
+    { path: 'user', select: 'fullname email' },
     { path: 'responses.userId', select: 'firstName lastName email' }
   ]);
 
