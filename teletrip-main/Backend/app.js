@@ -118,7 +118,6 @@ app.get('/health', (req, res) => {
         version: '2026-08-13-hcn-reconcile-fix'
     });
 });
-});
 
 // Routes 
 app.use('/users', userRoutes); 

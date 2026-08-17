@@ -5,6 +5,7 @@ const router = express.Router();
 const fetch = require('node-fetch');
 const { addLog } = require('../services/certificationLogger');
 const { getHotelContent } = require('../services/hotelbeds.content.service');
+const { getMTLSAgent } = require('../config/mtls.config');
 const HotelIndex = require('../models/hotelIndex.model');
 // Hotelbeds API configuration  
 const HOTELBEDS_API_KEY = process.env.HOTELBEDS_API_KEY || '106700a0f2f1e2aa1d4c2b16daae70b2';     
@@ -456,10 +457,12 @@ router.post('/hotels/book', authUser, async (req, res) => {
           req.body.source = {
             channel: 'B2C',
             device: 'WEB',
-            deviceInfo: 'TeleTrip Web Application'
+            deviceInfo: 'TeleTrip Web Application',
+            sourceMarket: 'PK'
           };
         }
 
+        const agent = getMTLSAgent();
         const response = await fetch(`${HOTELBEDS_BASE_URL}/hotel-api/1.0/bookings`, {
             method: 'POST',
             headers: {
@@ -469,7 +472,8 @@ router.post('/hotels/book', authUser, async (req, res) => {
                 'Accept': 'application/json',
                 // 'Accept-Encoding': handled automatically by node-fetch
             },
-            body: JSON.stringify(req.body)
+            body: JSON.stringify(req.body),
+            ...(agent && { agent })
         });
 
         if (!response.ok) {
@@ -520,6 +524,7 @@ router.post('/hotels/checkrate', async (req, res) => {
         const signature = generateHotelbedsSignature(HOTELBEDS_API_KEY, HOTELBEDS_SECRET, timestamp);
 
         const url = `${HOTELBEDS_BASE_URL}/hotel-api/1.0/checkrates`;
+        const checkrateAgent = getMTLSAgent();
         const response = await fetch(url, {
             method: 'POST',
             headers: {
@@ -537,7 +542,8 @@ router.post('/hotels/checkrate', async (req, res) => {
                     deviceInfo: 'TeleTrip Web Application',
                     sourceMarket: 'PK'
                 }
-            })
+            }),
+            ...(checkrateAgent && { agent: checkrateAgent })
         });
 
         if (!response.ok) {
@@ -896,13 +902,15 @@ router.delete('/hotels/bookings/:bookingId', authUser, async (req, res) => {
         if (language) params.append('language', language);
 
         const url = `${HOTELBEDS_BASE_URL}/hotel-api/1.0/bookings/${bookingId}?${params}`;
+        const cancelAgent = getMTLSAgent();
         const response = await fetch(url, {
             method: 'DELETE',
             headers: {
                 'Api-key': HOTELBEDS_API_KEY,
                 'X-Signature': signature,
                 'Accept': 'application/json',
-            }
+            },
+            ...(cancelAgent && { agent: cancelAgent })
         });
 
         const responseText = await response.text();

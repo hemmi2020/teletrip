@@ -47,13 +47,6 @@ async function confirmBookingWithHotelbeds(bookingRequest) {
         sourceMarket: 'PK'
       };
     }
-    if (!bookingRequest.source) {
-      bookingRequest.source = {
-        channel: 'B2C',
-        device: 'WEB',
-        deviceInfo: 'TeleTrip Web Application'
-      };
-    }
 
     const url = `${HOTELBEDS_BASE_URL}/hotel-api/1.0/bookings`;
     const headers = {

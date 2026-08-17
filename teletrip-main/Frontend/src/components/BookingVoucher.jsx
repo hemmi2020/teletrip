@@ -195,10 +195,6 @@ const BookingVoucher = ({ booking, onClose }) => {
                       {f.description}{f.roomName ? ` (${f.roomName})` : ''}
                     </span>
                   ))}
-                    <span key={i} style={{ fontSize: '11px', padding: '3px 8px', background: '#fed7d7', color: '#742a2a', borderRadius: '4px' }}>
-                      {f.description}
-                    </span>
-                  ))}
                 </div>
               </div>
             </div>

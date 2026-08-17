@@ -8,7 +8,7 @@ const { addLog } = require('../services/certificationLogger');
 const { getMTLSAgent } = require('../config/mtls.config');
 const { getHotelContent } = require('../services/hotelbeds.content.service');
 const crypto = require('crypto');
-const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
+const fetch = require('node-fetch');
 // Hotelbeds API configuration
 const HOTELBEDS_API_KEY = process.env.HOTELBEDS_API_KEY;
 const HOTELBEDS_SECRET = process.env.HOTELBEDS_SECRET;
@@ -651,7 +651,10 @@ module.exports.cancelBooking = asyncErrorHandler(async (req, res) => {
       const signature = generateHotelbedsSignature(HOTELBEDS_API_KEY, HOTELBEDS_SECRET, timestamp);
 
       const url = `${HOTELBEDS_BASE_URL}/hotel-api/1.0/bookings/${hotelbedsReference}?cancellationFlag=CANCELLATION`;
-      const response = await fetch(url, {
+      
+      // ✅ MANDATORY: Use MTLS agent for cancellation flow
+      const agent = getMTLSAgent();
+      const fetchOptions = {
         method: 'DELETE',
         headers: {
           'Api-key': HOTELBEDS_API_KEY,
@@ -659,7 +662,10 @@ module.exports.cancelBooking = asyncErrorHandler(async (req, res) => {
           'Accept': 'application/json',
           'Accept-Encoding': 'gzip'
         }
-      });
+      };
+      if (agent) fetchOptions.agent = agent;
+      
+      const response = await fetch(url, fetchOptions);
 
       const responseText = await response.text();
       const responseBody = responseText ? JSON.parse(responseText) : null;
