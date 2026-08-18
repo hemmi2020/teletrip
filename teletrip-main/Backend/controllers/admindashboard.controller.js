@@ -10,6 +10,8 @@ const ApiResponse = require('../utils/response.util');
 const { asyncErrorHandler } = require('../middlewares/errorHandler.middleware');
 const notificationService = require('../services/notification.service');
 const { runHotelContentSync, getLatestSyncStatus, getSyncJobs } = require('../services/hotelSync.service');
+const { runReconciliation } = require('../services/hotelbeds.reconciliation.service');
+const SystemSettings = require('../models/systemsetting.model');
 const moment = require('moment');
 
 const user = userModel; 
@@ -1382,7 +1384,6 @@ const markPayOnSiteAsPaid = asyncErrorHandler(async (req, res) => {
 });
 
 // ========== EMAIL SETTINGS ==========
-const SystemSettings = require('../models/systemsetting.model');
 
 /**
  * GET /api/v1/admin/settings/email
@@ -1574,7 +1575,6 @@ const getHotelSyncHistory = asyncErrorHandler(async (req, res) => {
 });
 
 // ========== HOTELBEDS RECONCILIATION (Recommended) ==========
-const { runReconciliation } = require('../services/hotelbeds.reconciliation.service');
 
 const reconcileBookings = asyncErrorHandler(async (req, res) => {
   const { startDate, endDate, filterType = 'CHECKIN' } = req.body;
