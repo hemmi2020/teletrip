@@ -80,25 +80,25 @@ const BookingVoucher = ({ booking, onClose }) => {
   const hotelbedsRef = hb.confirmationNumber || hbBooking?.reference;
   const confirmationNumber = hotelbedsRef || booking.bookingReference;
   
-  const rooms = hbHotel.rooms || hb.rooms || [];
+  const rooms = hbHotel.rooms || hb.rooms || hbBooking?.hotel?.rooms || [];
   const primaryGuest = booking.guestInfo?.primaryGuest || {};
   const checkIn = hb.checkIn || booking.checkInDate;
   const checkOut = hb.checkOut || booking.checkOutDate;
   // Currency must be from Hotelbeds booking response (mandatory - do not convert)
   const bookingCurrency = hbBooking?.currency || hb.currency || booking.pricing?.currency || 'EUR';
-  const categoryName = hb.categoryName || hbHotel.categoryName || '';
+  const categoryName = hb.categoryName || hbHotel.categoryName || hbBooking?.hotel?.categoryName || '';
   const categoryCode = hb.categoryCode || hbHotel.categoryCode || '';
-  const destinationName = hb.destinationName || hbHotel.destinationName || '';
-  const zoneName = hb.zoneName || hbHotel.zoneName || '';
+  const destinationName = hb.destinationName || hbHotel.destinationName || hbBooking?.hotel?.destinationName || '';
+  const zoneName = hb.zoneName || hbHotel.zoneName || hbBooking?.hotel?.zoneName || '';
   const hotelName = hb.hotelName || hbHotel.name || 'Hotel';
   // Accommodation type from Content API (mandatory - must be property type like Hotel/Hostel/Apartment)
-  const accommodationType = hb.accommodationType || hbHotel.accommodationType || 
+  const accommodationType = hb.accommodationType || hbHotel.accommodationType || hbBooking?.hotel?.accommodationType || 
     (categoryCode === '4EST' ? 'Hotel' : categoryCode === '5EST' ? 'Hotel' : categoryCode === '3EST' ? 'Hotel' : categoryCode === 'STD' ? 'Hotel' : 'Hotel');
   // Paid facilities (indFee=true) - mandatory display
   const paidFacilities = hb.paidFacilities || [];
 
   // Total in EUR from Hotelbeds
-  const totalNetEUR = parseFloat(hbBooking?.totalNet) || parseFloat(hb.totalNet) || parseFloat(hbHotel?.totalNet) || parseFloat(booking.totalAmount) || 0;
+  const totalNetEUR = parseFloat(hbBooking?.totalNet) || parseFloat(hb.totalNet) || parseFloat(hbHotel?.totalNet) || parseFloat(booking.pricing?.totalAmount) || parseFloat(booking.totalAmount) || 0;
   // Total in PKR from our pricing
   const totalPKR = booking.pricing?.totalAmount || 0;
   // Display amount: prefer PKR conversion from EUR, fallback to stored PKR
@@ -162,10 +162,10 @@ const BookingVoucher = ({ booking, onClose }) => {
                 <span style={{ fontWeight: 600, fontSize: '13px' }}>{fullAddress}</span>
               </div>
             )}
-            {(hb.hotelPhone || hbHotel.phones?.[0]?.phoneNumber) ? (
+            {(hb.hotelPhone || hbHotel.phones?.[0]?.phoneNumber || hbBooking?.hotel?.phones?.[0]?.phoneNumber) ? (
               <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid #f5f5f5' }}>
                 <span style={{ color: '#666', fontSize: '13px' }}>Phone</span>
-                <span style={{ fontWeight: 600, fontSize: '13px' }}>{hb.hotelPhone || hbHotel.phones?.[0]?.phoneNumber}</span>
+                <span style={{ fontWeight: 600, fontSize: '13px' }}>{hb.hotelPhone || hbHotel.phones?.[0]?.phoneNumber || hbBooking?.hotel?.phones?.[0]?.phoneNumber}</span>
               </div>
             ) : (
               <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid #f5f5f5' }}>
@@ -225,7 +225,7 @@ const BookingVoucher = ({ booking, onClose }) => {
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid #f5f5f5' }}>
               <span style={{ color: '#666', fontSize: '13px' }}>Status</span>
-              <span style={{ fontWeight: 600, fontSize: '13px', color: booking.status === 'confirmed' ? '#28a745' : '#f59e0b' }}>{booking.status === 'confirmed' ? 'CONFIRMED' : 'PENDING'}</span>
+              <span style={{ fontWeight: 600, fontSize: '13px', color: (booking.status === 'confirmed' || hotelbedsRef) ? '#28a745' : '#f59e0b' }}>{(booking.status === 'confirmed' || hotelbedsRef) ? 'CONFIRMED' : 'PENDING'}</span>
             </div>
           </div>
 

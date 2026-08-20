@@ -1300,13 +1300,79 @@ const markPayOnSiteAsPaid = asyncErrorHandler(async (req, res) => {
             const hbSupplier = hbHotel?.supplier || hbBooking?.supplier;
             const hbInvoice = hbBooking?.invoiceCompany;
             const bookingCurrency = hbBooking?.currency || 'EUR';
-            
+            const hbRooms = hbHotel?.rooms || [];
+
+            // ✅ Fetch hotel phone & paid facilities from Content API
+            let hotelContent = null;
+            const hbHotelCode = hbHotel?.code || booking.hotelBooking?.hotelCode;
+            if (hbHotelCode) {
+              try {
+                const { getHotelContent } = require('../services/hotelbeds.content.service');
+                hotelContent = await getHotelContent(hbHotelCode);
+                console.log('📋 [ADMIN-CONTENT] Hotel details fetched for code:', hbHotelCode);
+              } catch (contentErr) {
+                console.warn('⚠️ [ADMIN-CONTENT] Failed to fetch hotel content:', contentErr.message);
+              }
+            }
+
             booking.status = 'confirmed';
             booking.paymentStatus = 'paid';
             booking.pricing.currency = bookingCurrency;
+            booking.pricing.totalAmount = parseFloat(hbBooking?.totalNet) || booking.pricing.totalAmount;
             booking.hotelBooking.confirmationNumber = hbBooking?.reference || null;
             booking.hotelBooking.currency = bookingCurrency;
             booking.hotelBooking.totalNet = hbBooking?.totalNet || null;
+            booking.hotelBooking.categoryCode = hbHotel?.categoryCode || booking.hotelBooking?.categoryCode;
+            booking.hotelBooking.categoryName = hbHotel?.categoryName || booking.hotelBooking?.categoryName;
+            booking.hotelBooking.destinationCode = hbHotel?.destinationCode || booking.hotelBooking?.destinationCode;
+            booking.hotelBooking.destinationName = hbHotel?.destinationName || booking.hotelBooking?.destinationName;
+            booking.hotelBooking.zoneName = hbHotel?.zoneName || booking.hotelBooking?.zoneName;
+            booking.hotelBooking.latitude = hbHotel?.latitude || booking.hotelBooking?.latitude;
+            booking.hotelBooking.longitude = hbHotel?.longitude || booking.hotelBooking?.longitude;
+            // ✅ Update rooms from Hotelbeds response
+            if (hbRooms.length > 0) {
+              booking.hotelBooking.rooms = hbRooms.map((hbRoom, idx) => {
+                const roomRate = hbRoom.rates?.[0] || {};
+                const roomPaxes = hbRoom.paxes || [];
+                const roomChildAges = roomPaxes.filter(p => p.type === 'CH').map(p => p.age);
+                return {
+                  roomName: hbRoom.name || booking.hotelBooking.rooms[idx]?.roomName || `Room ${idx + 1}`,
+                  roomCode: hbRoom.code || null,
+                  boardCode: roomRate.boardCode || null,
+                  boardName: roomRate.boardName || booking.hotelBooking.rooms[idx]?.boardName || 'Room Only',
+                  rateComments: roomRate.rateComments || null,
+                  adults: roomRate.adults || roomPaxes.filter(p => p.type === 'AD').length || 1,
+                  children: roomRate.children || roomPaxes.filter(p => p.type === 'CH').length || 0,
+                  childAges: roomChildAges.length > 0 ? roomChildAges : booking.hotelBooking.rooms[idx]?.childAges || [],
+                  netPrice: parseFloat(roomRate.net) || booking.hotelBooking.rooms[idx]?.netPrice || 0,
+                  sellingPrice: parseFloat(roomRate.net) || booking.hotelBooking.rooms[idx]?.sellingPrice || 0,
+                  paymentType: roomRate.paymentType || 'AT_HOTEL',
+                  cancellationPolicies: roomRate.cancellationPolicies || [],
+                  taxes: roomRate.taxes || null,
+                  rateClass: roomRate.rateClass || null,
+                  paxes: roomPaxes
+                };
+              });
+            }
+            // ✅ Update hotel phone from Content API
+            if (hotelContent?.phones?.[0]?.phoneNumber) {
+              booking.hotelBooking.hotelPhone = hotelContent.phones[0].phoneNumber;
+            }
+            // ✅ Update paid facilities
+            const allPaidFacilities = [
+              ...(hotelContent?.paidFacilities || []),
+              ...(hotelContent?.roomPaidFacilities || [])
+            ];
+            if (allPaidFacilities.length > 0) {
+              booking.hotelBooking.paidFacilities = allPaidFacilities;
+            }
+            // ✅ Update accommodation type
+            if (hotelContent?.accommodationTypeCode) {
+              booking.hotelBooking.accommodationTypeCode = hotelContent.accommodationTypeCode;
+            }
+            if (hotelContent?.accommodationType) {
+              booking.hotelBooking.accommodationType = hotelContent.accommodationType;
+            }
             booking.hotelBooking.supplier = hbSupplier ? {
               name: hbSupplier.name,
               vatNumber: hbSupplier.vatNumber

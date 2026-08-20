@@ -2468,13 +2468,24 @@ module.exports.createPayOnSiteBooking = asyncErrorHandler(async (req, res) => {
     const Booking = require('../models/booking.model');
     const { getHotelContent } = require('../services/hotelbeds.content.service');
 
-    // Fetch hotel phone/address from Content API for voucher display
+    // Extract hotel code from booking request for Content API lookup
+    let hotelCode = null;
+    if (hotelbedsBookingRequest?.rooms?.[0]?.rateKey) {
+      const rateKeyParts = hotelbedsBookingRequest.rooms[0].rateKey.split('|');
+      if (rateKeyParts.length >= 5) hotelCode = rateKeyParts[4];
+    }
+    // Fallback: try to extract from first item id (format: HOTELCODE-ROOMCODE-...)
+    if (!hotelCode && bookingData.items?.[0]?.id) {
+      const idParts = bookingData.items[0].id.split('-');
+      if (idParts.length >= 1 && /^\d+$/.test(idParts[0])) hotelCode = idParts[0];
+    }
+
+    // Fetch hotel phone/address/facilities from Content API for voucher display
     let hotelContent = null;
-    const hbHotelCode = hotelbedsResult?.hotelbedsData?.booking?.hotel?.code;
-    if (hbHotelCode) {
+    if (hotelCode) {
       try {
-        hotelContent = await getHotelContent(hbHotelCode);
-        console.log('📋 [CONTENT-API] Hotel details fetched for code:', hbHotelCode);
+        hotelContent = await getHotelContent(hotelCode);
+        console.log('📋 [CONTENT-API] Hotel details fetched for code:', hotelCode);
       } catch (contentErr) {
         console.warn('⚠️ [CONTENT-API] Failed to fetch hotel content:', contentErr.message);
       }
@@ -2491,13 +2502,58 @@ module.exports.createPayOnSiteBooking = asyncErrorHandler(async (req, res) => {
     const bookingRandom = Math.random().toString(36).substr(2, 4).toUpperCase();
     const bookingReference = `${bookingRefPrefix}${bookingTimestamp}${bookingRandom}`;
 
-    // Extract rich data from Hotelbeds response for voucher display
-    const hbData = hotelbedsResult?.hotelbedsData;
-    const hbBooking = hbData?.booking;
-    const hbHotel = hbBooking?.hotel;
-    const hbSupplier = hbHotel?.supplier || hbBooking?.supplier;
-    const hbInvoice = hbBooking?.invoiceCompany;
-    const bookingCurrency = hbBooking?.currency || currency;
+    // Build room details from bookingData.items (frontend cart) since Hotelbeds response not available yet
+    const builtRooms = [];
+    (bookingData.items || []).forEach((item, idx) => {
+      const hbRoom = hotelbedsBookingRequest?.rooms?.[idx];
+      const paxes = hbRoom?.paxes || [];
+      const childAges = paxes.filter(p => p.type === 'CH').map(p => p.age);
+      const adults = paxes.filter(p => p.type === 'AD').length || item.guests || bookingData.guests || 1;
+      const children = paxes.filter(p => p.type === 'CH').length || item.children || 0;
+
+      builtRooms.push({
+        roomName: item.roomName || item.name || `Room ${idx + 1}`,
+        roomCode: item.roomCode || null,
+        boardName: item.boardName || item.board || 'Room Only',
+        rateComments: item.rateComments || null,
+        adults,
+        children,
+        childAges,
+        netPrice: parseFloat(item.price) || parseFloat(item.netPrice) || 0,
+        sellingPrice: parseFloat(item.price) || parseFloat(item.netPrice) || 0,
+        paymentType: 'AT_HOTEL',
+        cancellationPolicies: item.cancellationPolicies || [],
+        taxes: item.taxes || null,
+        rateClass: item.rateClass || null,
+        paxes
+      });
+    });
+
+    // If no items but hotelbedsBookingRequest has rooms, build from that
+    if (builtRooms.length === 0 && hotelbedsBookingRequest?.rooms) {
+      hotelbedsBookingRequest.rooms.forEach((hbRoom, idx) => {
+        const paxes = hbRoom.paxes || [];
+        const childAges = paxes.filter(p => p.type === 'CH').map(p => p.age);
+        const adults = paxes.filter(p => p.type === 'AD').length || bookingData.guests || 1;
+        const children = paxes.filter(p => p.type === 'CH').length || 0;
+        builtRooms.push({
+          roomName: hbRoom.name || `Room ${idx + 1}`,
+          roomCode: hbRoom.code || null,
+          boardName: 'Room Only',
+          rateComments: null,
+          adults,
+          children,
+          childAges,
+          netPrice: 0,
+          sellingPrice: 0,
+          paymentType: 'AT_HOTEL',
+          cancellationPolicies: [],
+          taxes: null,
+          rateClass: null,
+          paxes
+        });
+      });
+    }
 
     const newBooking = await Booking.create({
       user: userId,
@@ -2506,53 +2562,26 @@ module.exports.createPayOnSiteBooking = asyncErrorHandler(async (req, res) => {
       status: 'pending',
       pricing: {
         basePrice: paymentAmount,
-        totalAmount: parseFloat(hbBooking?.totalNet) || paymentAmount,
-        currency: bookingCurrency,
+        totalAmount: paymentAmount,
+        currency: currency,
         taxes: 0,
         fees: 0,
         discounts: 0
       },
       hotelBooking: {
-        hotelName: hbHotel?.name || bookingData.hotelName || 'Hotel Booking',
-        hotelCode: hbHotel?.code || null,
-        categoryCode: hbHotel?.categoryCode || null,
-        categoryName: hbHotel?.categoryName || null,
-        destinationCode: hbHotel?.destinationCode || null,
-        destinationName: hbHotel?.destinationName || null,
-        zoneName: hbHotel?.zoneName || null,
-        latitude: hbHotel?.latitude || null,
-        longitude: hbHotel?.longitude || null,
+        hotelName: bookingData.hotelName || 'Hotel Booking',
+        hotelCode: hotelCode,
         checkIn: checkInDate,
         checkOut: checkOutDate,
         nights: nights,
-        rooms: (hbHotel?.rooms || []).map((hbRoom, idx) => {
-          const hbRate = hbRoom.rates?.[0] || {};
-          const paxes = hbRoom.paxes || [];
-          const childAges = paxes.filter(p => p.type === 'CH').map(p => p.age);
-          
-          return {
-            roomName: hbRoom.name || `Room ${idx + 1}`,
-            roomCode: hbRoom.code || null,
-            boardCode: hbRate.boardCode || null,
-            boardName: hbRate.boardName || 'Room Only',
-            rateComments: hbRate.rateComments || null,
-            adults: hbRate.adults || paxes.filter(p => p.type === 'AD').length || 1,
-            children: hbRate.children || paxes.filter(p => p.type === 'CH').length || 0,
-            childAges: childAges,
-            netPrice: parseFloat(hbRate.net) || 0,
-            sellingPrice: parseFloat(hbRate.net) || 0,
-            paymentType: hbRate.paymentType || 'AT_HOTEL',
-            cancellationPolicies: hbRate.cancellationPolicies || [],
-            taxes: hbRate.taxes || null,
-            rateClass: hbRate.rateClass || null,
-            paxes: paxes
-          };
-        }),
+        rooms: builtRooms,
         hotelAddress: {
-          city: hbHotel?.destinationName || userData.city || '',
-          zone: hbHotel?.zoneName || '',
+          city: hotelContent?.city?.content || hotelContent?.city || bookingData.city || userData.city || '',
+          zone: hotelContent?.zone?.content || hotelContent?.zone || '',
           street: hotelContent?.address?.content || hotelContent?.address?.street || '',
-          fullAddress: hotelContent ? [hotelContent.address?.content || hotelContent.address?.street, hotelContent.city, hotelContent.postalCode].filter(Boolean).join(', ') : ''
+          fullAddress: hotelContent
+            ? [hotelContent.address?.content || hotelContent.address?.street, hotelContent.city?.content || hotelContent.city, hotelContent.postalCode].filter(Boolean).join(', ')
+            : (bookingData.address || '')
         },
         hotelPhone: hotelContent?.phones?.[0]?.phoneNumber || null,
         hotelEmail: hotelContent?.email || null,
@@ -2563,12 +2592,12 @@ module.exports.createPayOnSiteBooking = asyncErrorHandler(async (req, res) => {
           ...(hotelContent?.roomPaidFacilities || [])
         ],
         description: hotelContent?.description || null,
-        confirmationNumber: hotelbedsReference || null,
-        supplier: hbSupplier ? { name: hbSupplier.name, vatNumber: hbSupplier.vatNumber } : null,
-        invoiceCompany: hbInvoice ? { code: hbInvoice.code, company: hbInvoice.company, registrationNumber: hbInvoice.registrationNumber } : null,
-        totalNet: hbBooking?.totalNet || null,
-        currency: bookingCurrency,
-        remark: hbBooking?.remark || null
+        confirmationNumber: null,
+        supplier: null,
+        invoiceCompany: null,
+        totalNet: null,
+        currency: currency,
+        remark: bookingData.specialRequests || null
       },
       guestInfo: {
         primaryGuest: {
