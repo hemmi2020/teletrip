@@ -90,6 +90,29 @@ async function confirmHotelbedsBooking(bookingData, rateKey) {
     if (agent) fetchOptions.agent = agent;
 
     const response = await fetch(`${HOTELBEDS_BASE_URL}/hotel-api/1.0/bookings`, fetchOptions);
+    const responseText = await response.text();
+    const responseData = responseText ? JSON.parse(responseText) : null;
+
+    // Log for certification
+    addLog({
+      step: 'Booking',
+      request: {
+        method: 'POST',
+        url: `${HOTELBEDS_BASE_URL}/hotel-api/1.0/bookings`,
+        headers: { 'Content-Type': 'application/json', 'Api-key': HOTELBEDS_API_KEY, 'X-Signature': signature, 'Accept': 'application/json' },
+        body: hotelbedsRequest
+      },
+      response: {
+        status: response.status,
+        body: responseData
+      }
+    });
+
+    if (!response.ok) {
+        throw new Error(`Hotelbeds booking failed: ${responseText}`);
+    }
+
+    return responseData;
 
     if (!response.ok) {
         const errorText = await response.text();
