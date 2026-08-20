@@ -277,7 +277,7 @@ const getAllUsers = asyncErrorHandler(async (req, res) => {
 
   // Filters
   if (status && status.trim()) {
-    query.isActive = status === 'active';
+    query.status = status;
   }
   if (role && role.trim()) {
     query.role = role;
@@ -451,7 +451,7 @@ const getAllBookings = asyncErrorHandler(async (req, res) => {
 
   // Filters
   if (status && status.trim()) {
-    query.isActive = status === 'active';
+    query.status = status;
   }
   if (hotelId && hotelId.trim()) {
     query.hotel = hotelId;

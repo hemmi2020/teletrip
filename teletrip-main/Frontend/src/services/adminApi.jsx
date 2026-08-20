@@ -50,12 +50,9 @@ export const AdminDashboardAPI = {
   // ========== DASHBOARD OVERVIEW ==========
   getDashboardOverview: async (period = '30d') => {
     try {
-      // ✅ FIXED: Changed to /api/admin/dashboard
       const response = await adminApi.get(`/api/admin/dashboard?period=${period}`);
-      console.log('📊 Dashboard data:', response.data);
       return { success: true, data: response.data.data };
     } catch (error) {
-      console.error('Dashboard overview error:', error.response || error);
       return { 
         success: false, 
         error: error.response?.data?.message || 'Failed to load dashboard' 
@@ -306,9 +303,9 @@ export const AdminDashboardAPI = {
     }
   },
 
-  markPayOnSiteAsPaid: async (paymentId) => {
+  markPayOnSiteAsPaid: async (paymentId, body = {}) => {
     try {
-      const response = await adminApi.put(`/api/admin/payments/${paymentId}/mark-paid`);
+      const response = await adminApi.put(`/api/admin/payments/${paymentId}/mark-paid`, body);
       return { success: true, data: response.data.data };
     } catch (error) {
       return { 
@@ -545,6 +542,7 @@ export const AdminDashboardAPI = {
       };
     }
   },
+
   bulkUpdateUsers: async (userIds, action, data = {}) => {
     try {
       const response = await adminApi.post(`/api/admin/users/bulk/${action}`, {

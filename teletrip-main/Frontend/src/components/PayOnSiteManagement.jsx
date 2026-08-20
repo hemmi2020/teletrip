@@ -54,7 +54,10 @@ const PayOnSiteManagement = ({ showToast }) => {
     setShowConfirmModal(false);
     
     try {
-      const result = await AdminDashboardAPI.markPayOnSiteAsPaid(selectedBooking._id);
+      const result = await AdminDashboardAPI.markPayOnSiteAsPaid(selectedBooking._id, {
+        paymentMethod,
+        notes
+      });
       
       if (result.success) {
         const hasHotelbedsRef = result.data?.hotelbedsReference;

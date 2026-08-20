@@ -77,7 +77,7 @@ const BookingVoucher = ({ booking, onClose }) => {
   const invoiceCompany = hb.invoiceCompany || hbBooking?.invoiceCompany;
   
   // ⚠️ Critical: confirmationNumber must be the HOTELBEDS reference (148-XXXXXXX), not internal ref
-  const hotelbedsRef = hb.confirmationNumber || hbBooking?.reference;
+  const hotelbedsRef = hb.confirmationNumber || hbBooking?.reference || booking.hotelBooking?.hotelbedsReference || booking.hotelBooking?.confirmationNumber || '';
   const confirmationNumber = hotelbedsRef || booking.bookingReference;
   
   const rooms = hbHotel.rooms || hb.rooms || hbBooking?.hotel?.rooms || [];
@@ -162,17 +162,20 @@ const BookingVoucher = ({ booking, onClose }) => {
                 <span style={{ fontWeight: 600, fontSize: '13px' }}>{fullAddress}</span>
               </div>
             )}
-            {(hb.hotelPhone || hbHotel.phones?.[0]?.phoneNumber || hbBooking?.hotel?.phones?.[0]?.phoneNumber) ? (
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid #f5f5f5' }}>
-                <span style={{ color: '#666', fontSize: '13px' }}>Phone</span>
-                <span style={{ fontWeight: 600, fontSize: '13px' }}>{hb.hotelPhone || hbHotel.phones?.[0]?.phoneNumber || hbBooking?.hotel?.phones?.[0]?.phoneNumber}</span>
-              </div>
-            ) : (
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid #f5f5f5' }}>
-                <span style={{ color: '#666', fontSize: '13px' }}>Phone</span>
-                <span style={{ fontWeight: 500, fontSize: '13px', color: '#999' }}>Contact hotel directly</span>
-              </div>
-            )}
+            {(() => {
+              const phone = hb.hotelPhone || hbHotel.phones?.[0]?.phoneNumber || hbBooking?.hotel?.phones?.[0]?.phoneNumber || booking.hotelBooking?.hotelPhone || booking.hotel?.contactInfo?.phone || booking.hotel?.phones?.[0]?.phoneNumber || '';
+              return phone ? (
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid #f5f5f5' }}>
+                  <span style={{ color: '#666', fontSize: '13px' }}>Phone</span>
+                  <span style={{ fontWeight: 600, fontSize: '13px' }}>{phone}</span>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid #f5f5f5' }}>
+                  <span style={{ color: '#666', fontSize: '13px' }}>Phone</span>
+                  <span style={{ fontWeight: 500, fontSize: '13px', color: '#999' }}>Contact hotel directly</span>
+                </div>
+              );
+            })()}
             {destinationName && (
               <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid #f5f5f5' }}>
                 <span style={{ color: '#666', fontSize: '13px' }}>Destination</span>
@@ -225,7 +228,7 @@ const BookingVoucher = ({ booking, onClose }) => {
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid #f5f5f5' }}>
               <span style={{ color: '#666', fontSize: '13px' }}>Status</span>
-              <span style={{ fontWeight: 600, fontSize: '13px', color: (booking.status === 'confirmed' || hotelbedsRef) ? '#28a745' : '#f59e0b' }}>{(booking.status === 'confirmed' || hotelbedsRef) ? 'CONFIRMED' : 'PENDING'}</span>
+              <span style={{ fontWeight: 600, fontSize: '13px', color: (booking.status === 'confirmed' || booking.status === 'completed' || confirmationNumber?.startsWith('H') || hotelbedsRef) ? '#28a745' : '#f59e0b' }}>{(booking.status === 'confirmed' || booking.status === 'completed' || confirmationNumber?.startsWith('H') || hotelbedsRef) ? 'CONFIRMED' : 'PENDING'}</span>
             </div>
           </div>
 

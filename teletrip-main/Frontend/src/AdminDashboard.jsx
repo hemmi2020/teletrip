@@ -69,6 +69,7 @@ import DestinationManagement from './components/DestinationManagement';
 import HotelContentSyncTab from './components/HotelContentSyncTab';
 import HotelbedsToolsTab from './components/HotelbedsToolsTab';
 import PayOnSiteManagement from './components/PayOnSiteManagement';
+import BookingVoucher from './components/BookingVoucher';
 import './styles/admin-responsive.css';
 
 // Toast Component
@@ -172,6 +173,7 @@ const AdminDashboard = () => {
   const [selectedItem, setSelectedItem] = useState(null);
   const [modalType, setModalType] = useState(null);
   const [bookingManagementModal, setBookingManagementModal] = useState(null);
+  const [voucherBooking, setVoucherBooking] = useState(null);
 
   // Bulk actions state
   const [selectedIds, setSelectedIds] = useState([]);
@@ -443,9 +445,7 @@ const AdminDashboard = () => {
         showToast(result.error, 'error');
       }
     } else if (activeTab === 'payments') {
-      const result = filters.status === 'pay-on-site'
-        ? await AdminDashboardAPI.getPayOnSiteBookings(filters)
-        : await AdminDashboardAPI.getAllPayments(filters);
+      const result = await AdminDashboardAPI.getAllPayments(filters);
       
       if (result.success) {
         setData({
@@ -728,26 +728,11 @@ const AdminDashboard = () => {
           showToast(result.error, 'error');
         }
       } else if (action === 'voucher') {
-        const result = await AdminDashboardAPI.generateVoucher(bookingId);
-        if (result.success) {
-          const voucher = result.data;
-          const voucherText = `
-BOOKING VOUCHER
-================
-Ref: ${voucher.bookingReference}
-Guest: ${voucher.guestName}
-Email: ${voucher.email}
-Amount: PKR ${voucher.totalAmount}
-          `;
-          const blob = new Blob([voucherText], { type: 'text/plain' });
-          const url = window.URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = `voucher-${voucher.bookingReference}.txt`;
-          a.click();
-          showToast('Voucher downloaded', 'success');
+        const result = await AdminDashboardAPI.getBookingDetails(bookingId);
+        if (result.success && result.data) {
+          setVoucherBooking(result.data);
         } else {
-          showToast(result.error, 'error');
+          showToast(result.error || 'Failed to load booking for voucher', 'error');
         }
       } else {
         const result = await AdminDashboardAPI.updateBookingStatus(bookingId, {
@@ -819,7 +804,10 @@ Amount: PKR ${voucher.totalAmount}
         }
       } else if (action === 'markPaid') {
         if (window.confirm('Mark this pay-on-site payment as paid?')) {
-          const result = await AdminDashboardAPI.markPayOnSiteAsPaid(paymentId);
+          const result = await AdminDashboardAPI.markPayOnSiteAsPaid(paymentId, {
+            paymentMethod: 'cash',
+            notes: 'Marked as paid from admin payments table'
+          });
           if (result.success) {
             showToast('Payment marked as paid', 'success');
             setFilters(prev => ({ ...prev, status: '' }));
@@ -1592,6 +1580,14 @@ Amount: PKR ${voucher.totalAmount}
         ticket={selectedItem}
         onSendMessage={handleSendTicketMessage}
       />
+
+      {/* Booking Voucher Modal */}
+      {voucherBooking && (
+        <BookingVoucher 
+          booking={voucherBooking} 
+          onClose={() => setVoucherBooking(null)} 
+        />
+      )}
 
       {/* Header */}
       <header className="admin-header bg-white border-b border-gray-200 sticky top-0 z-40">
