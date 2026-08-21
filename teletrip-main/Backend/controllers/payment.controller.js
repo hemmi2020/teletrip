@@ -2531,31 +2531,7 @@ module.exports.createPayOnSiteBooking = asyncErrorHandler(async (req, res) => {
         paxes
       });
     });
-    const builtRooms = [];
-    (bookingData.items || []).forEach((item, idx) => {
-      const hbRoom = hotelbedsBookingRequest?.rooms?.[idx];
-      const paxes = hbRoom?.paxes || [];
-      const childAges = paxes.filter(p => p.type === 'CH').map(p => p.age);
-      const adults = paxes.filter(p => p.type === 'AD').length || item.guests || bookingData.guests || 1;
-      const children = paxes.filter(p => p.type === 'CH').length || item.children || 0;
 
-      builtRooms.push({
-        roomName: item.roomName || item.name || `Room ${idx + 1}`,
-        roomCode: item.roomCode || null,
-        boardName: item.boardName || item.board || 'Room Only',
-        rateComments: item.rateComments || null,
-        adults,
-        children,
-        childAges,
-        netPrice: parseFloat(item.price) || parseFloat(item.netPrice) || 0,
-        sellingPrice: parseFloat(item.price) || parseFloat(item.netPrice) || 0,
-        paymentType: 'AT_HOTEL',
-        cancellationPolicies: item.cancellationPolicies || [],
-        taxes: item.taxes || null,
-        rateClass: item.rateClass || null,
-        paxes
-      });
-    });
 
     // If no items but hotelbedsBookingRequest has rooms, build from that
     if (builtRooms.length === 0 && hotelbedsBookingRequest?.rooms) {
