@@ -408,40 +408,6 @@ const Checkout = () => {
         bookingId: bookingId,
         orderId: `ORDER_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
       };
-      const paymentPayload = {
-        userData: {
-          firstName: billingInfo.firstName.trim(),
-          lastName: billingInfo.lastName.trim(),
-          email: billingInfo.email.trim().toLowerCase(),
-          phone: billingInfo.phone.trim().replace(/\s+/g, ''),
-          address: billingInfo.address.trim(),
-          city: billingInfo.city.trim(),
-          state: billingInfo.state,
-          country: billingInfo.country,
-          postalCode: billingInfo.postalCode || ''
-        },
-        bookingData: {
-          hotelName: isActivity ? firstItem.name : (firstItem?.hotelName || 'Hotel Booking'),
-          checkIn: firstItem?.checkIn,
-          checkOut: firstItem?.checkOut,
-          items: checkoutItems.map(item => ({
-            name: item.type === 'activity' ? item.name : (item.hotelName || 'Hotel Booking'),
-            quantity: 1,
-            price: parseFloat(item.price || item.totalPrice || 0)
-          })),
-          itinerary: checkoutItems.map(item => 
-            item.type === 'activity' 
-              ? `${item.name} - ${item.from} to ${item.to}`
-              : `${item.hotelName} - ${item.checkIn} to ${item.checkOut}`
-          ).join('; '),
-          hotelbedsBookingRequest: hotelbedsBookingRequest
-        },
-        amount: currencyConversion ? currencyConversion.totalPKR : parseFloat(totalAmount),
-        currency: 'PKR',
-        currencyConversion: currencyConversion, // Store conversion details
-        bookingId: bookingId,
-        orderId: `ORDER_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-      };
 
       console.log('💳 Initiating payment with payload:', paymentPayload);
 
