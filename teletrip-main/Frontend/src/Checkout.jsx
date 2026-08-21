@@ -683,35 +683,6 @@ const handlePayOnSiteBooking = async () => {
         currencyConversion: currencyConversion,
         bookingId: `HOTELBEDS_${Date.now()}`
       };
-      const payOnSitePayload = {
-        userData: {
-          firstName: billingInfo.firstName.trim(),
-          lastName: billingInfo.lastName.trim(),
-          email: billingInfo.email.trim().toLowerCase(),
-          phone: billingInfo.phone.trim().replace(/\s+/g, ''),
-          address: billingInfo.address.trim(),
-          city: billingInfo.city.trim(),
-          state: billingInfo.state,
-          country: billingInfo.country,
-          postalCode: billingInfo.postalCode || ''
-        },
-        bookingData: {
-          hotelName: firstItem?.hotelName || 'Hotel Booking',
-          checkIn: firstItem?.checkIn,
-          checkOut: firstItem?.checkOut,
-          guests: checkoutItems.reduce((sum, item) => sum + (item.adults || 0) + (item.children || 0), 0),
-          items: checkoutItems.map(item => ({
-            name: item.hotelName || item.roomName || 'Hotel Booking',
-            quantity: 1,
-            price: parseFloat(item.price || item.totalPrice || 0)
-          })),
-          hotelbedsBookingRequest: hotelbedsBookingRequest
-        },
-        amount: parseFloat(totalAmount),
-        currency: 'EUR',
-        currencyConversion: currencyConversion,
-        bookingId: `HOTELBEDS_${Date.now()}`
-      };
       
       console.log('📤 Sending Pay on Site booking with Hotelbeds request');
       bookingResponse = await axios.post(
