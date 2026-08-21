@@ -391,6 +391,41 @@ const Checkout = () => {
           checkOut: firstItem?.checkOut,
           items: checkoutItems.map(item => ({
             name: item.type === 'activity' ? item.name : (item.hotelName || 'Hotel Booking'),
+            roomName: item.roomName || null,
+            quantity: 1,
+            price: parseFloat(item.totalPrice || item.net || item.price || 0)
+          })),
+          itinerary: checkoutItems.map(item => 
+            item.type === 'activity' 
+              ? `${item.name} - ${item.from} to ${item.to}`
+              : `${item.hotelName} - ${item.checkIn} to ${item.checkOut}`
+          ).join('; '),
+          hotelbedsBookingRequest: hotelbedsBookingRequest
+        },
+        amount: currencyConversion ? currencyConversion.totalPKR : parseFloat(totalAmount),
+        currency: 'PKR',
+        currencyConversion: currencyConversion, // Store conversion details
+        bookingId: bookingId,
+        orderId: `ORDER_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      };
+      const paymentPayload = {
+        userData: {
+          firstName: billingInfo.firstName.trim(),
+          lastName: billingInfo.lastName.trim(),
+          email: billingInfo.email.trim().toLowerCase(),
+          phone: billingInfo.phone.trim().replace(/\s+/g, ''),
+          address: billingInfo.address.trim(),
+          city: billingInfo.city.trim(),
+          state: billingInfo.state,
+          country: billingInfo.country,
+          postalCode: billingInfo.postalCode || ''
+        },
+        bookingData: {
+          hotelName: isActivity ? firstItem.name : (firstItem?.hotelName || 'Hotel Booking'),
+          checkIn: firstItem?.checkIn,
+          checkOut: firstItem?.checkOut,
+          items: checkoutItems.map(item => ({
+            name: item.type === 'activity' ? item.name : (item.hotelName || 'Hotel Booking'),
             quantity: 1,
             price: parseFloat(item.price || item.totalPrice || 0)
           })),
@@ -611,6 +646,43 @@ const handlePayOnSiteBooking = async () => {
       };
       
       // Send to Pay at Office endpoint with Hotelbeds request
+      const payOnSitePayload = {
+        userData: {
+          firstName: billingInfo.firstName.trim(),
+          lastName: billingInfo.lastName.trim(),
+          email: billingInfo.email.trim().toLowerCase(),
+          phone: billingInfo.phone.trim().replace(/\s+/g, ''),
+          address: billingInfo.address.trim(),
+          city: billingInfo.city.trim(),
+          state: billingInfo.state,
+          country: billingInfo.country,
+          postalCode: billingInfo.postalCode || ''
+        },
+        bookingData: {
+          hotelName: firstItem?.hotelName || 'Hotel Booking',
+          checkIn: firstItem?.checkIn,
+          checkOut: firstItem?.checkOut,
+          guests: checkoutItems.reduce((sum, item) => sum + (item.adults || 0) + (item.children || 0), 0),
+          items: checkoutItems.map(item => ({
+            name: item.hotelName || item.roomName || 'Hotel Booking',
+            roomName: item.roomName || 'Room',
+            quantity: 1,
+            price: parseFloat(item.totalPrice || item.net || item.price || 0),
+            totalPrice: parseFloat(item.totalPrice || item.net || item.price || 0),
+            adults: item.adults || 2,
+            children: item.children || 0,
+            childAges: item.childAges || [],
+            nights: item.nights || 1,
+            boardName: item.boardName || 'Room Only',
+            rateKey: item.rateKey || null
+          })),
+          hotelbedsBookingRequest: hotelbedsBookingRequest
+        },
+        amount: parseFloat(totalAmount),
+        currency: 'EUR',
+        currencyConversion: currencyConversion,
+        bookingId: `HOTELBEDS_${Date.now()}`
+      };
       const payOnSitePayload = {
         userData: {
           firstName: billingInfo.firstName.trim(),

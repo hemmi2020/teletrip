@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Printer, MapPin, Phone, Mail, Calendar, Users, CreditCard, AlertTriangle, Building2, BedDouble, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { Printer, MapPin, Phone, Mail, Calendar, Users, CreditCard, AlertTriangle, Building2, BedDouble, Clock, CheckCircle, XCircle, Ban } from 'lucide-react';
 
 const BookingVoucher = ({ booking, onClose }) => {
   const voucherRef = useRef(null);
@@ -51,12 +51,8 @@ const BookingVoucher = ({ booking, onClose }) => {
             * { box-sizing: border-box; }
             body {
               font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-              padding: 0;
-              margin: 0;
-              color: #1f2937;
-              font-size: 13px;
-              line-height: 1.5;
-              background: #fff;
+              padding: 0; margin: 0; color: #1f2937; font-size: 13px;
+              line-height: 1.5; background: #fff;
             }
             .voucher-container { max-width: 800px; margin: 0 auto; padding: 24px; }
             .voucher-header {
@@ -68,12 +64,14 @@ const BookingVoucher = ({ booking, onClose }) => {
             .voucher-header-right { text-align: right; }
             .voucher-header-right .conf-label { font-size: 10px; text-transform: uppercase; color: #64748b; letter-spacing: 1px; }
             .voucher-header-right .conf-number { font-size: 18px; font-weight: 700; color: #0f172a; font-family: monospace; }
-            .voucher-header-right .status-badge {
-              display: inline-block; margin-top: 6px; padding: 3px 10px; border-radius: 4px;
-              font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
+            .status-banner {
+              padding: 8px 14px; border-radius: 6px; margin-bottom: 16px;
+              font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+              display: flex; align-items: center; gap: 8px;
             }
-            .status-confirmed { background: #dcfce7; color: #166534; }
-            .status-pending { background: #fef3c7; color: #92400e; }
+            .status-confirmed { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+            .status-pending { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+            .status-cancelled { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
             .section { margin-bottom: 20px; page-break-inside: avoid; }
             .section-title {
               font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
@@ -90,13 +88,22 @@ const BookingVoucher = ({ booking, onClose }) => {
               background: #f8fafc; page-break-inside: avoid;
             }
             .room-card-header {
-              display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;
+              display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;
             }
             .room-card-header h4 { margin: 0; font-size: 13px; color: #0f172a; }
-            .room-card-header .room-price { font-weight: 700; color: #0f172a; font-size: 14px; }
+            .room-price-block { text-align: right; }
+            .room-price-block .total { font-weight: 700; color: #0f172a; font-size: 15px; }
+            .room-price-block .per-night { font-size: 10px; color: #64748b; }
+            .room-price-block .pkr { font-size: 11px; color: #059669; font-weight: 600; }
             .room-meta { display: flex; flex-wrap: wrap; gap: 12px; font-size: 11px; color: #475569; margin-bottom: 8px; }
             .room-meta span { display: flex; align-items: center; gap: 4px; }
-            .child-ages { font-size: 11px; color: #475569; margin-top: 4px; }
+            .pax-block {
+              background: #fff; border: 1px solid #e2e8f0; border-radius: 6px;
+              padding: 8px 12px; margin-top: 8px;
+            }
+            .pax-block .pax-title { font-size: 10px; text-transform: uppercase; color: #64748b; letter-spacing: 0.5px; margin-bottom: 4px; }
+            .pax-block .pax-row { font-size: 12px; color: #334155; }
+            .child-ages { font-size: 11px; color: #92400e; margin-top: 2px; font-weight: 500; }
             .rate-comments {
               background: #eff6ff; border-left: 3px solid #3b82f6; padding: 8px 12px;
               margin-top: 10px; font-size: 11px; color: #334155; line-height: 1.5; border-radius: 0 4px 4px 0;
@@ -115,6 +122,12 @@ const BookingVoucher = ({ booking, onClose }) => {
               display: inline-block; padding: 2px 8px; background: #fee2e2; color: #991b1b;
               border-radius: 4px; font-size: 10px; margin: 4px 4px 0 0;
             }
+            .no-facilities {
+              background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px;
+              padding: 10px 12px; margin-bottom: 20px; page-break-inside: avoid;
+              display: flex; align-items: center; gap: 8px;
+            }
+            .no-facilities span { font-size: 11px; color: #166534; font-weight: 500; }
             .supplier-notice {
               background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px;
               padding: 12px; margin-top: 16px; font-size: 10px; line-height: 1.6; color: #334155;
@@ -188,7 +201,7 @@ const BookingVoucher = ({ booking, onClose }) => {
   const fullAddress = addressParts.length > 0 ? addressParts[0] : (hb.hotelAddress?.city || zoneName || destinationName || '');
 
   // Totals
-  const totalNetEUR = parseFloat(hbBooking?.totalNet) || parseFloat(hb.totalNet) || parseFloat(hbHotel?.totalNet) || 0;
+  const totalNetEUR = parseFloat(hbBooking?.totalNet) || parseFloat(hb.totalNet) || parseFloat(hbHotel?.totalNet) || rooms.reduce((sum, r) => sum + parseFloat(r.netPrice || r.sellingPrice || 0), 0);
   const totalPKR = booking.pricing?.totalAmount || 0;
   const pkrConverted = formatPKR(totalNetEUR);
   const displayTotal = totalPKR > 100 ? `PKR ${Math.round(totalPKR).toLocaleString()}` : (pkrConverted || `PKR ${Math.round(totalNetEUR * 310).toLocaleString()}`);
@@ -202,7 +215,12 @@ const BookingVoucher = ({ booking, onClose }) => {
   const supplierVAT = supplier?.vatNumber || invoiceCompany?.registrationNumber || hbBooking?.invoiceCompany?.registrationNumber || '100035906500003';
   const supplierNotice = `Payable through ${supplierName}, acting as agent for the service operating company, details of which can be provided upon request. VAT: ${supplierVAT} Reference: ${confirmationNumber}`;
 
-  const isConfirmed = booking.status === 'confirmed' || booking.status === 'completed' || confirmationNumber?.startsWith('H') || hotelbedsRef;
+  // Status logic
+  const isConfirmed = booking.status === 'confirmed' || booking.status === 'completed';
+  const isCancelled = booking.status === 'cancelled';
+  const isReserved = booking.status === 'pending' && paymentMethod === 'pay_on_site';
+  const statusLabel = isCancelled ? 'Cancelled' : isConfirmed ? 'Confirmed' : isReserved ? 'Reserved — Payment Pending' : 'Pending';
+  const statusColor = isCancelled ? 'bg-red-100 text-red-700' : isConfirmed ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700';
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 no-print">
@@ -229,11 +247,21 @@ const BookingVoucher = ({ booking, onClose }) => {
             <div className="text-right">
               <div className="text-[10px] uppercase text-slate-500 tracking-wider">Confirmation #</div>
               <div className="text-lg font-bold text-slate-900 font-mono">{confirmationNumber}</div>
-              <span className={`inline-block mt-1 px-2.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide ${isConfirmed ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
-                {isConfirmed ? 'Confirmed' : 'Pending'}
+              <span className={`inline-block mt-1 px-2.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide ${statusColor}`}>
+                {statusLabel}
               </span>
             </div>
           </div>
+
+          {/* Status Banner */}
+          {isReserved && (
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-5 flex items-center gap-2">
+              <Clock className="w-4 h-4 text-amber-600 flex-shrink-0" />
+              <p className="text-xs text-amber-800 font-medium">
+                This booking is RESERVED. Payment must be completed at the Telitrip office before check-in. The room will be confirmed with the hotel once payment is received.
+              </p>
+            </div>
+          )}
 
           {/* Two Column Layout */}
           <div className="flex flex-col md:flex-row gap-6 mb-6">
@@ -311,7 +339,7 @@ const BookingVoucher = ({ booking, onClose }) => {
           </div>
 
           {/* Paid Facilities - Mandatory */}
-          {paidFacilities.length > 0 && (
+          {paidFacilities.length > 0 ? (
             <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-5">
               <h4 className="text-[11px] font-bold uppercase text-red-800 tracking-wider mb-1 flex items-center gap-1.5">
                 <AlertTriangle className="w-3.5 h-3.5" /> Facilities with Additional Charges
@@ -324,6 +352,13 @@ const BookingVoucher = ({ booking, onClose }) => {
                   </span>
                 ))}
               </div>
+            </div>
+          ) : (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-5 flex items-center gap-2">
+              <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
+              <p className="text-[11px] text-green-800 font-medium">
+                All facilities included in this rate are complimentary. No additional charges apply.
+              </p>
             </div>
           )}
 
@@ -340,25 +375,50 @@ const BookingVoucher = ({ booking, onClose }) => {
               const rateComments = room.rateComments || '';
               const taxes = room.taxes;
               const roomName = room.roomName || room.name || `Room ${idx + 1}`;
+              const perNight = nights > 0 ? netPrice / nights : netPrice;
 
               return (
                 <div key={idx} className="border border-slate-200 rounded-lg p-4 mb-3 bg-slate-50">
+                  {/* Room header with name and price */}
                   <div className="flex justify-between items-start mb-2">
                     <h4 className="text-sm font-bold text-slate-900">
                       {rooms.length > 1 ? `Room ${idx + 1}: ` : ''}{roomName}
                     </h4>
                     <div className="text-right">
-                      <div className="text-sm font-bold text-slate-900">{formatPKR(netPrice) || `PKR ${Math.round(netPrice * 310).toLocaleString()}`}</div>
-                      <div className="text-[10px] text-slate-500">{bookingCurrency} {netPrice.toFixed(2)}</div>
+                      <div className="text-[15px] font-bold text-slate-900">
+                        {bookingCurrency} {netPrice.toFixed(2)}
+                      </div>
+                      <div className="text-[10px] text-slate-500">
+                        {nights} night{nights !== 1 ? 's' : ''} × {bookingCurrency} {perNight.toFixed(2)} / night
+                      </div>
+                      {formatPKR(netPrice) && (
+                        <div className="text-[11px] text-green-700 font-semibold mt-0.5">
+                          {formatPKR(netPrice)}
+                        </div>
+                      )}
                     </div>
                   </div>
+
+                  {/* Board and basic meta */}
                   <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600 mb-2">
                     <span className="flex items-center gap-1"><BedDouble className="w-3 h-3" /> {boardName}</span>
-                    <span className="flex items-center gap-1"><Users className="w-3 h-3" /> {adults} Adult{adults !== 1 ? 's' : ''}{children > 0 ? `, ${children} Child${children !== 1 ? 'ren' : ''}` : ''}</span>
+                    <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {nights} night{nights !== 1 ? 's' : ''}</span>
+                  </div>
+
+                  {/* Pax block - prominently displayed */}
+                  <div className="bg-white border border-slate-200 rounded-md p-2.5 mt-2">
+                    <div className="text-[10px] uppercase text-slate-500 tracking-wider mb-1">Occupancy</div>
+                    <div className="text-xs text-slate-800">
+                      <span className="font-semibold">{adults}</span> Adult{adults !== 1 ? 's' : ''}
+                      {children > 0 && (
+                        <>, <span className="font-semibold">{children}</span> Child{children !== 1 ? 'ren' : ''}</>
+                      )}
+                    </div>
                     {childAges.length > 0 && (
-                      <span className="flex items-center gap-1 text-amber-700">
-                        <Clock className="w-3 h-3" /> Children Ages: {childAges.join(', ')}
-                      </span>
+                      <div className="text-[11px] text-amber-700 font-medium mt-1 flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        Child Age{childAges.length !== 1 ? 's' : ''}: {childAges.map(a => `${a} year${a !== 1 ? 's' : ''}`).join(', ')}
+                      </div>
                     )}
                   </div>
 
@@ -424,6 +484,11 @@ const BookingVoucher = ({ booking, onClose }) => {
               <span>Payment Method</span>
               <span className="font-medium text-slate-700">{paymentMethod === 'pay_on_site' ? 'Pay at Hotel/Office' : 'Prepaid (Credit Card)'}</span>
             </div>
+            {isReserved && (
+              <div className="mt-2 p-2 bg-amber-100 border border-amber-300 rounded text-[11px] text-amber-900 font-medium">
+                ⚠ Payment not yet received. Booking will be confirmed once payment is completed.
+              </div>
+            )}
           </div>
 
           {/* Supplier Notice - Mandatory */}

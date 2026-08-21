@@ -2508,6 +2508,34 @@ module.exports.createPayOnSiteBooking = asyncErrorHandler(async (req, res) => {
       const hbRoom = hotelbedsBookingRequest?.rooms?.[idx];
       const paxes = hbRoom?.paxes || [];
       const childAges = paxes.filter(p => p.type === 'CH').map(p => p.age);
+      // Prefer per-room pax from item (frontend cart), fallback to paxes from hotelbeds request
+      const adults = item.adults || paxes.filter(p => p.type === 'AD').length || bookingData.guests || 1;
+      const children = item.children || paxes.filter(p => p.type === 'CH').length || 0;
+      // Use totalPrice (full room cost) not price (per-night)
+      const roomTotal = parseFloat(item.totalPrice) || parseFloat(item.price) || parseFloat(item.netPrice) || 0;
+
+      builtRooms.push({
+        roomName: item.roomName || item.name || `Room ${idx + 1}`,
+        roomCode: item.roomCode || null,
+        boardName: item.boardName || item.board || 'Room Only',
+        rateComments: item.rateComments || null,
+        adults,
+        children,
+        childAges: item.childAges?.length > 0 ? item.childAges : (childAges.length > 0 ? childAges : []),
+        netPrice: roomTotal,
+        sellingPrice: roomTotal,
+        paymentType: 'AT_HOTEL',
+        cancellationPolicies: item.cancellationPolicies || [],
+        taxes: item.taxes || null,
+        rateClass: item.rateClass || null,
+        paxes
+      });
+    });
+    const builtRooms = [];
+    (bookingData.items || []).forEach((item, idx) => {
+      const hbRoom = hotelbedsBookingRequest?.rooms?.[idx];
+      const paxes = hbRoom?.paxes || [];
+      const childAges = paxes.filter(p => p.type === 'CH').map(p => p.age);
       const adults = paxes.filter(p => p.type === 'AD').length || item.guests || bookingData.guests || 1;
       const children = paxes.filter(p => p.type === 'CH').length || item.children || 0;
 
@@ -2670,7 +2698,19 @@ module.exports.createPayOnSiteBooking = asyncErrorHandler(async (req, res) => {
         hotelName: bookingData.hotelName,
         checkIn: bookingData.checkIn,
         checkOut: bookingData.checkOut,
-        guests: bookingData.guests
+        guests: bookingData.guests,
+        rooms: bookingData.items?.length || 1,
+        roomsList: (bookingData.items || []).map((item, idx) => ({
+          name: item.roomName || item.name || `Room ${idx + 1}`,
+          boardName: item.boardName || item.board || 'Room Only',
+          adults: item.adults || item.guests || 1,
+          children: item.children || 0,
+          childAges: item.childAges || [],
+          netPrice: parseFloat(item.totalPrice) || parseFloat(item.price) || parseFloat(item.netPrice) || 0,
+          nights: item.nights || nights || 1,
+          rateComments: item.rateComments || null
+        })),
+        totalNetEUR: (bookingData.items || []).reduce((sum, item) => sum + (parseFloat(item.totalPrice) || parseFloat(item.price) || parseFloat(item.netPrice) || 0), 0)
       }
     }, 'Pay at Office booking created successfully', 201);
 
