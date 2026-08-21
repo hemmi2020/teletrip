@@ -688,8 +688,13 @@ const handlePayOnSiteBooking = async () => {
               rooms: checkoutItems.length,
               roomsList: checkoutItems.map((item, idx) => ({
                 name: item.roomName || `Room ${idx + 1}`,
+                boardName: item.boardName || 'Room Only',
                 adults: item.adults || 2,
-                children: item.children || 0
+                children: item.children || 0,
+                childAges: item.childAges || [],
+                netPrice: parseFloat(item.totalPrice || item.net || item.price || 0),
+                nights: item.nights || 1,
+                rateComments: item.rateComments || null
               }))
             },
             bookingType: firstItem.type === 'activity' ? 'activity' : 'hotel'
