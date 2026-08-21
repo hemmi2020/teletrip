@@ -587,6 +587,8 @@ const [reviewsModal, setReviewsModal] = useState({
     const adults = parseInt(searchParams.get("adults") || "2");
     const children = parseInt(searchParams.get("children") || "0");
     const rooms = parseInt(searchParams.get("rooms") || "1");
+    const childAgesParam = searchParams.get("childAges");
+    const childAges = childAgesParam ? childAgesParam.split(',').map(age => parseInt(age)).filter(a => !isNaN(a)) : [];
     const nights = Math.ceil((new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60 * 24));
     const totalFromAPI = parseFloat(rate.net);
     const pricePerNight = nights > 0 ? (totalFromAPI / nights) : totalFromAPI;
@@ -598,6 +600,7 @@ const [reviewsModal, setReviewsModal] = useState({
       roomCode: room.code, roomName: room.name, rateKey: rate.rateKey,
       price: pricePerNight, pricePerNight, currency: hotel.currency || 'EUR',
       checkIn, checkOut, nights, guests: adults + children, adults, children, rooms,
+      childAges,
       location: `${hotel.zoneName}, ${hotel.destinationName}`,
       boardName: rate.boardName, rateClass: rate.rateClass, paymentType: rate.paymentType,
       cancellationPolicies: rate.cancellationPolicies || [],

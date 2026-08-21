@@ -342,27 +342,24 @@ const Checkout = () => {
             surname: billingInfo.lastName
           },
           rooms: roomsWithFreshKeys.map(({ item, rateKey, roomId }) => {
-            // Parse occupancy from rateKey format: ...||rooms~adults~children~childAge1,childAge2||...
-            const occupancyMatch = rateKey.match(/\|\|(\d+)~(\d+)~(\d+)(?:~([^|]*))?/);
-            const rateAdults = occupancyMatch ? parseInt(occupancyMatch[2]) : (item.adults || 2);
-            const rateChildren = occupancyMatch ? parseInt(occupancyMatch[3]) : (item.children || 0);
-            const rateChildAges = occupancyMatch && occupancyMatch[4]
-              ? occupancyMatch[4].split(',').map(a => parseInt(a)).filter(a => !isNaN(a))
-              : (item.childAges || []);
+            // Use per-room occupancy from cart item (rateKey regex is unreliable for multi-room)
+            const rateAdults = item.adults || 2;
+            const rateChildren = item.children || 0;
+            const rateChildAges = item.childAges || [];
             
             return {
               rateKey,
               paxes: [
                 ...Array(rateAdults).fill(null).map((_, i) => ({
-                  roomId: 1,
+                  roomId: roomId,
                   type: 'AD',
                   name: i === 0 ? billingInfo.firstName : 'Guest',
                   surname: i === 0 ? billingInfo.lastName : 'Surname'
                 })),
                 ...Array(rateChildren).fill(null).map((_, i) => ({
-                  roomId: 1,
+                  roomId: roomId,
                   type: 'CH',
-                  age: rateChildAges[i] || item.childAges?.[i] || 10,
+                  age: rateChildAges[i] || 10,
                   name: 'Child',
                   surname: 'Surname'
                 }))
@@ -584,27 +581,24 @@ const handlePayOnSiteBooking = async () => {
           surname: billingInfo.lastName
         },
         rooms: roomsWithFreshKeys.map(({ item, rateKey, roomId }) => {
-          // Parse occupancy from rateKey format: ...||rooms~adults~children~childAge1,childAge2||...
-          const occupancyMatch = rateKey.match(/\|\|(\d+)~(\d+)~(\d+)(?:~([^|]*))?/);
-          const rateAdults = occupancyMatch ? parseInt(occupancyMatch[2]) : (item.adults || 2);
-          const rateChildren = occupancyMatch ? parseInt(occupancyMatch[3]) : (item.children || 0);
-          const rateChildAges = occupancyMatch && occupancyMatch[4] 
-            ? occupancyMatch[4].split(',').map(a => parseInt(a)).filter(a => !isNaN(a))
-            : (item.childAges || []);
+          // Use per-room occupancy from cart item (rateKey regex is unreliable for multi-room)
+          const rateAdults = item.adults || 2;
+          const rateChildren = item.children || 0;
+          const rateChildAges = item.childAges || [];
           
           return {
             rateKey,
             paxes: [
               ...Array(rateAdults).fill(null).map((_, i) => ({
-                roomId: 1,
+                roomId: roomId,
                 type: 'AD',
                 name: i === 0 ? billingInfo.firstName : 'Guest',
                 surname: i === 0 ? billingInfo.lastName : 'Surname'
               })),
               ...Array(rateChildren).fill(null).map((_, i) => ({
-                roomId: 1,
+                roomId: roomId,
                 type: 'CH',
-                age: rateChildAges[i] || item.childAges?.[i] || 10,
+                age: rateChildAges[i] || 10,
                 name: 'Child',
                 surname: 'Surname'
               }))

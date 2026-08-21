@@ -1335,17 +1335,18 @@ const markPayOnSiteAsPaid = asyncErrorHandler(async (req, res) => {
                 const roomRate = hbRoom.rates?.[0] || {};
                 const roomPaxes = hbRoom.paxes || [];
                 const roomChildAges = roomPaxes.filter(p => p.type === 'CH').map(p => p.age);
+                const originalRoom = booking.hotelBooking.rooms[idx] || {};
                 return {
-                  roomName: hbRoom.name || booking.hotelBooking.rooms[idx]?.roomName || `Room ${idx + 1}`,
+                  roomName: hbRoom.name || originalRoom.roomName || `Room ${idx + 1}`,
                   roomCode: hbRoom.code || null,
                   boardCode: roomRate.boardCode || null,
-                  boardName: roomRate.boardName || booking.hotelBooking.rooms[idx]?.boardName || 'Room Only',
+                  boardName: roomRate.boardName || originalRoom.boardName || 'Room Only',
                   rateComments: roomRate.rateComments || null,
-                  adults: roomRate.adults || roomPaxes.filter(p => p.type === 'AD').length || 1,
-                  children: roomRate.children || roomPaxes.filter(p => p.type === 'CH').length || 0,
-                  childAges: roomChildAges.length > 0 ? roomChildAges : booking.hotelBooking.rooms[idx]?.childAges || [],
-                  netPrice: parseFloat(roomRate.net) || booking.hotelBooking.rooms[idx]?.netPrice || 0,
-                  sellingPrice: parseFloat(roomRate.net) || booking.hotelBooking.rooms[idx]?.sellingPrice || 0,
+                  adults: roomRate.adults || roomPaxes.filter(p => p.type === 'AD').length || originalRoom.adults || 1,
+                  children: roomRate.children || roomPaxes.filter(p => p.type === 'CH').length || originalRoom.children || 0,
+                  childAges: roomChildAges.length > 0 ? roomChildAges : originalRoom.childAges || [],
+                  netPrice: parseFloat(roomRate.net) || originalRoom.netPrice || 0,
+                  sellingPrice: parseFloat(roomRate.net) || originalRoom.sellingPrice || 0,
                   paymentType: roomRate.paymentType || 'AT_HOTEL',
                   cancellationPolicies: roomRate.cancellationPolicies || [],
                   taxes: roomRate.taxes || null,
