@@ -285,6 +285,7 @@ router.post('/hotels/search', async (req, res) => {
         const timestamp = Math.floor(Date.now() / 1000);
         const signature = generateHotelbedsSignature(HOTELBEDS_API_KEY, HOTELBEDS_SECRET, timestamp);
 
+        const agent = getMTLSAgent();
         const response = await fetch(`${HOTELBEDS_BASE_URL}/hotel-api/1.0/hotels`, {
             method: 'POST',
             headers: {
@@ -302,7 +303,8 @@ router.post('/hotels/search', async (req, res) => {
                     deviceInfo: 'TeleTrip Web Application',
                     sourceMarket: 'PK'
                 }
-})
+}),
+            ...(agent && { agent })
         });
 
         if (!response.ok) {
@@ -345,6 +347,7 @@ router.post('/hotels/search-auth', async (req, res) => {
         console.log('Hotel search (no auth required)');
 
         const url = `${HOTELBEDS_BASE_URL}/hotel-api/1.0/hotels`;
+        const agent = getMTLSAgent();
         const response = await fetch(url, {
             method: 'POST',
             headers: {
@@ -362,7 +365,8 @@ router.post('/hotels/search-auth', async (req, res) => {
                     deviceInfo: 'TeleTrip Web Application',
                     sourceMarket: 'PK'
                 }
-            })
+            }),
+            ...(agent && { agent })
         });
 
         if (!response.ok) {
@@ -804,6 +808,7 @@ router.get('/hotels/bookings', authUser, async (req, res) => {
         if (destination) params.append('destination', destination);
         if (hotel) params.append('hotel', hotel);
 
+        const agent = getMTLSAgent();
         const response = await fetch(`${HOTELBEDS_BASE_URL}/hotel-api/1.0/bookings?${params}`, {
             method: 'GET',
             headers: {
@@ -811,7 +816,8 @@ router.get('/hotels/bookings', authUser, async (req, res) => {
                 'X-Signature': signature,
                 'Accept': 'application/json',
                 // 'Accept-Encoding': handled automatically by node-fetch
-            }
+            },
+            ...(agent && { agent })
         });
 
         if (!response.ok) {
@@ -836,6 +842,7 @@ router.get('/hotels/bookings/:bookingId', authUser, async (req, res) => {
 
         const url = `${HOTELBEDS_BASE_URL}/hotel-api/1.0/bookings/${bookingId}${language ? `?language=${language}` : ''}`;
 
+        const agent = getMTLSAgent();
         const response = await fetch(url, {
             method: 'GET',
             headers: {
@@ -843,7 +850,8 @@ router.get('/hotels/bookings/:bookingId', authUser, async (req, res) => {
                 'X-Signature': signature,
                 'Accept': 'application/json',
                 // 'Accept-Encoding': handled automatically by node-fetch
-            }
+            },
+            ...(agent && { agent })
         });
 
         if (!response.ok) {
@@ -957,6 +965,7 @@ router.get('/hotels/bookings/reconfirmations', authUser, async (req, res) => {
         if (clientReferences) params.append('clientReferences', clientReferences);
         if (references) params.append('references', references);
 
+        const agent = getMTLSAgent();
         const response = await fetch(`${HOTELBEDS_BASE_URL}/hotel-api/1.0/bookings/reconfirmations?${params}`, {
             method: 'GET',
             headers: {
@@ -964,7 +973,8 @@ router.get('/hotels/bookings/reconfirmations', authUser, async (req, res) => {
                 'X-Signature': signature,
                 'Accept': 'application/json',
                 // 'Accept-Encoding': handled automatically by node-fetch
-            }
+            },
+            ...(agent && { agent })
         });
 
         if (!response.ok) {

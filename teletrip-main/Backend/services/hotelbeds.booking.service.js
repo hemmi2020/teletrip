@@ -47,6 +47,10 @@ async function confirmBookingWithHotelbeds(bookingRequest) {
         sourceMarket: 'PK'
       };
     }
+    // Add clientReference fallback if missing
+    if (!bookingRequest.clientReference) {
+      bookingRequest.clientReference = `TELI_${Date.now()}`;
+    }
 
     const url = `${HOTELBEDS_BASE_URL}/hotel-api/1.0/bookings`;
     const headers = {

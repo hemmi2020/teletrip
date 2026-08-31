@@ -584,16 +584,7 @@ if (children > 0 && childAges.length > 0) {
           )}
         </div>
       )}
-      {hotel.hotelFacilities && hotel.hotelFacilities.length > 0 && (
-        <div className="mt-4">
-          <h4 className="text-sm font-semibold text-gray-800 mb-2">Facilities</h4>
-          <div className="flex flex-wrap gap-1.5">
-            {hotel.hotelFacilities.map((f, i) => (
-              <span key={i} className="text-xs px-2.5 py-1 bg-gray-100 text-gray-600 rounded-full">{f.description || `Facility ${f.code}`}</span>
-            ))}
-          </div>
-        </div>
-      )}
+
       {/* Amenities */}
       {hotel.amenities && hotel.amenities.length > 0 && (
         <div className="flex gap-3 flex-wrap">

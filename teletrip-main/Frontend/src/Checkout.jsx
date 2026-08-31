@@ -367,6 +367,12 @@ const Checkout = () => {
             };
           }),
           clientReference: `TELI_${Date.now()}`,
+          source: {
+            channel: 'B2C',
+            device: 'WEB',
+            deviceInfo: 'TeleTrip Web Application',
+            sourceMarket: 'PK'
+          },
           remark: billingInfo?.specialRequests ? `${billingInfo.specialRequests} | Booking via TeleTrip` : 'Booking via TeleTrip',
           tolerance: 2.00
         };
@@ -607,6 +613,12 @@ const handlePayOnSiteBooking = async () => {
           };
         }),
         clientReference: `TELI_${Date.now()}`,
+        source: {
+          channel: 'B2C',
+          device: 'WEB',
+          deviceInfo: 'TeleTrip Web Application',
+          sourceMarket: 'PK'
+        },
         remark: billingInfo?.specialRequests ? `${billingInfo.specialRequests} | Booking via TeleTrip` : 'Booking via TeleTrip',
         tolerance: 2.00
       };
