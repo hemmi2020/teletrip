@@ -12,8 +12,8 @@ const HOTELBEDS_SECRET = process.env.HOTELBEDS_SECRET || '018e478aa6';
 // Use MTLS endpoint when certificate is configured (mandatory for production)
 // Test: api-mtls.test.hotelbeds.com | Production: api-mtls.hotelbeds.com
 const HOTELBEDS_BASE_URL = process.env.HOTELBEDS_BASE_URL || (
-  process.env.HOTELBEDS_MTLS_CERT_PATH 
-    ? 'https://api-mtls.test.hotelbeds.com' 
+  (process.env.HOTELBEDS_MTLS_CERT || process.env.HOTELBEDS_MTLS_CERT_PATH)
+    ? 'https://api-mtls.test.hotelbeds.com'
     : 'https://api.test.hotelbeds.com'
 );
 
