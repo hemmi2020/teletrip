@@ -702,6 +702,33 @@ router.get('/sync-hotels/history',
   validateRequest,
   adminDashboardController.getHotelSyncHistory
 );
+
+// ========== STATIC CONTENT SYNC (Hotelbeds recommended item) ==========
+/**
+ * POST /api/admin/sync-static-content
+ * Start static content sync (destinations, boards, chains, categories, etc.)
+ * Body: { types?: string[], force?: boolean }
+ * @access Private (Admin only)
+ */
+router.post('/sync-static-content',
+  ...requireAdmin,
+  [
+    body('types').optional().isArray().withMessage('Types must be an array'),
+    body('force').optional().isBoolean().withMessage('Force must be boolean')
+  ],
+  validateRequest,
+  adminDashboardController.startStaticSync
+);
+
+/**
+ * GET /api/admin/static-content-status
+ * Get static content sync progress and per-type local counts
+ * @access Private (Admin only)
+ */
+router.get('/static-content-status',
+  ...requireAdmin,
+  adminDashboardController.getStaticSyncStatus
+);
 // ========== HOTELBEDS RECONCILIATION & HCN (Recommended items) ==========
 /**
  * POST /api/admin/reconcile-bookings

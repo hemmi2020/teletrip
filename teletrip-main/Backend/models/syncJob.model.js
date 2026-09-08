@@ -1,8 +1,9 @@
 const mongoose = require('mongoose');
 
 const SyncJobSchema = new mongoose.Schema({
-  jobType: { type: String, enum: ['hotel_content_full', 'hotel_index'], required: true },
+  jobType: { type: String, enum: ['hotel_content_full', 'hotel_index', 'static_content_full'], required: true },
   status: { type: String, enum: ['pending', 'running', 'completed', 'failed'], default: 'pending' },
+  lastActivityAt: { type: Date },
   totalItems: { type: Number, default: 0 },
   processedItems: { type: Number, default: 0 },
   failedItems: { type: Number, default: 0 },

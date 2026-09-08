@@ -10,6 +10,12 @@ const ApiResponse = require('../utils/response.util');
 const { asyncErrorHandler } = require('../middlewares/errorHandler.middleware');
 const notificationService = require('../services/notification.service');
 const { runHotelContentSync, getLatestSyncStatus, getSyncJobs } = require('../services/hotelSync.service');
+const {
+  STATIC_CONTENT_TYPES,
+  runStaticContentSync,
+  getLatestStaticSyncStatus,
+  getStaticContentCounts
+} = require('../services/hotelbeds.staticcontent.service');
 const { runReconciliation } = require('../services/hotelbeds.reconciliation.service');
 const SystemSettings = require('../models/systemsetting.model');
 const moment = require('moment');
@@ -1641,6 +1647,98 @@ const getHotelSyncHistory = asyncErrorHandler(async (req, res) => {
   return ApiResponse.success(res, { jobs, count: jobs.length }, 'Sync history retrieved');
 });
 
+// ========== STATIC CONTENT SYNC (Hotelbeds recommended: auto-download static data) ==========
+const startStaticSync = asyncErrorHandler(async (req, res) => {
+  const { types, force = false } = req.body;
+
+  const validTypes = Object.keys(STATIC_CONTENT_TYPES);
+  const requested = Array.isArray(types) && types.length
+    ? types.filter(t => validTypes.includes(t))
+    : validTypes;
+
+  if (!requested.length) {
+    return ApiResponse.error(res, `No valid types provided. Valid types: ${validTypes.join(', ')}`, 400);
+  }
+
+  // Check if a static sync is already running
+  const latest = await getLatestStaticSyncStatus();
+  if (latest && latest.status === 'running') {
+    const fifteenMinAgo = new Date(Date.now() - 15 * 60 * 1000);
+    const lastActivity = latest.lastActivityAt
+      ? new Date(latest.lastActivityAt)
+      : (latest.logs?.length > 0
+          ? new Date(latest.logs[latest.logs.length - 1].timestamp)
+          : latest.startedAt);
+    const isStale = !lastActivity || lastActivity < fifteenMinAgo;
+
+    if (!force && !isStale) {
+      return ApiResponse.success(res, {
+        jobId: latest._id,
+        status: latest.status,
+        message: 'A static content sync job is already running',
+        progress: {
+          processed: latest.processedItems,
+          total: latest.totalItems,
+          percentage: latest.totalItems > 0 ? Math.round((latest.processedItems / latest.totalItems) * 100) : 0
+        }
+      }, 'Static content sync already in progress');
+    }
+
+    if (isStale) {
+      console.log(`[AdminStaticSync] Detected stale job ${latest._id}. Marking as failed.`);
+      await SyncJob.findByIdAndUpdate(latest._id, {
+        status: 'failed',
+        errorMessage: 'Auto-marked as failed: sync stalled or process restarted',
+        logs: [...(latest.logs || []), { message: 'Auto-marked as failed: sync stalled or process restarted', timestamp: new Date() }]
+      });
+    }
+  }
+
+  const job = await SyncJob.create({
+    jobType: 'static_content_full',
+    status: 'pending',
+    batchSize: 1000,
+    logs: [{ message: `Static content sync requested via admin API for: ${requested.join(', ')}` }]
+  });
+
+  // Fire and forget — respond immediately, sync runs async
+  runStaticContentSync({ jobId: job._id, types: requested }).catch(err => {
+    console.error('[AdminStaticSync] Background sync error:', err.message);
+  });
+
+  return ApiResponse.success(res, {
+    jobId: job._id,
+    status: 'started',
+    types: requested,
+    message: 'Static content sync started in background. Check status endpoint for progress.'
+  }, 'Static content sync started', 202);
+});
+
+const getStaticSyncStatus = asyncErrorHandler(async (req, res) => {
+  const latest = await getLatestStaticSyncStatus();
+  const counts = await getStaticContentCounts();
+
+  const expected = {};
+  for (const key of Object.keys(STATIC_CONTENT_TYPES)) {
+    expected[key] = counts[key] || { count: 0, lastSynced: null };
+  }
+
+  const progress = latest ? {
+    jobId: latest._id,
+    status: latest.status,
+    processed: latest.processedItems,
+    total: latest.totalItems,
+    failed: latest.failedItems,
+    percentage: latest.totalItems > 0 ? Math.round((latest.processedItems / latest.totalItems) * 100) : 0,
+    startedAt: latest.startedAt,
+    completedAt: latest.completedAt,
+    errorMessage: latest.errorMessage || null,
+    recentLogs: latest.logs?.slice(-10) || []
+  } : { status: 'none' };
+
+  return ApiResponse.success(res, { progress, counts: expected }, 'Static content status retrieved');
+});
+
 // ========== HOTELBEDS RECONCILIATION (Recommended) ==========
 
 const reconcileBookings = asyncErrorHandler(async (req, res) => {
@@ -1751,6 +1849,8 @@ module.exports = {
   resetHotelSync,
   getHotelSyncStatus,
   getHotelSyncHistory,
+  startStaticSync,
+  getStaticSyncStatus,
   reconcileBookings,
   pollHCN,
   getHCNSummary,
