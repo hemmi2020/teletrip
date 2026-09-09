@@ -19,7 +19,8 @@
  * CHAIN SUPPORT (required for SSL.com certs):
  *   Your client certificate may need the intermediate CA appended so Hotelbeds can
  *   verify the full chain. For file paths, place ca-intermediate.crt next to your
- *   client cert. For inline, concatenate leaf + intermediate into HOTELBEDS_MTLS_CERT.
+ *   client cert. For inline, concatenate leaf + intermediate into HOTELBEDS_MTLS_CERT
+ *   or set HOTELBEDS_MTLS_INTERMEDIATE separately.
  *
  * Reference: https://developer.hotelbeds.com/documentation/hotels/knowledge-base/mutual-authentication/
  */
@@ -46,9 +47,40 @@ function countCerts(pem) {
 }
 
 /**
+ * Compute a simple hash/fingerprint of the first cert in a PEM bundle
+ * for diagnostic comparison
+ */
+function certFingerprint(pem) {
+  try {
+    const text = Buffer.isBuffer(pem) ? pem.toString() : pem;
+    const match = text.match(/-----BEGIN CERTIFICATE-----([\s\S]+?)-----END CERTIFICATE-----/);
+    if (!match) return 'no-cert-found';
+    const base64 = match[1].replace(/\s/g, '');
+    // Return first 16 chars of base64 as a simple identifier
+    return base64.substring(0, 16) + '...' + base64.substring(base64.length - 8);
+  } catch (e) {
+    return 'error:' + e.message;
+  }
+}
+
+/**
+ * Compute a simple fingerprint of a private key for diagnostic comparison
+ */
+function keyFingerprint(pem) {
+  try {
+    const text = Buffer.isBuffer(pem) ? pem.toString() : pem;
+    const match = text.match(/-----BEGIN ([A-Z ]+?)-----([\s\S]+?)-----END \1-----/);
+    if (!match) return 'no-key-found';
+    const base64 = match[2].replace(/\s/g, '');
+    return base64.substring(0, 16) + '...' + base64.substring(base64.length - 8);
+  } catch (e) {
+    return 'error:' + e.message;
+  }
+}
+
+/**
  * Try to find and read an intermediate CA certificate next to the client cert file.
  * Looks for: ca-intermediate.crt, client.chain.crt, or any .crt in the same dir
- * that contains more than one cert or has a different subject.
  */
 function findIntermediateChain(certPath, certContent) {
   const dir = path.dirname(certPath);
@@ -65,7 +97,6 @@ function findIntermediateChain(certPath, certContent) {
     if (fs.existsSync(candidate)) {
       try {
         const data = fs.readFileSync(candidate);
-        // Only use if it adds more certs to the chain
         if (countCerts(data) >= 1) {
           console.log(`[MTLS] Appending intermediate chain from ${path.basename(candidate)} (${countCerts(data)} cert(s))`);
           return data;
@@ -89,9 +120,11 @@ function getMTLSAgent() {
     cert = normalizePem(process.env.HOTELBEDS_MTLS_CERT);
     key = normalizePem(process.env.HOTELBEDS_MTLS_KEY);
 
+    console.log('[MTLS] Cert fingerprint:', certFingerprint(cert));
+    console.log('[MTLS] Key fingerprint:', keyFingerprint(key));
+
     const leafCount = countCerts(cert);
     if (leafCount === 1 && process.env.HOTELBEDS_MTLS_INTERMEDIATE) {
-      // Append intermediate CA to form full chain
       const intermediate = normalizePem(process.env.HOTELBEDS_MTLS_INTERMEDIATE);
       cert = cert.trim() + '\n' + intermediate.trim() + '\n';
       console.log('[MTLS] Appended intermediate CA from HOTELBEDS_MTLS_INTERMEDIATE env var');
@@ -101,7 +134,7 @@ function getMTLSAgent() {
       ca = normalizePem(process.env.HOTELBEDS_MTLS_CA);
       console.log('[MTLS] Using custom CA from env var for server verification');
     }
-    console.log('[MTLS] Reading cert from env vars. Leaf certs in chain:', countCerts(cert));
+    console.log('[MTLS] Reading cert from env vars. Total certs in chain:', countCerts(cert));
   }
   // Option 2: Read from file paths (for local development)
   else if (process.env.HOTELBEDS_MTLS_CERT_PATH && process.env.HOTELBEDS_MTLS_KEY_PATH) {
@@ -112,13 +145,11 @@ function getMTLSAgent() {
 
       const leafCount = countCerts(cert);
       if (leafCount === 1) {
-        // Try to auto-find intermediate CA next to the cert file
         const intermediate = findIntermediateChain(certPath, cert);
         if (intermediate) {
           cert = Buffer.concat([cert, Buffer.from('\n'), intermediate]);
         } else {
           console.warn('[MTLS] ⚠️ Client cert appears to be a single leaf. Hotelbeds may reject it without the intermediate CA chain.');
-          console.warn('[MTLS]    Place ca-intermediate.crt next to your client cert, or concatenate leaf + intermediate into the cert file.');
         }
       }
 
@@ -135,20 +166,14 @@ function getMTLSAgent() {
   else {
     if (process.env.NODE_ENV === 'production') {
       console.warn('[MTLS] ⚠️ WARNING: MTLS not configured. Production Hotelbeds API requires mutual TLS.');
-      console.warn('[MTLS] Set HOTELBEDS_MTLS_CERT + HOTELBEDS_MTLS_KEY or file path equivalents.');
     }
     return null;
   }
 
   try {
-    // By default, do NOT override Node's CA store. Hotelbeds' server cert is signed
-    // by a public CA that Node.js already trusts. Setting a custom ca replaces the
-    // default store and causes "unable to get local issuer certificate" errors.
     const options = { cert, key, rejectUnauthorized: true };
     if (ca) options.ca = ca;
 
-    // Emergency override for debugging certificate issues in test environments
-    // NEVER use in production.
     if (process.env.HOTELBEDS_MTLS_REJECT_UNAUTHORIZED === 'false') {
       options.rejectUnauthorized = false;
       console.warn('[MTLS] ⚠️ WARNING: rejectUnauthorized=false — this disables certificate verification!');
@@ -159,6 +184,8 @@ function getMTLSAgent() {
     return mtlsAgent;
   } catch (error) {
     console.error('[MTLS] ❌ Failed to create MTLS agent:', error.message);
+    console.error('[MTLS]    If error is "key values mismatch", your HOTELBEDS_MTLS_CERT and HOTELBEDS_MTLS_KEY do not match.');
+    console.error('[MTLS]    Re-copy both from your local cert files: telitrip-client.crt and telitrip-client.key');
     return null;
   }
 }
