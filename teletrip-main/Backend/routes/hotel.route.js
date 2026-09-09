@@ -16,6 +16,16 @@ const HOTELBEDS_BASE_URL = process.env.HOTELBEDS_BASE_URL || (
     ? 'https://api-mtls.test.hotelbeds.com'
     : 'https://api.test.hotelbeds.com'
 );
+
+// Warn if MTLS is configured but BASE_URL points to the non-MTLS endpoint
+if ((process.env.HOTELBEDS_MTLS_CERT || process.env.HOTELBEDS_MTLS_CERT_PATH) && HOTELBEDS_BASE_URL.includes('api.test.hotelbeds.com') && !HOTELBEDS_BASE_URL.includes('api-mtls')) {
+  console.warn('[MTLS] ⚠️ WARNING: MTLS certs are configured but HOTELBEDS_BASE_URL points to the regular endpoint.');
+  console.warn('[MTLS]          Expected: https://api-mtls.test.hotelbeds.com or https://api-mtls.hotelbeds.com');
+  console.warn('[MTLS]          Current:', HOTELBEDS_BASE_URL);
+  console.warn('[MTLS]          Either unset HOTELBEDS_BASE_URL for auto-detect, or set it to the MTLS endpoint.');
+}
+
+console.log('[Config] Hotelbeds base URL:', HOTELBEDS_BASE_URL);
 const HOTELBEDS_CONTENT_URL = 'https://api.test.hotelbeds.com/hotel-content-api/1.0';   
 const TRIPADVISOR_API_KEY = process.env.TRIPADVISOR_API_KEY ;
 
