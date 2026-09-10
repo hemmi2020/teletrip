@@ -3,7 +3,7 @@ const crypto = require('crypto');
 const HOTELBEDS_API_KEY = process.env.HOTELBEDS_API_KEY || '106700a0f2f1e2aa1d4c2b16daae70b2';
 const HOTELBEDS_SECRET = process.env.HOTELBEDS_SECRET || '018e478aa6';
 // Content API uses the regular test endpoint — MTLS is only required for the booking flow
-const CONTENT_BASE_URL = process.env.HOTELBEDS_CONTENT_URL || 'https://api.test.hotelbeds.com/hotel-content-api/1.0';
+const CONTENT_BASE_URL = process.env.HOTELBEDS_CONTENT_URL || ((process.env.HOTELBEDS_ENV || 'test').toLowerCase() === 'live' ? 'https://api.hotelbeds.com/hotel-content-api/1.0' : 'https://api.test.hotelbeds.com/hotel-content-api/1.0');
 
 // Fields we actually need for sync — drastically reduces payload vs fields=all
 const SYNC_FIELDS = 'code,name,description,address,city,postalCode,countryCode,stateCode,destinationCode,phones,email,web,categoryCode,categoryGroupCode,accommodationTypeCode,facilities,images,rooms';

@@ -9,10 +9,11 @@ const { getMTLSAgent } = require('../config/mtls.config');
 
 const HOTELBEDS_API_KEY = process.env.HOTELBEDS_API_KEY || '106700a0f2f1e2aa1d4c2b16daae70b2';
 const HOTELBEDS_SECRET = process.env.HOTELBEDS_SECRET || '018e478aa6';
+const HOTELBEDS_ENV = (process.env.HOTELBEDS_ENV || 'test').toLowerCase();
 const HOTELBEDS_BASE_URL = process.env.HOTELBEDS_BASE_URL || (
   (process.env.HOTELBEDS_MTLS_CERT || process.env.HOTELBEDS_MTLS_CERT_PATH)
-    ? 'https://api-mtls.test.hotelbeds.com'
-    : 'https://api.test.hotelbeds.com'
+    ? (HOTELBEDS_ENV === 'live' ? 'https://api-mtls.hotelbeds.com' : 'https://api-mtls.test.hotelbeds.com')
+    : (HOTELBEDS_ENV === 'live' ? 'https://api.hotelbeds.com' : 'https://api.test.hotelbeds.com')
 );
 
 function generateSignature(apiKey, secret, timestamp) {
