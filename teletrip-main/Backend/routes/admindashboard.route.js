@@ -642,6 +642,16 @@ router.get('/certification-logs', ...requireAdmin, async (req, res) => {
  */
 router.get('/certification-logs/download', async (req, res) => {
   try {
+    const fs = require('fs');
+    const path = require('path');
+    const filePath = path.join(__dirname, '../../hotelbeds_certification_logs.json');
+
+    if (fs.existsSync(filePath)) {
+      res.setHeader('Content-Type', 'application/json');
+      res.setHeader('Content-Disposition', 'attachment; filename="hotelbeds_certification_logs.json"');
+      return res.sendFile(filePath);
+    }
+
     const logs = await getLogs();
     res.setHeader('Content-Type', 'application/json');
     res.setHeader('Content-Disposition', 'attachment; filename="hotelbeds_certification_logs.json"');
