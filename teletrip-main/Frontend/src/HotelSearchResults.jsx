@@ -732,16 +732,6 @@ const HotelSearchResults = () => {
     setVisibleCount(20);
   }, [searchParams, selectedAmenities, selectedAccommodationTypes, hotelNameSearch, selectedBoards, selectedCategories, selectedZones, selectedReviewRatings, selectedCancellation, priceMin, priceMax, selectedPromos, selectedDiscounts, selectedChains, selectedEstablishment, sortOption]);
 
-  // Fetch reviews ONLY for currently visible hotels to prevent network flooding and main thread lag
-  useEffect(() => {
-    if (sortedHotels && sortedHotels.length > 0) {
-      const visible = sortedHotels.slice(0, visibleCount);
-      visible.forEach(hotel => {
-        fetchTripAdvisorReviews(hotel);
-      });
-    }
-  }, [sortedHotels, visibleCount]);
-
   // Fetch hotel content (description, facilities) when a hotel is selected - Hotelbeds Certification
   useEffect(() => {
     if (!selectedHotel) {
@@ -1134,6 +1124,16 @@ const HotelSearchResults = () => {
     }
     return 0;
   }), [filteredHotels, sortOption]);
+
+  // Fetch reviews ONLY for currently visible hotels to prevent network flooding and main thread lag
+  useEffect(() => {
+    if (sortedHotels && sortedHotels.length > 0) {
+      const visible = sortedHotels.slice(0, visibleCount);
+      visible.forEach(hotel => {
+        fetchTripAdvisorReviews(hotel);
+      });
+    }
+  }, [sortedHotels, visibleCount]);
 
   if (loading) {
     return (
@@ -2243,8 +2243,8 @@ const HotelSearchResults = () => {
                           onClick={(e) => { e.stopPropagation(); handleMultiRoomAddToCart(selectedHotel, roomSelections, roomConfigs); }}
                           disabled={Object.keys(roomSelections).length < roomConfigs.length}
                           className={`inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-lg text-[13px] font-semibold transition-colors ${Object.keys(roomSelections).length >= roomConfigs.length
-                              ? 'bg-blue-600 text-white hover:bg-blue-700'
-                              : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                            ? 'bg-blue-600 text-white hover:bg-blue-700'
+                            : 'bg-gray-200 text-gray-400 cursor-not-allowed'
                             }`}
                         >
                           <ShoppingCart className="w-4 h-4" />
