@@ -1,55 +1,55 @@
 const express = require('express');
 const crypto = require('crypto');
-const { authUser } = require('../middlewares/auth.middleware'); 
-const router = express.Router();   
+const { authUser } = require('../middlewares/auth.middleware');
+const router = express.Router();
 const fetch = require('node-fetch');
 const { addLog } = require('../services/certificationLogger');
 const { getHotelContent } = require('../services/hotelbeds.content.service');
 const { getMTLSAgent } = require('../config/mtls.config');
 const HotelIndex = require('../models/hotelIndex.model');
 // Hotelbeds API configuration  
-const HOTELBEDS_API_KEY = process.env.HOTELBEDS_API_KEY || '106700a0f2f1e2aa1d4c2b16daae70b2';     
-const HOTELBEDS_SECRET = process.env.HOTELBEDS_SECRET || '018e478aa6'; 
+const HOTELBEDS_API_KEY = process.env.HOTELBEDS_API_KEY || '106700a0f2f1e2aa1d4c2b16daae70b2';
+const HOTELBEDS_SECRET = process.env.HOTELBEDS_SECRET || '018e478aa6';
 // Use MTLS endpoint when certificate is configured (mandatory for production)
 const HOTELBEDS_ENV = (process.env.HOTELBEDS_ENV || 'test').toLowerCase();
 const HOTELBEDS_BASE_URL = process.env.HOTELBEDS_BASE_URL || (
-  (process.env.HOTELBEDS_MTLS_CERT || process.env.HOTELBEDS_MTLS_CERT_PATH)
-    ? (HOTELBEDS_ENV === 'live' ? 'https://api-mtls.hotelbeds.com' : 'https://api-mtls.test.hotelbeds.com')
-    : (HOTELBEDS_ENV === 'live' ? 'https://api.hotelbeds.com' : 'https://api.test.hotelbeds.com')
+    HOTELBEDS_ENV === 'live'
+        ? ((process.env.HOTELBEDS_MTLS_CERT || process.env.HOTELBEDS_MTLS_CERT_PATH) ? 'https://api-mtls.hotelbeds.com' : 'https://api.hotelbeds.com')
+        : 'https://api-mtls.test.hotelbeds.com'
 );
 
 // Warn if MTLS is configured but BASE_URL points to the non-MTLS endpoint
 if ((process.env.HOTELBEDS_MTLS_CERT || process.env.HOTELBEDS_MTLS_CERT_PATH) && HOTELBEDS_BASE_URL.includes('api.test.hotelbeds.com') && !HOTELBEDS_BASE_URL.includes('api-mtls')) {
-  console.warn('[MTLS] ⚠️ WARNING: MTLS certs are configured but HOTELBEDS_BASE_URL points to the regular endpoint.');
-  console.warn('[MTLS]          Expected: https://api-mtls.test.hotelbeds.com or https://api-mtls.hotelbeds.com');
-  console.warn('[MTLS]          Current:', HOTELBEDS_BASE_URL);
-  console.warn('[MTLS]          Either unset HOTELBEDS_BASE_URL for auto-detect, or set it to the MTLS endpoint.');
+    console.warn('[MTLS] ⚠️ WARNING: MTLS certs are configured but HOTELBEDS_BASE_URL points to the regular endpoint.');
+    console.warn('[MTLS]          Expected: https://api-mtls.test.hotelbeds.com or https://api-mtls.hotelbeds.com');
+    console.warn('[MTLS]          Current:', HOTELBEDS_BASE_URL);
+    console.warn('[MTLS]          Either unset HOTELBEDS_BASE_URL for auto-detect, or set it to the MTLS endpoint.');
 }
 
 console.log('[Config] Hotelbeds base URL:', HOTELBEDS_BASE_URL);
-const HOTELBEDS_CONTENT_URL = HOTELBEDS_ENV === 'live' ? 'https://api.hotelbeds.com/hotel-content-api/1.0' : 'https://api.test.hotelbeds.com/hotel-content-api/1.0';   
-const TRIPADVISOR_API_KEY = process.env.TRIPADVISOR_API_KEY ;
+const HOTELBEDS_CONTENT_URL = HOTELBEDS_ENV === 'live' ? 'https://api.hotelbeds.com/hotel-content-api/1.0' : 'https://api.test.hotelbeds.com/hotel-content-api/1.0';
+const TRIPADVISOR_API_KEY = process.env.TRIPADVISOR_API_KEY;
 
 // Generate signature for Hotelbeds API 
-function generateHotelbedsSignature(apiKey, secret, timestamp) { 
+function generateHotelbedsSignature(apiKey, secret, timestamp) {
     const stringToSign = apiKey + secret + timestamp;
-    return crypto.createHash('sha256').update(stringToSign).digest('hex');      
-} 
+    return crypto.createHash('sha256').update(stringToSign).digest('hex');
+}
 
 // Hotel name search - autocomplete from local index (uses synced Content API data)
 router.get('/hotels/search-by-name', async (req, res) => {
     try {
         const { q, destination, city, limit = 20 } = req.query;
-        
+
         if (!q || q.length < 2) {
             return res.json({ success: true, data: [] });
         }
 
         const query = {};
-        
+
         // Text search on name
         query.name = { $regex: q, $options: 'i' };
-        
+
         // Optional destination filter (by code or by city/destination name)
         if (destination) {
             query.destinationCode = destination.toUpperCase();
@@ -90,7 +90,7 @@ router.post('/search-suggestions', async (req, res) => {
     try {
         // Use CountriesNow API as fallback (free, no auth required)
         const response = await fetch('https://countriesnow.space/api/v0.1/countries');
-        
+
         if (!response.ok) {
             throw new Error('Failed to fetch countries data');
         }
@@ -106,7 +106,7 @@ router.post('/search-suggestions', async (req, res) => {
                     country.cities.forEach(city => {
                         const cityLower = city.toLowerCase();
                         const countryLower = country.country.toLowerCase();
-                        
+
                         // Match if query is in city name or country name
                         if (cityLower.includes(queryLower) || countryLower.includes(queryLower)) {
                             results.push({
@@ -114,7 +114,7 @@ router.post('/search-suggestions', async (req, res) => {
                                 name: city,
                                 type: 'city',
                                 country: country.country,
-                        countryCode: country.iso3,
+                                countryCode: country.iso3,
                                 location: `${city}, ${country.country}`
                             });
                         }
@@ -150,7 +150,7 @@ async function fetchHotelContent(hotelCodes) {
     try {
         const timestamp = Math.floor(Date.now() / 1000);
         const signature = generateHotelbedsSignature(HOTELBEDS_API_KEY, HOTELBEDS_SECRET, timestamp);
-        
+
         const codesParam = Array.isArray(hotelCodes) ? hotelCodes.join(',') : hotelCodes;
         const contentUrl = `${HOTELBEDS_CONTENT_URL}/hotels?fields=images,facilities,amenities,accommodationTypeCode,chainCode,segmentCodes&language=ENG&codes=${codesParam}`;
 
@@ -170,7 +170,7 @@ async function fetchHotelContent(hotelCodes) {
         }
 
         const data = await response.json();
-        
+
         const contentMap = {};
         if (data.hotels) {
             data.hotels.forEach(hotel => {
@@ -184,7 +184,7 @@ async function fetchHotelContent(hotelCodes) {
                 };
             });
         }
-        
+
         return contentMap;
     } catch (error) {
         console.error('Error fetching hotel content:', error);
@@ -197,7 +197,7 @@ async function fetchHotelDetails(hotelCode) {
     try {
         const timestamp = Math.floor(Date.now() / 1000);
         const signature = generateHotelbedsSignature(HOTELBEDS_API_KEY, HOTELBEDS_SECRET, timestamp);
-        
+
         const detailsUrl = `${HOTELBEDS_CONTENT_URL}/hotels/${hotelCode}/details`;
 
         const response = await fetch(detailsUrl, {
@@ -226,14 +226,14 @@ async function fetchHotelDetails(hotelCode) {
 async function enhanceHotelsWithContent(hotels) {
     try {
         const hotelCodes = hotels.map(hotel => hotel.code).filter(Boolean);
-        
+
         if (hotelCodes.length === 0) return hotels;
 
         const contentMap = await fetchHotelContent(hotelCodes);
 
         return hotels.map(hotel => {
             const content = contentMap[hotel.code] || {};
-            
+
             let thumbnail = null;
             if (content.images && content.images.length > 0) {
                 const mainImage = content.images.find(img => img.typeCode === 'GEN') || content.images[0];
@@ -245,7 +245,7 @@ async function enhanceHotelsWithContent(hotels) {
             const amenities = [];
             if (content.facilities) {
                 content.facilities.forEach(facility => {
-                    switch(facility.facilityCode) {
+                    switch (facility.facilityCode) {
                         case 20: amenities.push('WIFI'); break;
                         case 15: amenities.push('BREAKFAST'); break;
                         case 50: amenities.push('PARKING'); break;
@@ -279,11 +279,11 @@ router.get('/hotels/content/:hotelCode', async (req, res) => {
     try {
         const { hotelCode } = req.params;
         const content = await getHotelContent(hotelCode);
-        
+
         if (!content) {
             return res.status(404).json({ success: false, error: 'Hotel content not found' });
         }
-        
+
         res.json({ success: true, data: content });
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
@@ -291,7 +291,7 @@ router.get('/hotels/content/:hotelCode', async (req, res) => {
 });
 
 // Public hotel search route (enhanced with images)
-router.post('/hotels/search', async (req, res) => { 
+router.post('/hotels/search', async (req, res) => {
     try {
         const timestamp = Math.floor(Date.now() / 1000);
         const signature = generateHotelbedsSignature(HOTELBEDS_API_KEY, HOTELBEDS_SECRET, timestamp);
@@ -314,7 +314,7 @@ router.post('/hotels/search', async (req, res) => {
                     deviceInfo: 'TeleTrip Web Application',
                     sourceMarket: 'PK'
                 }
-}),
+            }),
             ...(agent && { agent })
         });
 
@@ -329,7 +329,7 @@ router.post('/hotels/search', async (req, res) => {
         }
 
         const data = await response.json();
-        
+
         if (data.hotels && data.hotels.hotels) {
             data.hotels.hotels = await enhanceHotelsWithContent(data.hotels.hotels);
         }
@@ -388,7 +388,7 @@ router.post('/hotels/search-auth', async (req, res) => {
                 error: 'Failed to fetch hotels',
                 details: errorText
             });
-        } 
+        }
 
         const data = await response.json();
 
@@ -439,7 +439,7 @@ router.get('/hotels/details/:hotelCode', async (req, res) => {
     try {
         const { hotelCode } = req.params;
         const details = await fetchHotelDetails(hotelCode);
-        
+
         if (!details) {
             return res.status(404).json({
                 success: false,
@@ -449,10 +449,10 @@ router.get('/hotels/details/:hotelCode', async (req, res) => {
 
         res.json({
             success: true,
-            data: details  
+            data: details
         });
     } catch (error) {
-        console.error('Hotel Details Error:', error);  
+        console.error('Hotel Details Error:', error);
         res.status(500).json({
             success: false,
             error: 'Failed to fetch hotel details',
@@ -469,12 +469,12 @@ router.post('/hotels/book', authUser, async (req, res) => {
 
         // Add source marker for distribution management (Hotelbeds recommendation)
         if (!req.body.source) {
-          req.body.source = {
-            channel: 'B2C',
-            device: 'WEB',
-            deviceInfo: 'TeleTrip Web Application',
-            sourceMarket: 'PK'
-          };
+            req.body.source = {
+                channel: 'B2C',
+                device: 'WEB',
+                deviceInfo: 'TeleTrip Web Application',
+                sourceMarket: 'PK'
+            };
         }
 
         const agent = getMTLSAgent();
@@ -494,7 +494,7 @@ router.post('/hotels/book', authUser, async (req, res) => {
         if (!response.ok) {
             const errorText = await response.text();
             console.error('Hotelbeds Booking Error:', response.status, errorText);
-            
+
             let errorMessage = 'Failed to create booking';
             try {
                 const errorData = JSON.parse(errorText);
@@ -506,8 +506,8 @@ router.post('/hotels/book', authUser, async (req, res) => {
                         errorMessage = 'Room price or availability has changed. Please search again for updated options.';
                     }
                 }
-            } catch (e) {}
-            
+            } catch (e) { }
+
             return res.status(response.status).json({
                 success: false,
                 error: errorMessage,
@@ -605,140 +605,140 @@ router.post('/hotels/checkrate', async (req, res) => {
 
 // Search TripAdvisor for hotel location ID
 async function searchTripAdvisorLocation(hotelName, city) {
-  try {
-    const searchQuery = `${hotelName} ${city}`;
-    const url = `https://api.content.tripadvisor.com/api/v1/location/search?searchQuery=${encodeURIComponent(searchQuery)}&category=hotels&language=en&key=${TRIPADVISOR_API_KEY}`;
-    
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'accept': 'application/json'
-      }
-    });
-    
-    const data = await response.json();
-    
-    if (data.data && data.data.length > 0) {
-      return data.data[0].location_id;
+    try {
+        const searchQuery = `${hotelName} ${city}`;
+        const url = `https://api.content.tripadvisor.com/api/v1/location/search?searchQuery=${encodeURIComponent(searchQuery)}&category=hotels&language=en&key=${TRIPADVISOR_API_KEY}`;
+
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'accept': 'application/json'
+            }
+        });
+
+        const data = await response.json();
+
+        if (data.data && data.data.length > 0) {
+            return data.data[0].location_id;
+        }
+
+        return null;
+    } catch (error) {
+        console.error('TripAdvisor search error:', error);
+        return null;
     }
-    
-    return null;
-  } catch (error) {
-    console.error('TripAdvisor search error:', error);
-    return null;
-  }
 }
 
 // Get TripAdvisor location details (rating info) 
 async function getTripAdvisorDetails(locationId) {
-  try {
-    const url = `https://api.content.tripadvisor.com/api/v1/location/${locationId}/details?language=en&key=${TRIPADVISOR_API_KEY}`;
-    
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'accept': 'application/json'
-      }
-    });
-    
-    return await response.json();
-  } catch (error) {
-    console.error('TripAdvisor details error:', error);
-    return null;
-  }
+    try {
+        const url = `https://api.content.tripadvisor.com/api/v1/location/${locationId}/details?language=en&key=${TRIPADVISOR_API_KEY}`;
+
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'accept': 'application/json'
+            }
+        });
+
+        return await response.json();
+    } catch (error) {
+        console.error('TripAdvisor details error:', error);
+        return null;
+    }
 }
 
 // Get TripAdvisor reviews
 async function getTripAdvisorReviews(locationId) {
-  try {
-    const url = `https://api.content.tripadvisor.com/api/v1/location/${locationId}/reviews?language=en&key=${TRIPADVISOR_API_KEY}`;
-    
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'accept': 'application/json'
-      }
-    });
-    
-    return await response.json();
-  } catch (error) {
-    console.error('TripAdvisor reviews error:', error);
-    return null;
-  }
+    try {
+        const url = `https://api.content.tripadvisor.com/api/v1/location/${locationId}/reviews?language=en&key=${TRIPADVISOR_API_KEY}`;
+
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'accept': 'application/json'
+            }
+        });
+
+        return await response.json();
+    } catch (error) {
+        console.error('TripAdvisor reviews error:', error);
+        return null;
+    }
 }
 
 // ROUTE: Get hotel reviews from TripAdvisor
 router.get('/hotels/:hotelCode/reviews', async (req, res) => {
-  try {
-    const { hotelCode } = req.params;
-    
-    // Get hotel info from your database or Hotelbeds
-    // For now, we'll need the hotel name and city from the search results
-    // You should store this info when hotels are searched
-    
-    // This is a placeholder - you'll need to get actual hotel data
-    const hotelName = req.query.name || '';
-    const city = req.query.city || '';
-    
-    if (!hotelName || !city) {
-      return res.json({
-        success: false,
-        message: 'Hotel name and city required',
-        data: null
-      });
+    try {
+        const { hotelCode } = req.params;
+
+        // Get hotel info from your database or Hotelbeds
+        // For now, we'll need the hotel name and city from the search results
+        // You should store this info when hotels are searched
+
+        // This is a placeholder - you'll need to get actual hotel data
+        const hotelName = req.query.name || '';
+        const city = req.query.city || '';
+
+        if (!hotelName || !city) {
+            return res.json({
+                success: false,
+                message: 'Hotel name and city required',
+                data: null
+            });
+        }
+
+        // Step 1: Search for hotel on TripAdvisor
+        const locationId = await searchTripAdvisorLocation(hotelName, city);
+
+        if (!locationId) {
+            return res.json({
+                success: false,
+                message: 'Hotel not found on TripAdvisor',
+                data: null
+            });
+        }
+
+        // Step 2: Get hotel details
+        const details = await getTripAdvisorDetails(locationId);
+
+        // Step 3: Get reviews
+        const reviewsData = await getTripAdvisorReviews(locationId);
+
+        // Format response
+        res.json({
+            success: true,
+            data: {
+                locationId: locationId,
+                rating: details?.rating || 0,
+                numReviews: details?.num_reviews || 0,
+                rankingData: details?.ranking_data || null,
+                ratingImageUrl: details?.rating_image_url || null,
+                reviews: reviewsData?.data || []
+            }
+        });
+
+    } catch (error) {
+        console.error('Error fetching TripAdvisor data:', error);
+        res.status(500).json({
+            success: false,
+            message: error.message,
+            data: null
+        });
     }
-    
-    // Step 1: Search for hotel on TripAdvisor
-    const locationId = await searchTripAdvisorLocation(hotelName, city);
-    
-    if (!locationId) {
-      return res.json({
-        success: false,
-        message: 'Hotel not found on TripAdvisor',
-        data: null
-      });
-    }
-    
-    // Step 2: Get hotel details
-    const details = await getTripAdvisorDetails(locationId);
-    
-    // Step 3: Get reviews
-    const reviewsData = await getTripAdvisorReviews(locationId);
-    
-    // Format response
-    res.json({
-      success: true,
-      data: {
-        locationId: locationId,
-        rating: details?.rating || 0,
-        numReviews: details?.num_reviews || 0,
-        rankingData: details?.ranking_data || null,
-        ratingImageUrl: details?.rating_image_url || null,
-        reviews: reviewsData?.data || []
-      }
-    });
-    
-  } catch (error) {
-    console.error('Error fetching TripAdvisor data:', error);
-    res.status(500).json({
-      success: false,
-      message: error.message,
-      data: null
-    });
-  }
 });
 
 
 // Geocoding route using Nominatim (free, no API key required)
-router.get('/geocode', async (req, res) => {  
+router.get('/geocode', async (req, res) => {
     try {
-        const { q } = req.query; 
-  
-        if (!q) { 
+        const { q } = req.query;
+
+        if (!q) {
             return res.status(400).json({
-                success: false, 
+                success: false,
                 error: 'Query parameter "q" is required'
-            }); 
+            });
         }
 
         // Try OpenCage first (has API key)
@@ -769,7 +769,7 @@ router.get('/geocode', async (req, res) => {
         try {
             const controller = new AbortController();
             const timeout = setTimeout(() => controller.abort(), 10000);
-            const response = await fetch( 
+            const response = await fetch(
                 `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=5`,
                 { headers: { 'User-Agent': 'TeleTrip/1.0 (telitrip.com)' }, signal: controller.signal }
             );
@@ -805,7 +805,7 @@ router.get('/hotels/bookings', authUser, async (req, res) => {
         const signature = generateHotelbedsSignature(HOTELBEDS_API_KEY, HOTELBEDS_SECRET, timestamp);
 
         const { filterType, status, from, to, start, end, clientReference, creationUser, country, destination, hotel } = req.query;
-        
+
         const params = new URLSearchParams();
         if (filterType) params.append('filterType', filterType);
         if (status) params.append('status', status);
@@ -966,7 +966,7 @@ router.get('/hotels/bookings/reconfirmations', authUser, async (req, res) => {
         const signature = generateHotelbedsSignature(HOTELBEDS_API_KEY, HOTELBEDS_SECRET, timestamp);
 
         const { from, to, start, end, filterType, clientReferences, references } = req.query;
-        
+
         const params = new URLSearchParams();
         params.append('from', from || 1);
         params.append('to', to || 100);
@@ -1052,7 +1052,7 @@ router.post('/hotels/search-by-hotels', async (req, res) => {
         }
 
         const data = await response.json();
-        
+
         // Log for certification
         addLog({
             step: 'Availability',

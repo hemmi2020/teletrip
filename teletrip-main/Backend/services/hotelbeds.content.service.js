@@ -66,13 +66,16 @@ async function getHotelContent(hotelCode) {
     const signature = generateSignature(HOTELBEDS_API_KEY, HOTELBEDS_SECRET, timestamp);
 
     const url = `${CONTENT_BASE_URL}/hotels/${hotelCode}/details?language=ENG&useSecondaryLanguage=false`;
+    const { getMTLSAgent } = require('../config/mtls.config');
+    const agent = getMTLSAgent();
     const response = await fetchWithRetry(url, {
       method: 'GET',
       headers: {
         'Api-key': HOTELBEDS_API_KEY,
         'X-Signature': signature,
         'Accept': 'application/json'
-      }
+      },
+      ...(agent && { agent })
     }, { retries: 3, baseDelay: 1000, timeoutMs: 15000 });
 
     if (!response.ok) {
@@ -82,7 +85,7 @@ async function getHotelContent(hotelCode) {
 
     const data = await response.json();
     const hotel = data.hotel;
-    
+
     if (!hotel) return null;
 
     return {
@@ -127,7 +130,7 @@ async function getHotelContent(hotelCode) {
         indFee: f.indFee || false
       })),
       // Room-level facilities with paid charges (indFee=true)
-      roomPaidFacilities: (hotel.rooms || []).flatMap(room => 
+      roomPaidFacilities: (hotel.rooms || []).flatMap(room =>
         (room.facilities || [])
           .filter(f => f.indFee === true)
           .map(f => ({
@@ -159,13 +162,16 @@ async function getHotelsBulk(from = 1, to = 100) {
     const signature = generateSignature(HOTELBEDS_API_KEY, HOTELBEDS_SECRET, timestamp);
 
     const url = `${CONTENT_BASE_URL}/hotels?fields=${SYNC_FIELDS}&language=ENG&from=${from}&to=${to}`;
+    const { getMTLSAgent } = require('../config/mtls.config');
+    const agent = getMTLSAgent();
     const response = await fetchWithRetry(url, {
       method: 'GET',
       headers: {
         'Api-key': HOTELBEDS_API_KEY,
         'X-Signature': signature,
         'Accept': 'application/json'
-      }
+      },
+      ...(agent && { agent })
     }, { retries: 3, baseDelay: 2000, timeoutMs: 45000 });
 
     if (!response.ok) {

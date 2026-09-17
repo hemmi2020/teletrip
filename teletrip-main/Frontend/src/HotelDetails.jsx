@@ -653,6 +653,30 @@ if (children > 0 && childAges.length > 0) {
                       <Bed className="w-4 h-4 mr-2" />
                       <span className="text-sm">Room Code: {room.code}</span>
                     </div>
+                    {/* Room Facilities - Paid (indFee=true) vs Free */}
+                    {room.facilities && room.facilities.length > 0 && (
+                      <div className="mb-2">
+                        {room.facilities.filter(f => f.indFee === true).length > 0 && (
+                          <div className="flex flex-wrap gap-1 mb-1">
+                            {room.facilities.filter(f => f.indFee === true).map((f, i) => (
+                              <span key={`room-paid-${i}`} className="text-xs px-2 py-0.5 bg-orange-100 text-orange-700 border border-orange-200 rounded font-medium flex items-center">
+                                <AlertCircle className="w-3 h-3 mr-1" />
+                                {f.description?.content || f.description || `Facility ${f.facilityCode}`} (Extra Charge)
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                        {room.facilities.filter(f => f.indFee !== true).length > 0 && (
+                          <div className="flex flex-wrap gap-1">
+                            {room.facilities.filter(f => f.indFee !== true).slice(0, 5).map((f, i) => (
+                              <span key={`room-free-${i}`} className="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded">
+                                {f.description?.content || f.description || `Facility ${f.facilityCode}`}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
                 {/* Room Rates */}
