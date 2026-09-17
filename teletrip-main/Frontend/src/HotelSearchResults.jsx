@@ -18,7 +18,7 @@ import {
   ChevronDown,
   Filter,
   X,
-  MessageSquare, 
+  MessageSquare,
   ThumbsUp,
   ShoppingCart,
   Bed,
@@ -44,15 +44,14 @@ import logo from './images/Telitrip-Logo.png';
 const RatingCircles = ({ rating, size = 'w-5 h-5' }) => {
   const numRating = Number(rating) || 0;
   const filledCircles = Math.round(numRating);
-  
+
   return (
     <div className="flex gap-0.5">
       {[...Array(5)].map((_, i) => (
         <div
           key={i}
-          className={`${size} rounded-full ${
-            i < filledCircles ? 'bg-green-600' : 'bg-gray-300'
-          }`}
+          className={`${size} rounded-full ${i < filledCircles ? 'bg-green-600' : 'bg-gray-300'
+            }`}
         />
       ))}
     </div>
@@ -67,6 +66,7 @@ const HotelSearchResults = () => {
   const [user, setUser] = useState(null);
   const [sortOption, setSortOption] = useState("default");
   const [showModifySearch, setShowModifySearch] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(20);
 
   // Listen for Search tab press from BottomNavBar
   useEffect(() => {
@@ -116,13 +116,13 @@ const HotelSearchResults = () => {
     sortBy: true,
   });
   const [hotelReviews, setHotelReviews] = useState({});
-const [expandedReviews, setExpandedReviews] = useState({});
-const [loadingReviews, setLoadingReviews] = useState({});
-const [reviewsModal, setReviewsModal] = useState({
-  isOpen: false,
-  hotelId: null,
-  hotelName: null
-});
+  const [expandedReviews, setExpandedReviews] = useState({});
+  const [loadingReviews, setLoadingReviews] = useState({});
+  const [reviewsModal, setReviewsModal] = useState({
+    isOpen: false,
+    hotelId: null,
+    hotelName: null
+  });
   const navigate = useNavigate();
   const { addToCart } = useCart();
   const { formatPKR, convert } = useCurrency();
@@ -161,300 +161,300 @@ const [reviewsModal, setReviewsModal] = useState({
   ];
 
   const convertCountryCode = (code) => {
-  const countryMap = {
-    // A‑codes
-    AFG: "Afghanistan",
-    ALB: "Albania",
-    DZA: "Algeria",
-    ASM: "American Samoa",
-    AND: "Andorra",
-    AGO: "Angola",
-    AIA: "Anguilla",
-    ATA: "Antarctica",
-    ATG: "Antigua and Barbuda",
-    ARG: "Argentina",
-    ARM: "Armenia",
-    ABW: "Aruba",
-    AUS: "Australia",
-    AUT: "Austria",
-    AZE: "Azerbaijan", 
+    const countryMap = {
+      // A‑codes
+      AFG: "Afghanistan",
+      ALB: "Albania",
+      DZA: "Algeria",
+      ASM: "American Samoa",
+      AND: "Andorra",
+      AGO: "Angola",
+      AIA: "Anguilla",
+      ATA: "Antarctica",
+      ATG: "Antigua and Barbuda",
+      ARG: "Argentina",
+      ARM: "Armenia",
+      ABW: "Aruba",
+      AUS: "Australia",
+      AUT: "Austria",
+      AZE: "Azerbaijan",
 
-    // B‑codes
-    BHS: "Bahamas",
-    BHR: "Bahrain",
-    BGD: "Bangladesh",
-    BRB: "Barbados",
-    BLR: "Belarus",
-    BEL: "Belgium",
-    BLZ: "Belize",
-    BEN: "Benin",
-    BMU: "Bermuda",
-    BTN: "Bhutan",
-    BOL: "Bolivia (Plurinational State of)",
-    BIH: "Bosnia and Herzegovina",
-    BWA: "Botswana",
-    BVT: "Bouvet Island",
-    BRA: "Brazil",
-    IOT: "British Indian Ocean Territory",
-    BRN: "Brunei Darussalam",
-    BGR: "Bulgaria",
-    BFA: "Burkina Faso",
-    BDI: "Burundi",
+      // B‑codes
+      BHS: "Bahamas",
+      BHR: "Bahrain",
+      BGD: "Bangladesh",
+      BRB: "Barbados",
+      BLR: "Belarus",
+      BEL: "Belgium",
+      BLZ: "Belize",
+      BEN: "Benin",
+      BMU: "Bermuda",
+      BTN: "Bhutan",
+      BOL: "Bolivia (Plurinational State of)",
+      BIH: "Bosnia and Herzegovina",
+      BWA: "Botswana",
+      BVT: "Bouvet Island",
+      BRA: "Brazil",
+      IOT: "British Indian Ocean Territory",
+      BRN: "Brunei Darussalam",
+      BGR: "Bulgaria",
+      BFA: "Burkina Faso",
+      BDI: "Burundi",
 
-    // C‑codes
-    CPV: "Cabo Verde",
-    KHM: "Cambodia",
-    CMR: "Cameroon",
-    CAN: "Canada",
-    CYM: "Cayman Islands",
-    CAF: "Central African Republic",
-    TCD: "Chad",
-    CHL: "Chile",
-    CHN: "China",
-    CXR: "Christmas Island",
-    CCK: "Cocos (Keeling) Islands",
-    COL: "Colombia",
-    COM: "Comoros",
-    COG: "Congo",
-    COD: "Congo, Democratic Republic of the",
-    COK: "Cook Islands",
-    CRI: "Costa Rica",
-    CIV: "Côte d'Ivoire",
-    HRV: "Croatia",
-    CUB: "Cuba",
-    CUW: "Curaçao",
-    CYP: "Cyprus",
-    CZE: "Czechia",
+      // C‑codes
+      CPV: "Cabo Verde",
+      KHM: "Cambodia",
+      CMR: "Cameroon",
+      CAN: "Canada",
+      CYM: "Cayman Islands",
+      CAF: "Central African Republic",
+      TCD: "Chad",
+      CHL: "Chile",
+      CHN: "China",
+      CXR: "Christmas Island",
+      CCK: "Cocos (Keeling) Islands",
+      COL: "Colombia",
+      COM: "Comoros",
+      COG: "Congo",
+      COD: "Congo, Democratic Republic of the",
+      COK: "Cook Islands",
+      CRI: "Costa Rica",
+      CIV: "Côte d'Ivoire",
+      HRV: "Croatia",
+      CUB: "Cuba",
+      CUW: "Curaçao",
+      CYP: "Cyprus",
+      CZE: "Czechia",
 
-    // D‑codes
-    DNK: "Denmark",
-    DJI: "Djibouti",
-    DMA: "Dominica",
-    DOM: "Dominican Republic",
-    ECU: "Ecuador",
-    EGY: "Egypt",
-    SLV: "El Salvador",
-    GNQ: "Equatorial Guinea",
-    ERI: "Eritrea",
-    EST: "Estonia",
-    SWZ: "Eswatini",
-    ETH: "Ethiopia",
+      // D‑codes
+      DNK: "Denmark",
+      DJI: "Djibouti",
+      DMA: "Dominica",
+      DOM: "Dominican Republic",
+      ECU: "Ecuador",
+      EGY: "Egypt",
+      SLV: "El Salvador",
+      GNQ: "Equatorial Guinea",
+      ERI: "Eritrea",
+      EST: "Estonia",
+      SWZ: "Eswatini",
+      ETH: "Ethiopia",
 
-    // F‑codes
-    FLK: "Falkland Islands (Malvinas)",
-    FRO: "Faroe Islands",
-    FJI: "Fiji",
-    FIN: "Finland",
-    FRA: "France",
-    GUF: "French Guiana",
-    PYF: "French Polynesia",
-    ATF: "French Southern Territories",
+      // F‑codes
+      FLK: "Falkland Islands (Malvinas)",
+      FRO: "Faroe Islands",
+      FJI: "Fiji",
+      FIN: "Finland",
+      FRA: "France",
+      GUF: "French Guiana",
+      PYF: "French Polynesia",
+      ATF: "French Southern Territories",
 
-    // G‑codes
-    GAB: "Gabon",
-    GMB: "Gambia",
-    GEO: "Georgia",
-    DEU: "Germany",
-    GHA: "Ghana",
-    GIB: "Gibraltar",
-    GRC: "Greece",
-    GRL: "Greenland",
-    GRD: "Grenada",
-    GLP: "Guadeloupe",
-    GUM: "Guam",
-    GTM: "Guatemala",
-    GGY: "Guernsey",
-    GIN: "Guinea",
-    GNB: "Guinea-Bissau",
-    GUY: "Guyana",
+      // G‑codes
+      GAB: "Gabon",
+      GMB: "Gambia",
+      GEO: "Georgia",
+      DEU: "Germany",
+      GHA: "Ghana",
+      GIB: "Gibraltar",
+      GRC: "Greece",
+      GRL: "Greenland",
+      GRD: "Grenada",
+      GLP: "Guadeloupe",
+      GUM: "Guam",
+      GTM: "Guatemala",
+      GGY: "Guernsey",
+      GIN: "Guinea",
+      GNB: "Guinea-Bissau",
+      GUY: "Guyana",
 
-    // H‑codes
-    HTI: "Haiti",
-    HMD: "Heard Island and McDonald Islands",
-    VAT: "Holy See",
-    HND: "Honduras",
-    HKG: "Hong Kong",
-    HUN: "Hungary",
+      // H‑codes
+      HTI: "Haiti",
+      HMD: "Heard Island and McDonald Islands",
+      VAT: "Holy See",
+      HND: "Honduras",
+      HKG: "Hong Kong",
+      HUN: "Hungary",
 
-    // I‑codes
-    ISL: "Iceland",
-    IND: "India",
-    IDN: "Indonesia",
-    IRN: "Iran (Islamic Republic of)",
-    IRQ: "Iraq",
-    IRL: "Ireland",
-    IMN: "Isle of Man",
-    ISR: "Israel",
-    ITA: "Italy",
-    JAM: "Jamaica",
-    JPN: "Japan",
-    JEY: "Jersey",
-    JOR: "Jordan",
+      // I‑codes
+      ISL: "Iceland",
+      IND: "India",
+      IDN: "Indonesia",
+      IRN: "Iran (Islamic Republic of)",
+      IRQ: "Iraq",
+      IRL: "Ireland",
+      IMN: "Isle of Man",
+      ISR: "Israel",
+      ITA: "Italy",
+      JAM: "Jamaica",
+      JPN: "Japan",
+      JEY: "Jersey",
+      JOR: "Jordan",
 
-    // K‑codes
-    KAZ: "Kazakhstan",
-    KEN: "Kenya",
-    KIR: "Kiribati",
-    PRK: "Korea (Democratic People's Republic of)",
-    KOR: "Korea, Republic of",
-    KWT: "Kuwait",
-    KGZ: "Kyrgyzstan",
+      // K‑codes
+      KAZ: "Kazakhstan",
+      KEN: "Kenya",
+      KIR: "Kiribati",
+      PRK: "Korea (Democratic People's Republic of)",
+      KOR: "Korea, Republic of",
+      KWT: "Kuwait",
+      KGZ: "Kyrgyzstan",
 
-    // L‑codes
-    LAO: "Lao People's Democratic Republic",
-    LVA: "Latvia",
-    LBN: "Lebanon",
-    LSO: "Lesotho",
-    LBR: "Liberia",
-    LBY: "Libya",
-    LIE: "Liechtenstein",
-    LTU: "Lithuania",
-    LUX: "Luxembourg",
+      // L‑codes
+      LAO: "Lao People's Democratic Republic",
+      LVA: "Latvia",
+      LBN: "Lebanon",
+      LSO: "Lesotho",
+      LBR: "Liberia",
+      LBY: "Libya",
+      LIE: "Liechtenstein",
+      LTU: "Lithuania",
+      LUX: "Luxembourg",
 
-    // M‑codes
-    MAC: "Macao",
-    MKD: "North Macedonia",
-    MDG: "Madagascar",
-    MWI: "Malawi",
-    MYS: "Malaysia",
-    MDV: "Maldives",
-    MLI: "Mali",
-    MLT: "Malta",
-    MHL: "Marshall Islands",
-    MTQ: "Martinique",
-    MRT: "Mauritania",
-    MUS: "Mauritius",
-    MYT: "Mayotte",
-    MEX: "Mexico",
-    FSM: "Micronesia (Federated States of)",
-    MDA: "Moldova, Republic of",
-    MCO: "Monaco",
-    MNG: "Mongolia",
-    MNE: "Montenegro",
-    MSR: "Montserrat",
-    MAR: "Morocco",
-    MOZ: "Mozambique",
-    MMR: "Myanmar",
+      // M‑codes
+      MAC: "Macao",
+      MKD: "North Macedonia",
+      MDG: "Madagascar",
+      MWI: "Malawi",
+      MYS: "Malaysia",
+      MDV: "Maldives",
+      MLI: "Mali",
+      MLT: "Malta",
+      MHL: "Marshall Islands",
+      MTQ: "Martinique",
+      MRT: "Mauritania",
+      MUS: "Mauritius",
+      MYT: "Mayotte",
+      MEX: "Mexico",
+      FSM: "Micronesia (Federated States of)",
+      MDA: "Moldova, Republic of",
+      MCO: "Monaco",
+      MNG: "Mongolia",
+      MNE: "Montenegro",
+      MSR: "Montserrat",
+      MAR: "Morocco",
+      MOZ: "Mozambique",
+      MMR: "Myanmar",
 
-    // N‑codes
-    NAM: "Namibia",
-    NRU: "Nauru",
-    NPL: "Nepal",
-    NLD: "Netherlands",
-    NCL: "New Caledonia",
-    NZL: "New Zealand",
-    NIC: "Nicaragua",
-    NER: "Niger",
-    NGA: "Nigeria",
-    NIU: "Niue",
-    NFK: "Norfolk Island",
-    MNP: "Northern Mariana Islands",
-    NOR: "Norway",
+      // N‑codes
+      NAM: "Namibia",
+      NRU: "Nauru",
+      NPL: "Nepal",
+      NLD: "Netherlands",
+      NCL: "New Caledonia",
+      NZL: "New Zealand",
+      NIC: "Nicaragua",
+      NER: "Niger",
+      NGA: "Nigeria",
+      NIU: "Niue",
+      NFK: "Norfolk Island",
+      MNP: "Northern Mariana Islands",
+      NOR: "Norway",
 
-    // O‑codes
-    OMN: "Oman",
+      // O‑codes
+      OMN: "Oman",
 
-    // P‑codes
-    PAK: "Pakistan",
-    PLW: "Palau",
-    PSE: "State of Palestine",
-    PAN: "Panama",
-    PNG: "Papua New Guinea",
-    PRY: "Paraguay",
-    PER: "Peru",
-    PHL: "Philippines",
-    PCN: "Pitcairn",
-    POL: "Poland",
-    PRT: "Portugal",
-    PRI: "Puerto Rico",
+      // P‑codes
+      PAK: "Pakistan",
+      PLW: "Palau",
+      PSE: "State of Palestine",
+      PAN: "Panama",
+      PNG: "Papua New Guinea",
+      PRY: "Paraguay",
+      PER: "Peru",
+      PHL: "Philippines",
+      PCN: "Pitcairn",
+      POL: "Poland",
+      PRT: "Portugal",
+      PRI: "Puerto Rico",
 
-    // Q‑codes
-    QAT: "Qatar",
+      // Q‑codes
+      QAT: "Qatar",
 
-    // R‑codes
-    REU: "Réunion",
-    ROU: "Romania",
-    RUS: "Russian Federation",
-    RWA: "Rwanda",
+      // R‑codes
+      REU: "Réunion",
+      ROU: "Romania",
+      RUS: "Russian Federation",
+      RWA: "Rwanda",
 
-    // S‑codes
-    BLM: "Saint Barthélemy",
-    SHN: "Saint Helena, Ascension and Tristan da Cunha",
-    KNA: "Saint Kitts and Nevis",
-    LCA: "Saint Lucia",
-    SPM: "Saint Pierre and Miquelon",
-    VCT: "Saint Vincent and the Grenadines",
-    WSM: "Samoa",
-    SMR: "San Marino",
-    STP: "Sao Tome and Principe",
-    SAU: "Saudi Arabia",
-    SEN: "Senegal",
-    SRB: "Serbia",
-    SYC: "Seychelles",
-    SLE: "Sierra Leone",
-    SGP: "Singapore",
-    SXM: "Sint Maarten (Dutch part)",
-    SVK: "Slovakia",
-    SVN: "Slovenia",
-    SLB: "Solomon Islands",
-    SOM: "Somalia",
-    ZAF: "South Africa",
-    SGS: "South Georgia and the South Sandwich Islands",
-    SSD: "South Sudan",
-    ESP: "Spain",
-    LKA: "Sri Lanka",
-    SDN: "Sudan",
-    SUR: "Suriname",
-    SJM: "Svalbard and Jan Mayen",
-    SWE: "Sweden",
-    CHE: "Switzerland",
-    SYR: "Syrian Arab Republic",
+      // S‑codes
+      BLM: "Saint Barthélemy",
+      SHN: "Saint Helena, Ascension and Tristan da Cunha",
+      KNA: "Saint Kitts and Nevis",
+      LCA: "Saint Lucia",
+      SPM: "Saint Pierre and Miquelon",
+      VCT: "Saint Vincent and the Grenadines",
+      WSM: "Samoa",
+      SMR: "San Marino",
+      STP: "Sao Tome and Principe",
+      SAU: "Saudi Arabia",
+      SEN: "Senegal",
+      SRB: "Serbia",
+      SYC: "Seychelles",
+      SLE: "Sierra Leone",
+      SGP: "Singapore",
+      SXM: "Sint Maarten (Dutch part)",
+      SVK: "Slovakia",
+      SVN: "Slovenia",
+      SLB: "Solomon Islands",
+      SOM: "Somalia",
+      ZAF: "South Africa",
+      SGS: "South Georgia and the South Sandwich Islands",
+      SSD: "South Sudan",
+      ESP: "Spain",
+      LKA: "Sri Lanka",
+      SDN: "Sudan",
+      SUR: "Suriname",
+      SJM: "Svalbard and Jan Mayen",
+      SWE: "Sweden",
+      CHE: "Switzerland",
+      SYR: "Syrian Arab Republic",
 
-    // T‑codes
-    TWN: "Taiwan, Province of China",
-    TJK: "Tajikistan",
-    TZA: "Tanzania, United Republic of",
-    THA: "Thailand",
-    TLS: "Timor-Leste",
-    TGO: "Togo",
-    TKL: "Tokelau",
-    TON: "Tonga",
-    TTO: "Trinidad and Tobago",
-    TUN: "Tunisia",
-    TUR: "Türkiye",
-    TKM: "Turkmenistan",
-    TCA: "Turks and Caicos Islands",
-    TUV: "Tuvalu",
-    UGA: "Uganda",
-    UKR: "Ukraine",
-    ARE: "United Arab Emirates",
-    GBR: "United Kingdom of Great Britain and Northern Ireland",
-    USA: "United States of America",
-    UMI: "United States Minor Outlying Islands",
-    URY: "Uruguay",
-    UZB: "Uzbekistan",
+      // T‑codes
+      TWN: "Taiwan, Province of China",
+      TJK: "Tajikistan",
+      TZA: "Tanzania, United Republic of",
+      THA: "Thailand",
+      TLS: "Timor-Leste",
+      TGO: "Togo",
+      TKL: "Tokelau",
+      TON: "Tonga",
+      TTO: "Trinidad and Tobago",
+      TUN: "Tunisia",
+      TUR: "Türkiye",
+      TKM: "Turkmenistan",
+      TCA: "Turks and Caicos Islands",
+      TUV: "Tuvalu",
+      UGA: "Uganda",
+      UKR: "Ukraine",
+      ARE: "United Arab Emirates",
+      GBR: "United Kingdom of Great Britain and Northern Ireland",
+      USA: "United States of America",
+      UMI: "United States Minor Outlying Islands",
+      URY: "Uruguay",
+      UZB: "Uzbekistan",
 
-    // V‑codes
-    VUT: "Vanuatu",
-    VEN: "Venezuela (Bolivarian Republic of)",
-    VNM: "Viet Nam",
-    VGB: "Virgin Islands (British)",
-    VIR: "Virgin Islands (U.S.)",
+      // V‑codes
+      VUT: "Vanuatu",
+      VEN: "Venezuela (Bolivarian Republic of)",
+      VNM: "Viet Nam",
+      VGB: "Virgin Islands (British)",
+      VIR: "Virgin Islands (U.S.)",
 
-    // W‑codes
-    WLF: "Wallis and Futuna",
-    ESH: "Western Sahara",
+      // W‑codes
+      WLF: "Wallis and Futuna",
+      ESH: "Western Sahara",
 
-    // Y‑codes
-    YEM: "Yemen",
+      // Y‑codes
+      YEM: "Yemen",
 
-    // Z‑codes
-    ZMB: "Zambia",
-    ZWE: "Zimbabwe"
+      // Z‑codes
+      ZMB: "Zambia",
+      ZWE: "Zimbabwe"
+    };
+
+    return countryMap[code.toUpperCase()] || code;
   };
-
-  return countryMap[code.toUpperCase()] || code;
-};
 
 
   const parseStars = (str) => {
@@ -469,20 +469,20 @@ const [reviewsModal, setReviewsModal] = useState({
     }
 
     // Sort policies by date to find the most relevant one
-    const sortedPolicies = cancellationPolicies.sort((a, b) => 
+    const sortedPolicies = cancellationPolicies.sort((a, b) =>
       new Date(a.from) - new Date(b.from)
     );
 
     // Get the most recent/relevant policy
     const policy = sortedPolicies[0];
-    
+
     // Format the date
     const formatDate = (dateString) => {
       const date = new Date(dateString);
-      return date.toLocaleDateString('en-US', { 
-        year: 'numeric', 
-        month: '2-digit', 
-        day: '2-digit' 
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
       });
     };
 
@@ -539,16 +539,16 @@ const [reviewsModal, setReviewsModal] = useState({
   };
 
   const handleAmenityChange = (amenityId) => {
-    setSelectedAmenities(prev => 
-      prev.includes(amenityId) 
+    setSelectedAmenities(prev =>
+      prev.includes(amenityId)
         ? prev.filter(id => id !== amenityId)
         : [...prev, amenityId]
     );
   };
 
   const handleAccommodationTypeChange = (typeId) => {
-    setSelectedAccommodationTypes(prev => 
-      prev.includes(typeId) 
+    setSelectedAccommodationTypes(prev =>
+      prev.includes(typeId)
         ? prev.filter(id => id !== typeId)
         : [...prev, typeId]
     );
@@ -576,12 +576,12 @@ const [reviewsModal, setReviewsModal] = useState({
   };
 
   const handleAddToCart = (hotel, room, rate) => {
-    console.log('🏨 handleAddToCart called with:', { 
-      hotelId: hotel.id, 
-      hotelName: hotel.name, 
-      roomName: room.name 
+    console.log('🏨 handleAddToCart called with:', {
+      hotelId: hotel.id,
+      hotelName: hotel.name,
+      roomName: room.name
     });
-    
+
     const checkIn = searchParams.get("checkIn");
     const checkOut = searchParams.get("checkOut");
     const adults = parseInt(searchParams.get("adults") || "2");
@@ -612,7 +612,7 @@ const [reviewsModal, setReviewsModal] = useState({
       category: hotel.categoryName, totalPrice: totalFromAPI, net: totalFromAPI,
       addedAt: new Date().toISOString(),
     };
-    
+
     console.log('🛒 Adding to cart:', cartItem);
     addToCart(cartItem);
     setNotification({ show: true, message: `${room.name} added to cart!`, type: 'success' });
@@ -622,12 +622,12 @@ const [reviewsModal, setReviewsModal] = useState({
   };
 
   const handleMultiRoomAddToCart = (hotel, selections, roomConfigsList) => {
-    console.log('🏨🏨 handleMultiRoomAddToCart called with:', { 
-      hotelId: hotel.id, 
-      hotelName: hotel.name, 
-      roomCount: Object.keys(selections).length 
+    console.log('🏨🏨 handleMultiRoomAddToCart called with:', {
+      hotelId: hotel.id,
+      hotelName: hotel.name,
+      roomCount: Object.keys(selections).length
     });
-    
+
     const checkIn = searchParams.get("checkIn");
     const checkOut = searchParams.get("checkOut");
     const nights = Math.ceil((new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60 * 24));
@@ -671,71 +671,76 @@ const [reviewsModal, setReviewsModal] = useState({
 
   // ADD THIS FUNCTION
   const fetchTripAdvisorReviews = async (hotel) => {
-  // Check if already fetched or currently loading
-  if (hotelReviews[hotel.id] || loadingReviews[hotel.id]) return;
-  
-  setLoadingReviews(prev => ({ ...prev, [hotel.id]: true }));
-  
-  try {
-    // Use hotel code (not id) and send proper hotel data
-    const hotelCode = hotel.code || hotel.id;
-    const cityName = hotel.city || hotel.address?.split(',')[0] || 'Baku';
-    
-    console.log(`Fetching reviews for: ${hotel.name} in ${cityName}`);
-    
-    const response = await fetch(
-      `${API_BASE_URL}/hotels/${encodeURIComponent(hotelCode)}/reviews?name=${encodeURIComponent(hotel.name)}&city=${encodeURIComponent(cityName)}`
-    );
-    
-    const data = await response.json();
-    
-    console.log('Reviews response:', data);
-    
-    if (data.success && data.data) {
-      setHotelReviews(prev => ({
-        ...prev,
-        [hotel.id]: data.data
-      }));
-    } else {
-      console.log('No reviews found or API returned error:', data.message);
+    // Check if already fetched or currently loading
+    if (hotelReviews[hotel.id] || loadingReviews[hotel.id]) return;
+
+    setLoadingReviews(prev => ({ ...prev, [hotel.id]: true }));
+
+    try {
+      // Use hotel code (not id) and send proper hotel data
+      const hotelCode = hotel.code || hotel.id;
+      const cityName = hotel.city || hotel.address?.split(',')[0] || 'Baku';
+
+      console.log(`Fetching reviews for: ${hotel.name} in ${cityName}`);
+
+      const response = await fetch(
+        `${API_BASE_URL}/hotels/${encodeURIComponent(hotelCode)}/reviews?name=${encodeURIComponent(hotel.name)}&city=${encodeURIComponent(cityName)}`
+      );
+
+      const data = await response.json();
+
+      console.log('Reviews response:', data);
+
+      if (data.success && data.data) {
+        setHotelReviews(prev => ({
+          ...prev,
+          [hotel.id]: data.data
+        }));
+      } else {
+        console.log('No reviews found or API returned error:', data.message);
+      }
+    } catch (error) {
+      console.error('Error fetching reviews:', error);
+    } finally {
+      setLoadingReviews(prev => ({ ...prev, [hotel.id]: false }));
     }
-  } catch (error) {
-    console.error('Error fetching reviews:', error);
-  } finally {
-    setLoadingReviews(prev => ({ ...prev, [hotel.id]: false }));
-  }
-};
-const openReviewsModal = (hotel) => {
-  setReviewsModal({
-    isOpen: true,
-    hotelId: hotel.id,
-    hotelName: hotel.name
-  });
-  
-  // Fetch reviews if not already fetched
-  if (!hotelReviews[hotel.id]) {
-    fetchTripAdvisorReviews(hotel);
-  }
-};
-
-// 5. Add function to close modal
-const closeReviewsModal = () => {
-  setReviewsModal({
-    isOpen: false,
-    hotelId: null,
-    hotelName: null
-  });
-};
-
-  // ADD THIS useEffect AFTER your existing hotel fetching useEffect
-  useEffect(() => {
-  if (hotels.length > 0) {
-    // Fetch reviews for ALL hotels
-    hotels.forEach(hotel => {
-      fetchTripAdvisorReviews(hotel);
+  };
+  const openReviewsModal = (hotel) => {
+    setReviewsModal({
+      isOpen: true,
+      hotelId: hotel.id,
+      hotelName: hotel.name
     });
-  }
-}, [hotels]);
+
+    // Fetch reviews if not already fetched
+    if (!hotelReviews[hotel.id]) {
+      fetchTripAdvisorReviews(hotel);
+    }
+  };
+
+  // 5. Add function to close modal
+  const closeReviewsModal = () => {
+    setReviewsModal({
+      isOpen: false,
+      hotelId: null,
+      hotelName: null
+    });
+  };
+
+  // Reset visible hotel count when filters or search change
+  useEffect(() => {
+    setVisibleCount(20);
+  }, [searchParams, selectedAmenities, selectedAccommodationTypes, hotelNameSearch, selectedBoards, selectedCategories, selectedZones, selectedReviewRatings, selectedCancellation, priceMin, priceMax, selectedPromos, selectedDiscounts, selectedChains, selectedEstablishment, sortOption]);
+
+  // Fetch reviews ONLY for currently visible hotels to prevent network flooding and main thread lag
+  useEffect(() => {
+    if (sortedHotels && sortedHotels.length > 0) {
+      const visible = sortedHotels.slice(0, visibleCount);
+      visible.forEach(hotel => {
+        fetchTripAdvisorReviews(hotel);
+      });
+    }
+  }, [sortedHotels, visibleCount]);
 
   // Fetch hotel content (description, facilities) when a hotel is selected - Hotelbeds Certification
   useEffect(() => {
@@ -765,29 +770,29 @@ const closeReviewsModal = () => {
   // HELPER FUNCTION
   const getRatingColor = (rating) => {
 
-  // Debounced address search via backend proxy
-  useEffect(() => {
-    if (addressSearch.trim().length < 3) { setAddressSuggestions([]); setShowAddressSuggestions(false); return; }
-    setLoadingAddress(true);
-    const city = searchParams.get("city") || '';
-    const timer = setTimeout(async () => {
-      try {
-        const q = `${addressSearch}, ${city}`;
-        const res = await fetch(`${API_BASE_URL.replace('/api', '')}/api/locations/address?q=${encodeURIComponent(q)}`);
-        if (res.ok) {
-          const data = await res.json();
-          if (data.success && data.data.length > 0) {
-            setAddressSuggestions(data.data);
-            setShowAddressSuggestions(true);
-          } else {
-            setShowAddressSuggestions(false);
+    // Debounced address search via backend proxy
+    useEffect(() => {
+      if (addressSearch.trim().length < 3) { setAddressSuggestions([]); setShowAddressSuggestions(false); return; }
+      setLoadingAddress(true);
+      const city = searchParams.get("city") || '';
+      const timer = setTimeout(async () => {
+        try {
+          const q = `${addressSearch}, ${city}`;
+          const res = await fetch(`${API_BASE_URL.replace('/api', '')}/api/locations/address?q=${encodeURIComponent(q)}`);
+          if (res.ok) {
+            const data = await res.json();
+            if (data.success && data.data.length > 0) {
+              setAddressSuggestions(data.data);
+              setShowAddressSuggestions(true);
+            } else {
+              setShowAddressSuggestions(false);
+            }
           }
-        }
-      } catch (err) { /* silent */ }
-      finally { setLoadingAddress(false); }
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [addressSearch, searchParams]);
+        } catch (err) { /* silent */ }
+        finally { setLoadingAddress(false); }
+      }, 500);
+      return () => clearTimeout(timer);
+    }, [addressSearch, searchParams]);
     if (rating >= 4.5) return "bg-green-600";
     if (rating >= 3.5) return "bg-green-500";
     if (rating >= 2.5) return "bg-yellow-500";
@@ -795,7 +800,7 @@ const closeReviewsModal = () => {
     return "bg-red-600";
   };
 
- 
+
   useEffect(() => {
     const fetchHotels = async () => {
       try {
@@ -819,19 +824,19 @@ const closeReviewsModal = () => {
 
         // If searching by specific hotel code, skip geocoding
         const hotelCode = searchParams.get("hotelCode");
-        
+
         if (!hotelCode && (!city || !country)) {
           throw new Error("Please provide a destination");
         }
 
         let lat, lon;
-        
+
         const geoResponse = await fetch(
           `${API_BASE_URL}/geocode?q=${encodeURIComponent(city + ", " + convertCountryCode(country))}`
         );
 
         if (geoResponse.ok) {
-          const geoResult = await geoResponse.json();  
+          const geoResult = await geoResponse.json();
           lat = geoResult?.data?.[0]?.lat;
           lon = geoResult?.data?.[0]?.lon;
         }
@@ -849,7 +854,7 @@ const closeReviewsModal = () => {
             }
           } catch (nomErr) { console.warn('Direct Nominatim fallback failed:', nomErr.message); }
         }
-        
+
         if (!hotelCode && (!lat || !lon || (parseFloat(lat) === 0 && parseFloat(lon) === 0))) {
           throw new Error(`Unable to find coordinates for ${city}`);
         }
@@ -897,7 +902,7 @@ const closeReviewsModal = () => {
         // If a specific hotel code is provided, use hotel-by-ID search
         let searchEndpoint = `${API_BASE_URL}/hotels/search`;
         let searchBody = requestBody;
-        
+
         if (hotelCode) {
           searchEndpoint = `${API_BASE_URL}/hotels/search-by-hotels`;
           searchBody = {
@@ -907,7 +912,7 @@ const closeReviewsModal = () => {
           };
           console.log('🏨 Searching specific hotel by ID:', hotelCode);
         }
-        
+
         console.log('🔍 Hotel Search Request:', JSON.stringify(searchBody, null, 2));
 
         let hotelResponse;
@@ -964,8 +969,8 @@ const closeReviewsModal = () => {
           const cheapestRate =
             allRates.length > 0
               ? allRates.reduce((min, rate) =>
-                  parseFloat(rate.net) < parseFloat(min.net) ? rate : min
-                )
+                parseFloat(rate.net) < parseFloat(min.net) ? rate : min
+              )
               : null;
 
           const cancellationPolicy = cheapestRate?.cancellationPolicies || [];
@@ -1013,7 +1018,7 @@ const closeReviewsModal = () => {
         });
 
         // Filter by hotel name if provided
-        const finalHotels = hotelName 
+        const finalHotels = hotelName
           ? transformedHotels.filter(h => h.name.toLowerCase().includes(hotelName.toLowerCase()))
           : transformedHotels;
 
@@ -1028,7 +1033,7 @@ const closeReviewsModal = () => {
     fetchHotels();
   }, [searchParams]);
 
- 
+
 
   // Dynamic filter options derived from hotel data (memoized)
   const dynamicBoards = useMemo(() => [...new Set(hotels.flatMap(h => h.boards))].filter(Boolean).sort(), [hotels]);
@@ -1160,7 +1165,7 @@ const closeReviewsModal = () => {
     );
   }
 
-  
+
 
 
 
@@ -1178,7 +1183,7 @@ const closeReviewsModal = () => {
           ${sidebarCollapsed ? 'w-0 overflow-hidden border-0' : 'w-[300px]'}
           transition-all duration-200
         `}>
-          <div className="h-full overflow-y-auto px-4 py-4 text-left" style={{scrollbarWidth:'thin',scrollbarColor:'#e5e7eb transparent', width: '100%', boxSizing: 'border-box'}}>
+          <div className="h-full overflow-y-auto px-4 py-4 text-left" style={{ scrollbarWidth: 'thin', scrollbarColor: '#e5e7eb transparent', width: '100%', boxSizing: 'border-box' }}>
             <div className="flex justify-between items-center pb-3 mb-1 border-b border-gray-100">
               <span className="text-xs font-semibold text-gray-900 tracking-wider uppercase">Filters</span>
               <div className="flex items-center gap-2">
@@ -1222,7 +1227,7 @@ const closeReviewsModal = () => {
                   <label className="text-[11px] text-gray-500 mb-1 block">Specific address</label>
                   <input type="text" value={addressSearch} onChange={(e) => setAddressSearch(e.target.value)} onFocus={() => addressSuggestions.length > 0 && setShowAddressSuggestions(true)} placeholder="Street, point of interest..." className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 rounded-md bg-gray-50/50 focus:bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none" />
                   {showAddressSuggestions && (
-                    <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-52 overflow-y-auto" style={{scrollbarWidth:'thin'}}>
+                    <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-52 overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
                       {loadingAddress ? (
                         <div className="px-2.5 py-2 text-[12px] text-gray-400 text-center">Searching...</div>
                       ) : addressSuggestions.length > 0 ? (
@@ -1436,9 +1441,9 @@ const closeReviewsModal = () => {
                 <div className="space-y-1.5">
                   {accommodationTypes.map(type => (
                     <label key={type.id} className="flex flex-row items-center justify-start gap-2.5 py-0.5 cursor-pointer group">
-                        <input type="checkbox" checked={selectedAccommodationTypes.includes(type.id)} onChange={() => handleAccommodationTypeChange(type.id)} className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer" />
-                        <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1 text-left">{type.name}</span>
-                        <span className="text-[11px] text-gray-400">{filterCounts.accommodationTypes[type.id] || 0}</span>
+                      <input type="checkbox" checked={selectedAccommodationTypes.includes(type.id)} onChange={() => handleAccommodationTypeChange(type.id)} className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer" />
+                      <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1 text-left">{type.name}</span>
+                      <span className="text-[11px] text-gray-400">{filterCounts.accommodationTypes[type.id] || 0}</span>
                     </label>
                   ))}
                 </div>
@@ -1748,26 +1753,26 @@ const closeReviewsModal = () => {
           {/* Sort bar — fixed, always below header with gap */}
           <div className="fixed top-16 sm:top-20 left-0 right-0 z-[99] flex justify-center px-3 sm:px-6 pt-1.5 sm:pt-2 pointer-events-none">
             <div className="pointer-events-auto w-full max-w-4xl border-b-0" style={{ background: 'rgba(255,255,255,0.78)', backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)', borderRadius: 40, border: '1px solid rgba(255,255,255,0.5)', boxShadow: '0 2px 16px rgba(0,0,0,0.07)' }}>
-            <div className="px-4 sm:px-5 py-2 flex items-center gap-2">
-              <h1 className="text-[13px] sm:text-base font-semibold text-gray-900 truncate flex-1 min-w-0">
-                {sortedHotels.length} Hotels{searchParams.get("city") ? ` in ${searchParams.get("city")}` : searchParams.get("hotelName") ? ` · "${searchParams.get("hotelName")}"` : ''}
-              </h1>
-              <select value={sortOption} onChange={(e) => setSortOption(e.target.value)} className="text-[12px] px-2 py-1.5 border border-gray-200 rounded-lg bg-white text-gray-600 outline-none flex-shrink-0" style={{minHeight:'unset'}}>
-                <option value="default">Recommended</option>
-                <option value="priceLowHigh">Price ↑</option>
-                <option value="priceHighLow">Price ↓</option>
-                <option value="ratingHighLow">Rating ↓</option>
-                <option value="ratingLowHigh">Rating ↑</option>
-              </select>
-              <button onClick={() => setShowModifySearch(s => !s)} className="text-[12px] text-blue-600 font-medium whitespace-nowrap cursor-pointer flex-shrink-0 px-3 py-1.5 rounded-lg border border-blue-200 bg-blue-50" style={{minHeight:'unset'}}>
-                {showModifySearch ? 'Close' : 'Modify'}
-              </button>
-            </div>
-            {showModifySearch && (
-              <div className="px-4 sm:px-5 pb-3 pt-2 border-t border-gray-100/50">
-                <HotelSearchForm defaultTab="stays" variant="light" />
+              <div className="px-4 sm:px-5 py-2 flex items-center gap-2">
+                <h1 className="text-[13px] sm:text-base font-semibold text-gray-900 truncate flex-1 min-w-0">
+                  {sortedHotels.length} Hotels{searchParams.get("city") ? ` in ${searchParams.get("city")}` : searchParams.get("hotelName") ? ` · "${searchParams.get("hotelName")}"` : ''}
+                </h1>
+                <select value={sortOption} onChange={(e) => setSortOption(e.target.value)} className="text-[12px] px-2 py-1.5 border border-gray-200 rounded-lg bg-white text-gray-600 outline-none flex-shrink-0" style={{ minHeight: 'unset' }}>
+                  <option value="default">Recommended</option>
+                  <option value="priceLowHigh">Price ↑</option>
+                  <option value="priceHighLow">Price ↓</option>
+                  <option value="ratingHighLow">Rating ↓</option>
+                  <option value="ratingLowHigh">Rating ↑</option>
+                </select>
+                <button onClick={() => setShowModifySearch(s => !s)} className="text-[12px] text-blue-600 font-medium whitespace-nowrap cursor-pointer flex-shrink-0 px-3 py-1.5 rounded-lg border border-blue-200 bg-blue-50" style={{ minHeight: 'unset' }}>
+                  {showModifySearch ? 'Close' : 'Modify'}
+                </button>
               </div>
-            )}
+              {showModifySearch && (
+                <div className="px-4 sm:px-5 pb-3 pt-2 border-t border-gray-100/50">
+                  <HotelSearchForm defaultTab="stays" variant="light" />
+                </div>
+              )}
             </div>
           </div>
           <div className="max-w-[1280px] mx-auto px-3 sm:px-6 w-full pt-16 sm:pt-12">
@@ -1794,8 +1799,8 @@ const closeReviewsModal = () => {
             </div>
 
             {/* Hotel Cards */}
-            <div className="space-y-3 pb-20">
-              {sortedHotels.map((hotel, cardIndex) => {
+            <div className="space-y-3 pb-6">
+              {sortedHotels.slice(0, visibleCount).map((hotel, cardIndex) => {
                 const checkIn = searchParams.get("checkIn");
                 const checkOut = searchParams.get("checkOut");
                 const nights = checkIn && checkOut ? Math.ceil((new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60 * 24)) : 1;
@@ -1804,84 +1809,96 @@ const closeReviewsModal = () => {
                 const roomTypes = [...new Set((hotel.rooms || []).map(r => r.name))];
 
                 return (
-                <div
-                  key={hotel.id}
-                  className="bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-lg hover:border-gray-200 transition-all duration-200 flex flex-col sm:flex-row group"
-                >
-                  {/* Image */}
-                  <div className="sm:w-56 lg:w-64 relative overflow-hidden flex-shrink-0">
-                    <img src={hotel.thumbnail || "https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg"} alt={hotel.name} className="w-full aspect-video sm:aspect-auto sm:h-full object-cover group-hover:scale-105 transition-transform duration-500" onError={(e) => (e.target.src = "https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg")} />
-                    {hotel.hasFreeCancellation && (
-                      <div className="absolute top-2 left-2 bg-green-600/90 text-white px-2 py-0.5 rounded text-[10px] font-medium">Free cancellation</div>
-                    )}
-                  </div>
+                  <div
+                    key={hotel.id}
+                    className="bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-lg hover:border-gray-200 transition-all duration-200 flex flex-col sm:flex-row group"
+                  >
+                    {/* Image */}
+                    <div className="sm:w-56 lg:w-64 relative overflow-hidden flex-shrink-0">
+                      <img loading="lazy" src={hotel.thumbnail || "https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg"} alt={hotel.name} className="w-full aspect-video sm:aspect-auto sm:h-full object-cover group-hover:scale-105 transition-transform duration-500" onError={(e) => (e.target.src = "https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg")} />
+                      {hotel.hasFreeCancellation && (
+                        <div className="absolute top-2 left-2 bg-green-600/90 text-white px-2 py-0.5 rounded text-[10px] font-medium">Free cancellation</div>
+                      )}
+                    </div>
 
-                  {/* Content */}
-                  <div className="flex-1 p-3 sm:p-4 flex flex-col justify-between min-w-0">
-                    <div>
-                      <div className="flex justify-between items-start gap-2 mb-1">
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <h2 className="text-[14px] font-semibold text-gray-900 line-clamp-2 leading-tight">{hotel.name}</h2>
-                            <div className="flex items-center gap-0.5 flex-shrink-0">
-                              {[...Array(hotel.stars)].map((_, i) => <Star key={i} className="w-2.5 h-2.5 text-amber-400 fill-current" />)}
+                    {/* Content */}
+                    <div className="flex-1 p-3 sm:p-4 flex flex-col justify-between min-w-0">
+                      <div>
+                        <div className="flex justify-between items-start gap-2 mb-1">
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <h2 className="text-[14px] font-semibold text-gray-900 line-clamp-2 leading-tight">{hotel.name}</h2>
+                              <div className="flex items-center gap-0.5 flex-shrink-0">
+                                {[...Array(hotel.stars)].map((_, i) => <Star key={i} className="w-2.5 h-2.5 text-amber-400 fill-current" />)}
+                              </div>
                             </div>
                           </div>
+                          <div className="text-right flex-shrink-0">
+                            <div className="text-lg font-bold text-blue-600 leading-tight">{hotel.currency || 'EUR'} {totalPrice.toFixed(0)}</div>
+                            {formatPKR(totalPrice) && <div className="text-[11px] text-gray-400">≈ {formatPKR(totalPrice)}</div>}
+                            <div className="text-[10px] text-gray-400">{hotel.currency || 'EUR'} {pricePerNight.toFixed(0)}/night · {nights}n</div>
+                            {hotelReviews[hotel.id] && hotelReviews[hotel.id].numReviews > 0 && (
+                              <div className="flex items-center gap-1 mt-0.5 justify-end">
+                                <RatingCircles rating={hotelReviews[hotel.id].rating} size="w-2 h-2" />
+                                <span className="text-[10px] text-gray-400">{hotelReviews[hotel.id].numReviews.toLocaleString()}</span>
+                              </div>
+                            )}
+                          </div>
                         </div>
-                        <div className="text-right flex-shrink-0">
-                          <div className="text-lg font-bold text-blue-600 leading-tight">{hotel.currency || 'EUR'} {totalPrice.toFixed(0)}</div>
-                          {formatPKR(totalPrice) && <div className="text-[11px] text-gray-400">≈ {formatPKR(totalPrice)}</div>}
-                          <div className="text-[10px] text-gray-400">{hotel.currency || 'EUR'} {pricePerNight.toFixed(0)}/night · {nights}n</div>
-                          {hotelReviews[hotel.id] && hotelReviews[hotel.id].numReviews > 0 && (
-                            <div className="flex items-center gap-1 mt-0.5 justify-end">
-                              <RatingCircles rating={hotelReviews[hotel.id].rating} size="w-2 h-2" />
-                              <span className="text-[10px] text-gray-400">{hotelReviews[hotel.id].numReviews.toLocaleString()}</span>
-                            </div>
-                          )}
+
+                        <div className="flex items-center text-gray-400 text-[12px] mb-2">
+                          <MapPin className="w-3 h-3 mr-0.5 flex-shrink-0" /><span className="truncate">{hotel.address}</span>
                         </div>
+
+                        {/* Room types */}
+                        {roomTypes.length > 0 && (
+                          <div className="flex gap-1 flex-wrap mb-2">
+                            {roomTypes.slice(0, 3).map((rt, i) => (
+                              <span key={i} className="text-[10px] px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded font-medium truncate max-w-[140px]">{rt}</span>
+                            ))}
+                            {roomTypes.length > 3 && <span className="text-[10px] text-gray-400 self-center">+{roomTypes.length - 3}</span>}
+                          </div>
+                        )}
+
+                        {/* Board tags */}
+                        {hotel.boards.length > 0 && (
+                          <div className="flex gap-1 flex-wrap mb-1.5">
+                            {hotel.boards.slice(0, 2).map((b, i) => (
+                              <span key={i} className="text-[10px] px-1.5 py-0.5 bg-gray-50 text-gray-500 rounded">{b}</span>
+                            ))}
+                          </div>
+                        )}
                       </div>
 
-                      <div className="flex items-center text-gray-400 text-[12px] mb-2">
-                        <MapPin className="w-3 h-3 mr-0.5 flex-shrink-0" /><span className="truncate">{hotel.address}</span>
+                      {/* Bottom row */}
+                      <div className="flex items-center justify-end mt-2 pt-2 border-t border-gray-50">
+                        <button onClick={(e) => {
+                          e.stopPropagation();
+                          console.log('👀 View Rooms clicked for hotel:', { id: hotel.id, name: hotel.name });
+                          setRoomSelections({});
+                          setActiveRoomTab(0);
+                          setSelectedHotel(hotel);
+                        }} className="w-full sm:w-auto px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-[12px] font-medium inline-flex items-center justify-center gap-1" style={{ minHeight: '40px' }}>
+                          <Bed className="w-3 h-3" />View Rooms
+                        </button>
                       </div>
-
-                      {/* Room types */}
-                      {roomTypes.length > 0 && (
-                        <div className="flex gap-1 flex-wrap mb-2">
-                          {roomTypes.slice(0, 3).map((rt, i) => (
-                            <span key={i} className="text-[10px] px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded font-medium truncate max-w-[140px]">{rt}</span>
-                          ))}
-                          {roomTypes.length > 3 && <span className="text-[10px] text-gray-400 self-center">+{roomTypes.length - 3}</span>}
-                        </div>
-                      )}
-
-                      {/* Board tags */}
-                      {hotel.boards.length > 0 && (
-                        <div className="flex gap-1 flex-wrap mb-1.5">
-                          {hotel.boards.slice(0, 2).map((b, i) => (
-                            <span key={i} className="text-[10px] px-1.5 py-0.5 bg-gray-50 text-gray-500 rounded">{b}</span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Bottom row */}
-                    <div className="flex items-center justify-end mt-2 pt-2 border-t border-gray-50">
-                      <button onClick={(e) => { 
-                        e.stopPropagation(); 
-                        console.log('👀 View Rooms clicked for hotel:', { id: hotel.id, name: hotel.name });
-                        setRoomSelections({}); 
-                        setActiveRoomTab(0); 
-                        setSelectedHotel(hotel); 
-                      }} className="w-full sm:w-auto px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-[12px] font-medium inline-flex items-center justify-center gap-1" style={{ minHeight: '40px' }}>
-                        <Bed className="w-3 h-3" />View Rooms
-                      </button>
                     </div>
                   </div>
-                </div>
-              );
+                );
               })}
             </div>
+
+            {/* Load More Button */}
+            {visibleCount < sortedHotels.length && (
+              <div className="text-center py-6 mb-12">
+                <button
+                  onClick={() => setVisibleCount(prev => prev + 20)}
+                  className="px-6 py-2.5 bg-white border border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white font-medium rounded-xl shadow-sm transition-all text-sm inline-flex items-center gap-2 cursor-pointer"
+                >
+                  Load More Hotels ({sortedHotels.length - visibleCount} remaining)
+                </button>
+              </div>
+            )}
 
             {sortedHotels.length === 0 && (
               <div className="text-center py-16">
@@ -1894,442 +1911,439 @@ const closeReviewsModal = () => {
           </div>
         </div>
         {/* Reviews Modal */}
-<ReviewsModal
-  isOpen={reviewsModal.isOpen}
-  onClose={closeReviewsModal}
-  hotelName={reviewsModal.hotelName}
-  reviewData={reviewsModal.hotelId ? hotelReviews[reviewsModal.hotelId] : null}
-/>
+        <ReviewsModal
+          isOpen={reviewsModal.isOpen}
+          onClose={closeReviewsModal}
+          hotelName={reviewsModal.hotelName}
+          reviewData={reviewsModal.hotelId ? hotelReviews[reviewsModal.hotelId] : null}
+        />
 
-      {/* Hotel Detail Modal */}
-      {selectedHotel && (() => {
-        const checkIn = searchParams.get("checkIn");
-        const checkOut = searchParams.get("checkOut");
-        const nights = checkIn && checkOut ? Math.ceil((new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60 * 24)) : 1;
-        const allImages = (selectedHotel.images || []).map(img => img.path ? `https://photos.hotelbeds.com/giata/original/${img.path}` : null).filter(Boolean);
-        const modalImages = allImages.slice(0, 5);
-        if (modalImages.length === 0 && selectedHotel.thumbnail) modalImages.push(selectedHotel.thumbnail);
-        if (allImages.length === 0 && selectedHotel.thumbnail) allImages.push(selectedHotel.thumbnail);
-        const uniqueRoomTypes = [...new Set((selectedHotel.rooms || []).map(r => r.name))];
+        {/* Hotel Detail Modal */}
+        {selectedHotel && (() => {
+          const checkIn = searchParams.get("checkIn");
+          const checkOut = searchParams.get("checkOut");
+          const nights = checkIn && checkOut ? Math.ceil((new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60 * 24)) : 1;
+          const allImages = (selectedHotel.images || []).map(img => img.path ? `https://photos.hotelbeds.com/giata/original/${img.path}` : null).filter(Boolean);
+          const modalImages = allImages.slice(0, 5);
+          if (modalImages.length === 0 && selectedHotel.thumbnail) modalImages.push(selectedHotel.thumbnail);
+          if (allImages.length === 0 && selectedHotel.thumbnail) allImages.push(selectedHotel.thumbnail);
+          const uniqueRoomTypes = [...new Set((selectedHotel.rooms || []).map(r => r.name))];
 
-        const openGallery = (idx) => { setGalleryImages(allImages); setGalleryIndex(idx); setGalleryOpen(true); };
+          const openGallery = (idx) => { setGalleryImages(allImages); setGalleryIndex(idx); setGalleryOpen(true); };
 
-        // Multi-room config parsing
-        const roomConfigsParam = searchParams.get("roomConfigs");
-        const roomConfigs = roomConfigsParam ? (() => { try { return JSON.parse(roomConfigsParam); } catch(e) { return [{ adults: parseInt(searchParams.get("adults") || "2"), children: 0 }]; } })() : [{ adults: parseInt(searchParams.get("adults") || "2"), children: 0 }];
-        const isMultiRoom = roomConfigs.length > 1;
+          // Multi-room config parsing
+          const roomConfigsParam = searchParams.get("roomConfigs");
+          const roomConfigs = roomConfigsParam ? (() => { try { return JSON.parse(roomConfigsParam); } catch (e) { return [{ adults: parseInt(searchParams.get("adults") || "2"), children: 0 }]; } })() : [{ adults: parseInt(searchParams.get("adults") || "2"), children: 0 }];
+          const isMultiRoom = roomConfigs.length > 1;
 
-        return (
-        <div className="fixed inset-0 z-[150] flex items-end sm:items-center justify-center" onClick={() => setSelectedHotel(null)}>
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
-          <div className="relative bg-white w-full sm:max-w-4xl sm:rounded-2xl rounded-t-2xl max-h-[92vh] overflow-hidden flex flex-col shadow-2xl" onClick={(e) => e.stopPropagation()}>
+          return (
+            <div className="fixed inset-0 z-[150] flex items-end sm:items-center justify-center" onClick={() => setSelectedHotel(null)}>
+              <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+              <div className="relative bg-white w-full sm:max-w-4xl sm:rounded-2xl rounded-t-2xl max-h-[92vh] overflow-hidden flex flex-col shadow-2xl" onClick={(e) => e.stopPropagation()}>
 
-            {/* ── Sticky Header ── */}
-            <div className="flex-shrink-0 bg-white border-b border-gray-100 px-4 py-3">
-              <div className="flex items-start gap-3">
-                {/* Title + meta */}
-                <div className="flex-1 min-w-0">
-                  <h2 className="text-[15px] font-bold text-gray-900 leading-tight line-clamp-2 pr-2">{selectedHotel.name}</h2>
-                  <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                    <div className="flex">{[...Array(selectedHotel.stars)].map((_, i) => <Star key={i} className="w-3 h-3 text-amber-400 fill-current" />)}</div>
-                    <span className="text-[11px] text-gray-400">·</span>
-                    <span className="text-[11px] text-gray-500 flex items-center gap-0.5 truncate"><MapPin className="w-3 h-3 flex-shrink-0" />{selectedHotel.address}</span>
-                  </div>
-                  {/* Room type chips — horizontal scroll, no wrap */}
-                  <div className="flex items-center gap-1.5 mt-1.5 overflow-x-auto pb-0.5" style={{scrollbarWidth:'none', WebkitOverflowScrolling:'touch'}}>
-                    <span className="text-[11px] text-gray-400 flex-shrink-0">{selectedHotel.rooms?.length || 0} types:</span>
-                    {uniqueRoomTypes.slice(0, 6).map((rt, i) => (
-                      <button key={i} onClick={() => { const el = document.getElementById(`room-${selectedHotel.rooms.find(r => r.name === rt)?.code}`); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }} className="text-[10px] px-2.5 py-1 bg-blue-50 text-blue-600 rounded-full font-medium hover:bg-blue-100 transition-colors flex-shrink-0 cursor-pointer whitespace-nowrap">{rt}</button>
-                    ))}
-                    {uniqueRoomTypes.length > 6 && <span className="text-[10px] text-gray-400 flex-shrink-0">+{uniqueRoomTypes.length - 6}</span>}
+                {/* ── Sticky Header ── */}
+                <div className="flex-shrink-0 bg-white border-b border-gray-100 px-4 py-3">
+                  <div className="flex items-start gap-3">
+                    {/* Title + meta */}
+                    <div className="flex-1 min-w-0">
+                      <h2 className="text-[15px] font-bold text-gray-900 leading-tight line-clamp-2 pr-2">{selectedHotel.name}</h2>
+                      <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                        <div className="flex">{[...Array(selectedHotel.stars)].map((_, i) => <Star key={i} className="w-3 h-3 text-amber-400 fill-current" />)}</div>
+                        <span className="text-[11px] text-gray-400">·</span>
+                        <span className="text-[11px] text-gray-500 flex items-center gap-0.5 truncate"><MapPin className="w-3 h-3 flex-shrink-0" />{selectedHotel.address}</span>
+                      </div>
+                      {/* Room type chips — horizontal scroll, no wrap */}
+                      <div className="flex items-center gap-1.5 mt-1.5 overflow-x-auto pb-0.5" style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
+                        <span className="text-[11px] text-gray-400 flex-shrink-0">{selectedHotel.rooms?.length || 0} types:</span>
+                        {uniqueRoomTypes.slice(0, 6).map((rt, i) => (
+                          <button key={i} onClick={() => { const el = document.getElementById(`room-${selectedHotel.rooms.find(r => r.name === rt)?.code}`); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }} className="text-[10px] px-2.5 py-1 bg-blue-50 text-blue-600 rounded-full font-medium hover:bg-blue-100 transition-colors flex-shrink-0 cursor-pointer whitespace-nowrap">{rt}</button>
+                        ))}
+                        {uniqueRoomTypes.length > 6 && <span className="text-[10px] text-gray-400 flex-shrink-0">+{uniqueRoomTypes.length - 6}</span>}
+                      </div>
+                    </div>
+                    {/* Price + Close */}
+                    <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                      <button
+                        onClick={() => setSelectedHotel(null)}
+                        className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
+                        aria-label="Close"
+                      >
+                        <X className="w-4 h-4 text-gray-600" />
+                      </button>
+                      <div className="text-right">
+                        <div className="text-[10px] text-gray-400">from</div>
+                        <div className="text-base font-bold text-blue-600 leading-tight">{selectedHotel.currency || 'EUR'} {parseFloat(selectedHotel.price).toFixed(0)}</div>
+                        {formatPKR(parseFloat(selectedHotel.price)) && <div className="text-[10px] text-gray-400">≈ {formatPKR(parseFloat(selectedHotel.price))}</div>}
+                        <div className="text-[10px] text-gray-400">{nights} {nights === 1 ? 'night' : 'nights'}</div>
+                      </div>
+                    </div>
                   </div>
                 </div>
-                {/* Price + Close */}
-                <div className="flex flex-col items-end gap-2 flex-shrink-0">
-                  <button
-                    onClick={() => setSelectedHotel(null)}
-                    className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
-                    aria-label="Close"
-                  >
-                    <X className="w-4 h-4 text-gray-600" />
-                  </button>
-                  <div className="text-right">
-                    <div className="text-[10px] text-gray-400">from</div>
-                    <div className="text-base font-bold text-blue-600 leading-tight">{selectedHotel.currency || 'EUR'} {parseFloat(selectedHotel.price).toFixed(0)}</div>
-                    {formatPKR(parseFloat(selectedHotel.price)) && <div className="text-[10px] text-gray-400">≈ {formatPKR(parseFloat(selectedHotel.price))}</div>}
-                    <div className="text-[10px] text-gray-400">{nights} {nights === 1 ? 'night' : 'nights'}</div>
-                  </div>
-                </div>
-              </div>
-            </div>
 
-            {/* ── Scrollable body ── */}
-            <div className="overflow-y-auto flex-1" style={{scrollbarWidth:'thin'}}>
+                {/* ── Scrollable body ── */}
+                <div className="overflow-y-auto flex-1" style={{ scrollbarWidth: 'thin' }}>
 
-              {/* Image collage — full width, no negative margins */}
-              {modalImages.length >= 3 ? (
-                <div style={{display:'grid', gridTemplateColumns:'2fr 1fr', gridTemplateRows:'1fr 1fr', gap:2, height: 200, width:'100%'}}>
-                  {/* Large left image — spans 2 rows */}
-                  <div style={{gridRow:'1/3', overflow:'hidden', cursor:'pointer'}} onClick={() => openGallery(0)}>
-                    <img src={modalImages[0]} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}} onError={(e) => e.target.src='https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg'} />
-                  </div>
-                  {/* Top right */}
-                  <div style={{overflow:'hidden', cursor:'pointer'}} onClick={() => openGallery(1)}>
-                    <img src={modalImages[1]} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}} onError={(e) => e.target.src='https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg'} />
-                  </div>
-                  {/* Bottom right — with photo count overlay */}
-                  <div style={{overflow:'hidden', cursor:'pointer', position:'relative'}} onClick={() => openGallery(2)}>
-                    <img src={modalImages[2]} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}} onError={(e) => e.target.src='https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg'} />
-                    {allImages.length > 3 && (
-                      <div style={{position:'absolute',inset:0,backgroundColor:'rgba(0,0,0,0.5)',display:'flex',alignItems:'center',justifyContent:'center'}}>
-                        <span style={{color:'#fff',fontSize:13,fontWeight:600}}>+{allImages.length - 3} photos</span>
+                  {/* Image collage — full width, no negative margins */}
+                  {modalImages.length >= 3 ? (
+                    <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gridTemplateRows: '1fr 1fr', gap: 2, height: 200, width: '100%' }}>
+                      {/* Large left image — spans 2 rows */}
+                      <div style={{ gridRow: '1/3', overflow: 'hidden', cursor: 'pointer' }} onClick={() => openGallery(0)}>
+                        <img src={modalImages[0]} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => e.target.src = 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg'} />
+                      </div>
+                      {/* Top right */}
+                      <div style={{ overflow: 'hidden', cursor: 'pointer' }} onClick={() => openGallery(1)}>
+                        <img src={modalImages[1]} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => e.target.src = 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg'} />
+                      </div>
+                      {/* Bottom right — with photo count overlay */}
+                      <div style={{ overflow: 'hidden', cursor: 'pointer', position: 'relative' }} onClick={() => openGallery(2)}>
+                        <img src={modalImages[2]} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => e.target.src = 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg'} />
+                        {allImages.length > 3 && (
+                          <div style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <span style={{ color: '#fff', fontSize: 13, fontWeight: 600 }}>+{allImages.length - 3} photos</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ height: 180, width: '100%', overflow: 'hidden', cursor: 'pointer' }} onClick={() => openGallery(0)}>
+                      <img src={modalImages[0] || 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg'} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    </div>
+                  )}
+
+                  {/* Hotel details */}
+                  <div className="px-4 py-3 border-b border-gray-100 space-y-2">
+                    {/* Hotel Description - Hotelbeds Certification Recommended */}
+                    {hotelContentData?.description && (
+                      <div className="text-[12px] text-gray-600 leading-relaxed">
+                        <h4 className="text-xs font-semibold text-gray-700 mb-1">About this hotel</h4>
+                        <p className="line-clamp-3">{hotelContentData.description}</p>
                       </div>
                     )}
-                  </div>
-                </div>
-              ) : (
-                <div style={{height:180, width:'100%', overflow:'hidden', cursor:'pointer'}} onClick={() => openGallery(0)}>
-                  <img src={modalImages[0] || 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg'} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}} />
-                </div>
-              )}
-
-              {/* Hotel details */}
-              <div className="px-4 py-3 border-b border-gray-100 space-y-2">
-                {/* Hotel Description - Hotelbeds Certification Recommended */}
-                {hotelContentData?.description && (
-                  <div className="text-[12px] text-gray-600 leading-relaxed">
-                    <h4 className="text-xs font-semibold text-gray-700 mb-1">About this hotel</h4>
-                    <p className="line-clamp-3">{hotelContentData.description}</p>
-                  </div>
-                )}
-                {/* Facilities - Hotelbeds Certification Recommended */}
-                {hotelContentData?.facilities && hotelContentData.facilities.length > 0 && (
-                  <div>
-                    <h4 className="text-xs font-semibold text-gray-500 uppercase mb-1.5">Facilities</h4>
-                    <div className="flex flex-wrap gap-1.5">
-                      {hotelContentData.facilities.slice(0, 15).map((f, i) => (
-                        <span key={i} className="text-[10px] px-2 py-0.5 bg-gray-50 text-gray-600 rounded-full">{f.description || `Facility ${f.code}`}</span>
-                      ))}
-                      {hotelContentData.facilities.length > 15 && (
-                        <span className="text-[10px] px-2 py-0.5 text-gray-400">+{hotelContentData.facilities.length - 15} more</span>
-                      )}
-                    </div>
-                  </div>
-                )}
-                {/* Amenities — clearly below image */}
-                {[...new Set(selectedHotel.amenities)].length > 0 && (
-                  <div className="flex gap-1.5 flex-wrap">
-                    {[...new Set(selectedHotel.amenities)].map((amenity, i) => {
-                      const ad = availableAmenities.find(a => a.id === amenity);
-                      if (!ad) return null;
-                      const Ic = ad.icon;
-                      return (
-                        <span key={i} className="inline-flex items-center gap-1 text-[11px] text-gray-600 bg-gray-100 px-2.5 py-1 rounded-full">
-                          <Ic className="w-3 h-3 text-blue-500" />{ad.name}
-                        </span>
-                      );
-                    })}
-                  </div>
-                )}
-                <div className="flex items-center gap-2 text-[11px] text-gray-400 flex-wrap">
-                  <span>{searchParams.get("checkIn")} → {searchParams.get("checkOut")}</span>
-                  <span>·</span>
-                  <span>{searchParams.get("adults")} adults{searchParams.get("children") && searchParams.get("children") !== "0" ? `, ${searchParams.get("children")} children` : ''}</span>
-                  <span>·</span>
-                  <span>{searchParams.get("rooms")} room(s)</span>
-                </div>
-                <div className="text-[12px] text-gray-500">
-                  {selectedHotel.category} · {selectedHotel.zone}
-                  {selectedHotel.boards.length > 0 && <> · {selectedHotel.boards.join(', ')}</>}
-                  {selectedHotel.hasFreeCancellation && <span className="text-green-600"> · Free cancellation available</span>}
-                </div>
-              </div>
-
-              {/* Multi-room tab bar */}
-              {isMultiRoom && (
-                <div className="px-4 py-2 border-b border-gray-100 flex gap-1 overflow-x-auto" style={{scrollbarWidth:'none'}}>
-                  {roomConfigs.map((config, idx) => (
-                    <button key={idx} onClick={() => setActiveRoomTab(idx)}
-                      className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                        activeRoomTab === idx ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                      }`} style={{minHeight:'unset'}}>
-                      Room {idx + 1}
-                      <span className="text-[10px] ml-1 opacity-70">({config.adults}A{config.children > 0 ? `+${config.children}C` : ''})</span>
-                      {roomSelections[idx] && <span className="ml-1 text-[10px]">✓</span>}
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {/* Rooms list */}
-              <div className="px-4 py-3 space-y-3">
-                {selectedHotel.rooms && selectedHotel.rooms.length > 0 ? (
-                selectedHotel.rooms.map((room) => {
-                  const filteredRates = (room.rates || []).filter(rate => {
-                    if (selectedBoards.length > 0 && !selectedBoards.includes(rate.boardName)) return false;
-                    if (selectedCancellation === "free" && !(rate.cancellationPolicies?.length > 0 && parseFloat(rate.cancellationPolicies[0]?.amount || 0) === 0)) return false;
-                    if (selectedCancellation === "nonrefundable" && rate.rateClass !== 'NRF') return false;
-                    if (selectedCancellation === "partial" && !(rate.cancellationPolicies?.length > 0 && parseFloat(rate.cancellationPolicies[0]?.amount || 0) > 0)) return false;
-                    if (selectedPackaging === "with" && !rate.packaging) return false;
-                    if (selectedPackaging === "without" && rate.packaging) return false;
-                    if (selectedPromos.length > 0) {
-                      const ratePromos = (rate.promotions || rate.offers || []).map(p => p.name || p.code).filter(Boolean);
-                      if (!selectedPromos.some(p => ratePromos.includes(p))) return false;
-                    }
-                    const ratePrice = parseFloat(rate.net);
-                    const ratePkr = convert ? (convert(ratePrice) || ratePrice) : ratePrice;
-                    if (priceMin && ratePkr < parseFloat(priceMin)) return false;
-                    if (priceMax && ratePkr > parseFloat(priceMax)) return false;
-                    return true;
-                  });
-                  if (filteredRates.length === 0) return null;
-
-                  return (
-                  <div key={room.code} id={`room-${room.code}`} className="border border-gray-100 rounded-xl overflow-hidden">
-                    <div className="px-4 py-2.5 bg-gray-50/80 border-b border-gray-100 flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Bed className="w-4 h-4 text-gray-400" />
-                        <span className="text-[13px] font-semibold text-gray-800">{room.name}</span>
-                        <button onClick={(e) => { e.stopPropagation(); setSelectedRoomDetail(room); }} className="p-1 hover:bg-blue-50 rounded transition-colors" title="Room details" style={{minHeight:'unset'}}>
-                          <Info className="w-3.5 h-3.5 text-blue-500" />
-                        </button>
+                    {/* Facilities - Hotelbeds Certification Recommended */}
+                    {hotelContentData?.facilities && hotelContentData.facilities.length > 0 && (
+                      <div>
+                        <h4 className="text-xs font-semibold text-gray-500 uppercase mb-1.5">Facilities</h4>
+                        <div className="flex flex-wrap gap-1.5">
+                          {hotelContentData.facilities.slice(0, 15).map((f, i) => (
+                            <span key={i} className="text-[10px] px-2 py-0.5 bg-gray-50 text-gray-600 rounded-full">{f.description || `Facility ${f.code}`}</span>
+                          ))}
+                          {hotelContentData.facilities.length > 15 && (
+                            <span className="text-[10px] px-2 py-0.5 text-gray-400">+{hotelContentData.facilities.length - 15} more</span>
+                          )}
+                        </div>
                       </div>
-                      <span className="text-[11px] text-gray-400">{filteredRates.length} rate{filteredRates.length !== 1 ? 's' : ''}</span>
+                    )}
+                    {/* Amenities — clearly below image */}
+                    {[...new Set(selectedHotel.amenities)].length > 0 && (
+                      <div className="flex gap-1.5 flex-wrap">
+                        {[...new Set(selectedHotel.amenities)].map((amenity, i) => {
+                          const ad = availableAmenities.find(a => a.id === amenity);
+                          if (!ad) return null;
+                          const Ic = ad.icon;
+                          return (
+                            <span key={i} className="inline-flex items-center gap-1 text-[11px] text-gray-600 bg-gray-100 px-2.5 py-1 rounded-full">
+                              <Ic className="w-3 h-3 text-blue-500" />{ad.name}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    )}
+                    <div className="flex items-center gap-2 text-[11px] text-gray-400 flex-wrap">
+                      <span>{searchParams.get("checkIn")} → {searchParams.get("checkOut")}</span>
+                      <span>·</span>
+                      <span>{searchParams.get("adults")} adults{searchParams.get("children") && searchParams.get("children") !== "0" ? `, ${searchParams.get("children")} children` : ''}</span>
+                      <span>·</span>
+                      <span>{searchParams.get("rooms")} room(s)</span>
                     </div>
-                    <div className="divide-y divide-gray-50">
-                      {filteredRates.map((rate, idx) => {
-                        const total = parseFloat(rate.net);
-                        const perNight = nights > 0 ? total / nights : total;
-                        const hasFreeCancellation = rate.cancellationPolicies?.length > 0 && parseFloat(rate.cancellationPolicies[0]?.amount || 0) === 0;
-                        const isSelectedForTab = isMultiRoom && roomSelections[activeRoomTab]?.room?.code === room.code && roomSelections[activeRoomTab]?.rate?.rateKey === rate.rateKey;
+                    <div className="text-[12px] text-gray-500">
+                      {selectedHotel.category} · {selectedHotel.zone}
+                      {selectedHotel.boards.length > 0 && <> · {selectedHotel.boards.join(', ')}</>}
+                      {selectedHotel.hasFreeCancellation && <span className="text-green-600"> · Free cancellation available</span>}
+                    </div>
+                  </div>
+
+                  {/* Multi-room tab bar */}
+                  {isMultiRoom && (
+                    <div className="px-4 py-2 border-b border-gray-100 flex gap-1 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+                      {roomConfigs.map((config, idx) => (
+                        <button key={idx} onClick={() => setActiveRoomTab(idx)}
+                          className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeRoomTab === idx ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                            }`} style={{ minHeight: 'unset' }}>
+                          Room {idx + 1}
+                          <span className="text-[10px] ml-1 opacity-70">({config.adults}A{config.children > 0 ? `+${config.children}C` : ''})</span>
+                          {roomSelections[idx] && <span className="ml-1 text-[10px]">✓</span>}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Rooms list */}
+                  <div className="px-4 py-3 space-y-3">
+                    {selectedHotel.rooms && selectedHotel.rooms.length > 0 ? (
+                      selectedHotel.rooms.map((room) => {
+                        const filteredRates = (room.rates || []).filter(rate => {
+                          if (selectedBoards.length > 0 && !selectedBoards.includes(rate.boardName)) return false;
+                          if (selectedCancellation === "free" && !(rate.cancellationPolicies?.length > 0 && parseFloat(rate.cancellationPolicies[0]?.amount || 0) === 0)) return false;
+                          if (selectedCancellation === "nonrefundable" && rate.rateClass !== 'NRF') return false;
+                          if (selectedCancellation === "partial" && !(rate.cancellationPolicies?.length > 0 && parseFloat(rate.cancellationPolicies[0]?.amount || 0) > 0)) return false;
+                          if (selectedPackaging === "with" && !rate.packaging) return false;
+                          if (selectedPackaging === "without" && rate.packaging) return false;
+                          if (selectedPromos.length > 0) {
+                            const ratePromos = (rate.promotions || rate.offers || []).map(p => p.name || p.code).filter(Boolean);
+                            if (!selectedPromos.some(p => ratePromos.includes(p))) return false;
+                          }
+                          const ratePrice = parseFloat(rate.net);
+                          const ratePkr = convert ? (convert(ratePrice) || ratePrice) : ratePrice;
+                          if (priceMin && ratePkr < parseFloat(priceMin)) return false;
+                          if (priceMax && ratePkr > parseFloat(priceMax)) return false;
+                          return true;
+                        });
+                        if (filteredRates.length === 0) return null;
 
                         return (
-                          <div key={idx} className={`px-4 py-3 hover:bg-blue-50/30 transition-colors ${isSelectedForTab ? 'bg-blue-50 ring-1 ring-blue-200' : ''}`}>
-                            <div className="flex justify-between items-start gap-4">
-                              <div className="min-w-0 flex-1 space-y-1.5">
-                                {/* Tags row */}
-                                <div className="flex items-center gap-1.5 flex-wrap">
-                                  <span className="text-[11px] px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full font-medium">{rate.boardName}</span>
-                                  {rate.rateClass === 'NRF' ? (
-                                    <span className="text-[11px] px-2 py-0.5 bg-red-50 text-red-600 rounded-full font-medium flex items-center gap-0.5"><XCircle className="w-2.5 h-2.5" />Non-Refundable</span>
-                                  ) : hasFreeCancellation ? (
-                                    <span className="text-[11px] px-2 py-0.5 bg-green-50 text-green-600 rounded-full font-medium flex items-center gap-0.5"><CheckCircle className="w-2.5 h-2.5" />Free Cancellation</span>
-                                  ) : null}
-                                  {rate.packaging && <span className="text-[11px] px-2 py-0.5 bg-purple-50 text-purple-600 rounded-full font-medium">Package</span>}
-                                  {isSelectedForTab && <span className="text-[11px] px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full font-medium">✓ Selected</span>}
-                                </div>
-                                {/* Details row */}
-                                <div className="flex items-center gap-2 text-[11px] text-gray-400">
-                                  <span>{rate.paymentType === 'AT_WEB' ? 'Pay Online' : rate.paymentType === 'AT_HOTEL' ? 'Pay at Office' : rate.paymentType}</span>
-                                  <span>·</span>
-                                  <span>{rate.allotment} room{rate.allotment !== 1 ? 's' : ''} left</span>
-                                  {rate.rooms && <><span>·</span><span>{rate.rooms} room(s)</span></>}
-                                </div>
-                                {/* Offers */}
-                                {rate.offers && rate.offers.length > 0 && (
-                                  <div className="flex gap-1 flex-wrap">
-                                    {rate.offers.map((offer, oi) => (
-                                      <span key={oi} className="text-[10px] px-2 py-0.5 bg-green-50 text-green-700 rounded-full flex items-center gap-0.5"><Tag className="w-2.5 h-2.5" />{offer.name}{offer.amount ? `: ${formatPKR(Math.abs(parseFloat(offer.amount))) || `PKR ${Math.round(convert(Math.abs(parseFloat(offer.amount))) || 0)}`} off` : ''}</span>
-                                    ))}
-                                  </div>
-                                )}
-                                {/* Cancellation detail */}
-                                {rate.cancellationPolicies && rate.cancellationPolicies.length > 0 && (
-                                  <div className="text-[11px] text-gray-400">
-                                    {formatCancellationPolicy(rate.cancellationPolicies)}
-                                  </div>
-                                )}
-                                {/* Excluded Taxes - mandatory display alongside rates */}
-                                {rate.taxes && rate.taxes.taxes && rate.taxes.taxes.length > 0 && !rate.taxes.allIncluded && (
-                                  <div className="text-[10px] text-amber-700 bg-amber-50 px-2 py-1 rounded">
-                                    {rate.taxes.taxes.map((tax, ti) => (
-                                      <span key={ti}>{ti > 0 ? ' + ' : '⚠ Excluded: '}{tax.subType || tax.type || 'Tax'} {tax.currency} {parseFloat(tax.amount).toFixed(2)}</span>
-                                    ))}
-                                    <span className="text-amber-600"> (payable locally)</span>
-                                  </div>
-                                )}
+                          <div key={room.code} id={`room-${room.code}`} className="border border-gray-100 rounded-xl overflow-hidden">
+                            <div className="px-4 py-2.5 bg-gray-50/80 border-b border-gray-100 flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <Bed className="w-4 h-4 text-gray-400" />
+                                <span className="text-[13px] font-semibold text-gray-800">{room.name}</span>
+                                <button onClick={(e) => { e.stopPropagation(); setSelectedRoomDetail(room); }} className="p-1 hover:bg-blue-50 rounded transition-colors" title="Room details" style={{ minHeight: 'unset' }}>
+                                  <Info className="w-3.5 h-3.5 text-blue-500" />
+                                </button>
                               </div>
-                              {/* Price + CTA */}
-                              <div className="text-right flex-shrink-0 min-w-[120px]">
-                                <div className="text-[11px] text-gray-400">{selectedHotel.currency || 'EUR'} {perNight.toFixed(0)} / night</div>
-                                <div className="text-lg font-bold text-blue-600">{selectedHotel.currency || 'EUR'} {total.toFixed(2)}</div>
-                                {formatPKR(total) && <div className="text-[10px] text-gray-400">≈ {formatPKR(total)}</div>}
-                                <div className="text-[11px] text-gray-400 mb-2">total for {nights}n</div>
-                                {isMultiRoom ? (
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setRoomSelections(prev => ({ ...prev, [activeRoomTab]: { room, rate } }));
-                                      // Auto-advance to next unselected tab
-                                      const nextUnselected = roomConfigs.findIndex((_, i) => i > activeRoomTab && !roomSelections[i]);
-                                      if (nextUnselected !== -1) setActiveRoomTab(nextUnselected);
-                                    }}
-                                    className={`w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg transition-colors text-[12px] font-semibold ${
-                                      isSelectedForTab ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-blue-600 text-white hover:bg-blue-700'
-                                    }`}
-                                  >
-                                    {isSelectedForTab ? <><CheckCircle className="w-3.5 h-3.5" />Selected</> : <>Select for Room {activeRoomTab + 1}</>}
-                                  </button>
-                                ) : (
-                                  <button
-                                    onClick={(e) => { e.stopPropagation(); handleAddToCart(selectedHotel, room, rate); }}
-                                    className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-[12px] font-semibold"
-                                  >
-                                    <ShoppingCart className="w-3.5 h-3.5" />Add to Cart
-                                  </button>
-                                )}
-                              </div>
+                              <span className="text-[11px] text-gray-400">{filteredRates.length} rate{filteredRates.length !== 1 ? 's' : ''}</span>
+                            </div>
+                            <div className="divide-y divide-gray-50">
+                              {filteredRates.map((rate, idx) => {
+                                const total = parseFloat(rate.net);
+                                const perNight = nights > 0 ? total / nights : total;
+                                const hasFreeCancellation = rate.cancellationPolicies?.length > 0 && parseFloat(rate.cancellationPolicies[0]?.amount || 0) === 0;
+                                const isSelectedForTab = isMultiRoom && roomSelections[activeRoomTab]?.room?.code === room.code && roomSelections[activeRoomTab]?.rate?.rateKey === rate.rateKey;
+
+                                return (
+                                  <div key={idx} className={`px-4 py-3 hover:bg-blue-50/30 transition-colors ${isSelectedForTab ? 'bg-blue-50 ring-1 ring-blue-200' : ''}`}>
+                                    <div className="flex justify-between items-start gap-4">
+                                      <div className="min-w-0 flex-1 space-y-1.5">
+                                        {/* Tags row */}
+                                        <div className="flex items-center gap-1.5 flex-wrap">
+                                          <span className="text-[11px] px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full font-medium">{rate.boardName}</span>
+                                          {rate.rateClass === 'NRF' ? (
+                                            <span className="text-[11px] px-2 py-0.5 bg-red-50 text-red-600 rounded-full font-medium flex items-center gap-0.5"><XCircle className="w-2.5 h-2.5" />Non-Refundable</span>
+                                          ) : hasFreeCancellation ? (
+                                            <span className="text-[11px] px-2 py-0.5 bg-green-50 text-green-600 rounded-full font-medium flex items-center gap-0.5"><CheckCircle className="w-2.5 h-2.5" />Free Cancellation</span>
+                                          ) : null}
+                                          {rate.packaging && <span className="text-[11px] px-2 py-0.5 bg-purple-50 text-purple-600 rounded-full font-medium">Package</span>}
+                                          {isSelectedForTab && <span className="text-[11px] px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full font-medium">✓ Selected</span>}
+                                        </div>
+                                        {/* Details row */}
+                                        <div className="flex items-center gap-2 text-[11px] text-gray-400">
+                                          <span>{rate.paymentType === 'AT_WEB' ? 'Pay Online' : rate.paymentType === 'AT_HOTEL' ? 'Pay at Office' : rate.paymentType}</span>
+                                          <span>·</span>
+                                          <span>{rate.allotment} room{rate.allotment !== 1 ? 's' : ''} left</span>
+                                          {rate.rooms && <><span>·</span><span>{rate.rooms} room(s)</span></>}
+                                        </div>
+                                        {/* Offers */}
+                                        {rate.offers && rate.offers.length > 0 && (
+                                          <div className="flex gap-1 flex-wrap">
+                                            {rate.offers.map((offer, oi) => (
+                                              <span key={oi} className="text-[10px] px-2 py-0.5 bg-green-50 text-green-700 rounded-full flex items-center gap-0.5"><Tag className="w-2.5 h-2.5" />{offer.name}{offer.amount ? `: ${formatPKR(Math.abs(parseFloat(offer.amount))) || `PKR ${Math.round(convert(Math.abs(parseFloat(offer.amount))) || 0)}`} off` : ''}</span>
+                                            ))}
+                                          </div>
+                                        )}
+                                        {/* Cancellation detail */}
+                                        {rate.cancellationPolicies && rate.cancellationPolicies.length > 0 && (
+                                          <div className="text-[11px] text-gray-400">
+                                            {formatCancellationPolicy(rate.cancellationPolicies)}
+                                          </div>
+                                        )}
+                                        {/* Excluded Taxes - mandatory display alongside rates */}
+                                        {rate.taxes && rate.taxes.taxes && rate.taxes.taxes.length > 0 && !rate.taxes.allIncluded && (
+                                          <div className="text-[10px] text-amber-700 bg-amber-50 px-2 py-1 rounded">
+                                            {rate.taxes.taxes.map((tax, ti) => (
+                                              <span key={ti}>{ti > 0 ? ' + ' : '⚠ Excluded: '}{tax.subType || tax.type || 'Tax'} {tax.currency} {parseFloat(tax.amount).toFixed(2)}</span>
+                                            ))}
+                                            <span className="text-amber-600"> (payable locally)</span>
+                                          </div>
+                                        )}
+                                      </div>
+                                      {/* Price + CTA */}
+                                      <div className="text-right flex-shrink-0 min-w-[120px]">
+                                        <div className="text-[11px] text-gray-400">{selectedHotel.currency || 'EUR'} {perNight.toFixed(0)} / night</div>
+                                        <div className="text-lg font-bold text-blue-600">{selectedHotel.currency || 'EUR'} {total.toFixed(2)}</div>
+                                        {formatPKR(total) && <div className="text-[10px] text-gray-400">≈ {formatPKR(total)}</div>}
+                                        <div className="text-[11px] text-gray-400 mb-2">total for {nights}n</div>
+                                        {isMultiRoom ? (
+                                          <button
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              setRoomSelections(prev => ({ ...prev, [activeRoomTab]: { room, rate } }));
+                                              // Auto-advance to next unselected tab
+                                              const nextUnselected = roomConfigs.findIndex((_, i) => i > activeRoomTab && !roomSelections[i]);
+                                              if (nextUnselected !== -1) setActiveRoomTab(nextUnselected);
+                                            }}
+                                            className={`w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg transition-colors text-[12px] font-semibold ${isSelectedForTab ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-blue-600 text-white hover:bg-blue-700'
+                                              }`}
+                                          >
+                                            {isSelectedForTab ? <><CheckCircle className="w-3.5 h-3.5" />Selected</> : <>Select for Room {activeRoomTab + 1}</>}
+                                          </button>
+                                        ) : (
+                                          <button
+                                            onClick={(e) => { e.stopPropagation(); handleAddToCart(selectedHotel, room, rate); }}
+                                            className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-[12px] font-semibold"
+                                          >
+                                            <ShoppingCart className="w-3.5 h-3.5" />Add to Cart
+                                          </button>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              })}
                             </div>
                           </div>
                         );
-                      })}
-                    </div>
+                      })
+                    ) : (
+                      <div className="text-center py-8 text-gray-500 text-sm">No rooms available</div>
+                    )}
                   </div>
-                );
-                })
-              ) : (
-                <div className="text-center py-8 text-gray-500 text-sm">No rooms available</div>
-              )}
-            </div>
 
-            {/* Multi-room summary bar */}
-            {isMultiRoom && Object.keys(roomSelections).length > 0 && (
-              <div className="flex-shrink-0 border-t border-gray-200 bg-gray-50 px-4 py-3">
-                <div className="space-y-1.5 mb-3">
-                  {roomConfigs.map((config, idx) => {
-                    const sel = roomSelections[idx];
-                    return (
-                      <div key={idx} className="flex items-center justify-between text-[12px]">
-                        <span className="text-gray-600">
-                          Room {idx + 1} <span className="text-gray-400">({config.adults}A{config.children > 0 ? `+${config.children}C` : ''})</span>
-                        </span>
-                        {sel ? (
-                          <span className="text-gray-800 font-medium">
-                            {sel.room.name} · {sel.rate.boardName} · {selectedHotel.currency || 'EUR'} {parseFloat(sel.rate.net).toFixed(2)}{formatPKR(parseFloat(sel.rate.net)) ? ` (≈ ${formatPKR(parseFloat(sel.rate.net))})` : ''}
-                          </span>
-                        ) : (
-                          <span className="text-gray-400 italic">Not selected</span>
-                        )}
+                  {/* Multi-room summary bar */}
+                  {isMultiRoom && Object.keys(roomSelections).length > 0 && (
+                    <div className="flex-shrink-0 border-t border-gray-200 bg-gray-50 px-4 py-3">
+                      <div className="space-y-1.5 mb-3">
+                        {roomConfigs.map((config, idx) => {
+                          const sel = roomSelections[idx];
+                          return (
+                            <div key={idx} className="flex items-center justify-between text-[12px]">
+                              <span className="text-gray-600">
+                                Room {idx + 1} <span className="text-gray-400">({config.adults}A{config.children > 0 ? `+${config.children}C` : ''})</span>
+                              </span>
+                              {sel ? (
+                                <span className="text-gray-800 font-medium">
+                                  {sel.room.name} · {sel.rate.boardName} · {selectedHotel.currency || 'EUR'} {parseFloat(sel.rate.net).toFixed(2)}{formatPKR(parseFloat(sel.rate.net)) ? ` (≈ ${formatPKR(parseFloat(sel.rate.net))})` : ''}
+                                </span>
+                              ) : (
+                                <span className="text-gray-400 italic">Not selected</span>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
-                    );
-                  })}
-                </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="text-[11px] text-gray-400">Total for {roomConfigs.length} rooms</div>
-                    <div className="text-lg font-bold text-blue-600">
-                      {selectedHotel.currency || 'EUR'} {Object.values(roomSelections).reduce((sum, sel) => sum + parseFloat(sel.rate.net), 0).toFixed(2)}
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="text-[11px] text-gray-400">Total for {roomConfigs.length} rooms</div>
+                          <div className="text-lg font-bold text-blue-600">
+                            {selectedHotel.currency || 'EUR'} {Object.values(roomSelections).reduce((sum, sel) => sum + parseFloat(sel.rate.net), 0).toFixed(2)}
+                          </div>
+                          {formatPKR(Object.values(roomSelections).reduce((sum, sel) => sum + parseFloat(sel.rate.net), 0)) && (
+                            <div className="text-[11px] text-gray-400">≈ {formatPKR(Object.values(roomSelections).reduce((sum, sel) => sum + parseFloat(sel.rate.net), 0))} (charged amount)</div>
+                          )}
+                        </div>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleMultiRoomAddToCart(selectedHotel, roomSelections, roomConfigs); }}
+                          disabled={Object.keys(roomSelections).length < roomConfigs.length}
+                          className={`inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-lg text-[13px] font-semibold transition-colors ${Object.keys(roomSelections).length >= roomConfigs.length
+                              ? 'bg-blue-600 text-white hover:bg-blue-700'
+                              : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                            }`}
+                        >
+                          <ShoppingCart className="w-4 h-4" />
+                          Add All {roomConfigs.length} Rooms
+                          {Object.keys(roomSelections).length < roomConfigs.length && (
+                            <span className="text-[10px] opacity-70">({Object.keys(roomSelections).length}/{roomConfigs.length})</span>
+                          )}
+                        </button>
+                      </div>
                     </div>
-                    {formatPKR(Object.values(roomSelections).reduce((sum, sel) => sum + parseFloat(sel.rate.net), 0)) && (
-                      <div className="text-[11px] text-gray-400">≈ {formatPKR(Object.values(roomSelections).reduce((sum, sel) => sum + parseFloat(sel.rate.net), 0))} (charged amount)</div>
-                    )}
-                  </div>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); handleMultiRoomAddToCart(selectedHotel, roomSelections, roomConfigs); }}
-                    disabled={Object.keys(roomSelections).length < roomConfigs.length}
-                    className={`inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-lg text-[13px] font-semibold transition-colors ${
-                      Object.keys(roomSelections).length >= roomConfigs.length
-                        ? 'bg-blue-600 text-white hover:bg-blue-700'
-                        : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                    }`}
-                  >
-                    <ShoppingCart className="w-4 h-4" />
-                    Add All {roomConfigs.length} Rooms
-                    {Object.keys(roomSelections).length < roomConfigs.length && (
-                      <span className="text-[10px] opacity-70">({Object.keys(roomSelections).length}/{roomConfigs.length})</span>
-                    )}
-                  </button>
-                </div>
+                  )}
+
+                </div>{/* end scrollable body */}
               </div>
-            )}
-
-            </div>{/* end scrollable body */}
-          </div>
-        </div>
-        );
-      })()}
-
-      {/* Room Detail Modal */}
-      {selectedRoomDetail && (
-        <div className="fixed inset-0 z-[160] flex items-end sm:items-center justify-center" onClick={() => setSelectedRoomDetail(null)}>
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
-          <div className="relative bg-white w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl max-h-[85vh] overflow-hidden flex flex-col shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 flex-shrink-0">
-              <h3 className="text-[15px] font-bold text-gray-900 line-clamp-2 flex-1 pr-2">{selectedRoomDetail.name}</h3>
-              <button onClick={() => setSelectedRoomDetail(null)} className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center"><X className="w-4 h-4 text-gray-600" /></button>
             </div>
-            {/* Scrollable body */}
-            <div className="overflow-y-auto flex-1 p-4" style={{scrollbarWidth:'thin'}}>
-              {/* Room images */}
-              {(() => {
-                const roomImages = (selectedHotel?.images || [])
-                  .filter(img => img.roomCode === selectedRoomDetail.code)
-                  .map(img => img.path ? `https://photos.hotelbeds.com/giata/original/${img.path}` : null)
-                  .filter(Boolean);
-                return roomImages.length > 0 ? (
-                  <div className="grid grid-cols-2 gap-1 mb-4 rounded-xl overflow-hidden">
-                    {roomImages.slice(0, 4).map((img, i) => (
-                      <div key={i} className="aspect-video overflow-hidden cursor-pointer" onClick={() => { setGalleryImages(roomImages); setGalleryIndex(i); setGalleryOpen(true); }}>
-                        <img src={img} alt="" className="w-full h-full object-cover hover:scale-105 transition-transform" onError={(e) => e.target.style.display='none'} />
-                      </div>
-                    ))}
+          );
+        })()}
+
+        {/* Room Detail Modal */}
+        {selectedRoomDetail && (
+          <div className="fixed inset-0 z-[160] flex items-end sm:items-center justify-center" onClick={() => setSelectedRoomDetail(null)}>
+            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+            <div className="relative bg-white w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl max-h-[85vh] overflow-hidden flex flex-col shadow-2xl" onClick={(e) => e.stopPropagation()}>
+              {/* Header */}
+              <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 flex-shrink-0">
+                <h3 className="text-[15px] font-bold text-gray-900 line-clamp-2 flex-1 pr-2">{selectedRoomDetail.name}</h3>
+                <button onClick={() => setSelectedRoomDetail(null)} className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center"><X className="w-4 h-4 text-gray-600" /></button>
+              </div>
+              {/* Scrollable body */}
+              <div className="overflow-y-auto flex-1 p-4" style={{ scrollbarWidth: 'thin' }}>
+                {/* Room images */}
+                {(() => {
+                  const roomImages = (selectedHotel?.images || [])
+                    .filter(img => img.roomCode === selectedRoomDetail.code)
+                    .map(img => img.path ? `https://photos.hotelbeds.com/giata/original/${img.path}` : null)
+                    .filter(Boolean);
+                  return roomImages.length > 0 ? (
+                    <div className="grid grid-cols-2 gap-1 mb-4 rounded-xl overflow-hidden">
+                      {roomImages.slice(0, 4).map((img, i) => (
+                        <div key={i} className="aspect-video overflow-hidden cursor-pointer" onClick={() => { setGalleryImages(roomImages); setGalleryIndex(i); setGalleryOpen(true); }}>
+                          <img src={img} alt="" className="w-full h-full object-cover hover:scale-105 transition-transform" onError={(e) => e.target.style.display = 'none'} />
+                        </div>
+                      ))}
+                    </div>
+                  ) : null;
+                })()}
+                {/* Room code */}
+                <p className="text-xs text-gray-400 mb-3">Room code: {selectedRoomDetail.code}</p>
+                {/* Facilities from room data */}
+                {selectedHotel?.facilities?.length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-semibold text-gray-800 mb-2">Room Facilities</h4>
+                    <div className="flex flex-wrap gap-1.5">
+                      {selectedHotel.facilities.filter(f => f.roomCode === selectedRoomDetail.code || !f.roomCode).slice(0, 20).map((f, i) => (
+                        <span key={i} className="text-[11px] px-2 py-1 bg-gray-50 text-gray-600 rounded-full">{f.description || f.facilityName || `Facility ${f.facilityCode}`}</span>
+                      ))}
+                    </div>
                   </div>
-                ) : null;
-              })()}
-              {/* Room code */}
-              <p className="text-xs text-gray-400 mb-3">Room code: {selectedRoomDetail.code}</p>
-              {/* Facilities from room data */}
-              {selectedHotel?.facilities?.length > 0 && (
-                <div>
-                  <h4 className="text-sm font-semibold text-gray-800 mb-2">Room Facilities</h4>
-                  <div className="flex flex-wrap gap-1.5">
-                    {selectedHotel.facilities.filter(f => f.roomCode === selectedRoomDetail.code || !f.roomCode).slice(0, 20).map((f, i) => (
-                      <span key={i} className="text-[11px] px-2 py-1 bg-gray-50 text-gray-600 rounded-full">{f.description || f.facilityName || `Facility ${f.facilityCode}`}</span>
-                    ))}
-                  </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Image Gallery Lightbox */}
-      {galleryOpen && galleryImages.length > 0 && (
-        <div className="fixed inset-0 z-[200] bg-black/95 flex flex-col">
-          {/* Top bar */}
-          <div className="flex items-center justify-between px-4 py-3 flex-shrink-0">
-            <span className="text-white/70 text-sm">{galleryIndex + 1} / {galleryImages.length}</span>
-            <button onClick={() => setGalleryOpen(false)} className="p-2.5 rounded-full bg-white/15 hover:bg-white/25 transition-colors"><X className="w-5 h-5 text-white" /></button>
-          </div>
-          {/* Main image */}
-          <div className="flex-1 flex items-center justify-center px-4 relative min-h-0">
-            <button onClick={() => setGalleryIndex(prev => prev > 0 ? prev - 1 : galleryImages.length - 1)} className="absolute left-2 sm:left-6 p-2.5 rounded-full bg-white/10 hover:bg-white/20 transition-colors z-10"><ChevronDown className="w-5 h-5 text-white rotate-90" /></button>
-            <img src={galleryImages[galleryIndex]} alt="" className="max-h-full max-w-full object-contain rounded-lg" onError={(e) => e.target.src = 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg'} />
-            <button onClick={() => setGalleryIndex(prev => prev < galleryImages.length - 1 ? prev + 1 : 0)} className="absolute right-2 sm:right-6 p-2.5 rounded-full bg-white/10 hover:bg-white/20 transition-colors z-10"><ChevronDown className="w-5 h-5 text-white -rotate-90" /></button>
-          </div>
-          {/* Thumbnail strip */}
-          <div className="flex-shrink-0 px-4 py-3 overflow-x-auto">
-            <div className="flex gap-1.5 justify-center">
-              {galleryImages.map((img, i) => (
-                <button key={i} onClick={() => setGalleryIndex(i)} className={`flex-shrink-0 w-16 h-12 rounded-md overflow-hidden border-2 transition-all ${i === galleryIndex ? 'border-white opacity-100' : 'border-transparent opacity-50 hover:opacity-80'}`}>
-                  <img src={img} alt="" className="w-full h-full object-cover" onError={(e) => e.target.src = 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg'} />
-                </button>
-              ))}
+        {/* Image Gallery Lightbox */}
+        {galleryOpen && galleryImages.length > 0 && (
+          <div className="fixed inset-0 z-[200] bg-black/95 flex flex-col">
+            {/* Top bar */}
+            <div className="flex items-center justify-between px-4 py-3 flex-shrink-0">
+              <span className="text-white/70 text-sm">{galleryIndex + 1} / {galleryImages.length}</span>
+              <button onClick={() => setGalleryOpen(false)} className="p-2.5 rounded-full bg-white/15 hover:bg-white/25 transition-colors"><X className="w-5 h-5 text-white" /></button>
+            </div>
+            {/* Main image */}
+            <div className="flex-1 flex items-center justify-center px-4 relative min-h-0">
+              <button onClick={() => setGalleryIndex(prev => prev > 0 ? prev - 1 : galleryImages.length - 1)} className="absolute left-2 sm:left-6 p-2.5 rounded-full bg-white/10 hover:bg-white/20 transition-colors z-10"><ChevronDown className="w-5 h-5 text-white rotate-90" /></button>
+              <img src={galleryImages[galleryIndex]} alt="" className="max-h-full max-w-full object-contain rounded-lg" onError={(e) => e.target.src = 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg'} />
+              <button onClick={() => setGalleryIndex(prev => prev < galleryImages.length - 1 ? prev + 1 : 0)} className="absolute right-2 sm:right-6 p-2.5 rounded-full bg-white/10 hover:bg-white/20 transition-colors z-10"><ChevronDown className="w-5 h-5 text-white -rotate-90" /></button>
+            </div>
+            {/* Thumbnail strip */}
+            <div className="flex-shrink-0 px-4 py-3 overflow-x-auto">
+              <div className="flex gap-1.5 justify-center">
+                {galleryImages.map((img, i) => (
+                  <button key={i} onClick={() => setGalleryIndex(i)} className={`flex-shrink-0 w-16 h-12 rounded-md overflow-hidden border-2 transition-all ${i === galleryIndex ? 'border-white opacity-100' : 'border-transparent opacity-50 hover:opacity-80'}`}>
+                    <img src={img} alt="" className="w-full h-full object-cover" onError={(e) => e.target.src = 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg'} />
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Notification */}
-      {notification.show && (
-        <div className="fixed bottom-4 right-4 z-50 bg-green-600 text-white px-4 py-2.5 rounded-lg shadow-lg text-sm font-medium flex items-center gap-2 animate-in slide-in-from-bottom">
-          <CheckCircle className="w-4 h-4" />{notification.message}
-        </div>
-      )}
+        {/* Notification */}
+        {notification.show && (
+          <div className="fixed bottom-4 right-4 z-50 bg-green-600 text-white px-4 py-2.5 rounded-lg shadow-lg text-sm font-medium flex items-center gap-2 animate-in slide-in-from-bottom">
+            <CheckCircle className="w-4 h-4" />{notification.message}
+          </div>
+        )}
       </div>
-      
+
       {/* Overlay for mobile */}
       {showFilters && (
         <div
@@ -2337,7 +2351,7 @@ const closeReviewsModal = () => {
           onClick={() => setShowFilters(false)}
         />
       )}
-      
+
       <Footer />
     </>
   );
