@@ -4,7 +4,7 @@ const express = require('express');
 const connectToDb = require('./db/db');
 const cookieParser = require('cookie-parser');
 const userRoutes = require('./routes/user.route');
-const hotelRoutes = require('./routes/hotel.route.js');   
+const hotelRoutes = require('./routes/hotel.route.js');
 const activityRoutes = require('./routes/activity.route');
 const activityContentRoutes = require('./routes/activityContent.route');
 const paymentRoutes = require('./routes/payment.route');
@@ -30,7 +30,7 @@ require('./models/blacklistToken.model');
 require('./models/notification.model');
 require('./models/review.model');
 
-dotenv.config();   
+dotenv.config();
 connectToDb();
 const app = express();
 
@@ -74,22 +74,22 @@ app.use(compression());
 
 // General API rate limiting (more lenient)
 const generalLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 500, // Increased from 100
-  message: 'Too many requests from this IP, please try again later.',
-  standardHeaders: true,
-  legacyHeaders: false,
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 500, // Increased from 100
+    message: 'Too many requests from this IP, please try again later.',
+    standardHeaders: true,
+    legacyHeaders: false,
 });
 
 // Strict rate limiting for geocoding API (the problematic endpoint)
 const geocodeLimiter = rateLimit({
-  windowMs: 1 * 60 * 1000, // 1 minute
-  max: 10, // 10 requests per minute
-  message: 'Too many geocoding requests, please try again later.',
-  standardHeaders: true,
-  legacyHeaders: false,
-  // Skip rate limiting for health checks
-  skip: (req) => req.path === '/health' || req.path === '/'
+    windowMs: 1 * 60 * 1000, // 1 minute
+    max: 10, // 10 requests per minute
+    message: 'Too many geocoding requests, please try again later.',
+    standardHeaders: true,
+    legacyHeaders: false,
+    // Skip rate limiting for health checks
+    skip: (req) => req.path === '/health' || req.path === '/'
 });
 
 // Apply general rate limiter to all API routes
@@ -100,17 +100,17 @@ app.use('/uploads', express.static('./uploads'));
 
 // Root route (no rate limit)
 app.get('/', (req, res) => {
-    res.json({ 
+    res.json({
         message: 'TeleTrip Backend API is running!',
         status: 'OK',
-        timestamp: new Date().toISOString() 
+        timestamp: new Date().toISOString()
     });
 });
 
 // Health check route (no rate limit)
 app.get('/health', (req, res) => {
-    res.status(200).json({ 
-        status: 'OK', 
+    res.status(200).json({
+        status: 'OK',
         message: 'Server is running',
         timestamp: new Date().toISOString(),
         uptime: process.uptime(),
@@ -120,7 +120,7 @@ app.get('/health', (req, res) => {
 });
 
 // Routes 
-app.use('/users', userRoutes); 
+app.use('/users', userRoutes);
 app.use('/api', hotelRoutes);
 app.use('/api/activities', activityRoutes);
 app.use('/api/activity-content', activityContentRoutes);
@@ -131,7 +131,8 @@ app.use('/api/locations', locationsRoutes);
 app.use('/api/cities', citiesRoutes);
 app.use('/api/user', userDashboardRoutes);
 app.use('/api/admin', adminDashboardRoutes);
-console.log('[Routes] Admin dashboard routes mounted at /api/admin');
+app.use('/api/v1/admin', adminDashboardRoutes);
+console.log('[Routes] Admin dashboard routes mounted at /api/admin and /api/v1/admin');
 app.use('/api/v1/admin/email', emailRoutes);
 app.use('/api/reports', reportsRoutes);
 app.use('/api/financial', financialRoutes);
