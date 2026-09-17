@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const { body, param, query } = require('express-validator');
-const adminDashboardController = require('../controllers/admindashboard.controller'); 
+const adminDashboardController = require('../controllers/admindashboard.controller');
 const { authUser, requireRole } = require('../middlewares/auth.middleware');
 const { validateRequest } = require('../middlewares/validation.middleware');
- 
+
 // ========== MIDDLEWARE ==========
 // All admin routes require authentication and admin/super_admin role
 const requireAdmin = [authUser, requireRole(['admin', 'super_admin'])];
@@ -94,7 +94,7 @@ const dateRangeValidation = [
  * @desc    Get admin dashboard overview with comprehensive stats
  * @access  Private (Admin only)
  */
-router.get('/dashboard', 
+router.get('/dashboard',
   ...requireAdmin,
   [
     query('period')
@@ -112,7 +112,7 @@ router.get('/dashboard',
  * @desc    Get all users with filters and pagination
  * @access  Private (Admin only)
  */
-router.get('/users', 
+router.get('/users',
   ...requireAdmin,
   [
     ...paginationValidation,
@@ -146,7 +146,7 @@ router.get('/users',
  * @desc    Get specific user details with statistics
  * @access  Private (Admin only)
  */
-router.get('/users/:userId', 
+router.get('/users/:userId',
   ...requireAdmin,
   [param('userId').isMongoId().withMessage('Valid user ID is required')],
   validateRequest,
@@ -158,7 +158,7 @@ router.get('/users/:userId',
  * @desc    Update user status (activate/deactivate)
  * @access  Private (Admin only)
  */
-router.put('/users/:userId/status', 
+router.put('/users/:userId/status',
   ...requireAdmin,
   userStatusValidation,
   validateRequest,
@@ -170,7 +170,7 @@ router.put('/users/:userId/status',
  * @desc    Delete user (soft delete)
  * @access  Private (Super Admin only)
  */
-router.delete('/users/:userId', 
+router.delete('/users/:userId',
   authUser,
   requireRole(['super_admin']),
   userDeleteValidation,
@@ -184,7 +184,7 @@ router.delete('/users/:userId',
  * @desc    Get all bookings with filters
  * @access  Private (Admin only)
  */
-router.get('/bookings', 
+router.get('/bookings',
   ...requireAdmin,
   [
     ...paginationValidation,
@@ -212,7 +212,7 @@ router.get('/bookings',
       .isIn(['asc', 'desc'])
   ],
   validateRequest,
-  adminDashboardController.getAllBookings   
+  adminDashboardController.getAllBookings
 );
 
 /**
@@ -220,7 +220,7 @@ router.get('/bookings',
  * @desc    Get specific booking details
  * @access  Private (Admin only)
  */
-router.get('/bookings/:bookingId', 
+router.get('/bookings/:bookingId',
   ...requireAdmin,
   [param('bookingId').isMongoId().withMessage('Valid booking ID is required')],
   validateRequest,
@@ -232,7 +232,7 @@ router.get('/bookings/:bookingId',
  * @desc    Update booking status
  * @access  Private (Admin only)
  */
-router.put('/bookings/:bookingId/status', 
+router.put('/bookings/:bookingId/status',
   ...requireAdmin,
   bookingStatusValidation,
   validateRequest,
@@ -245,7 +245,7 @@ router.put('/bookings/:bookingId/status',
  * @desc    Get all hotels with filters
  * @access  Private (Admin only)
  */
-router.get('/hotels', 
+router.get('/hotels',
   ...requireAdmin,
   [
     ...paginationValidation,
@@ -279,7 +279,7 @@ router.get('/hotels',
  * @desc    Get specific hotel details with statistics
  * @access  Private (Admin only)
  */
-router.get('/hotels/:hotelId', 
+router.get('/hotels/:hotelId',
   ...requireAdmin,
   [param('hotelId').isMongoId().withMessage('Valid hotel ID is required')],
   validateRequest,
@@ -291,7 +291,7 @@ router.get('/hotels/:hotelId',
  * @desc    Create new hotel
  * @access  Private (Admin only)
  */
-router.post('/hotels', 
+router.post('/hotels',
   ...requireAdmin,
   hotelValidation,
   validateRequest,
@@ -303,7 +303,7 @@ router.post('/hotels',
  * @desc    Update hotel information
  * @access  Private (Admin only)
  */
-router.put('/hotels/:hotelId', 
+router.put('/hotels/:hotelId',
   ...requireAdmin,
   [
     param('hotelId').isMongoId().withMessage('Valid hotel ID is required'),
@@ -318,7 +318,7 @@ router.put('/hotels/:hotelId',
  * @desc    Update hotel status
  * @access  Private (Admin only)
  */
-router.put('/hotels/:hotelId/status', 
+router.put('/hotels/:hotelId/status',
   ...requireAdmin,
   hotelStatusValidation,
   validateRequest,
@@ -361,7 +361,7 @@ router.put('/payments/:paymentId/mark-paid',
  * @desc    Get all payments with filters
  * @access  Private (Admin only)
  */
-router.get('/payments', 
+router.get('/payments',
   ...requireAdmin,
   [
     ...paginationValidation,
@@ -396,7 +396,7 @@ router.get('/payments',
  * @desc    Get specific payment details
  * @access  Private (Admin only)
  */
-router.get('/payments/:paymentId', 
+router.get('/payments/:paymentId',
   ...requireAdmin,
   [param('paymentId').isMongoId().withMessage('Valid payment ID is required')],
   validateRequest,
@@ -408,7 +408,7 @@ router.get('/payments/:paymentId',
  * @desc    Process payment refund
  * @access  Private (Admin only)
  */
-router.post('/payments/:paymentId/refund', 
+router.post('/payments/:paymentId/refund',
   ...requireAdmin,
   refundValidation,
   validateRequest,
@@ -421,7 +421,7 @@ router.post('/payments/:paymentId/refund',
  * @desc    Get all support tickets
  * @access  Private (Admin only)
  */
-router.get('/support/tickets', 
+router.get('/support/tickets',
   ...requireAdmin,
   [
     ...paginationValidation,
@@ -439,7 +439,7 @@ router.get('/support/tickets',
  * @desc    Get specific support ticket details
  * @access  Private (Admin only)
  */
-router.get('/support/tickets/:ticketId', 
+router.get('/support/tickets/:ticketId',
   ...requireAdmin,
   [param('ticketId').isMongoId().withMessage('Valid ticket ID is required')],
   validateRequest,
@@ -451,7 +451,7 @@ router.get('/support/tickets/:ticketId',
  * @desc    Update support ticket
  * @access  Private (Admin only)
  */
-router.put('/support/tickets/:ticketId', 
+router.put('/support/tickets/:ticketId',
   ...requireAdmin,
   ticketUpdateValidation,
   validateRequest,
@@ -463,7 +463,7 @@ router.put('/support/tickets/:ticketId',
  * @desc    Add response to support ticket
  * @access  Private (Admin only)
  */
-router.post('/support/tickets/:ticketId/responses', 
+router.post('/support/tickets/:ticketId/responses',
   ...requireAdmin,
   ticketResponseValidation,
   validateRequest,
@@ -569,7 +569,7 @@ router.post('/email/bulk',
  * @desc    Get comprehensive analytics data
  * @access  Private (Admin only)
  */
-router.get('/analytics', 
+router.get('/analytics',
   ...requireAdmin,
   [
     ...dateRangeValidation,
@@ -584,7 +584,7 @@ router.get('/analytics',
  * @desc    Export data in various formats (CSV, Excel, PDF)
  * @access  Private (Admin only)
  */
-router.get('/reports/export', 
+router.get('/reports/export',
   ...requireAdmin,
   [
     ...dateRangeValidation,
@@ -633,6 +633,21 @@ router.get('/certification-logs', ...requireAdmin, async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Failed to retrieve certification logs' });
+  }
+});
+
+/**
+ * GET /api/v1/admin/certification-logs/download
+ * Direct browser download of hotelbeds_certification_logs.json
+ */
+router.get('/certification-logs/download', async (req, res) => {
+  try {
+    const logs = await getLogs();
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Disposition', 'attachment; filename="hotelbeds_certification_logs.json"');
+    res.send(JSON.stringify(logs, null, 2));
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to download certification logs' });
   }
 });
 
