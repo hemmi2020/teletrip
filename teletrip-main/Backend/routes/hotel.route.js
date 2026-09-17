@@ -330,6 +330,29 @@ router.post('/hotels/search', async (req, res) => {
 
         const data = await response.json();
 
+        // Log for certification
+        addLog({
+            step: 'Availability',
+            request: {
+                method: 'POST',
+                url: `${HOTELBEDS_BASE_URL}/hotel-api/1.0/hotels`,
+                headers: { 'Content-Type': 'application/json', 'Api-key': HOTELBEDS_API_KEY, 'X-Signature': signature, 'Accept': 'application/json' },
+                body: req.body
+            },
+            response: {
+                status: response.status,
+                body: {
+                    auditData: data.auditData,
+                    hotels: {
+                        total: data.hotels?.total,
+                        checkIn: data.hotels?.checkIn,
+                        checkOut: data.hotels?.checkOut,
+                        hotels: (data.hotels?.hotels || []).slice(0, 5)
+                    }
+                }
+            }
+        });
+
         if (data.hotels && data.hotels.hotels) {
             data.hotels.hotels = await enhanceHotelsWithContent(data.hotels.hotels);
         }
@@ -516,6 +539,21 @@ router.post('/hotels/book', authUser, async (req, res) => {
         }
 
         const data = await response.json();
+
+        // Log for certification
+        addLog({
+            step: 'Booking',
+            request: {
+                method: 'POST',
+                url: `${HOTELBEDS_BASE_URL}/hotel-api/1.0/bookings`,
+                headers: { 'Content-Type': 'application/json', 'Api-key': HOTELBEDS_API_KEY, 'X-Signature': signature, 'Accept': 'application/json' },
+                body: req.body
+            },
+            response: {
+                status: response.status,
+                body: data
+            }
+        });
 
         res.json({
             success: true,
