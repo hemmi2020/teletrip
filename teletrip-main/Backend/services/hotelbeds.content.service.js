@@ -2,8 +2,12 @@ const crypto = require('crypto');
 
 const HOTELBEDS_API_KEY = process.env.HOTELBEDS_API_KEY || '106700a0f2f1e2aa1d4c2b16daae70b2';
 const HOTELBEDS_SECRET = process.env.HOTELBEDS_SECRET || '018e478aa6';
-// Content API uses the regular test endpoint — MTLS is only required for the booking flow
-const CONTENT_BASE_URL = process.env.HOTELBEDS_CONTENT_URL || ((process.env.HOTELBEDS_ENV || 'test').toLowerCase() === 'live' ? 'https://api.hotelbeds.com/hotel-content-api/1.0' : 'https://api.test.hotelbeds.com/hotel-content-api/1.0');
+// Content API uses standard endpoint (Hotelbeds hosts only booking flow /hotel-api on api-mtls)
+const CONTENT_BASE_URL = process.env.HOTELBEDS_CONTENT_URL || (
+  (process.env.HOTELBEDS_ENV || 'test').toLowerCase() === 'live'
+    ? 'https://api.hotelbeds.com/hotel-content-api/1.0'
+    : 'https://api.test.hotelbeds.com/hotel-content-api/1.0'
+);
 
 // Fields we actually need for sync — drastically reduces payload vs fields=all
 const SYNC_FIELDS = 'code,name,description,address,city,postalCode,countryCode,stateCode,destinationCode,phones,email,web,categoryCode,categoryGroupCode,accommodationTypeCode,facilities,images,rooms';
@@ -58,7 +62,7 @@ async function fetchWithRetry(url, options = {}, { retries = 3, baseDelay = 2000
 
 /**
  * Fetch hotel details from Hotelbeds Content API
- * Returns phone numbers, address, description, facilities, images
+ * Returns phone numbers, address, description, facilities, images, and room facilities
  */
 async function getHotelContent(hotelCode) {
   try {
@@ -73,7 +77,8 @@ async function getHotelContent(hotelCode) {
       headers: {
         'Api-key': HOTELBEDS_API_KEY,
         'X-Signature': signature,
-        'Accept': 'application/json'
+        'Accept': 'application/json',
+        'Accept-Encoding': 'gzip'
       },
       ...(agent && { agent })
     }, { retries: 3, baseDelay: 1000, timeoutMs: 15000 });
@@ -87,6 +92,27 @@ async function getHotelContent(hotelCode) {
     const hotel = data.hotel;
 
     if (!hotel) return null;
+
+    // Process room-level facilities (mandatory Hotelbeds certification requirement)
+    const processedRooms = (hotel.rooms || []).map(room => {
+      const roomFacilities = (room.facilities || []).map(f => ({
+        code: f.facilityCode,
+        facilityCode: f.facilityCode,
+        groupCode: f.facilityGroupCode,
+        description: f.description?.content || `Facility ${f.facilityCode}`,
+        indFee: f.indFee === true
+      }));
+
+      return {
+        roomCode: room.roomCode,
+        roomName: room.roomDescription || room.name || 'Room',
+        typeCode: room.typeCode || '',
+        characteristicCode: room.characteristicCode || '',
+        facilities: roomFacilities,
+        paidFacilities: roomFacilities.filter(f => f.indFee === true),
+        freeFacilities: roomFacilities.filter(f => f.indFee !== true)
+      };
+    });
 
     return {
       code: hotel.code,
@@ -120,7 +146,19 @@ async function getHotelContent(hotelCode) {
           code: f.facilityCode,
           groupCode: f.facilityGroupCode,
           description: f.description?.content || `Facility ${f.facilityCode}`,
-          fee: true
+          fee: true,
+          indFee: true
+        })),
+      // Complimentary facilities (indFee=false)
+      freeFacilities: (hotel.facilities || [])
+        .filter(f => f.indFee !== true)
+        .slice(0, 50)
+        .map(f => ({
+          code: f.facilityCode,
+          groupCode: f.facilityGroupCode,
+          description: f.description?.content || `Facility ${f.facilityCode}`,
+          fee: false,
+          indFee: false
         })),
       // All facilities
       facilities: (hotel.facilities || []).slice(0, 50).map(f => ({
@@ -130,17 +168,19 @@ async function getHotelContent(hotelCode) {
         indFee: f.indFee || false
       })),
       // Room-level facilities with paid charges (indFee=true)
-      roomPaidFacilities: (hotel.rooms || []).flatMap(room =>
-        (room.facilities || [])
-          .filter(f => f.indFee === true)
-          .map(f => ({
-            roomName: room.roomDescription || room.name || 'Room',
-            code: f.facilityCode,
-            groupCode: f.facilityGroupCode,
-            description: f.description?.content || `Facility ${f.facilityCode}`,
-            fee: true
-          }))
+      roomPaidFacilities: processedRooms.flatMap(r =>
+        r.paidFacilities.map(f => ({
+          roomCode: r.roomCode,
+          roomName: r.roomName,
+          code: f.code,
+          groupCode: f.groupCode,
+          description: f.description,
+          fee: true,
+          indFee: true
+        }))
       ).slice(0, 30),
+      // Full rooms array with facilities
+      rooms: processedRooms,
       images: (hotel.images || []).slice(0, 10).map(img => ({
         path: img.path,
         type: img.type?.description?.content || img.imageTypeCode || ''
@@ -169,7 +209,8 @@ async function getHotelsBulk(from = 1, to = 100) {
       headers: {
         'Api-key': HOTELBEDS_API_KEY,
         'X-Signature': signature,
-        'Accept': 'application/json'
+        'Accept': 'application/json',
+        'Accept-Encoding': 'gzip'
       },
       ...(agent && { agent })
     }, { retries: 3, baseDelay: 2000, timeoutMs: 45000 });

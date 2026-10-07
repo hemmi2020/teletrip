@@ -17,7 +17,6 @@ yarn-error.log
 # Certificates (private keys must never be committed)
 certs/
 
-scripts
 # Logs
 logs
 *.log

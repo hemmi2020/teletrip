@@ -762,6 +762,16 @@ router.post('/reconcile-bookings',
 );
 
 /**
+ * GET /api/admin/hotelbeds-booking-detail/:reference
+ * Fetch single booking detail directly from Hotelbeds (Booking Detail Request)
+ * @access Private (Admin only)
+ */
+router.get('/hotelbeds-booking-detail/:reference',
+  ...requireAdmin,
+  adminDashboardController.getHotelbedsBookingDetail
+);
+
+/**
  * POST /api/admin/poll-hcn
  * Poll Hotelbeds for Hotel Confirmation Numbers
  * @access Private (Admin only)

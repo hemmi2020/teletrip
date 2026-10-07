@@ -8,6 +8,7 @@ import {
 const BookingVoucher = ({ booking, onClose }) => {
   const voucherRef = useRef(null);
   const [pkrRate, setPkrRate] = useState(null);
+  const [hidePrice, setHidePrice] = useState(false);
 
   // Fetch PKR conversion rate
   useEffect(() => {
@@ -211,7 +212,12 @@ const BookingVoucher = ({ booking, onClose }) => {
   const invoiceCompany = hb.invoiceCompany || hbBooking?.invoiceCompany;
 
   const hotelbedsRef = hb.confirmationNumber || hbBooking?.reference || booking.hotelBooking?.hotelbedsReference || '';
-  const confirmationNumber = hotelbedsRef || booking.bookingReference;
+  const clientRef = booking.bookingReference || booking.clientReference || '';
+  const confirmationNumber = hotelbedsRef || clientRef;
+
+  const incomingOffice = hbHotel.incomingOffice || hbBooking?.hotel?.incomingOffice || {};
+  const incomingOfficeName = incomingOffice.name || supplier?.name || invoiceCompany?.company || 'HOTELBEDS DMCC';
+  const incomingOfficeCode = incomingOffice.code || '';
 
   const rooms = hb.rooms || hbHotel.rooms || hbBooking?.hotel?.rooms || [];
   const primaryGuest = booking.guestInfo?.primaryGuest || {};
@@ -234,17 +240,21 @@ const BookingVoucher = ({ booking, onClose }) => {
   const addressParts = [hb.hotelAddress?.street, hb.hotelAddress?.fullAddress, zoneName, destinationName].filter(Boolean);
   const fullAddress = addressParts.length > 0 ? addressParts[0] : (hb.hotelAddress?.city || zoneName || destinationName || '');
 
-  const totalNetEUR = parseFloat(hbBooking?.totalNet) || parseFloat(hb.totalNet) || parseFloat(hbHotel?.totalNet) || rooms.reduce((sum, r) => sum + parseFloat(r.netPrice || r.sellingPrice || 0), 0);
-  const totalPKR = booking.pricing?.totalAmount || 0;
-  const pkrConverted = formatPKR(totalNetEUR);
-  const displayTotal = totalPKR > 100 ? `PKR ${Math.round(totalPKR).toLocaleString()}` : (pkrConverted || `PKR ${Math.round(totalNetEUR * 310).toLocaleString()}`);
+  // HBX Compliance: Supplier wholesale net price must NEVER be displayed to the customer.
+  // Display only customer retail pricing or no amounts.
+  const customerTotal = booking.pricing?.totalAmount || booking.totalAmount || 0;
+  const customerCurrency = booking.pricing?.currency || booking.currency || 'PKR';
+  const displayCustomerTotal = customerTotal > 0
+    ? `${customerCurrency} ${Math.round(customerTotal).toLocaleString()}`
+    : 'Prepaid in Full';
 
   const paymentMethod = booking.payment?.method || booking.paymentMethod ||
     (hb.rooms?.[0]?.paymentType === 'AT_HOTEL' ? 'pay_on_site' : 'card');
 
   const supplierName = supplier?.name || invoiceCompany?.company || hbBooking?.invoiceCompany?.company || 'HOTELBEDS DMCC';
   const supplierVAT = supplier?.vatNumber || invoiceCompany?.registrationNumber || hbBooking?.invoiceCompany?.registrationNumber || '100035906500003';
-  const supplierNotice = `Payable through ${supplierName}, acting as agent for the service operating company, details of which can be provided upon request. VAT: ${supplierVAT} Reference: ${confirmationNumber}`;
+  // Mandatory HBX Legal Text: "Bookable and payable through [Supplier], acting as agent for the service operating company..."
+  const supplierNotice = `Bookable and payable through ${supplierName}, acting as agent for the service operating company, details of which can be provided upon request. VAT: ${supplierVAT} Reference: ${confirmationNumber}`;
 
   const isConfirmed = booking.status === 'confirmed' || booking.status === 'completed';
   const isCancelled = booking.status === 'cancelled';
@@ -259,6 +269,15 @@ const BookingVoucher = ({ booking, onClose }) => {
         <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-3 flex items-center justify-between z-10 no-print">
           <h2 className="text-base font-bold text-gray-900 tracking-tight" style={{ letterSpacing: '-0.02em' }}>Booking Voucher</h2>
           <div className="flex items-center gap-2">
+            <label className="flex items-center gap-1.5 text-xs text-gray-600 cursor-pointer bg-gray-50 border border-gray-200 px-3 py-1.5 rounded-full select-none hover:bg-gray-100 transition-colors">
+              <input
+                type="checkbox"
+                checked={hidePrice}
+                onChange={(e) => setHidePrice(e.target.checked)}
+                className="rounded text-blue-600 focus:ring-0 cursor-pointer"
+              />
+              <span>Hide Price (Hotel Check-in)</span>
+            </label>
             <button onClick={handlePrint}
               className="flex items-center gap-1.5 px-4 py-2 text-white rounded-full text-xs font-bold tracking-widest uppercase transition-all hover:opacity-90"
               style={{ background: 'linear-gradient(135deg, #3b82f6, #2563eb)', letterSpacing: '0.08em' }}>
@@ -283,8 +302,11 @@ const BookingVoucher = ({ booking, onClose }) => {
                 <p className="text-xs text-gray-400 mt-0.5">Booking Confirmation Voucher</p>
               </div>
               <div className="text-left sm:text-right">
-                <p className="text-[10px] font-semibold tracking-widest uppercase text-gray-400" style={{ letterSpacing: '0.12em' }}>Confirmation #</p>
-                <p className="text-base font-bold text-gray-900 font-mono tracking-tight">{confirmationNumber}</p>
+                <p className="text-[10px] font-semibold tracking-widest uppercase text-gray-400" style={{ letterSpacing: '0.12em' }}>HBX Reference #</p>
+                <p className="text-base font-bold text-gray-900 font-mono tracking-tight">{hotelbedsRef || confirmationNumber}</p>
+                {clientRef && clientRef !== hotelbedsRef && (
+                  <p className="text-[10px] text-gray-500 font-mono mt-0.5">Booking Ref: {clientRef}</p>
+                )}
                 <span className={`inline-block mt-1 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${statusColor}`} style={{ letterSpacing: '0.08em' }}>
                   {statusLabel}
                 </span>
@@ -449,15 +471,13 @@ const BookingVoucher = ({ booking, onClose }) => {
                         <BedDouble className="w-3 h-3" /> {boardName}
                       </p>
                     </div>
-                    <div className="text-right">
-                      <p className="text-[15px] font-bold text-gray-900">{bookingCurrency} {netPrice.toFixed(2)}</p>
-                      {nights > 0 && netPrice > 0 && (
-                        <p className="text-[10px] text-gray-400">{nights} night{nights !== 1 ? 's' : ''} × {bookingCurrency} {perNight.toFixed(2)}</p>
-                      )}
-                      {formatPKR(netPrice) && (
-                        <p className="text-[11px] text-green-700 font-semibold mt-0.5">{formatPKR(netPrice)}</p>
-                      )}
-                    </div>
+                    {!hidePrice && (
+                      <div className="text-right">
+                        <span className="inline-block px-3 py-1 bg-green-50 border border-green-200 text-green-700 font-semibold text-xs rounded-full">
+                          Room Confirmed & Prepaid
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   {/* Occupancy */}
@@ -532,36 +552,62 @@ const BookingVoucher = ({ booking, onClose }) => {
           </div>
 
           {/* Payment Summary */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-5 mb-4">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-7 h-7 rounded-lg bg-green-50 flex items-center justify-center">
-                <BadgeCheck className="w-3.5 h-3.5 text-green-600" strokeWidth={1.8} />
+          {!hidePrice && (
+            <div className="bg-white rounded-2xl border border-gray-100 p-5 mb-4">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-7 h-7 rounded-lg bg-green-50 flex items-center justify-center">
+                  <BadgeCheck className="w-3.5 h-3.5 text-green-600" strokeWidth={1.8} />
+                </div>
+                <h3 className="text-sm font-bold text-gray-900 tracking-tight" style={{ letterSpacing: '-0.02em' }}>Payment Summary</h3>
               </div>
-              <h3 className="text-sm font-bold text-gray-900 tracking-tight" style={{ letterSpacing: '-0.02em' }}>Payment Summary</h3>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-gray-500">Retail Booking Amount</span>
+                  <span className="font-semibold text-gray-900">{displayCustomerTotal}</span>
+                </div>
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-gray-500">Payment Status</span>
+                  <span className="text-sm font-semibold text-green-700">Prepaid in Full</span>
+                </div>
+                <div className="flex justify-between items-center text-sm pt-2 border-t border-gray-100">
+                  <span className="text-gray-500">Payment Method</span>
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium">
+                    <Building2 className="w-3 h-3" />
+                    {paymentMethod === 'pay_on_site' ? 'Pay at Office' : 'Credit Card'}
+                  </span>
+                </div>
+              </div>
+              {isReserved && (
+                <div className="mt-3 p-2.5 bg-amber-50 border border-amber-200 rounded-lg text-[11px] text-amber-900 font-medium flex items-center gap-2">
+                  <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
+                  Payment not yet received. Booking will be confirmed once payment is completed.
+                </div>
+              )}
             </div>
-            <div className="space-y-2">
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-gray-500">Booking Amount ({bookingCurrency})</span>
-                <span className="font-semibold text-gray-900">{bookingCurrency} {totalNetEUR.toFixed(2)}</span>
+          )}
+
+          {/* Destination Incoming Office & 24/7 Emergency Assistance */}
+          <div className="bg-blue-50/70 border border-blue-200 rounded-2xl p-4 mb-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Phone className="w-4 h-4 text-blue-600" strokeWidth={2} />
+              <h3 className="text-[11px] font-bold text-blue-900 uppercase tracking-wider" style={{ letterSpacing: '0.06em' }}>
+                Destination Incoming Office & 24/7 Emergency Assistance
+              </h3>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-blue-950">
+              <div className="bg-white/80 border border-blue-100 rounded-xl p-3">
+                <p className="text-[9px] text-blue-600 uppercase font-semibold tracking-wider">Incoming Office / Operating Agent</p>
+                <p className="font-semibold text-gray-900 mt-0.5">{incomingOfficeName}</p>
+                {incomingOfficeCode && (
+                  <p className="text-[10px] text-gray-500 mt-0.5">Office Identifier: {incomingOfficeCode}</p>
+                )}
               </div>
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-gray-500">Total Payable</span>
-                <span className="text-lg font-bold text-gray-900">{displayTotal}</span>
-              </div>
-              <div className="flex justify-between items-center text-sm pt-2 border-t border-gray-100">
-                <span className="text-gray-500">Payment Method</span>
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-medium">
-                  <Building2 className="w-3 h-3" />
-                  {paymentMethod === 'pay_on_site' ? 'Pay at Office' : 'Credit Card'}
-                </span>
+              <div className="bg-white/80 border border-blue-100 rounded-xl p-3">
+                <p className="text-[9px] text-blue-600 uppercase font-semibold tracking-wider">24/7 Destination Emergency Hotline</p>
+                <p className="font-semibold text-gray-900 mt-0.5">+34 971 000 555 (Hotelbeds Worldwide Assistance)</p>
+                <p className="text-[10px] text-blue-700 font-medium mt-0.5">Telitrip Support: +92 300 1234567 | customer@telitrip.com</p>
               </div>
             </div>
-            {isReserved && (
-              <div className="mt-3 p-2.5 bg-amber-50 border border-amber-200 rounded-lg text-[11px] text-amber-900 font-medium flex items-center gap-2">
-                <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />
-                Payment not yet received. Booking will be confirmed once payment is completed.
-              </div>
-            )}
           </div>
 
           {/* Supplier Notice */}

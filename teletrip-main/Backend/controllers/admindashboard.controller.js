@@ -16,7 +16,7 @@ const {
   getLatestStaticSyncStatus,
   getStaticContentCounts
 } = require('../services/hotelbeds.staticcontent.service');
-const { runReconciliation } = require('../services/hotelbeds.reconciliation.service');
+const { runReconciliation, fetchHotelbedsBookingDetail } = require('../services/hotelbeds.reconciliation.service');
 const SystemSettings = require('../models/systemsetting.model');
 const moment = require('moment');
 
@@ -1754,6 +1754,16 @@ const reconcileBookings = asyncErrorHandler(async (req, res) => {
   return ApiResponse.success(res, result, 'Reconciliation completed');
 });
 
+const getHotelbedsBookingDetail = asyncErrorHandler(async (req, res) => {
+  const { reference } = req.params;
+  if (!reference) {
+    return ApiResponse.error(res, 'Booking reference is required', 400);
+  }
+
+  const booking = await fetchHotelbedsBookingDetail(reference);
+  return ApiResponse.success(res, booking, 'Hotelbeds booking detail retrieved');
+});
+
 // ========== HCN POLLING (Recommended) ==========
 const { pollHCNForBookings, getHCNStatusSummary } = require('../services/hotelbeds.hcn.service');
 
@@ -1852,6 +1862,7 @@ module.exports = {
   startStaticSync,
   getStaticSyncStatus,
   reconcileBookings,
+  getHotelbedsBookingDetail,
   pollHCN,
   getHCNSummary,
   getSyncSettings,

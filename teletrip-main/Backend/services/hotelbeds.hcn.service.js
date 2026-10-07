@@ -11,9 +11,7 @@ const HOTELBEDS_API_KEY = process.env.HOTELBEDS_API_KEY || '106700a0f2f1e2aa1d4c
 const HOTELBEDS_SECRET = process.env.HOTELBEDS_SECRET || '018e478aa6';
 const HOTELBEDS_ENV = (process.env.HOTELBEDS_ENV || 'test').toLowerCase();
 const HOTELBEDS_BASE_URL = process.env.HOTELBEDS_BASE_URL || (
-  (process.env.HOTELBEDS_MTLS_CERT || process.env.HOTELBEDS_MTLS_CERT_PATH)
-    ? (HOTELBEDS_ENV === 'live' ? 'https://api-mtls.hotelbeds.com' : 'https://api-mtls.test.hotelbeds.com')
-    : (HOTELBEDS_ENV === 'live' ? 'https://api.hotelbeds.com' : 'https://api.test.hotelbeds.com')
+  HOTELBEDS_ENV === 'live' ? 'https://api-mtls.hotelbeds.com' : 'https://api-mtls.test.hotelbeds.com'
 );
 
 function generateSignature(apiKey, secret, timestamp) {
@@ -35,7 +33,8 @@ async function fetchBookingDetail(bookingReference) {
       headers: {
         'Api-key': HOTELBEDS_API_KEY,
         'X-Signature': signature,
-        'Accept': 'application/json'
+        'Accept': 'application/json',
+        'Accept-Encoding': 'gzip'
       },
       ...(agent && { agent })
     });

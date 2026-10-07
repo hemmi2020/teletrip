@@ -13,9 +13,7 @@ const HOTELBEDS_SECRET = process.env.HOTELBEDS_SECRET || '018e478aa6';
 // Use MTLS endpoint when certificate is configured (mandatory for production)
 const HOTELBEDS_ENV = (process.env.HOTELBEDS_ENV || 'test').toLowerCase();
 const HOTELBEDS_BASE_URL = process.env.HOTELBEDS_BASE_URL || (
-    HOTELBEDS_ENV === 'live'
-        ? ((process.env.HOTELBEDS_MTLS_CERT || process.env.HOTELBEDS_MTLS_CERT_PATH) ? 'https://api-mtls.hotelbeds.com' : 'https://api.hotelbeds.com')
-        : 'https://api-mtls.test.hotelbeds.com'
+    HOTELBEDS_ENV === 'live' ? 'https://api-mtls.hotelbeds.com' : 'https://api-mtls.test.hotelbeds.com'
 );
 
 // Warn if MTLS is configured but BASE_URL points to the non-MTLS endpoint
@@ -27,7 +25,11 @@ if ((process.env.HOTELBEDS_MTLS_CERT || process.env.HOTELBEDS_MTLS_CERT_PATH) &&
 }
 
 console.log('[Config] Hotelbeds base URL:', HOTELBEDS_BASE_URL);
-const HOTELBEDS_CONTENT_URL = HOTELBEDS_ENV === 'live' ? 'https://api.hotelbeds.com/hotel-content-api/1.0' : 'https://api.test.hotelbeds.com/hotel-content-api/1.0';
+const HOTELBEDS_CONTENT_URL = process.env.HOTELBEDS_CONTENT_URL || (
+    HOTELBEDS_ENV === 'live' 
+        ? 'https://api.hotelbeds.com/hotel-content-api/1.0' 
+        : 'https://api.test.hotelbeds.com/hotel-content-api/1.0'
+);
 const TRIPADVISOR_API_KEY = process.env.TRIPADVISOR_API_KEY;
 
 // Generate signature for Hotelbeds API 
@@ -154,14 +156,17 @@ async function fetchHotelContent(hotelCodes) {
         const codesParam = Array.isArray(hotelCodes) ? hotelCodes.join(',') : hotelCodes;
         const contentUrl = `${HOTELBEDS_CONTENT_URL}/hotels?fields=images,facilities,amenities,accommodationTypeCode,chainCode,segmentCodes&language=ENG&codes=${codesParam}`;
 
+        const agent = getMTLSAgent();
         const response = await fetch(contentUrl, {
             method: 'GET',
             headers: {
                 'Accept': 'application/json',
+                'Accept-Encoding': 'gzip',
                 'Api-key': HOTELBEDS_API_KEY,
                 'X-Signature': signature,
                 'X-Timestamp': timestamp.toString()
-            }
+            },
+            ...(agent && { agent })
         });
 
         if (!response.ok) {
@@ -200,14 +205,17 @@ async function fetchHotelDetails(hotelCode) {
 
         const detailsUrl = `${HOTELBEDS_CONTENT_URL}/hotels/${hotelCode}/details`;
 
+        const agent = getMTLSAgent();
         const response = await fetch(detailsUrl, {
             method: 'GET',
             headers: {
                 'Accept': 'application/json',
+                'Accept-Encoding': 'gzip',
                 'Api-key': HOTELBEDS_API_KEY,
                 'X-Signature': signature,
                 'X-Timestamp': timestamp.toString()
-            }
+            },
+            ...(agent && { agent })
         });
 
         if (!response.ok) {
@@ -296,6 +304,16 @@ router.post('/hotels/search', async (req, res) => {
         const timestamp = Math.floor(Date.now() / 1000);
         const signature = generateHotelbedsSignature(HOTELBEDS_API_KEY, HOTELBEDS_SECRET, timestamp);
 
+        const searchBody = {
+            ...req.body,
+            sourceMarket: req.body.sourceMarket || 'PK',
+            source: {
+                channel: 'B2C',
+                device: 'WEB',
+                deviceInfo: 'TeleTrip Web Application'
+            }
+        };
+
         const agent = getMTLSAgent();
         const response = await fetch(`${HOTELBEDS_BASE_URL}/hotel-api/1.0/hotels`, {
             method: 'POST',
@@ -304,17 +322,9 @@ router.post('/hotels/search', async (req, res) => {
                 'Api-key': HOTELBEDS_API_KEY,
                 'X-Signature': signature,
                 'Accept': 'application/json',
-                // 'Accept-Encoding': handled automatically by node-fetch
+                'Accept-Encoding': 'gzip'
             },
-            body: JSON.stringify({
-                ...req.body,
-                source: {
-                    channel: 'B2C',
-                    device: 'WEB',
-                    deviceInfo: 'TeleTrip Web Application',
-                    sourceMarket: 'PK'
-                }
-            }),
+            body: JSON.stringify(searchBody),
             ...(agent && { agent })
         });
 
@@ -336,8 +346,8 @@ router.post('/hotels/search', async (req, res) => {
             request: {
                 method: 'POST',
                 url: `${HOTELBEDS_BASE_URL}/hotel-api/1.0/hotels`,
-                headers: { 'Content-Type': 'application/json', 'Api-key': HOTELBEDS_API_KEY, 'X-Signature': signature, 'Accept': 'application/json' },
-                body: req.body
+                headers: { 'Content-Type': 'application/json', 'Api-key': HOTELBEDS_API_KEY, 'X-Signature': signature, 'Accept': 'application/json', 'Accept-Encoding': 'gzip' },
+                body: searchBody
             },
             response: {
                 status: response.status,
@@ -380,6 +390,16 @@ router.post('/hotels/search-auth', async (req, res) => {
 
         console.log('Hotel search (no auth required)');
 
+        const searchBody = {
+            ...req.body,
+            sourceMarket: req.body.sourceMarket || 'PK',
+            source: {
+                channel: 'B2C',
+                device: 'WEB',
+                deviceInfo: 'TeleTrip Web Application'
+            }
+        };
+
         const url = `${HOTELBEDS_BASE_URL}/hotel-api/1.0/hotels`;
         const agent = getMTLSAgent();
         const response = await fetch(url, {
@@ -389,17 +409,9 @@ router.post('/hotels/search-auth', async (req, res) => {
                 'Api-key': HOTELBEDS_API_KEY,
                 'X-Signature': signature,
                 'Accept': 'application/json',
-                // 'Accept-Encoding': handled automatically by node-fetch
+                'Accept-Encoding': 'gzip'
             },
-            body: JSON.stringify({
-                ...req.body,
-                source: {
-                    channel: 'B2C',
-                    device: 'WEB',
-                    deviceInfo: 'TeleTrip Web Application',
-                    sourceMarket: 'PK'
-                }
-            }),
+            body: JSON.stringify(searchBody),
             ...(agent && { agent })
         });
 
@@ -421,8 +433,8 @@ router.post('/hotels/search-auth', async (req, res) => {
             request: {
                 method: 'POST',
                 url,
-                headers: { 'Content-Type': 'application/json', 'Api-key': HOTELBEDS_API_KEY, 'X-Signature': signature, 'Accept': 'application/json' },
-                body: req.body
+                headers: { 'Content-Type': 'application/json', 'Api-key': HOTELBEDS_API_KEY, 'X-Signature': signature, 'Accept': 'application/json', 'Accept-Encoding': 'gzip' },
+                body: searchBody
             },
             response: {
                 status: response.status,
@@ -490,14 +502,17 @@ router.post('/hotels/book', authUser, async (req, res) => {
         const timestamp = Math.floor(Date.now() / 1000);
         const signature = generateHotelbedsSignature(HOTELBEDS_API_KEY, HOTELBEDS_SECRET, timestamp);
 
-        // Add source marker for distribution management (Hotelbeds recommendation)
-        if (!req.body.source) {
-            req.body.source = {
+        // Hotelbeds requirement: sourceMarket must ONLY be in availability requests, NOT in booking requests
+        const bookingPayload = { ...req.body };
+        delete bookingPayload.sourceMarket;
+        if (!bookingPayload.source) {
+            bookingPayload.source = {
                 channel: 'B2C',
                 device: 'WEB',
-                deviceInfo: 'TeleTrip Web Application',
-                sourceMarket: 'PK'
+                deviceInfo: 'TeleTrip Web Application'
             };
+        } else if (bookingPayload.source.sourceMarket) {
+            delete bookingPayload.source.sourceMarket;
         }
 
         const agent = getMTLSAgent();
@@ -508,9 +523,9 @@ router.post('/hotels/book', authUser, async (req, res) => {
                 'Api-key': HOTELBEDS_API_KEY,
                 'X-Signature': signature,
                 'Accept': 'application/json',
-                // 'Accept-Encoding': handled automatically by node-fetch
+                'Accept-Encoding': 'gzip'
             },
-            body: JSON.stringify(req.body),
+            body: JSON.stringify(bookingPayload),
             ...(agent && { agent })
         });
 
@@ -546,7 +561,7 @@ router.post('/hotels/book', authUser, async (req, res) => {
             request: {
                 method: 'POST',
                 url: `${HOTELBEDS_BASE_URL}/hotel-api/1.0/bookings`,
-                headers: { 'Content-Type': 'application/json', 'Api-key': HOTELBEDS_API_KEY, 'X-Signature': signature, 'Accept': 'application/json' },
+                headers: { 'Content-Type': 'application/json', 'Api-key': HOTELBEDS_API_KEY, 'X-Signature': signature, 'Accept': 'application/json', 'Accept-Encoding': 'gzip' },
                 body: req.body
             },
             response: {
@@ -578,6 +593,17 @@ router.post('/hotels/checkrate', async (req, res) => {
 
         const url = `${HOTELBEDS_BASE_URL}/hotel-api/1.0/checkrates`;
         const checkrateAgent = getMTLSAgent();
+        const checkrateBody = { ...req.body };
+        delete checkrateBody.sourceMarket;
+        if (checkrateBody.source?.sourceMarket) {
+            delete checkrateBody.source.sourceMarket;
+        }
+        checkrateBody.source = {
+            channel: 'B2C',
+            device: 'WEB',
+            deviceInfo: 'TeleTrip Web Application'
+        };
+
         const response = await fetch(url, {
             method: 'POST',
             headers: {
@@ -585,17 +611,9 @@ router.post('/hotels/checkrate', async (req, res) => {
                 'Api-key': HOTELBEDS_API_KEY,
                 'X-Signature': signature,
                 'Accept': 'application/json',
-                // 'Accept-Encoding': handled automatically by node-fetch
+                'Accept-Encoding': 'gzip'
             },
-            body: JSON.stringify({
-                ...req.body,
-                source: {
-                    channel: 'B2C',
-                    device: 'WEB',
-                    deviceInfo: 'TeleTrip Web Application',
-                    sourceMarket: 'PK'
-                }
-            }),
+            body: JSON.stringify(checkrateBody),
             ...(checkrateAgent && { agent: checkrateAgent })
         });
 
@@ -617,7 +635,7 @@ router.post('/hotels/checkrate', async (req, res) => {
             request: {
                 method: 'POST',
                 url,
-                headers: { 'Content-Type': 'application/json', 'Api-key': HOTELBEDS_API_KEY, 'X-Signature': signature, 'Accept': 'application/json' },
+                headers: { 'Content-Type': 'application/json', 'Api-key': HOTELBEDS_API_KEY, 'X-Signature': signature, 'Accept': 'application/json', 'Accept-Encoding': 'gzip' },
                 body: req.body
             },
             response: {
@@ -864,7 +882,7 @@ router.get('/hotels/bookings', authUser, async (req, res) => {
                 'Api-key': HOTELBEDS_API_KEY,
                 'X-Signature': signature,
                 'Accept': 'application/json',
-                // 'Accept-Encoding': handled automatically by node-fetch
+                'Accept-Encoding': 'gzip'
             },
             ...(agent && { agent })
         });
@@ -898,7 +916,7 @@ router.get('/hotels/bookings/:bookingId', authUser, async (req, res) => {
                 'Api-key': HOTELBEDS_API_KEY,
                 'X-Signature': signature,
                 'Accept': 'application/json',
-                // 'Accept-Encoding': handled automatically by node-fetch
+                'Accept-Encoding': 'gzip'
             },
             ...(agent && { agent })
         });
@@ -922,6 +940,7 @@ router.put('/hotels/bookings/:bookingId', authUser, async (req, res) => {
         const signature = generateHotelbedsSignature(HOTELBEDS_API_KEY, HOTELBEDS_SECRET, timestamp);
         const { bookingId } = req.params;
 
+        const agent = getMTLSAgent();
         const response = await fetch(`${HOTELBEDS_BASE_URL}/hotel-api/1.0/bookings/${bookingId}`, {
             method: 'PUT',
             headers: {
@@ -929,9 +948,10 @@ router.put('/hotels/bookings/:bookingId', authUser, async (req, res) => {
                 'Api-key': HOTELBEDS_API_KEY,
                 'X-Signature': signature,
                 'Accept': 'application/json',
-                // 'Accept-Encoding': handled automatically by node-fetch
+                'Accept-Encoding': 'gzip'
             },
-            body: JSON.stringify(req.body)
+            body: JSON.stringify(req.body),
+            ...(agent && { agent })
         });
 
         if (!response.ok) {
@@ -966,6 +986,7 @@ router.delete('/hotels/bookings/:bookingId', authUser, async (req, res) => {
                 'Api-key': HOTELBEDS_API_KEY,
                 'X-Signature': signature,
                 'Accept': 'application/json',
+                'Accept-Encoding': 'gzip'
             },
             ...(cancelAgent && { agent: cancelAgent })
         });
@@ -979,7 +1000,7 @@ router.delete('/hotels/bookings/:bookingId', authUser, async (req, res) => {
             request: {
                 method: 'DELETE',
                 url,
-                headers: { 'Api-key': HOTELBEDS_API_KEY, 'X-Signature': signature, 'Accept': 'application/json' }
+                headers: { 'Api-key': HOTELBEDS_API_KEY, 'X-Signature': signature, 'Accept': 'application/json', 'Accept-Encoding': 'gzip' }
             },
             response: {
                 status: response.status,
@@ -1021,7 +1042,7 @@ router.get('/hotels/bookings/reconfirmations', authUser, async (req, res) => {
                 'Api-key': HOTELBEDS_API_KEY,
                 'X-Signature': signature,
                 'Accept': 'application/json',
-                // 'Accept-Encoding': handled automatically by node-fetch
+                'Accept-Encoding': 'gzip'
             },
             ...(agent && { agent })
         });
@@ -1058,6 +1079,12 @@ router.post('/hotels/search-by-hotels', async (req, res) => {
             stay,
             occupancies,
             hotels: { hotel: hotels.map(code => parseInt(code)) },
+            sourceMarket: req.body.sourceMarket || 'PK',
+            source: {
+                channel: 'B2C',
+                device: 'WEB',
+                deviceInfo: 'TeleTrip Web Application'
+            },
             ...(filter && { filter })
         };
 
@@ -1070,18 +1097,12 @@ router.post('/hotels/search-by-hotels', async (req, res) => {
                 'Content-Type': 'application/json',
                 'Api-key': HOTELBEDS_API_KEY,
                 'X-Signature': signature,
-                'Accept': 'application/json'
+                'Accept': 'application/json',
+                'Accept-Encoding': 'gzip'
             },
-            body: JSON.stringify({
-                ...searchBody,
-                source: {
-                    channel: 'B2C',
-                    device: 'WEB',
-                    deviceInfo: 'TeleTrip Web Application',
-                    sourceMarket: 'PK'
-                }
-            }),
-            timeout: 60000
+            body: JSON.stringify(searchBody),
+            timeout: 60000,
+            ...(agent && { agent })
         });
 
         if (!response.ok) {
@@ -1094,7 +1115,7 @@ router.post('/hotels/search-by-hotels', async (req, res) => {
         // Log for certification
         addLog({
             step: 'Availability',
-            request: { method: 'POST', url: `${HOTELBEDS_BASE_URL}/hotel-api/1.0/hotels`, headers: { 'Content-Type': 'application/json', 'Api-key': HOTELBEDS_API_KEY, 'X-Signature': signature, 'Accept': 'application/json' }, body: searchBody },
+            request: { method: 'POST', url: `${HOTELBEDS_BASE_URL}/hotel-api/1.0/hotels`, headers: { 'Content-Type': 'application/json', 'Api-key': HOTELBEDS_API_KEY, 'X-Signature': signature, 'Accept': 'application/json', 'Accept-Encoding': 'gzip' }, body: searchBody },
             response: { status: response.status, body: { auditData: data.auditData, hotels: { total: data.hotels?.total || 0, checkIn: data.hotels?.checkIn, checkOut: data.hotels?.checkOut, hotelsCount: data.hotels?.hotels?.length || 0 } } }
         });
 

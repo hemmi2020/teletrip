@@ -27,9 +27,20 @@ const PAYMENT_METHODS = {
 
 const BOARD_TYPES = {
   ROOM_ONLY: 'Room Only',
+  BED_AND_BREAKFAST: 'Bed & Breakfast',
   HALF_BOARD: 'Half Board',
   FULL_BOARD: 'Full Board',
-  ALL_INCLUSIVE: 'All Inclusive'
+  ALL_INCLUSIVE: 'All Inclusive',
+  SELF_CATERING: 'Self Catering'
+};
+
+const BOARD_CODE_MAP = {
+  RO: 'Room Only',
+  BB: 'Bed & Breakfast',
+  HB: 'Half Board',
+  FB: 'Full Board',
+  AI: 'All Inclusive',
+  SC: 'Self Catering'
 };
 
 const RATE_CLASSES = {
@@ -56,6 +67,7 @@ module.exports = {
   PAYMENT_STATUS,
   PAYMENT_METHODS,
   BOARD_TYPES,
+  BOARD_CODE_MAP,
   RATE_CLASSES,
   USER_ROLES,
   EMAIL_TYPES

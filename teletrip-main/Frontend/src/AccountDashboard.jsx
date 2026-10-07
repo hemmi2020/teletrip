@@ -510,16 +510,32 @@ const BookingCard = ({ booking, onCancel, onViewDetails, onPayNow, onVoucher, to
   const cancellationPolicies = booking.hotelBooking?.rooms?.[0]?.cancellationPolicies || [];
   const hasRefundPolicy = cancellationPolicies.length > 0;
   
-  // Check if free cancellation is available
+  // HBX Compliance: Sort policies chronologically and verify UTC deadline
+  const sortedPolicies = [...cancellationPolicies].sort((a, b) => new Date(a.from) - new Date(b.from));
+  const earliestPolicy = sortedPolicies[0];
   const now = new Date();
-  const freeCancellation = cancellationPolicies.find(policy => {
-    const policyDate = new Date(policy.from);
-    return now < policyDate && policy.amount === 0;
-  });
-  
-  const refundAmount = freeCancellation ? booking.totalAmount : 
-    cancellationPolicies.length > 0 ? 
-    booking.totalAmount - cancellationPolicies[0].amount : 0;
+  const isBeforeDeadline = earliestPolicy && now < new Date(earliestPolicy.from);
+  const freeCancellation = isBeforeDeadline ? earliestPolicy : null;
+
+  // Accurately compute refund and penalty without mixing raw EUR into PKR totals
+  const totalCustomerAmount = booking.pricing?.totalAmount || booking.totalAmount || 0;
+  const supplierTotalEUR = parseFloat(booking.hotelBooking?.totalNet || booking.backup?.hotelbedsBookingData?.booking?.totalNet || 0);
+  const activePolicy = sortedPolicies.slice().reverse().find(p => now >= new Date(p.from)) || earliestPolicy;
+  const penaltyAmountEUR = !isBeforeDeadline && activePolicy ? parseFloat(activePolicy.amount || 0) : 0;
+
+  let refundAmount = totalCustomerAmount;
+  let penaltyDisplay = '';
+  if (!isBeforeDeadline && penaltyAmountEUR > 0) {
+    if (supplierTotalEUR > 0) {
+      const penaltyRatio = Math.min(1, penaltyAmountEUR / supplierTotalEUR);
+      const penaltyInBookingCurrency = totalCustomerAmount * penaltyRatio;
+      refundAmount = Math.max(0, totalCustomerAmount - penaltyInBookingCurrency);
+      penaltyDisplay = convertPKR(penaltyInBookingCurrency);
+    } else {
+      refundAmount = Math.max(0, totalCustomerAmount - penaltyAmountEUR);
+      penaltyDisplay = convertPKR(penaltyAmountEUR);
+    }
+  }
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
@@ -669,12 +685,12 @@ const BookingCard = ({ booking, onCancel, onViewDetails, onPayNow, onVoucher, to
               <AlertCircle className="w-3 h-3 mr-1" />
               {freeCancellation ? (
                 <span>
-                  ✓ Free cancellation until {formatDate(freeCancellation.from)}
+                  ✓ Free cancellation until {new Date(freeCancellation.from).toLocaleString(undefined, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZoneName: 'short' })}
                   {refundAmount > 0 && ` • Full refund: ${convertPKR(refundAmount)}`}
                 </span>
-              ) : cancellationPolicies[0] ? (
+              ) : activePolicy ? (
                 <span>
-                  Cancellation fee: {convertPKR(cancellationPolicies[0].amount)} • Refund: {convertPKR(refundAmount)}
+                  Cancellation fee: {penaltyDisplay || convertPKR(activePolicy.amount)} • Refund: {convertPKR(refundAmount)}
                 </span>
               ) : (
                 <span>Cancellation policy applies</span>

@@ -11,9 +11,7 @@ const HOTELBEDS_API_KEY = process.env.HOTELBEDS_API_KEY || '106700a0f2f1e2aa1d4c
 const HOTELBEDS_SECRET = process.env.HOTELBEDS_SECRET || '018e478aa6';
 const HOTELBEDS_ENV = (process.env.HOTELBEDS_ENV || 'test').toLowerCase();
 const HOTELBEDS_BASE_URL = process.env.HOTELBEDS_BASE_URL || (
-  (process.env.HOTELBEDS_MTLS_CERT || process.env.HOTELBEDS_MTLS_CERT_PATH)
-    ? (HOTELBEDS_ENV === 'live' ? 'https://api-mtls.hotelbeds.com' : 'https://api-mtls.test.hotelbeds.com')
-    : (HOTELBEDS_ENV === 'live' ? 'https://api.hotelbeds.com' : 'https://api.test.hotelbeds.com')
+  HOTELBEDS_ENV === 'live' ? 'https://api-mtls.hotelbeds.com' : 'https://api-mtls.test.hotelbeds.com'
 );
 
 function generateSignature(apiKey, secret, timestamp) {
@@ -47,7 +45,8 @@ async function fetchHotelbedsBookings({ startDate, endDate, filterType = 'CHECKI
       headers: {
         'Api-key': HOTELBEDS_API_KEY,
         'X-Signature': signature,
-        'Accept': 'application/json'
+        'Accept': 'application/json',
+        'Accept-Encoding': 'gzip'
       },
       ...(agent && { agent })
     });
@@ -209,7 +208,43 @@ async function runReconciliation({ startDate, endDate, filterType = 'CHECKIN' } 
   return results;
 }
 
+/**
+ * Fetch individual booking details from Hotelbeds by reference
+ * (Hotelbeds Certification Recommended: Booking Detail Request)
+ * @param {string} bookingReference - Hotelbeds booking reference
+ */
+async function fetchHotelbedsBookingDetail(bookingReference) {
+  try {
+    const timestamp = Math.floor(Date.now() / 1000);
+    const signature = generateSignature(HOTELBEDS_API_KEY, HOTELBEDS_SECRET, timestamp);
+
+    const agent = getMTLSAgent();
+    const response = await fetch(`${HOTELBEDS_BASE_URL}/hotel-api/1.0/bookings/${bookingReference}`, {
+      method: 'GET',
+      headers: {
+        'Api-key': HOTELBEDS_API_KEY,
+        'X-Signature': signature,
+        'Accept': 'application/json',
+        'Accept-Encoding': 'gzip'
+      },
+      ...(agent && { agent })
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Hotelbeds Booking Detail error ${response.status}: ${errorText}`);
+    }
+
+    const data = await response.json();
+    return data.booking || null;
+  } catch (error) {
+    console.error(`[Reconciliation] Failed to fetch Hotelbeds booking detail for ${bookingReference}:`, error.message);
+    throw error;
+  }
+}
+
 module.exports = {
   runReconciliation,
-  fetchHotelbedsBookings
+  fetchHotelbedsBookings,
+  fetchHotelbedsBookingDetail
 };

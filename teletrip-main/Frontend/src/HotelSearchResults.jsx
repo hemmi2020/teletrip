@@ -488,9 +488,12 @@ const HotelSearchResults = () => {
 
     const amount = parseFloat(policy.amount);
     const fromDate = formatDate(policy.from);
+    const isFuture = new Date() < new Date(policy.from);
 
-    if (amount === 0) {
-      return `✓ Free cancellation until ${fromDate}`;
+    if (amount === 0 || isFuture) {
+      const pkrAmount = convert ? convert(amount) : null;
+      const displayAmount = pkrAmount ? `PKR ${Math.round(pkrAmount).toLocaleString()}` : `EUR ${amount.toFixed(2)}`;
+      return `✓ Free cancellation until ${fromDate}${amount > 0 ? ` (fee: ${displayAmount} thereafter)` : ''}`;
     } else {
       const pkrAmount = convert ? convert(amount) : null;
       const displayAmount = pkrAmount ? `PKR ${Math.round(pkrAmount).toLocaleString()}` : `EUR ${amount.toFixed(2)}`;
@@ -2019,18 +2022,43 @@ const HotelSearchResults = () => {
                         <p className="line-clamp-3">{hotelContentData.description}</p>
                       </div>
                     )}
-                    {/* Facilities - Hotelbeds Certification Recommended */}
+                    {/* Facilities - Mandatory Hotelbeds Certification: separate paid (indFee=true) vs Free */}
                     {hotelContentData?.facilities && hotelContentData.facilities.length > 0 && (
-                      <div>
-                        <h4 className="text-xs font-semibold text-gray-500 uppercase mb-1.5">Facilities</h4>
-                        <div className="flex flex-wrap gap-1.5">
-                          {hotelContentData.facilities.slice(0, 15).map((f, i) => (
-                            <span key={i} className="text-[10px] px-2 py-0.5 bg-gray-50 text-gray-600 rounded-full">{f.description || `Facility ${f.code}`}</span>
-                          ))}
-                          {hotelContentData.facilities.length > 15 && (
-                            <span className="text-[10px] px-2 py-0.5 text-gray-400">+{hotelContentData.facilities.length - 15} more</span>
-                          )}
-                        </div>
+                      <div className="space-y-2">
+                        {/* Paid Hotel Facilities */}
+                        {hotelContentData.facilities.filter(f => f.indFee === true).length > 0 && (
+                          <div className="p-2.5 bg-orange-50 border border-orange-200 rounded-lg">
+                            <h4 className="text-[11px] font-semibold text-orange-800 mb-1 flex items-center">
+                              <AlertCircle className="w-3.5 h-3.5 mr-1 text-orange-600 flex-shrink-0" />
+                              Facilities with Additional Charges (payable on-site):
+                            </h4>
+                            <div className="flex flex-wrap gap-1">
+                              {hotelContentData.facilities.filter(f => f.indFee === true).map((f, i) => (
+                                <span key={`paid-${i}`} className="text-[10px] px-2 py-0.5 bg-orange-100 text-orange-800 rounded font-medium border border-orange-200">
+                                  {f.description || `Facility ${f.code}`} (Extra Fee)
+                                </span>
+                              ))}
+                            </div>
+                            <p className="text-[10px] text-orange-700 mt-1">These facilities require additional payment directly at the property.</p>
+                          </div>
+                        )}
+                        {/* Complimentary Hotel Facilities */}
+                        {hotelContentData.facilities.filter(f => f.indFee !== true).length > 0 && (
+                          <div>
+                            <h4 className="text-xs font-semibold text-gray-700 mb-1 flex items-center">
+                              <CheckCircle className="w-3 h-3 mr-1 text-green-600 flex-shrink-0" />
+                              Complimentary Facilities:
+                            </h4>
+                            <div className="flex flex-wrap gap-1.5">
+                              {hotelContentData.facilities.filter(f => f.indFee !== true).slice(0, 15).map((f, i) => (
+                                <span key={`free-${i}`} className="text-[10px] px-2 py-0.5 bg-gray-50 text-gray-600 rounded-full border border-gray-200">{f.description || `Facility ${f.code}`}</span>
+                              ))}
+                              {hotelContentData.facilities.filter(f => f.indFee !== true).length > 15 && (
+                                <span className="text-[10px] px-2 py-0.5 text-gray-400">+{hotelContentData.facilities.filter(f => f.indFee !== true).length - 15} more</span>
+                              )}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
                     {/* Amenities — clearly below image */}
@@ -2082,10 +2110,12 @@ const HotelSearchResults = () => {
                     {selectedHotel.rooms && selectedHotel.rooms.length > 0 ? (
                       selectedHotel.rooms.map((room) => {
                         const filteredRates = (room.rates || []).filter(rate => {
+                          const isFree = rate.rateClass !== 'NRF' && rate.cancellationPolicies?.length > 0 && 
+                            (parseFloat(rate.cancellationPolicies[0]?.amount || 0) === 0 || new Date() < new Date(rate.cancellationPolicies[0].from));
                           if (selectedBoards.length > 0 && !selectedBoards.includes(rate.boardName)) return false;
-                          if (selectedCancellation === "free" && !(rate.cancellationPolicies?.length > 0 && parseFloat(rate.cancellationPolicies[0]?.amount || 0) === 0)) return false;
-                          if (selectedCancellation === "nonrefundable" && rate.rateClass !== 'NRF') return false;
-                          if (selectedCancellation === "partial" && !(rate.cancellationPolicies?.length > 0 && parseFloat(rate.cancellationPolicies[0]?.amount || 0) > 0)) return false;
+                          if (selectedCancellation === "free" && !isFree) return false;
+                          if (selectedCancellation === "nonrefundable" && (rate.rateClass !== 'NRF' && isFree)) return false;
+                          if (selectedCancellation === "partial" && !(!isFree && rate.rateClass !== 'NRF')) return false;
                           if (selectedPackaging === "with" && !rate.packaging) return false;
                           if (selectedPackaging === "without" && rate.packaging) return false;
                           if (selectedPromos.length > 0) {
@@ -2116,7 +2146,8 @@ const HotelSearchResults = () => {
                               {filteredRates.map((rate, idx) => {
                                 const total = parseFloat(rate.net);
                                 const perNight = nights > 0 ? total / nights : total;
-                                const hasFreeCancellation = rate.cancellationPolicies?.length > 0 && parseFloat(rate.cancellationPolicies[0]?.amount || 0) === 0;
+                                const hasFreeCancellation = rate.rateClass !== 'NRF' && rate.cancellationPolicies?.length > 0 &&
+                                  (parseFloat(rate.cancellationPolicies[0]?.amount || 0) === 0 || new Date() < new Date(rate.cancellationPolicies[0].from));
                                 const isSelectedForTab = isMultiRoom && roomSelections[activeRoomTab]?.room?.code === room.code && roomSelections[activeRoomTab]?.rate?.rateKey === rate.rateKey;
 
                                 return (
@@ -2293,17 +2324,52 @@ const HotelSearchResults = () => {
                 })()}
                 {/* Room code */}
                 <p className="text-xs text-gray-400 mb-3">Room code: {selectedRoomDetail.code}</p>
-                {/* Facilities from room data */}
-                {selectedHotel?.facilities?.length > 0 && (
-                  <div>
-                    <h4 className="text-sm font-semibold text-gray-800 mb-2">Room Facilities</h4>
-                    <div className="flex flex-wrap gap-1.5">
-                      {selectedHotel.facilities.filter(f => f.roomCode === selectedRoomDetail.code || !f.roomCode).slice(0, 20).map((f, i) => (
-                        <span key={i} className="text-[11px] px-2 py-1 bg-gray-50 text-gray-600 rounded-full">{f.description || f.facilityName || `Facility ${f.facilityCode}`}</span>
-                      ))}
+                {/* Room Facilities - Mandatory Hotelbeds Certification: Clearly separate paid (indFee=true) vs Free */}
+                {(() => {
+                  const roomFacilities = selectedRoomDetail.facilities || 
+                    hotelContentData?.rooms?.find(r => r.roomCode === selectedRoomDetail.code)?.facilities || 
+                    (selectedHotel?.facilities || []).filter(f => f.roomCode === selectedRoomDetail.code || !f.roomCode);
+                  if (!roomFacilities || roomFacilities.length === 0) return null;
+                  
+                  const paid = roomFacilities.filter(f => f.indFee === true);
+                  const free = roomFacilities.filter(f => f.indFee !== true);
+
+                  return (
+                    <div className="space-y-3">
+                      {paid.length > 0 && (
+                        <div className="p-2.5 bg-orange-50 border border-orange-200 rounded-lg">
+                          <h4 className="text-xs font-semibold text-orange-800 mb-1.5 flex items-center">
+                            <AlertCircle className="w-3.5 h-3.5 mr-1 text-orange-600 flex-shrink-0" />
+                            Room Facilities with Additional Charges (payable on-site):
+                          </h4>
+                          <div className="flex flex-wrap gap-1.5">
+                            {paid.map((f, i) => (
+                              <span key={`r-paid-${i}`} className="text-[11px] px-2 py-0.5 bg-orange-100 text-orange-800 rounded font-medium border border-orange-200">
+                                {f.description?.content || f.description || f.facilityName || `Facility ${f.facilityCode || f.code}`} (Extra Fee)
+                              </span>
+                            ))}
+                          </div>
+                          <p className="text-[10px] text-orange-700 mt-1">These room facilities require additional payment directly at the property.</p>
+                        </div>
+                      )}
+                      {free.length > 0 && (
+                        <div>
+                          <h4 className="text-xs font-semibold text-gray-700 mb-1.5 flex items-center">
+                            <CheckCircle className="w-3.5 h-3.5 mr-1 text-green-600 flex-shrink-0" />
+                            Complimentary Room Amenities:
+                          </h4>
+                          <div className="flex flex-wrap gap-1.5">
+                            {free.slice(0, 25).map((f, i) => (
+                              <span key={`r-free-${i}`} className="text-[11px] px-2 py-0.5 bg-gray-50 text-gray-700 rounded border border-gray-200">
+                                {f.description?.content || f.description || f.facilityName || `Facility ${f.facilityCode || f.code}`}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                )}
+                  );
+                })()}
               </div>
             </div>
           </div>

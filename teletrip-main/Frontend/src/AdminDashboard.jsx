@@ -1286,18 +1286,36 @@ const AdminDashboard = () => {
             displayId = item.bookingReference || item._id?.slice(-6) || 'N/A';
             
             const cancellationPolicies = item.hotelBooking?.rooms?.[0]?.cancellationPolicies || [];
+            const sortedPolicies = [...cancellationPolicies].sort((a, b) => new Date(a.from) - new Date(b.from));
+            const earliestPolicy = sortedPolicies[0];
             const now = new Date();
-            const freeCancellation = cancellationPolicies.find(policy => {
-              const policyDate = new Date(policy.from);
-              return now < policyDate && policy.amount === 0;
-            });
-            const refundAmount = freeCancellation ? item.totalAmount : 
-              cancellationPolicies.length > 0 ? item.totalAmount - cancellationPolicies[0].amount : 0;
+            const isBeforeDeadline = earliestPolicy && now < new Date(earliestPolicy.from);
+            const freeCancellation = isBeforeDeadline ? earliestPolicy : null;
+
+            const totalCustomerAmount = item.pricing?.totalAmount || item.totalAmount || 0;
+            const supplierTotalEUR = parseFloat(item.hotelBooking?.totalNet || item.backup?.hotelbedsBookingData?.booking?.totalNet || 0);
+            const activePolicy = sortedPolicies.slice().reverse().find(p => now >= new Date(p.from)) || earliestPolicy;
+            const penaltyAmountEUR = !isBeforeDeadline && activePolicy ? parseFloat(activePolicy.amount || 0) : 0;
+
+            let refundAmount = totalCustomerAmount;
+            let penaltyInBookingCurrency = 0;
+            if (!isBeforeDeadline && penaltyAmountEUR > 0) {
+              if (supplierTotalEUR > 0) {
+                const penaltyRatio = Math.min(1, penaltyAmountEUR / supplierTotalEUR);
+                penaltyInBookingCurrency = totalCustomerAmount * penaltyRatio;
+                refundAmount = Math.max(0, totalCustomerAmount - penaltyInBookingCurrency);
+              } else {
+                refundAmount = Math.max(0, totalCustomerAmount - penaltyAmountEUR);
+                penaltyInBookingCurrency = penaltyAmountEUR;
+              }
+            }
             
             const nights = item.nights || item.travelDates?.duration || 1;
-            const displayPrice = formatPKR ? formatPKR(item.pricing?.totalAmount || item.totalAmount || 0) : `PKR ${item.pricing?.totalAmount || item.totalAmount || 0}`;
-            const displayRefund = convert ? `PKR ${Math.round(convert(refundAmount)).toLocaleString()}` : `PKR ${refundAmount.toFixed(2)}`;
-            const displayFee = cancellationPolicies.length > 0 && convert ? `PKR ${Math.round(convert(cancellationPolicies[0].amount)).toLocaleString()}` : (cancellationPolicies.length > 0 ? `PKR ${cancellationPolicies[0].amount.toFixed(2)}` : '');
+            const displayPrice = formatPKR ? formatPKR(totalCustomerAmount) : `PKR ${totalCustomerAmount}`;
+            const displayRefund = formatPKR ? formatPKR(refundAmount) : (convert ? `PKR ${Math.round(convert(refundAmount)).toLocaleString()}` : `PKR ${refundAmount.toFixed(2)}`);
+            const displayFee = penaltyInBookingCurrency > 0 
+              ? (formatPKR ? formatPKR(penaltyInBookingCurrency) : `PKR ${Math.round(penaltyInBookingCurrency).toLocaleString()}`)
+              : (cancellationPolicies.length > 0 && convert ? `PKR ${Math.round(convert(cancellationPolicies[0].amount)).toLocaleString()}` : '');
             
             displayDetails = (
               <div>
@@ -1313,12 +1331,12 @@ const AdminDashboard = () => {
                 </p>
                 {freeCancellation && (
                   <p className="text-xs text-green-600 mt-1">
-                    ✓ Free cancellation • Full refund available
+                    ✓ Free cancellation until {new Date(freeCancellation.from).toLocaleDateString()} • Full refund available
                   </p>
                 )}
                 {!freeCancellation && cancellationPolicies.length > 0 && (
                   <p className="text-xs text-yellow-600 mt-1">
-                    Refund: {displayRefund} (Fee: {displayFee})
+                    Refund: {displayRefund} {displayFee ? `(Fee: ${displayFee})` : ''}
                   </p>
                 )}
               </div>

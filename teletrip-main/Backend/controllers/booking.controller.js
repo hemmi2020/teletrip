@@ -14,9 +14,7 @@ const HOTELBEDS_API_KEY = process.env.HOTELBEDS_API_KEY;
 const HOTELBEDS_SECRET = process.env.HOTELBEDS_SECRET;
 const HOTELBEDS_ENV = (process.env.HOTELBEDS_ENV || 'test').toLowerCase();
 const HOTELBEDS_BASE_URL = process.env.HOTELBEDS_BASE_URL || (
-  (process.env.HOTELBEDS_MTLS_CERT || process.env.HOTELBEDS_MTLS_CERT_PATH)
-    ? (HOTELBEDS_ENV === 'live' ? 'https://api-mtls.hotelbeds.com' : 'https://api-mtls.test.hotelbeds.com')
-    : (HOTELBEDS_ENV === 'live' ? 'https://api.hotelbeds.com' : 'https://api.test.hotelbeds.com')
+  HOTELBEDS_ENV === 'live' ? 'https://api-mtls.hotelbeds.com' : 'https://api-mtls.test.hotelbeds.com'
 );
 
 // Generate signature for Hotelbeds API
@@ -74,8 +72,7 @@ async function confirmHotelbedsBooking(bookingData, rateKey) {
         source: {
             channel: 'B2C',
             device: 'WEB',
-            deviceInfo: 'TeleTrip Web Application',
-            sourceMarket: 'PK'
+            deviceInfo: 'TeleTrip Web Application'
         }
     };
 
@@ -104,7 +101,7 @@ async function confirmHotelbedsBooking(bookingData, rateKey) {
       request: {
         method: 'POST',
         url: `${HOTELBEDS_BASE_URL}/hotel-api/1.0/bookings`,
-        headers: { 'Content-Type': 'application/json', 'Api-key': HOTELBEDS_API_KEY, 'X-Signature': signature, 'Accept': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Api-key': HOTELBEDS_API_KEY, 'X-Signature': signature, 'Accept': 'application/json', 'Accept-Encoding': 'gzip' },
         body: hotelbedsRequest
       },
       response: {
@@ -118,13 +115,6 @@ async function confirmHotelbedsBooking(bookingData, rateKey) {
     }
 
     return responseData;
-
-    if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Hotelbeds booking failed: ${errorText}`);
-    }
-
-    return await response.json();
 }
 
 // Create booking - WITH HOTELBEDS API INTEGRATION
@@ -242,10 +232,13 @@ module.exports.createBooking = asyncErrorHandler(async (req, res) => {
     }
   };
 
-  try {
-    // ⚠️ STEP 1: Call Hotelbeds Booking API
-    console.log('📞 Calling Hotelbeds Booking API...');
-    const hotelbedsResponse = await confirmHotelbedsBooking(bookingData, rateKey);
+  const shouldConfirmWithHotelbeds = req.body.directConfirm === true || req.query.direct === 'true';
+
+  if (shouldConfirmWithHotelbeds) {
+    try {
+      // Direct confirmation requested (e.g. certification tests / direct B2B book)
+      console.log('📞 Calling Hotelbeds Booking API (direct confirmation)...');
+      const hotelbedsResponse = await confirmHotelbedsBooking(bookingData, rateKey);
     
     // ⚠️ STEP 2: Store Hotelbeds booking reference and certification data
     const hbBooking = hotelbedsResponse.booking;
@@ -292,16 +285,6 @@ module.exports.createBooking = asyncErrorHandler(async (req, res) => {
         }
     } catch (phoneErr) {
         console.warn('⚠️ Could not fetch hotel content for voucher:', phoneErr.message);
-    }
-    try {
-        const hotelContent = await getHotelContent(hbHotel.code);
-        if (hotelContent && hotelContent.phones && hotelContent.phones.length > 0) {
-            const phoneNumber = hotelContent.phones[0].phoneNumber;
-            bookingData.hotelBooking.hotelPhone = phoneNumber;
-            console.log('📞 Hotel phone fetched for voucher:', phoneNumber);
-        }
-    } catch (phoneErr) {
-        console.warn('⚠️ Could not fetch hotel phone for voucher:', phoneErr.message);
     }
     bookingData.hotelBooking.totalNet = hbBooking.totalNet || null;
     bookingData.hotelBooking.supplier = hbSupplier ? {
@@ -359,7 +342,6 @@ module.exports.createBooking = asyncErrorHandler(async (req, res) => {
       );
     } catch (notificationError) {
       console.log('Notification failed:', notificationError.message);
-      // Don't fail the booking creation if notification fails
     }
 
     return ApiResponse.created(res, {
@@ -368,24 +350,23 @@ module.exports.createBooking = asyncErrorHandler(async (req, res) => {
       voucher: hotelbedsResponse.booking
     }, 'Booking confirmed successfully');
     
-  } catch (error) {
-    console.error('Booking creation error:', error);
-    
-    // If Hotelbeds booking fails, don't save to database
-    if (error.message && error.message.includes('Hotelbeds')) {
-      return ApiResponse.error(res, 'Booking failed: ' + error.message, 500);
+    } catch (error) {
+      console.error('Booking creation error:', error);
+      if (error.message && error.message.includes('Hotelbeds')) {
+        return ApiResponse.error(res, 'Booking failed: ' + error.message, 500);
+      }
+      throw error;
     }
-    
-    if (error.name === 'ValidationError') {
-      const validationErrors = Object.keys(error.errors).map(key => ({
-        field: key,
-        message: error.errors[key].message
-      }));
-      
-      return ApiResponse.badRequest(res, 'Validation failed', validationErrors);
-    }
-    
-    throw error; // Let asyncErrorHandler handle other errors
+  } else {
+    // Deferred confirmation: booking saved as pending prior to payment
+    console.log('ℹ️ Saving pending booking record prior to payment collection...');
+    bookingData.status = 'pending';
+    const booking = await bookingModel.create(bookingData);
+    return ApiResponse.created(res, {
+      booking,
+      bookingId: booking._id,
+      reference: booking.bookingReference
+    }, 'Pending booking created successfully');
   }
 });
 
@@ -704,7 +685,7 @@ module.exports.cancelBooking = asyncErrorHandler(async (req, res) => {
         request: {
           method: 'DELETE',
           url,
-          headers: { 'Api-key': HOTELBEDS_API_KEY, 'X-Signature': signature, 'Accept': 'application/json' }
+          headers: { 'Api-key': HOTELBEDS_API_KEY, 'X-Signature': signature, 'Accept': 'application/json', 'Accept-Encoding': 'gzip' }
         },
         response: {
           status: response.status,
@@ -726,8 +707,10 @@ module.exports.cancelBooking = asyncErrorHandler(async (req, res) => {
   }
 
   // STEP 2: Calculate cancellation fee from Hotelbeds response or local policy
-  const cancellationFee = hotelbedsResponse?.booking?.totalNet || calculateCancellationFee(booking);
-  const refundAmount = booking.pricing.totalAmount - cancellationFee;
+  const cancellationFee = hotelbedsResponse?.booking
+    ? parseFloat(hotelbedsResponse.booking.cancellationAmount || hotelbedsResponse.booking.totalNet || 0)
+    : calculateCancellationFee(booking);
+  const refundAmount = Math.max(0, (booking.pricing?.totalAmount || 0) - cancellationFee);
 
   // STEP 3: Update local booking status
   booking.status = 'cancelled';
@@ -784,26 +767,34 @@ module.exports.cancelBooking = asyncErrorHandler(async (req, res) => {
   }, 'Booking cancelled successfully');
 });
 
-// Calculate cancellation fee
+// Calculate cancellation fee using Hotelbeds cancellation policies with UTC deadline parsing
 function calculateCancellationFee(booking) {
+  const policies = booking.hotelBooking?.rooms?.[0]?.cancellationPolicies || [];
+  const totalAmount = booking.pricing?.totalAmount || 0;
+  
+  if (booking.hotelBooking?.rooms?.[0]?.rateClass === 'NRF') {
+    return totalAmount; // Non-refundable rate
+  }
+  
+  if (!policies || policies.length === 0) return 0;
+  
   const now = new Date();
-  const departureDate = booking.travelDates?.departureDate;
+  const sorted = [...policies].sort((a, b) => new Date(a.from) - new Date(b.from));
   
-  if (!departureDate) return 0;
+  // If current UTC time is before the first penalty threshold, cancellation is 100% free
+  const firstPenaltyDate = new Date(sorted[0].from);
+  if (now < firstPenaltyDate) {
+    return 0;
+  }
   
-  const daysUntilDeparture = Math.ceil((new Date(departureDate) - now) / (1000 * 60 * 60 * 24));
-  const totalAmount = booking.pricing.totalAmount;
-  
-  // Cancellation policy: 
-  // - More than 7 days: 10% fee
-  // - 3-7 days: 25% fee
-  // - 1-2 days: 50% fee
-  // - Less than 24 hours: 100% fee
-  
-  if (daysUntilDeparture > 7) return totalAmount * 0.1;
-  if (daysUntilDeparture >= 3) return totalAmount * 0.25;
-  if (daysUntilDeparture >= 1) return totalAmount * 0.5;
-  return totalAmount;
+  // Determine highest penalty tier that has taken effect
+  let activeFee = 0;
+  for (const policy of sorted) {
+    if (now >= new Date(policy.from)) {
+      activeFee = parseFloat(policy.amount || 0);
+    }
+  }
+  return Math.min(totalAmount, activeFee);
 }
 
 // Generate voucher

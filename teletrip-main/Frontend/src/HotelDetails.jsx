@@ -64,9 +64,19 @@ const CartNotification = ({ message, type, isVisible, onClose }) => {
 // Helper function for cancellation policy
 const formatCancellationPolicy = (policies) => {
   if (!policies || policies.length === 0) return "No cancellation policy";
-  const policy = policies[0];
-  const date = new Date(policy.from);
-  return `Cancel before ${date.toLocaleDateString()} for €${policy.amount} fee`;
+  const sorted = [...policies].sort((a, b) => new Date(a.from) - new Date(b.from));
+  const policy = sorted[0];
+  const deadline = new Date(policy.from);
+  const isFuture = new Date() < deadline;
+  const dateStr = deadline.toLocaleDateString(undefined, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  });
+  if (isFuture) {
+    return `✓ Free cancellation until ${dateStr}. Fee of €${policy.amount} applies thereafter.`;
+  }
+  return `Non-refundable. Cancellation fee: €${policy.amount}`;
 };
 
 // Custom hook for hotel cart integration
@@ -408,11 +418,38 @@ if (children > 0 && childAges.length > 0) {
           if (contentRes.ok) {
             const contentData = await contentRes.json();
             if (contentData.success && contentData.data) {
-              setHotel(prev => ({
-                ...prev,
-                description: contentData.data.description || '',
-                hotelFacilities: contentData.data.facilities || [],
-              }));
+              const contentRooms = contentData.data.rooms || [];
+              const allContentRoomFacilities = contentRooms.flatMap(cr => cr.facilities || []);
+
+              setHotel(prev => {
+                if (!prev) return prev;
+                // Merge content room facilities into available rooms
+                const updatedRooms = (prev.rooms || []).map(r => {
+                  // Find matching room in content data
+                  const matched = contentRooms.find(cr =>
+                    (r.code && cr.roomCode && (cr.roomCode === r.code || r.code.includes(cr.roomCode) || cr.roomCode.includes(r.code))) ||
+                    (r.name && cr.roomName && (r.name.toLowerCase().includes(cr.roomName.toLowerCase()) || cr.roomName.toLowerCase().includes(r.name.toLowerCase())))
+                  ) || contentRooms[0]; // fallback to first room type if single type
+
+                  const roomFacilities = matched?.facilities || (r.facilities && r.facilities.length > 0 ? r.facilities : allContentRoomFacilities);
+                  return {
+                    ...r,
+                    facilities: roomFacilities,
+                    paidFacilities: roomFacilities.filter(f => f.indFee === true),
+                    freeFacilities: roomFacilities.filter(f => f.indFee !== true)
+                  };
+                });
+
+                return {
+                  ...prev,
+                  description: contentData.data.description || prev.description,
+                  hotelFacilities: contentData.data.facilities || prev.facilities || [],
+                  paidFacilities: contentData.data.paidFacilities || (contentData.data.facilities || []).filter(f => f.indFee === true),
+                  freeFacilities: (contentData.data.facilities || []).filter(f => f.indFee !== true),
+                  roomPaidFacilities: contentData.data.roomPaidFacilities || [],
+                  rooms: updatedRooms
+                };
+              });
             }
           }
         } catch (contentErr) {
@@ -551,35 +588,59 @@ if (children > 0 && childAges.length > 0) {
           <p>{hotel.description}</p>
         </div>
       )}
-      {/* Hotel Facilities - Hotelbeds Certification: separate paid (indFee=true) */}
+      {/* Hotel Facilities - Mandatory Hotelbeds Certification: separate paid (indFee=true) vs Free (indFee=false) */}
       {hotel.hotelFacilities && hotel.hotelFacilities.length > 0 && (
-        <div className="mt-4">
-          {/* Paid Facilities - mandatory display with warning */}
+        <div className="mt-4 space-y-3">
+          {/* Paid Hotel Facilities */}
           {hotel.hotelFacilities.filter(f => f.indFee === true).length > 0 && (
-            <div className="mb-3">
-              <h4 className="text-sm font-semibold text-orange-700 mb-2 flex items-center">
-                <AlertCircle className="w-4 h-4 mr-1" />
-                Facilities with Additional Charges (payable on-site)
+            <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg">
+              <h4 className="text-sm font-semibold text-orange-800 mb-1.5 flex items-center">
+                <AlertCircle className="w-4 h-4 mr-1 text-orange-600 flex-shrink-0" />
+                Hotel Facilities with Additional Charges (payable on-site):
               </h4>
               <div className="flex flex-wrap gap-1.5">
                 {hotel.hotelFacilities.filter(f => f.indFee === true).map((f, i) => (
-                  <span key={`paid-${i}`} className="text-xs px-2.5 py-1 bg-orange-100 text-orange-700 border border-orange-200 rounded-full font-medium">
+                  <span key={`paid-${i}`} className="text-xs px-2.5 py-1 bg-orange-100 text-orange-800 border border-orange-200 rounded-full font-medium">
+                    {f.description || `Facility ${f.code}`}
+                    <span className="ml-1 text-[10px] text-orange-700 font-bold uppercase">(Extra Fee)</span>
+                  </span>
+                ))}
+              </div>
+              <p className="text-xs text-orange-700 mt-1.5">These facilities require additional payment directly at the property.</p>
+            </div>
+          )}
+          {/* Complimentary Hotel Facilities */}
+          {hotel.hotelFacilities.filter(f => f.indFee !== true).length > 0 && (
+            <div>
+              <h4 className="text-sm font-semibold text-gray-800 mb-1.5 flex items-center">
+                <CheckCircle className="w-4 h-4 mr-1 text-green-600 flex-shrink-0" />
+                Complimentary Hotel Facilities:
+              </h4>
+              <div className="flex flex-wrap gap-1.5">
+                {hotel.hotelFacilities.filter(f => f.indFee !== true).map((f, i) => (
+                  <span key={`free-${i}`} className="text-xs px-2.5 py-1 bg-gray-100 text-gray-700 rounded-full border border-gray-200">
                     {f.description || `Facility ${f.code}`}
                   </span>
                 ))}
               </div>
-              <p className="text-xs text-orange-600 mt-1">These facilities require additional payment directly at the property.</p>
             </div>
           )}
-          {/* Free Facilities */}
-          {hotel.hotelFacilities.filter(f => f.indFee !== true).length > 0 && (
-            <div>
-              <h4 className="text-sm font-semibold text-gray-800 mb-2">Facilities</h4>
+          {/* Room-level Paid Facilities Notice */}
+          {hotel.roomPaidFacilities && hotel.roomPaidFacilities.length > 0 && (
+            <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+              <h4 className="text-sm font-semibold text-amber-900 mb-1.5 flex items-center">
+                <AlertCircle className="w-4 h-4 mr-1 text-amber-600 flex-shrink-0" />
+                Room Amenities with Additional Charges (payable on-site):
+              </h4>
               <div className="flex flex-wrap gap-1.5">
-                {hotel.hotelFacilities.filter(f => f.indFee !== true).map((f, i) => (
-                  <span key={`free-${i}`} className="text-xs px-2.5 py-1 bg-gray-100 text-gray-600 rounded-full">{f.description || `Facility ${f.code}`}</span>
+                {hotel.roomPaidFacilities.map((f, i) => (
+                  <span key={`rpaid-${i}`} className="text-xs px-2.5 py-1 bg-amber-100 text-amber-900 border border-amber-200 rounded-full font-medium">
+                    {f.description}{f.roomName ? ` (${f.roomName})` : ''}
+                    <span className="ml-1 text-[10px] text-amber-700 font-bold uppercase">(Extra Fee)</span>
+                  </span>
                 ))}
               </div>
+              <p className="text-xs text-amber-800 mt-1.5">Applicable depending on selected room type. Payable directly at the property.</p>
             </div>
           )}
         </div>
@@ -653,26 +714,40 @@ if (children > 0 && childAges.length > 0) {
                       <Bed className="w-4 h-4 mr-2" />
                       <span className="text-sm">Room Code: {room.code}</span>
                     </div>
-                    {/* Room Facilities - Paid (indFee=true) vs Free */}
+                    {/* Room Facilities - Mandatory Hotelbeds Certification: Clearly separate paid (indFee=true) vs Free (indFee=false) */}
                     {room.facilities && room.facilities.length > 0 && (
-                      <div className="mb-2">
+                      <div className="mb-3 space-y-2">
+                        {/* Paid Room Facilities */}
                         {room.facilities.filter(f => f.indFee === true).length > 0 && (
-                          <div className="flex flex-wrap gap-1 mb-1">
-                            {room.facilities.filter(f => f.indFee === true).map((f, i) => (
-                              <span key={`room-paid-${i}`} className="text-xs px-2 py-0.5 bg-orange-100 text-orange-700 border border-orange-200 rounded font-medium flex items-center">
-                                <AlertCircle className="w-3 h-3 mr-1" />
-                                {f.description?.content || f.description || `Facility ${f.facilityCode}`} (Extra Charge)
-                              </span>
-                            ))}
+                          <div className="p-2.5 bg-orange-50 border border-orange-200 rounded-lg">
+                            <div className="text-xs font-semibold text-orange-800 flex items-center mb-1.5">
+                              <AlertCircle className="w-3.5 h-3.5 mr-1 text-orange-600 flex-shrink-0" />
+                              Room Facilities with Additional Charges (payable on-site):
+                            </div>
+                            <div className="flex flex-wrap gap-1.5">
+                              {room.facilities.filter(f => f.indFee === true).map((f, i) => (
+                                <span key={`room-paid-${i}`} className="text-xs px-2 py-0.5 bg-orange-100 text-orange-800 border border-orange-200 rounded font-medium flex items-center">
+                                  {f.description?.content || f.description || `Facility ${f.facilityCode || f.code}`}
+                                  <span className="ml-1 text-[10px] text-orange-700 font-bold uppercase">(Extra Fee)</span>
+                                </span>
+                              ))}
+                            </div>
                           </div>
                         )}
+                        {/* Free / Complimentary Room Facilities */}
                         {room.facilities.filter(f => f.indFee !== true).length > 0 && (
-                          <div className="flex flex-wrap gap-1">
-                            {room.facilities.filter(f => f.indFee !== true).slice(0, 5).map((f, i) => (
-                              <span key={`room-free-${i}`} className="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded">
-                                {f.description?.content || f.description || `Facility ${f.facilityCode}`}
-                              </span>
-                            ))}
+                          <div>
+                            <div className="text-xs font-medium text-gray-700 flex items-center mb-1">
+                              <CheckCircle className="w-3.5 h-3.5 mr-1 text-green-600 flex-shrink-0" />
+                              Complimentary Room Amenities:
+                            </div>
+                            <div className="flex flex-wrap gap-1">
+                              {room.facilities.filter(f => f.indFee !== true).map((f, i) => (
+                                <span key={`room-free-${i}`} className="text-xs px-2 py-0.5 bg-gray-100 text-gray-700 rounded border border-gray-200">
+                                  {f.description?.content || f.description || `Facility ${f.facilityCode || f.code}`}
+                                </span>
+                              ))}
+                            </div>
                           </div>
                         )}
                       </div>

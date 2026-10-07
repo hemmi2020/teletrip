@@ -31,6 +31,8 @@ const PaymentSuccessOnSite = () => {
       ? Math.ceil((new Date(bookingDetails.checkOut) - new Date(bookingDetails.checkIn)) / (1000 * 60 * 60 * 24))
       : 1);
 
+  const paidFacilities = bookingDetails.paidFacilities || bookingData.paidFacilities || [];
+
   const fmtDate = (d) => {
     if (!d) return 'N/A';
     return new Date(d).toLocaleDateString('en-GB', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
@@ -211,6 +213,29 @@ const PaymentSuccessOnSite = () => {
                     </div>
                   );
                 })}
+              </div>
+            </div>
+          )}
+
+          {/* Paid Facilities Warning (Mandatory Hotelbeds Certification) */}
+          {paidFacilities.length > 0 && (
+            <div className="bg-orange-50 border border-orange-200 rounded-2xl p-4 md:p-5 mb-6">
+              <div className="flex items-center gap-2 mb-2">
+                <AlertCircle className="w-4 h-4 text-orange-600" strokeWidth={2} />
+                <h3 className="text-xs font-bold text-orange-800 uppercase tracking-wider">
+                  Facilities with Additional Charges (payable on-site)
+                </h3>
+              </div>
+              <p className="text-xs text-orange-700 mb-2.5">
+                The following facilities require extra payment directly at the property:
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {paidFacilities.map((f, i) => (
+                  <span key={i} className="inline-block px-2.5 py-1 bg-orange-100 text-orange-800 text-xs rounded-full font-medium border border-orange-200">
+                    {f.description || f.name || f.code}{f.roomName ? ` (${f.roomName})` : ''}
+                    <span className="ml-1 text-[10px] text-orange-700 font-bold uppercase">(Extra Fee)</span>
+                  </span>
+                ))}
               </div>
             </div>
           )}

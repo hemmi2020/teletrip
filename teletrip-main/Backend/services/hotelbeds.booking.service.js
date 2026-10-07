@@ -13,9 +13,7 @@ const HOTELBEDS_SECRET = process.env.HOTELBEDS_SECRET || '018e478aa6';
 // Test: api-mtls.test.hotelbeds.com | Production: api-mtls.hotelbeds.com
 const HOTELBEDS_ENV = (process.env.HOTELBEDS_ENV || 'test').toLowerCase();
 const HOTELBEDS_BASE_URL = process.env.HOTELBEDS_BASE_URL || (
-  (process.env.HOTELBEDS_MTLS_CERT || process.env.HOTELBEDS_MTLS_CERT_PATH)
-    ? (HOTELBEDS_ENV === 'live' ? 'https://api-mtls.hotelbeds.com' : 'https://api-mtls.test.hotelbeds.com')
-    : (HOTELBEDS_ENV === 'live' ? 'https://api.hotelbeds.com' : 'https://api.test.hotelbeds.com')
+  HOTELBEDS_ENV === 'live' ? 'https://api-mtls.hotelbeds.com' : 'https://api-mtls.test.hotelbeds.com'
 );
 
 /**
@@ -39,13 +37,18 @@ async function confirmBookingWithHotelbeds(bookingRequest) {
     console.log('📞 [HOTELBEDS] Calling POST /bookings API...');
     console.log('📦 [HOTELBEDS] Request:', JSON.stringify(bookingRequest, null, 2));
 
+    // Hotelbeds requirement: sourceMarket must ONLY be in availability requests, NOT in booking requests
+    delete bookingRequest.sourceMarket;
+    if (bookingRequest.source?.sourceMarket) {
+      delete bookingRequest.source.sourceMarket;
+    }
+
     // Add source marker for distribution management (Hotelbeds recommendation)
     if (!bookingRequest.source) {
       bookingRequest.source = {
         channel: 'B2C',
         device: 'WEB',
-        deviceInfo: 'TeleTrip Web Application',
-        sourceMarket: 'PK'
+        deviceInfo: 'TeleTrip Web Application'
       };
     }
     // Add clientReference fallback if missing
@@ -59,7 +62,7 @@ async function confirmBookingWithHotelbeds(bookingRequest) {
       'Api-key': HOTELBEDS_API_KEY,
       'X-Signature': signature,
       'Accept': 'application/json',
-      // 'Accept-Encoding': handled automatically by node-fetch
+      'Accept-Encoding': 'gzip'
     };
 
     const agent = getMTLSAgent();
@@ -67,7 +70,7 @@ async function confirmBookingWithHotelbeds(bookingRequest) {
       method: 'POST',
       headers,
       body: JSON.stringify(bookingRequest),
-      timeout: 30000,
+      timeout: 65000,
       ...(agent && { agent })
     });
 
@@ -81,7 +84,7 @@ async function confirmBookingWithHotelbeds(bookingRequest) {
       request: {
         method: 'POST',
         url,
-        headers: { 'Content-Type': 'application/json', 'Api-key': HOTELBEDS_API_KEY, 'X-Signature': signature, 'Accept': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Api-key': HOTELBEDS_API_KEY, 'X-Signature': signature, 'Accept': 'application/json', 'Accept-Encoding': 'gzip' },
         body: bookingRequest
       },
       response: {
@@ -159,7 +162,7 @@ async function cancelBookingWithHotelbeds(bookingReference, cancellationFlag = '
       'Api-key': HOTELBEDS_API_KEY,
       'X-Signature': signature,
       'Accept': 'application/json',
-      // 'Accept-Encoding': handled automatically by node-fetch
+      'Accept-Encoding': 'gzip'
     };
 
     const agent = getMTLSAgent();
@@ -178,7 +181,7 @@ async function cancelBookingWithHotelbeds(bookingReference, cancellationFlag = '
       request: {
         method: 'DELETE',
         url,
-        headers: { 'Api-key': HOTELBEDS_API_KEY, 'X-Signature': signature, 'Accept': 'application/json' }
+        headers: { 'Api-key': HOTELBEDS_API_KEY, 'X-Signature': signature, 'Accept': 'application/json', 'Accept-Encoding': 'gzip' }
       },
       response: {
         status: response.status,
@@ -197,9 +200,13 @@ async function cancelBookingWithHotelbeds(bookingReference, cancellationFlag = '
     const cancellationResponse = JSON.parse(responseText);
     console.log('✅ [HOTELBEDS] Booking cancelled:', cancellationResponse.booking?.cancellationReference);
 
+    const cancellationFee = parseFloat(cancellationResponse.booking?.cancellationAmount || cancellationResponse.booking?.totalNet || 0);
+
     return {
       success: true,
       cancellationReference: cancellationResponse.booking?.cancellationReference,
+      cancellationFee,
+      cancellationCost: cancellationFee,
       refundAmount: cancellationResponse.booking?.totalNet || 0,
       cancellationData: cancellationResponse
     };
@@ -232,7 +239,7 @@ async function getBookingDetails(bookingReference) {
           'Api-key': HOTELBEDS_API_KEY,
           'X-Signature': signature,
           'Accept': 'application/json',
-          // 'Accept-Encoding': handled automatically by node-fetch
+          'Accept-Encoding': 'gzip'
         },
         timeout: 30000,
         ...(agent && { agent })

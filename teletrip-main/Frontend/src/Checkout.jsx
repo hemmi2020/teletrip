@@ -45,6 +45,10 @@ const Checkout = () => {
   const [paymentMethod, setPaymentMethod] = useState('hblpay'); // 'hblpay' or 'pay_on_site'
   const [showOrderSummary, setShowOrderSummary] = useState(true);
   const [rateComments, setRateComments] = useState([]);
+  const [excludedTaxes, setExcludedTaxes] = useState([]);
+  const [validatedRateKeys, setValidatedRateKeys] = useState({});
+  const [priceChangeNotice, setPriceChangeNotice] = useState(null);
+  const [isValidatingRates, setIsValidatingRates] = useState(false);
 
 
   // Form data matching your backend validation
@@ -126,6 +130,68 @@ const Checkout = () => {
       convertCurrency();
     }
   }, [checkoutItems, totalAmount]);
+
+  // Pre-validate rates with CheckRate on checkout entry (mandatory HBX workflow & disclosure compliance)
+  useEffect(() => {
+    const validateRatesOnEntry = async () => {
+      const hotelItems = (checkoutItems || []).filter(item => item.type !== 'activity' && item.type !== 'transfer' && item.rateKey);
+      if (hotelItems.length === 0) return;
+
+      setIsValidatingRates(true);
+      const keysMap = {};
+      const comments = [];
+      const taxes = [];
+      let detectedPriceChange = false;
+      let freshTotal = 0;
+
+      for (let idx = 0; idx < hotelItems.length; idx++) {
+        const item = hotelItems[idx];
+        try {
+          const res = await hotelApi.checkRate(item.rateKey);
+          if (res?.success && res.data?.hotel?.rooms?.[0]?.rates?.[0]) {
+            const freshRate = res.data.hotel.rooms[0].rates[0];
+            keysMap[item.rateKey] = freshRate.rateKey;
+
+            if (freshRate.rateComments) {
+              comments.push(freshRate.rateComments);
+            }
+            if (freshRate.taxes?.taxes?.length > 0) {
+              const unpaidTaxes = freshRate.taxes.taxes.filter(t => !t.included);
+              taxes.push(...unpaidTaxes);
+            }
+
+            const freshNet = parseFloat(freshRate.net || 0);
+            const originalNet = parseFloat(item.totalPrice || item.net || item.price || 0);
+            if (freshNet > 0 && Math.abs(freshNet - originalNet) > 0.01) {
+              detectedPriceChange = true;
+              freshTotal += freshNet;
+            } else {
+              freshTotal += originalNet;
+            }
+          } else {
+            keysMap[item.rateKey] = item.rateKey;
+          }
+        } catch (err) {
+          console.warn(`CheckRate pre-validation error for room ${idx + 1}:`, err.message);
+          keysMap[item.rateKey] = item.rateKey;
+        }
+      }
+
+      setValidatedRateKeys(keysMap);
+      if (comments.length > 0) setRateComments([...new Set(comments)]);
+      if (taxes.length > 0) setExcludedTaxes(taxes);
+      if (detectedPriceChange && freshTotal > 0) {
+        setPriceChangeNotice({
+          oldTotal: parseFloat(totalAmount),
+          newTotal: freshTotal,
+          difference: (freshTotal - parseFloat(totalAmount)).toFixed(2)
+        });
+      }
+      setIsValidatingRates(false);
+    };
+
+    validateRatesOnEntry();
+  }, [checkoutItems]);
 
   // Redirect if no items to checkout
   useEffect(() => {
@@ -370,8 +436,7 @@ const Checkout = () => {
           source: {
             channel: 'B2C',
             device: 'WEB',
-            deviceInfo: 'TeleTrip Web Application',
-            sourceMarket: 'PK'
+            deviceInfo: 'TeleTrip Web Application'
           },
           remark: billingInfo?.specialRequests ? `${billingInfo.specialRequests} | Booking via TeleTrip` : 'Booking via TeleTrip',
           tolerance: 2.00
@@ -616,8 +681,7 @@ const handlePayOnSiteBooking = async () => {
         source: {
           channel: 'B2C',
           device: 'WEB',
-          deviceInfo: 'TeleTrip Web Application',
-          sourceMarket: 'PK'
+          deviceInfo: 'TeleTrip Web Application'
         },
         remark: billingInfo?.specialRequests ? `${billingInfo.specialRequests} | Booking via TeleTrip` : 'Booking via TeleTrip',
         tolerance: 2.00
@@ -698,6 +762,7 @@ const handlePayOnSiteBooking = async () => {
               adults: checkoutItems.reduce((sum, item) => sum + (item.adults || 0), 0),
               children: checkoutItems.reduce((sum, item) => sum + (item.children || 0), 0),
               rooms: checkoutItems.length,
+              paidFacilities: firstItem?.paidFacilities || (firstItem?.hotelFacilities || []).filter(f => f.indFee === true) || [],
               roomsList: checkoutItems.map((item, idx) => ({
                 name: item.roomName || `Room ${idx + 1}`,
                 boardName: item.boardName || 'Room Only',
@@ -1119,10 +1184,44 @@ const handlePaymentSubmit = () => {
         </div>
       )}
 
+      {/* Rate Change Alert if CheckRate detected updated pricing */}
+      {priceChangeNotice && (
+        <div className="bg-blue-50 border border-blue-300 rounded-lg p-4 mb-4 flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+          <div>
+            <h4 className="text-sm font-bold text-blue-900">Hotelbeds Rate Update</h4>
+            <p className="text-xs text-blue-800 mt-1">
+              The hotel has updated the room price from <strong>EUR {priceChangeNotice.oldTotal.toFixed(2)}</strong> to <strong>EUR {priceChangeNotice.newTotal.toFixed(2)}</strong> ({priceChangeNotice.difference > 0 ? `+EUR ${priceChangeNotice.difference}` : `EUR ${priceChangeNotice.difference}`}). Your booking will proceed with the confirmed rate.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Mandatory Excluded Taxes & Local Destination Fees */}
+      {excludedTaxes.length > 0 && (
+        <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-4">
+          <div className="flex items-center gap-2 mb-2">
+            <AlertCircle className="w-4 h-4 text-orange-600" />
+            <h4 className="text-sm font-semibold text-orange-900">Local Taxes & Destination Fees (Payable at Hotel)</h4>
+          </div>
+          <p className="text-xs text-orange-800 mb-2">
+            The following city tax / resort fee is not included in the pre-payment and must be paid directly to the hotel upon check-in:
+          </p>
+          <ul className="space-y-1">
+            {excludedTaxes.map((tax, tIdx) => (
+              <li key={tIdx} className="text-xs text-orange-950 font-medium flex justify-between">
+                <span>{tax.subType || tax.type || 'City Tax / Tourist Fee'}:</span>
+                <span>{tax.currency || 'EUR'} {parseFloat(tax.amount || 0).toFixed(2)}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       {/* Rate Comments - Important Hotel Information */}
       {rateComments.length > 0 && (
         <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
-          <h4 className="text-sm font-semibold text-amber-900 mb-2">Important Hotel Information</h4>
+          <h4 className="text-sm font-semibold text-amber-900 mb-2">Important Hotel Information & Remarks</h4>
           {rateComments.map((comment, idx) => (
             <p key={idx} className="text-xs text-amber-800 mb-1">{comment}</p>
           ))}
