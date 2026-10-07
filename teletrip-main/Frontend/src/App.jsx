@@ -53,6 +53,17 @@ class ErrorBoundary extends React.Component {
 
   componentDidCatch(error, errorInfo) {
     console.error('Error caught by boundary:', error, errorInfo);
+    if (
+      error?.message?.includes('dynamically imported module') ||
+      error?.name === 'ChunkLoadError'
+    ) {
+      const key = 'chunk_reload_timestamp';
+      const last = sessionStorage.getItem(key);
+      if (!last || Date.now() - parseInt(last, 10) > 10000) {
+        sessionStorage.setItem(key, Date.now().toString());
+        window.location.reload();
+      }
+    }
   }
 
   render() {
