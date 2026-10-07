@@ -56,6 +56,17 @@ async function confirmBookingWithHotelbeds(bookingRequest) {
       bookingRequest.clientReference = `TELI_${Date.now()}`;
     }
 
+    // Ensure Hotelbeds compliant pax distribution: each room object's paxes must have roomId: 1
+    if (Array.isArray(bookingRequest.rooms)) {
+      bookingRequest.rooms.forEach(room => {
+        if (Array.isArray(room.paxes)) {
+          room.paxes.forEach(pax => {
+            pax.roomId = 1;
+          });
+        }
+      });
+    }
+
     const url = `${HOTELBEDS_BASE_URL}/hotel-api/1.0/bookings`;
     const headers = {
       'Content-Type': 'application/json',
