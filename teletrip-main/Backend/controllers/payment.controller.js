@@ -2447,13 +2447,33 @@ module.exports.createPayOnSiteBooking = asyncErrorHandler(async (req, res) => {
     await payment.save();
     console.log('💾 Pay on Site payment record created:', paymentId);
 
-    // ✅ PAY-ON-SITE WORKFLOW: Reserve locally, do NOT book with Hotelbeds yet
-    // Hotelbeds booking will be triggered when admin confirms payment received
+    // ✅ PAY-ON-SITE WORKFLOW: In test environment (or directConfirm), confirm with Hotelbeds Test API immediately
     let hotelbedsReference = null;
     let hotelbedsResult = null;
     let hotelbedsBookingRequest = bookingData.hotelbedsBookingRequest || null;
 
-    if (hotelbedsBookingRequest) {
+    const isTestEnv = (process.env.HOTELBEDS_BASE_URL || '').includes('test') || (process.env.HOTELBEDS_ENV || 'test').toLowerCase() === 'test';
+
+    if (hotelbedsBookingRequest && (isTestEnv || req.body.confirmImmediately === true)) {
+      console.log('🧪 [TEST ENV] Confirming booking with Hotelbeds Test API immediately for certification testing...');
+      try {
+        const { confirmBookingWithHotelbeds } = require('../services/hotelbeds.booking.service');
+        hotelbedsResult = await confirmBookingWithHotelbeds(hotelbedsBookingRequest);
+        if (hotelbedsResult?.success) {
+          hotelbedsReference = hotelbedsResult.hotelbedsReference;
+          console.log('✅ [TEST ENV] Hotelbeds booking confirmed:', hotelbedsReference);
+          
+          await payment.updateOne({
+            'metadata.hotelbedsReference': hotelbedsReference,
+            'metadata.hotelbedsBookingData': hotelbedsResult.hotelbedsData,
+            'metadata.pendingHotelbedsConfirmation': false,
+            updatedAt: new Date()
+          });
+        }
+      } catch (hbErr) {
+        console.error('⚠️ [TEST ENV] Hotelbeds test booking failed:', hbErr.message);
+      }
+    } else if (hotelbedsBookingRequest) {
       console.log('🏨 [PAY-ON-SITE] Booking reserved locally. Hotelbeds confirmation pending admin payment verification.');
       
       // Store the Hotelbeds request in payment metadata for admin confirmation later
@@ -2563,7 +2583,7 @@ module.exports.createPayOnSiteBooking = asyncErrorHandler(async (req, res) => {
       user: userId,
       bookingType: 'hotel',
       bookingReference: bookingReference,
-      status: 'pending',
+      status: hotelbedsReference ? 'confirmed' : 'pending',
       pricing: {
         basePrice: paymentAmount,
         totalAmount: paymentAmount,
@@ -2596,10 +2616,10 @@ module.exports.createPayOnSiteBooking = asyncErrorHandler(async (req, res) => {
           ...(hotelContent?.roomPaidFacilities || [])
         ],
         description: hotelContent?.description || null,
-        confirmationNumber: null,
-        supplier: null,
-        invoiceCompany: null,
-        totalNet: null,
+        confirmationNumber: hotelbedsReference || null,
+        supplier: hotelbedsResult?.hotelbedsData?.booking?.hotel?.supplier || hotelbedsResult?.hotelbedsData?.booking?.supplier || null,
+        invoiceCompany: hotelbedsResult?.hotelbedsData?.booking?.invoiceCompany || null,
+        totalNet: hotelbedsResult?.hotelbedsData?.booking?.totalNet || null,
         currency: currency,
         remark: bookingData.specialRequests || null
       },
@@ -2637,7 +2657,7 @@ module.exports.createPayOnSiteBooking = asyncErrorHandler(async (req, res) => {
       },
       backup: {
         hotelbedsBookingRequest: hotelbedsBookingRequest,
-        hotelbedsBookingData: null // Will be populated when admin confirms payment
+        hotelbedsBookingData: hotelbedsResult?.hotelbedsData || null
       }
     });
 

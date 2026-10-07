@@ -232,7 +232,8 @@ module.exports.createBooking = asyncErrorHandler(async (req, res) => {
     }
   };
 
-  const shouldConfirmWithHotelbeds = req.body.directConfirm === true || req.query.direct === 'true';
+  const isTestEnv = (process.env.HOTELBEDS_BASE_URL || '').includes('test') || (process.env.HOTELBEDS_ENV || 'test').toLowerCase() === 'test';
+  const shouldConfirmWithHotelbeds = req.body.directConfirm === true || req.query.direct === 'true' || isTestEnv;
 
   if (shouldConfirmWithHotelbeds) {
     try {
