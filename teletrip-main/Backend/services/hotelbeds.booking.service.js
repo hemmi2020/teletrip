@@ -56,14 +56,56 @@ async function confirmBookingWithHotelbeds(bookingRequest) {
       bookingRequest.clientReference = `TELI_${Date.now()}`;
     }
 
-    // Ensure Hotelbeds compliant pax distribution: each room object's paxes must have roomId: 1
+    // Ensure Hotelbeds compliant pax distribution: auto-align paxes with rateKey requirements
     if (Array.isArray(bookingRequest.rooms)) {
-      bookingRequest.rooms.forEach(room => {
-        if (Array.isArray(room.paxes)) {
-          room.paxes.forEach(pax => {
-            pax.roomId = 1;
-          });
+      bookingRequest.rooms = bookingRequest.rooms.map(room => {
+        let paxes = Array.isArray(room.paxes) ? [...room.paxes] : [];
+        const match = room.rateKey ? room.rateKey.match(/\|\|(\d+)~(\d+)~(\d+)(?:\|([^|]*))?\|/) : null;
+
+        if (match) {
+          const expAdults = parseInt(match[2], 10) || 1;
+          const expChildren = parseInt(match[3], 10) || 0;
+          const expChildAges = match[4] ? match[4].split(',').map(a => parseInt(a, 10)).filter(a => !isNaN(a)) : [];
+
+          const currentAdults = paxes.filter(p => p.type === 'AD');
+          const currentChildren = paxes.filter(p => p.type === 'CH');
+
+          // Align adults if fewer than required by rateKey
+          while (currentAdults.length < expAdults) {
+            const idx = currentAdults.length;
+            const newAdult = {
+              roomId: 1,
+              type: 'AD',
+              name: idx === 0 ? (bookingRequest.holder?.name || 'Guest') : 'Guest',
+              surname: idx === 0 ? (bookingRequest.holder?.surname || 'Adult') : `Surname${idx + 1}`
+            };
+            currentAdults.push(newAdult);
+            paxes.push(newAdult);
+          }
+
+          // Align children if fewer than required by rateKey
+          while (currentChildren.length < expChildren) {
+            const idx = currentChildren.length;
+            const age = expChildAges[idx] !== undefined ? expChildAges[idx] : 5;
+            const newChild = {
+              roomId: 1,
+              type: 'CH',
+              age: age,
+              name: 'Child',
+              surname: `Guest${idx + 1}`
+            };
+            currentChildren.push(newChild);
+            paxes.push(newChild);
+          }
         }
+
+        // Ensure all paxes have roomId: 1 for Hotelbeds room item schema
+        paxes.forEach(p => { p.roomId = 1; });
+
+        return {
+          ...room,
+          paxes
+        };
       });
     }
 

@@ -562,8 +562,8 @@ const BookingVoucher = ({ booking, onClose }) => {
               </div>
               <div className="space-y-2">
                 <div className="flex justify-between items-center text-sm">
-                  <span className="text-gray-500">Retail Booking Amount</span>
-                  <span className="font-semibold text-gray-900">{displayCustomerTotal}</span>
+                  <span className="text-gray-500">Retail Booking Amount:</span>
+                  <span className="font-semibold text-gray-900 ml-2">{displayCustomerTotal}</span>
                 </div>
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-gray-500">Payment Status</span>
