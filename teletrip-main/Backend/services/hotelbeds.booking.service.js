@@ -67,36 +67,42 @@ async function confirmBookingWithHotelbeds(bookingRequest) {
           const expChildren = parseInt(match[3], 10) || 0;
           const expChildAges = match[4] ? match[4].split(',').map(a => parseInt(a, 10)).filter(a => !isNaN(a)) : [];
 
-          const currentAdults = paxes.filter(p => p.type === 'AD');
-          const currentChildren = paxes.filter(p => p.type === 'CH');
+          let adults = paxes.filter(p => p.type === 'AD');
+          let children = paxes.filter(p => p.type === 'CH');
 
-          // Align adults if fewer than required by rateKey
-          while (currentAdults.length < expAdults) {
-            const idx = currentAdults.length;
-            const newAdult = {
-              roomId: 1,
-              type: 'AD',
-              name: idx === 0 ? (bookingRequest.holder?.name || 'Guest') : 'Guest',
-              surname: idx === 0 ? (bookingRequest.holder?.surname || 'Adult') : `Surname${idx + 1}`
-            };
-            currentAdults.push(newAdult);
-            paxes.push(newAdult);
+          // Exactly match adults count
+          if (adults.length > expAdults) {
+            adults = adults.slice(0, expAdults);
+          } else {
+            while (adults.length < expAdults) {
+              const idx = adults.length;
+              adults.push({
+                roomId: 1,
+                type: 'AD',
+                name: idx === 0 ? (bookingRequest.holder?.name || 'Guest') : 'Guest',
+                surname: idx === 0 ? (bookingRequest.holder?.surname || 'Adult') : `Surname${idx + 1}`
+              });
+            }
           }
 
-          // Align children if fewer than required by rateKey
-          while (currentChildren.length < expChildren) {
-            const idx = currentChildren.length;
-            const age = expChildAges[idx] !== undefined ? expChildAges[idx] : 5;
-            const newChild = {
-              roomId: 1,
-              type: 'CH',
-              age: age,
-              name: 'Child',
-              surname: `Guest${idx + 1}`
-            };
-            currentChildren.push(newChild);
-            paxes.push(newChild);
+          // Exactly match children count
+          if (children.length > expChildren) {
+            children = children.slice(0, expChildren);
+          } else {
+            while (children.length < expChildren) {
+              const idx = children.length;
+              const age = expChildAges[idx] !== undefined ? expChildAges[idx] : 5;
+              children.push({
+                roomId: 1,
+                type: 'CH',
+                age: age,
+                name: 'Child',
+                surname: `Guest${idx + 1}`
+              });
+            }
           }
+
+          paxes = [...adults, ...children];
         }
 
         // Ensure all paxes have roomId: 1 for Hotelbeds room item schema

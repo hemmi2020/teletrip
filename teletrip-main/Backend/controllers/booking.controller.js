@@ -28,32 +28,32 @@ async function confirmHotelbedsBooking(bookingData, rateKey) {
     const timestamp = Math.floor(Date.now() / 1000);
     const signature = generateHotelbedsSignature(HOTELBEDS_API_KEY, HOTELBEDS_SECRET, timestamp);
 
-    // Build paxes array for all guests
-    const paxes = [];
-    const adults = bookingData.guestInfo.totalGuests.adults || 1;
-    const children = bookingData.guestInfo.totalGuests.children || 0;
+    // Build paxes array aligned with rateKey requirements
+    let paxes = [];
+    const match = rateKey ? rateKey.match(/\|\|(\d+)~(\d+)~(\d+)(?:\|([^|]*))?\|/) : null;
+    const expAdults = match ? parseInt(match[2], 10) || 1 : (bookingData.guestInfo?.totalGuests?.adults || 1);
+    const expChildren = match ? parseInt(match[3], 10) || 0 : (bookingData.guestInfo?.totalGuests?.children || 0);
+    const expChildAges = match && match[4] ? match[4].split(',').map(a => parseInt(a, 10)).filter(a => !isNaN(a)) : (bookingData.childAges || []);
 
-    // Add all adults
-    for (let i = 0; i < adults; i++) {
+    // Add required adults
+    for (let i = 0; i < expAdults; i++) {
         paxes.push({
             roomId: 1,
             type: "AD",
-            name: i === 0 ? bookingData.guestInfo.primaryGuest.firstName : "Adult",
-            surname: i === 0 ? bookingData.guestInfo.primaryGuest.lastName : `Guest${i + 1}`
+            name: i === 0 ? (bookingData.guestInfo?.primaryGuest?.firstName || "Guest") : "Guest",
+            surname: i === 0 ? (bookingData.guestInfo?.primaryGuest?.lastName || "Adult") : `Surname${i + 1}`
         });
     }
 
-    // Add all children with ages
-    if (children > 0 && bookingData.childAges) {
-        for (let i = 0; i < children; i++) {
-            paxes.push({
-                roomId: 1,
-                type: "CH",
-                age: bookingData.childAges[i] || 10,
-                name: "Child",
-                surname: `Guest${i + 1}`
-            });
-        }
+    // Add required children with matching ages
+    for (let i = 0; i < expChildren; i++) {
+        paxes.push({
+            roomId: 1,
+            type: "CH",
+            age: expChildAges[i] !== undefined ? expChildAges[i] : 5,
+            name: "Child",
+            surname: `Guest${i + 1}`
+        });
     }
 
     const hotelbedsRequest = {
