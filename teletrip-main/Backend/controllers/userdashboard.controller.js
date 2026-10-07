@@ -253,8 +253,10 @@ const transformBookingData = (booking) => {
     checkInDate: booking.hotelBooking?.checkIn || booking.travelDates?.departureDate,
     checkOutDate: booking.hotelBooking?.checkOut || booking.travelDates?.returnDate,
     
-    // Map amount
+    // Map amount and currency
     totalAmount: booking.pricing?.totalAmount || 0,
+    pricing: booking.pricing,
+    currency: booking.pricing?.currency || booking.currency || 'EUR',
     
     // Map other fields
     status: booking.status,

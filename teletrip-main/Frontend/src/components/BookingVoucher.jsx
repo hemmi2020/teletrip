@@ -26,11 +26,13 @@ const BookingVoucher = ({ booking, onClose }) => {
   }, []);
 
   const toPKR = (eurAmount) => {
-    if (!pkrRate || !eurAmount) return null;
-    const base = eurAmount * (pkrRate.exchangeRate || 310);
-    const markup = eurAmount * (pkrRate.markupPerEuro || 0);
-    const subtotal = base + markup;
-    const fee = (subtotal * (pkrRate.transactionFeePercentage || 0)) / 100;
+    if (!eurAmount) return null;
+    const rate = pkrRate?.exchangeRate || 311.42;
+    const markup = pkrRate?.markupPerEuro || 0;
+    const feePct = pkrRate?.transactionFeePercentage ?? 1;
+    const base = eurAmount * rate;
+    const subtotal = base + (eurAmount * markup);
+    const fee = (subtotal * feePct) / 100;
     return Math.round(subtotal + fee);
   };
 
@@ -242,11 +244,22 @@ const BookingVoucher = ({ booking, onClose }) => {
 
   // HBX Compliance: Supplier wholesale net price must NEVER be displayed to the customer.
   // Display only customer retail pricing or no amounts.
-  const customerTotal = booking.pricing?.totalAmount || booking.totalAmount || 0;
-  const customerCurrency = booking.pricing?.currency || booking.currency || 'PKR';
-  const displayCustomerTotal = customerTotal > 0
-    ? `${customerCurrency} ${Math.round(customerTotal).toLocaleString()}`
-    : 'Prepaid in Full';
+  const rawTotal = parseFloat(booking.pricing?.totalAmount || booking.totalAmount || 0);
+  const rawCurrency = (booking.pricing?.currency || booking.currency || (rawTotal < 1500 ? 'EUR' : 'PKR')).toUpperCase();
+
+  let displayCustomerTotal = 'Prepaid in Full';
+  if (rawTotal > 0) {
+    if (rawCurrency === 'PKR') {
+      displayCustomerTotal = `PKR ${Math.round(rawTotal).toLocaleString()}`;
+    } else if (rawCurrency === 'EUR') {
+      const pkrAmount = toPKR(rawTotal);
+      displayCustomerTotal = pkrAmount
+        ? `PKR ${pkrAmount.toLocaleString()} (EUR ${rawTotal.toFixed(2)})`
+        : `EUR ${rawTotal.toFixed(2)}`;
+    } else {
+      displayCustomerTotal = `${rawCurrency} ${Math.round(rawTotal).toLocaleString()}`;
+    }
+  }
 
   const paymentMethod = booking.payment?.method || booking.paymentMethod ||
     (hb.rooms?.[0]?.paymentType === 'AT_HOTEL' ? 'pay_on_site' : 'card');
