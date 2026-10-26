@@ -1,18 +1,34 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSiteAccess } from '../../context/SiteAccessContext';
+import logo from '../../images/Telitrip-Logo.png';
+import Footer from '../Footer';
+import { Lock, ArrowRight, ShieldCheck, Hotel, Car, Globe, CheckCircle2 } from 'lucide-react';
 
 export default function ComingSoonGate() {
   const { verifyPasscode, error: contextError } = useSiteAccess();
   const [passcode, setPasscode] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showModal, setShowModal] = useState(false);
   const [localError, setLocalError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [bgIndex, setBgIndex] = useState(0);
+
+  const heroImages = [
+    "https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=1920&h=1080&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=1920&h=1080&fit=crop&q=80",
+    "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=1920&h=1080&fit=crop&q=80",
+  ];
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setBgIndex((prev) => (prev === heroImages.length - 1 ? 0 : prev + 1));
+    }, 6000);
+    return () => clearInterval(timer);
+  }, [heroImages.length]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!passcode.trim()) {
-      setLocalError('Please enter a passcode');
+      setLocalError('Please enter the preview passcode');
       return;
     }
 
@@ -27,154 +43,81 @@ export default function ComingSoonGate() {
   };
 
   return (
-    <div className="min-h-screen bg-[#070B14] text-white flex flex-col justify-between relative overflow-hidden font-sans selection:bg-emerald-500/30 selection:text-emerald-200">
-      {/* Dynamic Ambient Background Glows */}
-      <div className="absolute top-[-10%] left-[-10%] w-[55vw] h-[55vw] rounded-full bg-gradient-to-br from-emerald-600/15 via-teal-500/10 to-transparent blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-15%] right-[-10%] w-[60vw] h-[60vw] rounded-full bg-gradient-to-tl from-cyan-600/15 via-indigo-600/10 to-transparent blur-[140px] pointer-events-none" />
-      <div className="absolute inset-0 bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:32px_32px] opacity-20 pointer-events-none" />
-
-      {/* Top Header */}
-      <header className="relative z-10 max-w-7xl mx-auto w-full px-6 py-8 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/20 font-bold text-slate-950 text-xl tracking-tight">
-            T
-          </div>
-          <div>
-            <span className="text-xl font-bold tracking-tight text-white">TeleTrip</span>
-            <span className="hidden sm:inline-block ml-2 text-[10px] font-semibold uppercase tracking-widest px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-              Private Beta
+    <div className="min-h-screen bg-white text-gray-900 flex flex-col font-sans selection:bg-blue-600/10 selection:text-blue-700">
+      {/* ── Signature Floating Header Pill ── */}
+      <header className="fixed top-0 left-0 right-0 z-50 flex justify-center px-4 sm:px-6 pt-4 sm:pt-6 pointer-events-none">
+        <div
+          className="pointer-events-auto w-full max-w-5xl flex items-center justify-between gap-4 py-2.5 px-6 rounded-full bg-white/95 backdrop-blur-md border border-gray-100 shadow-[0_4px_25px_rgba(0,0,0,0.08)] transition-all"
+        >
+          <div className="flex items-center gap-3">
+            <img src={logo} alt="Telitrip" className="h-8 sm:h-9 w-auto object-contain" />
+            <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold tracking-wide bg-blue-50 text-blue-700 border border-blue-100">
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse" />
+              Private Preview
             </span>
           </div>
-        </div>
 
-        {/* Discreet Team Access Trigger */}
-        <button
-          onClick={() => { setShowModal(true); setLocalError(''); }}
-          className="group inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-900/80 hover:bg-slate-800 text-xs text-slate-400 hover:text-white border border-slate-800 hover:border-slate-700 transition-all duration-200 shadow-sm"
-        >
-          <svg className="w-3.5 h-3.5 text-emerald-400 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-          </svg>
-          <span>Team Preview</span>
-        </button>
+          <div className="flex items-center gap-4 text-xs font-medium text-gray-600">
+            <a
+              href="mailto:support@telitrip.com"
+              className="hidden md:inline-block hover:text-blue-600 transition-colors"
+            >
+              support@telitrip.com
+            </a>
+            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-gray-50 border border-gray-200/80 text-gray-700 text-xs font-semibold">
+              <Lock className="w-3.5 h-3.5 text-blue-600" />
+              <span>Team Access</span>
+            </div>
+          </div>
+        </div>
       </header>
 
-      {/* Main Teaser Hero */}
-      <main className="relative z-10 max-w-4xl mx-auto px-6 py-12 sm:py-20 flex-1 flex flex-col justify-center text-center">
-        {/* Launching Soon Pill */}
-        <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-slate-900/90 border border-slate-700/60 shadow-xl backdrop-blur-md mx-auto mb-8 animate-fade-in">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-          <span className="text-xs font-medium tracking-wider text-slate-300 uppercase">
-            Official Public Launch Arriving Soon
-          </span>
-        </div>
-
-        {/* Big Bold Headline */}
-        <h1 className="text-4xl sm:text-6xl md:text-7xl font-extrabold tracking-tight text-white mb-6 leading-[1.08]">
-          The Next Generation of <br />
-          <span className="bg-gradient-to-r from-emerald-300 via-teal-200 to-cyan-400 bg-clip-text text-transparent">
-            Global Luxury Travel
-          </span>
-        </h1>
-
-        {/* Narrative Subtitle */}
-        <p className="text-base sm:text-lg text-slate-400 max-w-2xl mx-auto mb-12 font-normal leading-relaxed">
-          We are conducting final end-to-end integration tests on our live booking engine. 
-          Soon, you will experience seamless hotel reservations, private transfers, and bespoke travel experiences worldwide.
-        </p>
-
-        {/* Feature Highlights Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto w-full text-left">
-          <div className="p-5 rounded-2xl bg-slate-900/50 border border-slate-800/80 backdrop-blur-sm hover:border-slate-700 transition-colors">
-            <div className="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center mb-3">
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-              </svg>
-            </div>
-            <h3 className="text-sm font-semibold text-white mb-1">Global Hotel Suites</h3>
-            <p className="text-xs text-slate-400 leading-relaxed">Direct connection to 300,000+ luxury resorts, villas, and boutique stays worldwide.</p>
-          </div>
-
-          <div className="p-5 rounded-2xl bg-slate-900/50 border border-slate-800/80 backdrop-blur-sm hover:border-slate-700 transition-colors">
-            <div className="w-9 h-9 rounded-xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center mb-3">
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-              </svg>
-            </div>
-            <h3 className="text-sm font-semibold text-white mb-1">Executive Transfers</h3>
-            <p className="text-xs text-slate-400 leading-relaxed">Chauffeured airport pick-ups and point-to-point luxury fleets with instant tracking.</p>
-          </div>
-
-          <div className="p-5 rounded-2xl bg-slate-900/50 border border-slate-800/80 backdrop-blur-sm hover:border-slate-700 transition-colors">
-            <div className="w-9 h-9 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center mb-3">
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-              </svg>
-            </div>
-            <h3 className="text-sm font-semibold text-white mb-1">Instant Direct Booking</h3>
-            <p className="text-xs text-slate-400 leading-relaxed">Encrypted mTLS bank-grade verification and instant hotel confirmation codes.</p>
-          </div>
-        </div>
-
-        {/* Contact Concierge Link */}
-        <div className="mt-12 text-xs text-slate-500">
-          For corporate partnerships or inquiries, contact us at{' '}
-          <a href="mailto:info@telitrip.com" className="text-emerald-400 hover:text-emerald-300 underline underline-offset-4">
-            info@telitrip.com
-          </a>
-        </div>
-      </main>
-
-      {/* Footer */}
-      <footer className="relative z-10 max-w-7xl mx-auto w-full px-6 py-6 border-t border-slate-900 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-4">
-        <div>
-          &copy; {new Date().getFullYear()} TeleTrip Group LLC. All rights reserved.
-        </div>
-        <div className="flex items-center gap-6">
-          <span className="flex items-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-            Live Engine Active
-          </span>
-          <button
-            onClick={() => { setShowModal(true); setLocalError(''); }}
-            className="text-slate-400 hover:text-white transition-colors"
-          >
-            Staff Passcode
-          </button>
-        </div>
-      </footer>
-
-      {/* Team Access Passcode Modal */}
-      {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md animate-fade-in">
-          <div className="relative w-full max-w-md rounded-3xl bg-slate-900 border border-slate-700/80 p-7 shadow-2xl shadow-black/80">
-            {/* Close Button */}
-            <button
-              onClick={() => setShowModal(false)}
-              className="absolute top-5 right-5 text-slate-400 hover:text-white p-1.5 rounded-xl hover:bg-slate-800 transition-colors"
+      {/* ── Hero Section with Telitrip Slider Background ── */}
+      <section className="relative min-h-[92vh] sm:min-h-screen flex items-center justify-center pt-28 pb-16 px-4 sm:px-6 bg-gray-950 overflow-hidden">
+        {/* Background slideshow */}
+        <div className="absolute inset-0 z-0">
+          {heroImages.map((img, i) => (
+            <div
+              key={i}
+              className={`absolute inset-0 transition-all duration-[1500ms] ease-in-out ${
+                i === bgIndex ? 'opacity-100 scale-100' : 'opacity-0 scale-105'
+              }`}
             >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+              <img src={img} alt="" className="w-full h-full object-cover" />
+            </div>
+          ))}
+          {/* Deep Telitrip gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-b from-gray-950/75 via-gray-950/45 to-gray-950/80" />
+        </div>
 
-            {/* Modal Header */}
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
-              </div>
+        {/* Hero Card Container */}
+        <div className="relative z-10 w-full max-w-lg mx-auto text-center">
+          {/* Badge */}
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white text-xs font-semibold uppercase tracking-wider mb-6 shadow-sm">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            Official Launch Arriving Soon
+          </div>
+
+          {/* Main Card Styled like Telitrip Search Cards */}
+          <div className="bg-white/95 backdrop-blur-2xl rounded-3xl p-7 sm:p-9 shadow-2xl border border-white/60 text-left">
+            <div className="flex items-center justify-between mb-4">
               <div>
-                <h3 className="text-lg font-bold text-white tracking-tight">Team Preview Access</h3>
-                <p className="text-xs text-slate-400">Enter your passcode to unlock the live platform</p>
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight leading-tight">
+                  Travel Smarter.
+                </h1>
+                <p className="text-xs sm:text-sm text-gray-500 mt-1">
+                  We are putting the final touches on our live booking engine.
+                </p>
+              </div>
+              <div className="w-11 h-11 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 shrink-0">
+                <Lock className="w-5 h-5" />
               </div>
             </div>
 
-            {/* Form */}
+            {/* Passcode Unlock Form */}
             <form onSubmit={handleSubmit} className="space-y-4 mt-6">
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-2">
+                <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">
                   Preview Passcode
                 </label>
                 <div className="relative">
@@ -182,15 +125,15 @@ export default function ComingSoonGate() {
                     type={showPassword ? 'text' : 'password'}
                     value={passcode}
                     onChange={(e) => setPasscode(e.target.value)}
-                    placeholder="Enter preview passcode..."
+                    placeholder="Enter team passcode..."
                     autoFocus
                     disabled={isSubmitting}
-                    className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500 transition-all pr-10"
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition-all pr-14"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 text-xs"
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-gray-500 hover:text-gray-800"
                   >
                     {showPassword ? 'Hide' : 'Show'}
                   </button>
@@ -199,47 +142,94 @@ export default function ComingSoonGate() {
 
               {/* Error Alert */}
               {(localError || contextError) && (
-                <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs flex items-center gap-2">
-                  <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
+                <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
+                  <span className="font-semibold">Error:</span>
                   <span>{localError || contextError}</span>
                 </div>
               )}
 
-              {/* Submit Button */}
+              {/* Submit CTA Button in Telitrip Brand Blue */}
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-semibold text-sm shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+                className="w-full py-3.5 px-6 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold text-sm shadow-lg shadow-blue-500/25 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 {isSubmitting ? (
                   <>
-                    <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 animate-spin text-white" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
                     </svg>
-                    <span>Verifying...</span>
+                    <span>Verifying Access...</span>
                   </>
                 ) : (
                   <>
-                    <span>Unlock Platform</span>
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                    </svg>
+                    <span>Enter Live Preview</span>
+                    <ArrowRight className="w-4 h-4" />
                   </>
                 )}
               </button>
             </form>
 
-            <div className="mt-5 pt-4 border-t border-slate-800 text-center">
-              <p className="text-[11px] text-slate-500">
-                Tip: You can also visit via 1-click link <code className="text-emerald-400/80 bg-slate-950 px-1 py-0.5 rounded">?preview=passcode</code>
+            {/* Quick 1-click Tip */}
+            <div className="mt-5 pt-4 border-t border-gray-100 flex items-center justify-between text-[11px] text-gray-400">
+              <span>Direct Link Support:</span>
+              <code className="text-blue-600 font-medium bg-blue-50 px-2 py-0.5 rounded-md">
+                ?preview=telitrip2026
+              </code>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Feature Highlights Styled like Telitrip Destination Cards ── */}
+      <section className="bg-white py-16 sm:py-20 px-4 sm:px-6 relative z-10 border-b border-gray-100">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center max-w-2xl mx-auto mb-12">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">
+              What's Coming in Telitrip
+            </h2>
+            <p className="text-sm text-gray-500 mt-2">
+              A comprehensive travel booking platform built with transparency, speed, and real-time live inventory.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="p-6 rounded-2xl bg-gray-50/80 border border-gray-100 hover:border-gray-200 transition-all hover:shadow-md">
+              <div className="w-12 h-12 rounded-xl bg-blue-100/70 text-blue-600 flex items-center justify-center mb-4">
+                <Hotel className="w-6 h-6" />
+              </div>
+              <h3 className="text-base font-bold text-gray-900 mb-1.5">300,000+ Hotel Suites</h3>
+              <p className="text-xs text-gray-600 leading-relaxed">
+                Direct connections to verified Hotelbeds properties, live real-time rate comparison, and room-level transparent fees.
+              </p>
+            </div>
+
+            <div className="p-6 rounded-2xl bg-gray-50/80 border border-gray-100 hover:border-gray-200 transition-all hover:shadow-md">
+              <div className="w-12 h-12 rounded-xl bg-emerald-100/70 text-emerald-600 flex items-center justify-center mb-4">
+                <Car className="w-6 h-6" />
+              </div>
+              <h3 className="text-base font-bold text-gray-900 mb-1.5">Executive Transfers</h3>
+              <p className="text-xs text-gray-600 leading-relaxed">
+                Seamless airport pick-ups, luxury private sedans, and point-to-point transfers with instant driver details.
+              </p>
+            </div>
+
+            <div className="p-6 rounded-2xl bg-gray-50/80 border border-gray-100 hover:border-gray-200 transition-all hover:shadow-md">
+              <div className="w-12 h-12 rounded-xl bg-purple-100/70 text-purple-600 flex items-center justify-center mb-4">
+                <ShieldCheck className="w-6 h-6" />
+              </div>
+              <h3 className="text-base font-bold text-gray-900 mb-1.5">Live mTLS Confirmation</h3>
+              <p className="text-xs text-gray-600 leading-relaxed">
+                Encrypted bank-grade mutual TLS integration ensuring guaranteed room confirmations and zero booking friction.
               </p>
             </div>
           </div>
         </div>
-      )}
+      </section>
+
+      {/* ── Official Telitrip Footer Component ── */}
+      <Footer />
     </div>
   );
 }
