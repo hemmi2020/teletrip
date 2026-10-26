@@ -334,26 +334,35 @@ if (children > 0 && childAges.length > 0) {
 
         let hotelResponse;
         let isAuthenticated = false;
+        const authToken = getAuthToken();
 
-        try {
-          hotelResponse = await makeAuthenticatedRequest(
-            `${API_BASE_URL}/hotels/search-auth`,
-            {
-              method: "POST",
-              body: JSON.stringify(requestBody),
+        if (authToken) {
+          try {
+            hotelResponse = await makeAuthenticatedRequest(
+              `${API_BASE_URL}/hotels/search-auth`,
+              {
+                method: "POST",
+                body: JSON.stringify(requestBody),
+              }
+            );
+
+            if (hotelResponse.ok) {
+              isAuthenticated = true;
+            } else {
+              hotelResponse = await fetch(`${API_BASE_URL}/hotels/search`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(requestBody),
+              });
             }
-          );
-
-          if (hotelResponse.ok) {
-            isAuthenticated = true;
-          } else {
+          } catch  {
             hotelResponse = await fetch(`${API_BASE_URL}/hotels/search`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify(requestBody),
             });
           }
-        } catch  {
+        } else {
           hotelResponse = await fetch(`${API_BASE_URL}/hotels/search`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },

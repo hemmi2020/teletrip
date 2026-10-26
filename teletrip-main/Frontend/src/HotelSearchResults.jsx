@@ -911,26 +911,35 @@ const HotelSearchResults = () => {
 
         let hotelResponse;
         let isAuthenticated = false;
+        const authToken = getAuthToken();
 
-        try {
-          hotelResponse = await makeAuthenticatedRequest(
-            hotelCode ? searchEndpoint : `${API_BASE_URL}/hotels/search-auth`,
-            {
-              method: "POST",
-              body: JSON.stringify(searchBody),
+        if (authToken && !hotelCode) {
+          try {
+            hotelResponse = await makeAuthenticatedRequest(
+              `${API_BASE_URL}/hotels/search-auth`,
+              {
+                method: "POST",
+                body: JSON.stringify(searchBody),
+              }
+            );
+
+            if (hotelResponse.ok) {
+              isAuthenticated = true;
+            } else {
+              hotelResponse = await fetch(searchEndpoint, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(searchBody),
+              });
             }
-          );
-
-          if (hotelResponse.ok) {
-            isAuthenticated = true;
-          } else {
+          } catch {
             hotelResponse = await fetch(searchEndpoint, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify(searchBody),
             });
           }
-        } catch {
+        } else {
           hotelResponse = await fetch(searchEndpoint, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
