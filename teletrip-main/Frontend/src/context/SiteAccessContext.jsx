@@ -48,9 +48,12 @@ export const SiteAccessProvider = ({ children }) => {
       let [resource, config] = args;
       const token = getStoredToken();
 
-      if (token) {
+      const url = typeof resource === 'string' ? resource : resource?.url || '';
+      const isBackendReq = url.startsWith('/api') || url.includes('telitrip-backend.onrender.com') || url.includes('localhost:3000');
+
+      if (token && isBackendReq) {
         config = config || {};
-        const headers = new Headers(config.headers || {});
+        const headers = new Headers(config.headers || (typeof resource === 'object' && resource.headers ? resource.headers : {}));
         if (!headers.has('x-site-access-token')) {
           headers.set('x-site-access-token', token);
         }

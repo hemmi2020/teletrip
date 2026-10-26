@@ -57,7 +57,17 @@ app.use(cors({
     ],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Cookie']
+    allowedHeaders: [
+        'Content-Type',
+        'Authorization',
+        'Cookie',
+        'x-site-access-token',
+        'X-Site-Access-Token',
+        'x-signature',
+        'api-key',
+        'Accept',
+        'Origin'
+    ]
 }));
 
 // Body parsing middleware
