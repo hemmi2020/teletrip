@@ -3,6 +3,9 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { CartProvider, UserProvider } from './components/CartSystem';
 import { HelmetProvider } from 'react-helmet-async';
 import { CurrencyProvider } from './context/CurrencyContext';
+import { SiteAccessProvider, useSiteAccess } from './context/SiteAccessContext';
+import ComingSoonGate from './components/gate/ComingSoonGate';
+import StaffPreviewBadge from './components/gate/StaffPreviewBadge';
 
 // Pages
 import Home from './Home';
@@ -79,49 +82,74 @@ class ErrorBoundary extends React.Component {
   }
 }
 
+const AppContent = () => {
+  const { isUnlocked, isLoading } = useSiteAccess();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#070B14] flex items-center justify-center">
+        <div className="w-8 h-8 rounded-full border-2 border-emerald-500/20 border-t-emerald-500 animate-spin" />
+      </div>
+    );
+  }
+
+  if (!isUnlocked) {
+    return <ComingSoonGate />;
+  }
+
+  return (
+    <>
+      <StaffPreviewBadge />
+      <div className="pb-14 md:pb-0">
+        <Routes>
+          <Route path="/" element={<Navigate to="/home" replace />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/home" element={<Home />} />
+          <Route path="/hotel-search-results" element={<HotelSearchResults />} />
+          <Route path="/hotel-details/:hotelCode" element={<HotelDetails />} />
+          <Route path="/activity-search-results" element={<ActivitySearchResults />} />
+          <Route path="/activity/:activityCode" element={<ActivityDetails />} />
+          <Route path="/transfers" element={<TransferSearch />} />
+          <Route path="/account" element={<AccountDashboard />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/faqs" element={<FAQs />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/cancellation-policy" element={<CancellationPolicy />} />
+          <Route path="/bookings" element={<BookingManagement />} />
+          <Route path="/bookings/:bookingId" element={<BookingDetails />} />
+          <Route path="/checkout" element={<Checkout />} />
+          <Route path="/payment/success" element={<PaymentSuccess />} />
+          <Route path="/payment/cancel" element={<PaymentCancel />} />
+          <Route path="/payment-success-onsite" element={<PaymentSuccessOnSite />} />
+          <Route path="/destinations" element={<DestinationsListingPage />} />
+          <Route path="/destinations/:slug" element={<DestinationPage />} />
+          <Route path="/admin/login" element={<AdminLogin />} />
+          <Route path="/admin/dashboard" element={<ProtectedAdminRoute><AdminDashboard /></ProtectedAdminRoute>} />
+          <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </div>
+    </>
+  );
+};
+
 const App = () => {
   return (
     <ErrorBoundary>
       <HelmetProvider>
         <CurrencyProvider>
-          <BrowserRouter>
-            <UserProvider>
-              <CartProvider>
-                <div className="pb-14 md:pb-0">
-                  <Routes>
-                    <Route path="/" element={<Navigate to="/home" replace />} />
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/signup" element={<Signup />} />
-                    <Route path="/home" element={<Home />} />
-                    <Route path="/hotel-search-results" element={<HotelSearchResults />} />
-                    <Route path="/hotel-details/:hotelCode" element={<HotelDetails />} />
-                    <Route path="/activity-search-results" element={<ActivitySearchResults />} />
-                    <Route path="/activity/:activityCode" element={<ActivityDetails />} />
-                    <Route path="/transfers" element={<TransferSearch />} />
-                    <Route path="/account" element={<AccountDashboard />} />
-                    <Route path="/contact" element={<Contact />} />
-                    <Route path="/about" element={<About />} />
-                    <Route path="/faqs" element={<FAQs />} />
-                    <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-                    <Route path="/terms" element={<Terms />} />
-                    <Route path="/cancellation-policy" element={<CancellationPolicy />} />
-                    <Route path="/bookings" element={<BookingManagement />} />
-                    <Route path="/bookings/:bookingId" element={<BookingDetails />} />
-                    <Route path="/checkout" element={<Checkout />} />
-                    <Route path="/payment/success" element={<PaymentSuccess />} />
-                    <Route path="/payment/cancel" element={<PaymentCancel />} />
-                    <Route path="/payment-success-onsite" element={<PaymentSuccessOnSite />} />
-                    <Route path="/destinations" element={<DestinationsListingPage />} />
-                    <Route path="/destinations/:slug" element={<DestinationPage />} />
-                    <Route path="/admin/login" element={<AdminLogin />} />
-                    <Route path="/admin/dashboard" element={<ProtectedAdminRoute><AdminDashboard /></ProtectedAdminRoute>} />
-                    <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </div>
-              </CartProvider>
-            </UserProvider>
-          </BrowserRouter>
+          <SiteAccessProvider>
+            <BrowserRouter>
+              <UserProvider>
+                <CartProvider>
+                  <AppContent />
+                </CartProvider>
+              </UserProvider>
+            </BrowserRouter>
+          </SiteAccessProvider>
         </CurrencyProvider>
       </HelmetProvider>
     </ErrorBoundary>

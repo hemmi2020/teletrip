@@ -26,6 +26,8 @@ const bookingManagementRoutes = require('./routes/bookingManagement.route');
 const currencyRoutes = require('./routes/currency.route');
 const destinationsRoutes = require('./routes/destinations.route');
 const emailRoutes = require('./routes/email.route');
+const siteAccessRoutes = require('./routes/siteAccess.route');
+const { siteAccessGuard } = require('./middlewares/siteAccess.middleware');
 require('./models/blacklistToken.model');
 require('./models/notification.model');
 require('./models/review.model');
@@ -118,6 +120,12 @@ app.get('/health', (req, res) => {
         version: '2026-08-13-hcn-reconcile-fix'
     });
 });
+
+// Site Access Gate - Verification endpoint
+app.use('/api/site-access', siteAccessRoutes);
+
+// Site Access Guard - restricts live routes when SITE_ACCESS_ENABLED=true
+app.use(siteAccessGuard);
 
 // Routes 
 app.use('/users', userRoutes);

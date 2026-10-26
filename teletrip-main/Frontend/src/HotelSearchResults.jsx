@@ -36,6 +36,7 @@ import HotelSearchForm from "./components/HotelSearchForm";
 import { useCart } from "./components/CartSystem";
 import { useCurrency } from "./context/CurrencyContext";
 import MobileFilters from "./components/MobileFilters";
+import HotelDetailModal from "./components/hotels/HotelDetailModal";
 import { AlertCircle } from "lucide-react";
 import SearchLoadingScreen from './components/SearchLoadingScreen';
 import logo from './images/Telitrip-Logo.png';
@@ -1922,377 +1923,38 @@ const HotelSearchResults = () => {
         />
 
         {/* Hotel Detail Modal */}
-        {selectedHotel && (() => {
-          const checkIn = searchParams.get("checkIn");
-          const checkOut = searchParams.get("checkOut");
-          const nights = checkIn && checkOut ? Math.ceil((new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60 * 24)) : 1;
-          const allImages = (selectedHotel.images || []).map(img => img.path ? `https://photos.hotelbeds.com/giata/original/${img.path}` : null).filter(Boolean);
-          const modalImages = allImages.slice(0, 5);
-          if (modalImages.length === 0 && selectedHotel.thumbnail) modalImages.push(selectedHotel.thumbnail);
-          if (allImages.length === 0 && selectedHotel.thumbnail) allImages.push(selectedHotel.thumbnail);
-          const uniqueRoomTypes = [...new Set((selectedHotel.rooms || []).map(r => r.name))];
-
-          const openGallery = (idx) => { setGalleryImages(allImages); setGalleryIndex(idx); setGalleryOpen(true); };
-
-          // Multi-room config parsing
-          const roomConfigsParam = searchParams.get("roomConfigs");
-          const roomConfigs = roomConfigsParam ? (() => { try { return JSON.parse(roomConfigsParam); } catch (e) { return [{ adults: parseInt(searchParams.get("adults") || "2"), children: 0 }]; } })() : [{ adults: parseInt(searchParams.get("adults") || "2"), children: 0 }];
-          const isMultiRoom = roomConfigs.length > 1;
-
-          return (
-            <div className="fixed inset-0 z-[150] flex items-end sm:items-center justify-center" onClick={() => setSelectedHotel(null)}>
-              <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
-              <div className="relative bg-white w-full sm:max-w-4xl sm:rounded-2xl rounded-t-2xl max-h-[92vh] overflow-hidden flex flex-col shadow-2xl" onClick={(e) => e.stopPropagation()}>
-
-                {/* ── Sticky Header ── */}
-                <div className="flex-shrink-0 bg-white border-b border-gray-100 px-4 py-3">
-                  <div className="flex items-start gap-3">
-                    {/* Title + meta */}
-                    <div className="flex-1 min-w-0">
-                      <h2 className="text-[15px] font-bold text-gray-900 leading-tight line-clamp-2 pr-2">{selectedHotel.name}</h2>
-                      <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                        <div className="flex">{[...Array(selectedHotel.stars)].map((_, i) => <Star key={i} className="w-3 h-3 text-amber-400 fill-current" />)}</div>
-                        <span className="text-[11px] text-gray-400">·</span>
-                        <span className="text-[11px] text-gray-500 flex items-center gap-0.5 truncate"><MapPin className="w-3 h-3 flex-shrink-0" />{selectedHotel.address}</span>
-                      </div>
-                      {/* Room type chips — horizontal scroll, no wrap */}
-                      <div className="flex items-center gap-1.5 mt-1.5 overflow-x-auto pb-0.5" style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
-                        <span className="text-[11px] text-gray-400 flex-shrink-0">{selectedHotel.rooms?.length || 0} types:</span>
-                        {uniqueRoomTypes.slice(0, 6).map((rt, i) => (
-                          <button key={i} onClick={() => { const el = document.getElementById(`room-${selectedHotel.rooms.find(r => r.name === rt)?.code}`); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }} className="text-[10px] px-2.5 py-1 bg-blue-50 text-blue-600 rounded-full font-medium hover:bg-blue-100 transition-colors flex-shrink-0 cursor-pointer whitespace-nowrap">{rt}</button>
-                        ))}
-                        {uniqueRoomTypes.length > 6 && <span className="text-[10px] text-gray-400 flex-shrink-0">+{uniqueRoomTypes.length - 6}</span>}
-                      </div>
-                    </div>
-                    {/* Price + Close */}
-                    <div className="flex flex-col items-end gap-2 flex-shrink-0">
-                      <button
-                        onClick={() => setSelectedHotel(null)}
-                        className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
-                        aria-label="Close"
-                      >
-                        <X className="w-4 h-4 text-gray-600" />
-                      </button>
-                      <div className="text-right">
-                        <div className="text-[10px] text-gray-400">from</div>
-                        <div className="text-base font-bold text-blue-600 leading-tight">{selectedHotel.currency || 'EUR'} {parseFloat(selectedHotel.price).toFixed(0)}</div>
-                        {formatPKR(parseFloat(selectedHotel.price)) && <div className="text-[10px] text-gray-400">≈ {formatPKR(parseFloat(selectedHotel.price))}</div>}
-                        <div className="text-[10px] text-gray-400">{nights} {nights === 1 ? 'night' : 'nights'}</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* ── Scrollable body ── */}
-                <div className="overflow-y-auto flex-1" style={{ scrollbarWidth: 'thin' }}>
-
-                  {/* Image collage — full width, no negative margins */}
-                  {modalImages.length >= 3 ? (
-                    <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gridTemplateRows: '1fr 1fr', gap: 2, height: 200, width: '100%' }}>
-                      {/* Large left image — spans 2 rows */}
-                      <div style={{ gridRow: '1/3', overflow: 'hidden', cursor: 'pointer' }} onClick={() => openGallery(0)}>
-                        <img src={modalImages[0]} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => e.target.src = 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg'} />
-                      </div>
-                      {/* Top right */}
-                      <div style={{ overflow: 'hidden', cursor: 'pointer' }} onClick={() => openGallery(1)}>
-                        <img src={modalImages[1]} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => e.target.src = 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg'} />
-                      </div>
-                      {/* Bottom right — with photo count overlay */}
-                      <div style={{ overflow: 'hidden', cursor: 'pointer', position: 'relative' }} onClick={() => openGallery(2)}>
-                        <img src={modalImages[2]} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => e.target.src = 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg'} />
-                        {allImages.length > 3 && (
-                          <div style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <span style={{ color: '#fff', fontSize: 13, fontWeight: 600 }}>+{allImages.length - 3} photos</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ) : (
-                    <div style={{ height: 180, width: '100%', overflow: 'hidden', cursor: 'pointer' }} onClick={() => openGallery(0)}>
-                      <img src={modalImages[0] || 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg'} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    </div>
-                  )}
-
-                  {/* Hotel details */}
-                  <div className="px-4 py-3 border-b border-gray-100 space-y-2">
-                    {/* Hotel Description - Hotelbeds Certification Recommended */}
-                    {hotelContentData?.description && (
-                      <div className="text-[12px] text-gray-600 leading-relaxed">
-                        <h4 className="text-xs font-semibold text-gray-700 mb-1">About this hotel</h4>
-                        <p className="line-clamp-3">{hotelContentData.description}</p>
-                      </div>
-                    )}
-                    {/* Facilities - Mandatory Hotelbeds Certification: separate paid (indFee=true) vs Free */}
-                    {hotelContentData?.facilities && hotelContentData.facilities.length > 0 && (
-                      <div className="space-y-2">
-                        {/* Paid Hotel Facilities */}
-                        {hotelContentData.facilities.filter(f => f.indFee === true).length > 0 && (
-                          <div className="p-2.5 bg-orange-50 border border-orange-200 rounded-lg">
-                            <h4 className="text-[11px] font-semibold text-orange-800 mb-1 flex items-center">
-                              <AlertCircle className="w-3.5 h-3.5 mr-1 text-orange-600 flex-shrink-0" />
-                              Facilities with Additional Charges (payable on-site):
-                            </h4>
-                            <div className="flex flex-wrap gap-1">
-                              {hotelContentData.facilities.filter(f => f.indFee === true).map((f, i) => (
-                                <span key={`paid-${i}`} className="text-[10px] px-2 py-0.5 bg-orange-100 text-orange-800 rounded font-medium border border-orange-200">
-                                  {f.description || `Facility ${f.code}`} (Extra Fee)
-                                </span>
-                              ))}
-                            </div>
-                            <p className="text-[10px] text-orange-700 mt-1">These facilities require additional payment directly at the property.</p>
-                          </div>
-                        )}
-                        {/* Complimentary Hotel Facilities */}
-                        {hotelContentData.facilities.filter(f => f.indFee !== true).length > 0 && (
-                          <div>
-                            <h4 className="text-xs font-semibold text-gray-700 mb-1 flex items-center">
-                              <CheckCircle className="w-3 h-3 mr-1 text-green-600 flex-shrink-0" />
-                              Complimentary Facilities:
-                            </h4>
-                            <div className="flex flex-wrap gap-1.5">
-                              {hotelContentData.facilities.filter(f => f.indFee !== true).slice(0, 15).map((f, i) => (
-                                <span key={`free-${i}`} className="text-[10px] px-2 py-0.5 bg-gray-50 text-gray-600 rounded-full border border-gray-200">{f.description || `Facility ${f.code}`}</span>
-                              ))}
-                              {hotelContentData.facilities.filter(f => f.indFee !== true).length > 15 && (
-                                <span className="text-[10px] px-2 py-0.5 text-gray-400">+{hotelContentData.facilities.filter(f => f.indFee !== true).length - 15} more</span>
-                              )}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                    {/* Amenities — clearly below image */}
-                    {[...new Set(selectedHotel.amenities)].length > 0 && (
-                      <div className="flex gap-1.5 flex-wrap">
-                        {[...new Set(selectedHotel.amenities)].map((amenity, i) => {
-                          const ad = availableAmenities.find(a => a.id === amenity);
-                          if (!ad) return null;
-                          const Ic = ad.icon;
-                          return (
-                            <span key={i} className="inline-flex items-center gap-1 text-[11px] text-gray-600 bg-gray-100 px-2.5 py-1 rounded-full">
-                              <Ic className="w-3 h-3 text-blue-500" />{ad.name}
-                            </span>
-                          );
-                        })}
-                      </div>
-                    )}
-                    <div className="flex items-center gap-2 text-[11px] text-gray-400 flex-wrap">
-                      <span>{searchParams.get("checkIn")} → {searchParams.get("checkOut")}</span>
-                      <span>·</span>
-                      <span>{searchParams.get("adults")} adults{searchParams.get("children") && searchParams.get("children") !== "0" ? `, ${searchParams.get("children")} children` : ''}</span>
-                      <span>·</span>
-                      <span>{searchParams.get("rooms")} room(s)</span>
-                    </div>
-                    <div className="text-[12px] text-gray-500">
-                      {selectedHotel.category} · {selectedHotel.zone}
-                      {selectedHotel.boards.length > 0 && <> · {selectedHotel.boards.join(', ')}</>}
-                      {selectedHotel.hasFreeCancellation && <span className="text-green-600"> · Free cancellation available</span>}
-                    </div>
-                  </div>
-
-                  {/* Multi-room tab bar */}
-                  {isMultiRoom && (
-                    <div className="px-4 py-2 border-b border-gray-100 flex gap-1 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
-                      {roomConfigs.map((config, idx) => (
-                        <button key={idx} onClick={() => setActiveRoomTab(idx)}
-                          className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeRoomTab === idx ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                            }`} style={{ minHeight: 'unset' }}>
-                          Room {idx + 1}
-                          <span className="text-[10px] ml-1 opacity-70">({config.adults}A{config.children > 0 ? `+${config.children}C` : ''})</span>
-                          {roomSelections[idx] && <span className="ml-1 text-[10px]">✓</span>}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Rooms list */}
-                  <div className="px-4 py-3 space-y-3">
-                    {selectedHotel.rooms && selectedHotel.rooms.length > 0 ? (
-                      selectedHotel.rooms.map((room) => {
-                        const filteredRates = (room.rates || []).filter(rate => {
-                          const isFree = rate.rateClass !== 'NRF' && rate.cancellationPolicies?.length > 0 && 
-                            (parseFloat(rate.cancellationPolicies[0]?.amount || 0) === 0 || new Date() < new Date(rate.cancellationPolicies[0].from));
-                          if (selectedBoards.length > 0 && !selectedBoards.includes(rate.boardName)) return false;
-                          if (selectedCancellation === "free" && !isFree) return false;
-                          if (selectedCancellation === "nonrefundable" && (rate.rateClass !== 'NRF' && isFree)) return false;
-                          if (selectedCancellation === "partial" && !(!isFree && rate.rateClass !== 'NRF')) return false;
-                          if (selectedPackaging === "with" && !rate.packaging) return false;
-                          if (selectedPackaging === "without" && rate.packaging) return false;
-                          if (selectedPromos.length > 0) {
-                            const ratePromos = (rate.promotions || rate.offers || []).map(p => p.name || p.code).filter(Boolean);
-                            if (!selectedPromos.some(p => ratePromos.includes(p))) return false;
-                          }
-                          const ratePrice = parseFloat(rate.net);
-                          const ratePkr = convert ? (convert(ratePrice) || ratePrice) : ratePrice;
-                          if (priceMin && ratePkr < parseFloat(priceMin)) return false;
-                          if (priceMax && ratePkr > parseFloat(priceMax)) return false;
-                          return true;
-                        });
-                        if (filteredRates.length === 0) return null;
-
-                        return (
-                          <div key={room.code} id={`room-${room.code}`} className="border border-gray-100 rounded-xl overflow-hidden">
-                            <div className="px-4 py-2.5 bg-gray-50/80 border-b border-gray-100 flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <Bed className="w-4 h-4 text-gray-400" />
-                                <span className="text-[13px] font-semibold text-gray-800">{room.name}</span>
-                                <button onClick={(e) => { e.stopPropagation(); setSelectedRoomDetail(room); }} className="p-1 hover:bg-blue-50 rounded transition-colors" title="Room details" style={{ minHeight: 'unset' }}>
-                                  <Info className="w-3.5 h-3.5 text-blue-500" />
-                                </button>
-                              </div>
-                              <span className="text-[11px] text-gray-400">{filteredRates.length} rate{filteredRates.length !== 1 ? 's' : ''}</span>
-                            </div>
-                            <div className="divide-y divide-gray-50">
-                              {filteredRates.map((rate, idx) => {
-                                const total = parseFloat(rate.net);
-                                const perNight = nights > 0 ? total / nights : total;
-                                const hasFreeCancellation = rate.rateClass !== 'NRF' && rate.cancellationPolicies?.length > 0 &&
-                                  (parseFloat(rate.cancellationPolicies[0]?.amount || 0) === 0 || new Date() < new Date(rate.cancellationPolicies[0].from));
-                                const isSelectedForTab = isMultiRoom && roomSelections[activeRoomTab]?.room?.code === room.code && roomSelections[activeRoomTab]?.rate?.rateKey === rate.rateKey;
-
-                                return (
-                                  <div key={idx} className={`px-4 py-3 hover:bg-blue-50/30 transition-colors ${isSelectedForTab ? 'bg-blue-50 ring-1 ring-blue-200' : ''}`}>
-                                    <div className="flex justify-between items-start gap-4">
-                                      <div className="min-w-0 flex-1 space-y-1.5">
-                                        {/* Tags row */}
-                                        <div className="flex items-center gap-1.5 flex-wrap">
-                                          <span className="text-[11px] px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full font-medium">{rate.boardName}</span>
-                                          {rate.rateClass === 'NRF' ? (
-                                            <span className="text-[11px] px-2 py-0.5 bg-red-50 text-red-600 rounded-full font-medium flex items-center gap-0.5"><XCircle className="w-2.5 h-2.5" />Non-Refundable</span>
-                                          ) : hasFreeCancellation ? (
-                                            <span className="text-[11px] px-2 py-0.5 bg-green-50 text-green-600 rounded-full font-medium flex items-center gap-0.5"><CheckCircle className="w-2.5 h-2.5" />Free Cancellation</span>
-                                          ) : null}
-                                          {rate.packaging && <span className="text-[11px] px-2 py-0.5 bg-purple-50 text-purple-600 rounded-full font-medium">Package</span>}
-                                          {isSelectedForTab && <span className="text-[11px] px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full font-medium">✓ Selected</span>}
-                                        </div>
-                                        {/* Details row */}
-                                        <div className="flex items-center gap-2 text-[11px] text-gray-400">
-                                          <span>{rate.paymentType === 'AT_WEB' ? 'Pay Online' : rate.paymentType === 'AT_HOTEL' ? 'Pay at Office' : rate.paymentType}</span>
-                                          <span>·</span>
-                                          <span>{rate.allotment} room{rate.allotment !== 1 ? 's' : ''} left</span>
-                                          {rate.rooms && <><span>·</span><span>{rate.rooms} room(s)</span></>}
-                                        </div>
-                                        {/* Offers */}
-                                        {rate.offers && rate.offers.length > 0 && (
-                                          <div className="flex gap-1 flex-wrap">
-                                            {rate.offers.map((offer, oi) => (
-                                              <span key={oi} className="text-[10px] px-2 py-0.5 bg-green-50 text-green-700 rounded-full flex items-center gap-0.5"><Tag className="w-2.5 h-2.5" />{offer.name}{offer.amount ? `: ${formatPKR(Math.abs(parseFloat(offer.amount))) || `PKR ${Math.round(convert(Math.abs(parseFloat(offer.amount))) || 0)}`} off` : ''}</span>
-                                            ))}
-                                          </div>
-                                        )}
-                                        {/* Cancellation detail */}
-                                        {rate.cancellationPolicies && rate.cancellationPolicies.length > 0 && (
-                                          <div className="text-[11px] text-gray-400">
-                                            {formatCancellationPolicy(rate.cancellationPolicies)}
-                                          </div>
-                                        )}
-                                        {/* Excluded Taxes - mandatory display alongside rates */}
-                                        {rate.taxes && rate.taxes.taxes && rate.taxes.taxes.length > 0 && !rate.taxes.allIncluded && (
-                                          <div className="text-[10px] text-amber-700 bg-amber-50 px-2 py-1 rounded">
-                                            {rate.taxes.taxes.map((tax, ti) => (
-                                              <span key={ti}>{ti > 0 ? ' + ' : '⚠ Excluded: '}{tax.subType || tax.type || 'Tax'} {tax.currency} {parseFloat(tax.amount).toFixed(2)}</span>
-                                            ))}
-                                            <span className="text-amber-600"> (payable locally)</span>
-                                          </div>
-                                        )}
-                                      </div>
-                                      {/* Price + CTA */}
-                                      <div className="text-right flex-shrink-0 min-w-[120px]">
-                                        <div className="text-[11px] text-gray-400">{selectedHotel.currency || 'EUR'} {perNight.toFixed(0)} / night</div>
-                                        <div className="text-lg font-bold text-blue-600">{selectedHotel.currency || 'EUR'} {total.toFixed(2)}</div>
-                                        {formatPKR(total) && <div className="text-[10px] text-gray-400">≈ {formatPKR(total)}</div>}
-                                        <div className="text-[11px] text-gray-400 mb-2">total for {nights}n</div>
-                                        {isMultiRoom ? (
-                                          <button
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              setRoomSelections(prev => ({ ...prev, [activeRoomTab]: { room, rate } }));
-                                              // Auto-advance to next unselected tab
-                                              const nextUnselected = roomConfigs.findIndex((_, i) => i > activeRoomTab && !roomSelections[i]);
-                                              if (nextUnselected !== -1) setActiveRoomTab(nextUnselected);
-                                            }}
-                                            className={`w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg transition-colors text-[12px] font-semibold ${isSelectedForTab ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-blue-600 text-white hover:bg-blue-700'
-                                              }`}
-                                          >
-                                            {isSelectedForTab ? <><CheckCircle className="w-3.5 h-3.5" />Selected</> : <>Select for Room {activeRoomTab + 1}</>}
-                                          </button>
-                                        ) : (
-                                          <button
-                                            onClick={(e) => { e.stopPropagation(); handleAddToCart(selectedHotel, room, rate); }}
-                                            className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-[12px] font-semibold"
-                                          >
-                                            <ShoppingCart className="w-3.5 h-3.5" />Add to Cart
-                                          </button>
-                                        )}
-                                      </div>
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        );
-                      })
-                    ) : (
-                      <div className="text-center py-8 text-gray-500 text-sm">No rooms available</div>
-                    )}
-                  </div>
-
-                  {/* Multi-room summary bar */}
-                  {isMultiRoom && Object.keys(roomSelections).length > 0 && (
-                    <div className="flex-shrink-0 border-t border-gray-200 bg-gray-50 px-4 py-3">
-                      <div className="space-y-1.5 mb-3">
-                        {roomConfigs.map((config, idx) => {
-                          const sel = roomSelections[idx];
-                          return (
-                            <div key={idx} className="flex items-center justify-between text-[12px]">
-                              <span className="text-gray-600">
-                                Room {idx + 1} <span className="text-gray-400">({config.adults}A{config.children > 0 ? `+${config.children}C` : ''})</span>
-                              </span>
-                              {sel ? (
-                                <span className="text-gray-800 font-medium">
-                                  {sel.room.name} · {sel.rate.boardName} · {selectedHotel.currency || 'EUR'} {parseFloat(sel.rate.net).toFixed(2)}{formatPKR(parseFloat(sel.rate.net)) ? ` (≈ ${formatPKR(parseFloat(sel.rate.net))})` : ''}
-                                </span>
-                              ) : (
-                                <span className="text-gray-400 italic">Not selected</span>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <div className="text-[11px] text-gray-400">Total for {roomConfigs.length} rooms</div>
-                          <div className="text-lg font-bold text-blue-600">
-                            {selectedHotel.currency || 'EUR'} {Object.values(roomSelections).reduce((sum, sel) => sum + parseFloat(sel.rate.net), 0).toFixed(2)}
-                          </div>
-                          {formatPKR(Object.values(roomSelections).reduce((sum, sel) => sum + parseFloat(sel.rate.net), 0)) && (
-                            <div className="text-[11px] text-gray-400">≈ {formatPKR(Object.values(roomSelections).reduce((sum, sel) => sum + parseFloat(sel.rate.net), 0))} (charged amount)</div>
-                          )}
-                        </div>
-                        <button
-                          onClick={(e) => { e.stopPropagation(); handleMultiRoomAddToCart(selectedHotel, roomSelections, roomConfigs); }}
-                          disabled={Object.keys(roomSelections).length < roomConfigs.length}
-                          className={`inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-lg text-[13px] font-semibold transition-colors ${Object.keys(roomSelections).length >= roomConfigs.length
-                            ? 'bg-blue-600 text-white hover:bg-blue-700'
-                            : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                            }`}
-                        >
-                          <ShoppingCart className="w-4 h-4" />
-                          Add All {roomConfigs.length} Rooms
-                          {Object.keys(roomSelections).length < roomConfigs.length && (
-                            <span className="text-[10px] opacity-70">({Object.keys(roomSelections).length}/{roomConfigs.length})</span>
-                          )}
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                </div>{/* end scrollable body */}
-              </div>
-            </div>
-          );
-        })()}
+        <HotelDetailModal
+          isOpen={Boolean(selectedHotel)}
+          onClose={() => setSelectedHotel(null)}
+          hotel={selectedHotel}
+          hotelContentData={hotelContentData}
+          searchParams={searchParams}
+          formatPKR={formatPKR}
+          convert={convert}
+          onAddToCart={handleAddToCart}
+          onMultiRoomAddToCart={handleMultiRoomAddToCart}
+          openGallery={(idx) => {
+            const allImages = (selectedHotel?.images || [])
+              .map(img => img.path ? `https://photos.hotelbeds.com/giata/original/${img.path}` : null)
+              .filter(Boolean);
+            if (allImages.length === 0 && selectedHotel?.thumbnail) allImages.push(selectedHotel.thumbnail);
+            setGalleryImages(allImages);
+            setGalleryIndex(idx || 0);
+            setGalleryOpen(true);
+          }}
+          onSelectRoomDetail={(room) => setSelectedRoomDetail(room)}
+          activeRoomTab={activeRoomTab}
+          setActiveRoomTab={setActiveRoomTab}
+          roomSelections={roomSelections}
+          setRoomSelections={setRoomSelections}
+          formatCancellationPolicy={formatCancellationPolicy}
+          selectedBoards={selectedBoards}
+          selectedCancellation={selectedCancellation}
+          selectedPackaging={selectedPackaging}
+          selectedPromos={selectedPromos}
+          priceMin={priceMin}
+          priceMax={priceMax}
+        />
 
         {/* Room Detail Modal */}
         {selectedRoomDetail && (
