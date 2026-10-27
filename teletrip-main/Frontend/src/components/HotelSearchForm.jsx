@@ -1048,6 +1048,12 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
     if (selectedHotelCode) {
       url += `&hotelCode=${selectedHotelCode}`;
     }
+    if (selectedLocation?.destinationCode) {
+      url += `&destinationCode=${encodeURIComponent(selectedLocation.destinationCode)}`;
+    }
+    if (selectedLocation?.lat || selectedLocation?.latitude) {
+      url += `&latitude=${selectedLocation.lat || selectedLocation.latitude}&longitude=${selectedLocation.lon || selectedLocation.longitude}`;
+    }
 
     // Add child ages if present
     if (totalChildren > 0 && allChildAges.length > 0) {

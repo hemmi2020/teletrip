@@ -224,10 +224,10 @@ const Checkout = () => {
       return false;
     }
 
-    // Phone validation (Pakistani format)
-    const phoneRegex = /^(\+92|0)?[0-9]{10}$/;
+    // Phone validation (Flexible international format supporting Pakistani + international)
+    const phoneRegex = /^[+]?[0-9\s\-()]{7,20}$/;
     if (!phoneRegex.test(billingInfo.phone.replace(/\s+/g, ''))) {
-      setError('Please enter a valid Pakistani phone number');
+      setError('Please enter a valid phone number');
       return false;
     }
 
@@ -417,13 +417,13 @@ const Checkout = () => {
               rateKey,
               paxes: [
                 ...Array(rateAdults).fill(null).map((_, i) => ({
-                  roomId: 1,
+                  roomId: roomId || 1,
                   type: 'AD',
                   name: i === 0 ? billingInfo.firstName : 'Guest',
                   surname: i === 0 ? billingInfo.lastName : 'Surname'
                 })),
                 ...Array(rateChildren).fill(null).map((_, i) => ({
-                  roomId: 1,
+                  roomId: roomId || 1,
                   type: 'CH',
                   age: rateChildAges[i] || 10,
                   name: 'Child',
@@ -662,13 +662,13 @@ const handlePayOnSiteBooking = async () => {
             rateKey,
             paxes: [
               ...Array(rateAdults).fill(null).map((_, i) => ({
-                roomId: 1,
+                roomId: roomId || 1,
                 type: 'AD',
                 name: i === 0 ? billingInfo.firstName : 'Guest',
                 surname: i === 0 ? billingInfo.lastName : 'Surname'
               })),
               ...Array(rateChildren).fill(null).map((_, i) => ({
-                roomId: 1,
+                roomId: roomId || 1,
                 type: 'CH',
                 age: rateChildAges[i] || 10,
                 name: 'Child',
@@ -723,6 +723,7 @@ const handlePayOnSiteBooking = async () => {
         amount: parseFloat(totalAmount),
         currency: 'EUR',
         currencyConversion: currencyConversion,
+        confirmImmediately: true,
         bookingId: `HOTELBEDS_${Date.now()}`
       };
       

@@ -823,16 +823,19 @@ const HotelSearchResults = () => {
           throw new Error("Please provide a destination");
         }
 
-        let lat, lon;
+        let lat = searchParams.get("latitude");
+        let lon = searchParams.get("longitude");
 
-        const geoResponse = await fetch(
-          `${API_BASE_URL}/geocode?q=${encodeURIComponent(city + ", " + convertCountryCode(country))}`
-        );
+        if (!lat || !lon) {
+          const geoResponse = await fetch(
+            `${API_BASE_URL}/geocode?q=${encodeURIComponent(city + ", " + convertCountryCode(country))}`
+          );
 
-        if (geoResponse.ok) {
-          const geoResult = await geoResponse.json();
-          lat = geoResult?.data?.[0]?.lat;
-          lon = geoResult?.data?.[0]?.lon;
+          if (geoResponse.ok) {
+            const geoResult = await geoResponse.json();
+            lat = geoResult?.data?.[0]?.lat;
+            lon = geoResult?.data?.[0]?.lon;
+          }
         }
 
         // If backend geocode failed, try Nominatim directly from frontend
@@ -977,6 +980,8 @@ const HotelSearchResults = () => {
               : null;
 
           const cancellationPolicy = cheapestRate?.cancellationPolicies || [];
+          const isFreeCancel = cheapestRate?.rateClass !== 'NRF' && cancellationPolicy.length > 0 &&
+            (parseFloat(cancellationPolicy[0]?.amount || 0) === 0 || new Date() < new Date(cancellationPolicy[0].from));
 
           return {
             id: hotel.code,
@@ -995,8 +1000,8 @@ const HotelSearchResults = () => {
             cancellationPolicy: cancellationPolicy,
             boards: [...new Set(allRates.map(r => r.boardName).filter(Boolean))],
             boardCodes: [...new Set(allRates.map(r => r.boardCode).filter(Boolean))],
-            hasFreeCancellation: cancellationPolicy.length > 0 && parseFloat(cancellationPolicy[0]?.amount || 0) === 0,
-            hasPartialCancellation: cancellationPolicy.length > 0 && parseFloat(cancellationPolicy[0]?.amount || 0) > 0,
+            hasFreeCancellation: isFreeCancel,
+            hasPartialCancellation: cheapestRate?.rateClass !== 'NRF' && cancellationPolicy.length > 0 && !isFreeCancel,
             hasNoCancellationInfo: !cancellationPolicy || cancellationPolicy.length === 0,
             promos: [...new Set(allRates.flatMap(r => (r.promotions || r.offers || []).map(p => p.name || p.code)).filter(Boolean))],
             discounts: [...new Set(allRates.flatMap(r => (r.rateCommentsId ? ['Discounted'] : []).concat(

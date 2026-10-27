@@ -2461,7 +2461,7 @@ module.exports.createPayOnSiteBooking = asyncErrorHandler(async (req, res) => {
         hotelbedsResult = await confirmBookingWithHotelbeds(hotelbedsBookingRequest);
         if (hotelbedsResult?.success) {
           hotelbedsReference = hotelbedsResult.hotelbedsReference;
-          console.log('✅ [TEST ENV] Hotelbeds booking confirmed:', hotelbedsReference);
+          console.log('✅ Hotelbeds booking confirmed:', hotelbedsReference);
           
           await payment.updateOne({
             'metadata.hotelbedsReference': hotelbedsReference,
@@ -2469,9 +2469,15 @@ module.exports.createPayOnSiteBooking = asyncErrorHandler(async (req, res) => {
             'metadata.pendingHotelbedsConfirmation': false,
             updatedAt: new Date()
           });
+        } else if (req.body.confirmImmediately === true) {
+          console.error('❌ Hotelbeds immediate booking failed:', hotelbedsResult?.error);
+          return ApiResponse.error(res, hotelbedsResult?.error || 'Hotelbeds booking confirmation failed', 400);
         }
       } catch (hbErr) {
-        console.error('⚠️ [TEST ENV] Hotelbeds test booking failed:', hbErr.message);
+        console.error('⚠️ Hotelbeds test booking failed:', hbErr.message);
+        if (req.body.confirmImmediately === true) {
+          return ApiResponse.error(res, hbErr.message || 'Hotelbeds booking confirmation failed', 400);
+        }
       }
     } else if (hotelbedsBookingRequest) {
       console.log('🏨 [PAY-ON-SITE] Booking reserved locally. Hotelbeds confirmation pending admin payment verification.');
