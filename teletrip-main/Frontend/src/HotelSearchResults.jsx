@@ -877,23 +877,31 @@ const HotelSearchResults = () => {
               occupancies[0].paxes = childAges.map(age => ({ type: 'CH', age }));
             }
           }
-        } else {
-          // Backward compatibility — flat params
-          occupancies = [{ rooms, adults, children: children > 0 ? children : 0 }];
-          if (children > 0 && childAges.length > 0) {
-            occupancies[0].paxes = childAges.map(age => ({ type: 'CH', age }));
+        // Ensure child ages are always provided whenever children > 0 (Hotelbeds requirement)
+        occupancies = occupancies.map(occ => {
+          if (occ.children > 0 && (!occ.paxes || occ.paxes.length === 0)) {
+            return {
+              ...occ,
+              paxes: Array.from({ length: occ.children }, (_, i) => ({ type: 'CH', age: 5 + (i * 2) }))
+            };
           }
-        }
+          return occ;
+        });
 
+        const destinationCode = searchParams.get("destinationCode");
         const requestBody = {
           stay: { checkIn, checkOut },
           occupancies,
-          geolocation: {
-            latitude: parseFloat(lat),
-            longitude: parseFloat(lon),
-            radius: 30,
-            unit: "km",
-          },
+          ...(destinationCode
+            ? { destination: { code: destinationCode.toUpperCase() } }
+            : {
+                geolocation: {
+                  latitude: parseFloat(lat),
+                  longitude: parseFloat(lon),
+                  radius: 30,
+                  unit: "km",
+                },
+              }),
         };
 
         // If a specific hotel code is provided, use hotel-by-ID search

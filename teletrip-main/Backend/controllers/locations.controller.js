@@ -21,6 +21,8 @@ exports.getTransferLocations = async (req, res) => {
           const crypto = require('crypto');
           const apiKey = process.env.HOTELBEDS_API_KEY;
           const secret = process.env.HOTELBEDS_SECRET;
+          const isLive = (process.env.HOTELBEDS_ENV || 'test').toLowerCase() === 'live';
+          const contentBase = process.env.HOTELBEDS_CONTENT_URL || (isLive ? 'https://api.hotelbeds.com/hotel-content-api/1.0' : 'https://api.test.hotelbeds.com/hotel-content-api/1.0');
           const timestamp = Math.floor(Date.now() / 1000);
           const sig = crypto.createHash('sha256').update(apiKey + secret + timestamp).digest('hex');
 
@@ -28,7 +30,7 @@ exports.getTransferLocations = async (req, res) => {
           
           // Use Hotel Content API with POST body for name filtering
           const hotelRes = await fetch(
-            `https://api.test.hotelbeds.com/hotel-content-api/1.0/hotels`,
+            `${contentBase}/hotels`,
             {
               method: 'POST',
               headers: {
@@ -109,12 +111,14 @@ async function getCountriesData() {
   try {
     const crypto = require('crypto');
     const fetch = (await import('node-fetch')).default;
-    const apiKey = process.env.HOTELBEDS_API_KEY || '106700a0f2f1e2aa1d4c2b16daae70b2';
-    const secret = process.env.HOTELBEDS_SECRET || '018e478aa6';
+    const isLive = (process.env.HOTELBEDS_ENV || 'test').toLowerCase() === 'live';
+    const contentBase = process.env.HOTELBEDS_CONTENT_URL || (isLive ? 'https://api.hotelbeds.com/hotel-content-api/1.0' : 'https://api.test.hotelbeds.com/hotel-content-api/1.0');
+    const apiKey = process.env.HOTELBEDS_API_KEY || (isLive ? 'f879ffbe1a15cfa78d4fc6770ec7c8e7' : '106700a0f2f1e2aa1d4c2b16daae70b2');
+    const secret = process.env.HOTELBEDS_SECRET || (isLive ? 'qLevQhmgdb' : '018e478aa6');
     const timestamp = Math.floor(Date.now() / 1000);
     const signature = crypto.createHash('sha256').update(apiKey + secret + timestamp).digest('hex');
 
-    const res = await fetch('https://api.test.hotelbeds.com/hotel-content-api/1.0/locations/destinations?fields=all&language=ENG&from=1&to=1500', {
+    const res = await fetch(`${contentBase}/locations/destinations?fields=code,name,countryCode&language=ENG&from=1&to=1500`, {
       method: 'GET',
       headers: {
         'Accept': 'application/json',
@@ -139,7 +143,10 @@ async function getCountriesData() {
             };
           }
           if (dest.name && dest.name.content) {
-            countryMap[countryCode].cities.push(dest.name.content);
+            countryMap[countryCode].cities.push({
+              name: dest.name.content,
+              code: dest.code
+            });
           }
         });
         countriesCache = Object.values(countryMap);
@@ -251,14 +258,17 @@ exports.searchLocations = async (req, res) => {
       // Match cities
       if (country.cities) {
         for (const city of country.cities) {
-          if (city.toLowerCase().includes(query)) {
+          const cityName = typeof city === 'string' ? city : (city.name || '');
+          const destCode = typeof city === 'object' ? (city.code || '') : '';
+          if (cityName.toLowerCase().includes(query)) {
             results.push({
               type: 'city',
-              name: city,
-              city: city,
+              name: cityName,
+              city: cityName,
               country: country.country,
               countryCode: country.iso3,
-              displayName: `${city}, ${country.country}`
+              destinationCode: destCode,
+              displayName: `${cityName}, ${country.country}`
             });
           }
           if (results.length >= 30) break;

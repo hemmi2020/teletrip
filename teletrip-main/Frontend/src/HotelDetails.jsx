@@ -290,53 +290,70 @@ const HotelDetails = () => {
           throw new Error("Missing required search parameters");
         }
 
-        // Get coordinates
-        const geoResponse = await fetch(
-          `${API_BASE_URL}/geocode?q=${encodeURIComponent(city + ", " + country)}`
-        );
-
-        if (!geoResponse.ok) {
-          throw new Error("Failed to fetch location coordinates");
-        }
-
-        const geoResult = await geoResponse.json();
-        if (!geoResult.success || !geoResult.data || geoResult.data.length === 0) {
-          throw new Error("Location not found");
-        }
-
-        const { lat, lon } = geoResult.data[0];
-
-        // FIXED: Build occupancy with paxes
-const occupancy = {
-  rooms: rooms,
-  adults: adults,
-  children: children > 0 ? children : 0,
-};
-
-// Add paxes array only if there are children
-if (children > 0 && childAges.length > 0) {
-  occupancy.paxes = childAges.map(age => ({ type: 'CH', age }));
-}
-
-        // Search hotels
-        const requestBody = {
-          stay: { checkIn, checkOut },
-          occupancies: [
-            occupancy
-          ],
-          geolocation: {
-            latitude: parseFloat(lat),
-            longitude: parseFloat(lon),
-            radius: 30,
-            unit: "km",
-          },
+        // Build occupancy with mandatory child paxes
+        const occupancy = {
+          rooms: rooms,
+          adults: adults,
+          children: children > 0 ? children : 0,
         };
+
+        if (children > 0) {
+          if (childAges.length > 0) {
+            occupancy.paxes = childAges.map(age => ({ type: 'CH', age }));
+          } else {
+            // Hotelbeds requires child age when children > 0
+            occupancy.paxes = Array.from({ length: children }, (_, i) => ({ type: 'CH', age: 5 + (i * 2) }));
+          }
+        }
+
+        let searchEndpoint = `${API_BASE_URL}/hotels/search`;
+        let requestBody;
+
+        if (hotelCode) {
+          // Direct hotel code availability search is significantly faster and more accurate
+          searchEndpoint = `${API_BASE_URL}/hotels/search-by-hotels`;
+          requestBody = {
+            stay: { checkIn, checkOut },
+            occupancies: [occupancy],
+            hotels: [parseInt(hotelCode)]
+          };
+        } else {
+          // Fallback to coordinates
+          let lat = null, lon = null;
+          try {
+            const geoResponse = await fetch(
+              `${API_BASE_URL}/geocode?q=${encodeURIComponent(city + ", " + country)}`
+            );
+            if (geoResponse.ok) {
+              const geoResult = await geoResponse.json();
+              if (geoResult?.data?.[0]) {
+                lat = geoResult.data[0].lat;
+                lon = geoResult.data[0].lon;
+              }
+            }
+          } catch (e) {
+            console.warn('Geocoding error in HotelDetails:', e.message);
+          }
+
+          requestBody = {
+            stay: { checkIn, checkOut },
+            occupancies: [occupancy],
+            ...(lat && lon ? {
+              geolocation: {
+                latitude: parseFloat(lat),
+                longitude: parseFloat(lon),
+                radius: 30,
+                unit: "km",
+              }
+            } : {})
+          };
+        }
 
         let hotelResponse;
         let isAuthenticated = false;
         const authToken = getAuthToken();
 
-        if (authToken) {
+        if (authToken && !hotelCode) {
           try {
             hotelResponse = await makeAuthenticatedRequest(
               `${API_BASE_URL}/hotels/search-auth`,
@@ -349,21 +366,21 @@ if (children > 0 && childAges.length > 0) {
             if (hotelResponse.ok) {
               isAuthenticated = true;
             } else {
-              hotelResponse = await fetch(`${API_BASE_URL}/hotels/search`, {
+              hotelResponse = await fetch(searchEndpoint, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(requestBody),
               });
             }
           } catch  {
-            hotelResponse = await fetch(`${API_BASE_URL}/hotels/search`, {
+            hotelResponse = await fetch(searchEndpoint, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify(requestBody),
             });
           }
         } else {
-          hotelResponse = await fetch(`${API_BASE_URL}/hotels/search`, {
+          hotelResponse = await fetch(searchEndpoint, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(requestBody),
