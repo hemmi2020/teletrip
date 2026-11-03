@@ -1971,9 +1971,9 @@ const HotelSearchResults = () => {
               setGalleryOpen(true);
               return;
             }
-            const rawImages = (hotelContentData?.images && hotelContentData.images.length > 0)
+            const rawImages = (hotelContentData?.images && hotelContentData.images.length >= (selectedHotel?.images?.length || 0))
               ? hotelContentData.images
-              : (selectedHotel?.images || []);
+              : (selectedHotel?.images && selectedHotel.images.length > 0 ? selectedHotel.images : (hotelContentData?.images || []));
             const allImages = rawImages
               .map(img => img.path ? `https://photos.hotelbeds.com/giata/original/${img.path.replace(/^\/+/, '')}` : (typeof img === 'string' ? img : null))
               .filter(Boolean);
@@ -2100,9 +2100,9 @@ const HotelSearchResults = () => {
                 {galleryTitle && selectedHotel && galleryTitle !== selectedHotel.name && (
                   <button
                     onClick={() => {
-                      const rawImages = (hotelContentData?.images && hotelContentData.images.length > 0)
+                      const rawImages = (hotelContentData?.images && hotelContentData.images.length >= (selectedHotel?.images?.length || 0))
                         ? hotelContentData.images
-                        : (selectedHotel?.images || []);
+                        : (selectedHotel?.images && selectedHotel.images.length > 0 ? selectedHotel.images : (hotelContentData?.images || []));
                       const allImages = rawImages
                         .map(img => img.path ? `https://photos.hotelbeds.com/giata/original/${img.path.replace(/^\/+/, '')}` : (typeof img === 'string' ? img : null))
                         .filter(Boolean);

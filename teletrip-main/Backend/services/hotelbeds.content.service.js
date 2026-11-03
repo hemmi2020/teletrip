@@ -191,8 +191,14 @@ async function getHotelContent(hotelCode) {
       ).slice(0, 30),
       // Full rooms array with facilities
       rooms: processedRooms,
-      images: (hotel.images || []).slice(0, 10).map(img => ({
+      images: (hotel.images || []).map(img => ({
         path: img.path,
+        order: img.order,
+        visualOrder: img.visualOrder,
+        imageTypeCode: img.type?.code || img.imageTypeCode || '',
+        roomCode: img.roomCode || null,
+        roomType: img.roomType || null,
+        characteristicCode: img.characteristicCode || null,
         type: img.type?.description?.content || img.imageTypeCode || ''
       }))
     };

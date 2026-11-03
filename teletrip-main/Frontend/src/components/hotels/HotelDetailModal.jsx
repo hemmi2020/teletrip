@@ -83,11 +83,23 @@ export const HotelDetailModal = ({
     ? Math.max(1, Math.ceil((new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60 * 24)))
     : 1;
 
-  // Images processing
-  const allImages = (hotel.images || [])
-    .map(img => img.path ? `https://photos.hotelbeds.com/giata/original/${img.path}` : null)
+  // Images processing: prioritize whichever array has more images (hotel.images from search vs hotelContentData.images)
+  const rawPool = (hotelContentData?.images && hotelContentData.images.length >= (hotel?.images?.length || 0))
+    ? hotelContentData.images
+    : (hotel?.images && hotel.images.length > 0 ? hotel.images : (hotelContentData?.images || []));
+
+  const allImages = rawPool
+    .map(img => {
+      if (!img) return null;
+      if (typeof img === 'string') return img;
+      if (img.path) {
+        const clean = img.path.replace(/^\/+/, '');
+        return clean.startsWith('http') ? clean : `https://photos.hotelbeds.com/giata/original/${clean}`;
+      }
+      return null;
+    })
     .filter(Boolean);
-  if (allImages.length === 0 && hotel.thumbnail) allImages.push(hotel.thumbnail);
+  if (allImages.length === 0 && hotel?.thumbnail) allImages.push(hotel.thumbnail);
   if (allImages.length === 0) allImages.push('https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg');
 
   const headerBg = allImages[0] || hotel.thumbnail || 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg';
@@ -200,7 +212,7 @@ export const HotelDetailModal = ({
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
-                  if (openGallery) openGallery(0);
+                  if (openGallery) openGallery(0, allImages, hotel.name);
                 }}
                 className="px-3 py-1.5 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-md border border-white/30 text-white text-xs font-semibold flex items-center gap-1.5 transition-all shadow-md cursor-pointer active:scale-95"
                 title="View all photos in gallery"
@@ -339,11 +351,11 @@ export const HotelDetailModal = ({
                     const filteredRates = (room.rates || []).filter(filterRate);
                     if (filteredRates.length === 0) return null;
 
-                    // Find room-specific images using intelligent matching
-                    const allPoolImages = (hotelContentData?.images && hotelContentData.images.length > 0)
-                      ? hotelContentData.images
-                      : (hotel.images || []);
-                    const roomImages = getRoomImages(room.code, allPoolImages);
+                    // Find room-specific images using intelligent matching across content & search images
+                    let roomImages = getRoomImages(room.code, hotelContentData?.images);
+                    if (!roomImages.length) {
+                      roomImages = getRoomImages(room.code, hotel.images);
+                    }
                     const roomImg = roomImages[0] || headerBg;
                     const hasRoomPhotos = roomImages.length > 0;
 
