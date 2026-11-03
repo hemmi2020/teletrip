@@ -25,19 +25,20 @@ const BookingVoucher = ({ booking, onClose }) => {
     fetchRate();
   }, []);
 
-  const toPKR = (eurAmount) => {
-    if (!eurAmount) return null;
-    const rate = pkrRate?.exchangeRate || 311.42;
-    const markup = pkrRate?.markupPerEuro || 0;
-    const feePct = pkrRate?.transactionFeePercentage ?? 1;
-    const base = eurAmount * rate;
-    const subtotal = base + (eurAmount * markup);
-    const fee = (subtotal * feePct) / 100;
-    return Math.round(subtotal + fee);
+  const toPKR = (amount, currency = 'AED') => {
+    if (!amount) return null;
+    const cur = (currency || 'AED').toUpperCase();
+    const rate = pkrRate?.rates?.[cur] || (cur === 'AED' ? 75.39 : cur === 'EUR' ? 309.84 : cur === 'USD' ? 276.69 : 75.39);
+    const comm = pkrRate?.commissionPercentage || 0;
+    const feePct = pkrRate?.serviceChargePercentage ?? pkrRate?.transactionFeePercentage ?? 1;
+    const retail = amount * (1 + comm / 100);
+    const base = retail * rate;
+    const fee = (base * feePct) / 100;
+    return Math.round(base + fee);
   };
 
-  const formatPKR = (eurAmount) => {
-    const pkr = toPKR(eurAmount);
+  const formatPKR = (amount, currency = 'AED') => {
+    const pkr = toPKR(amount, currency);
     return pkr ? `PKR ${pkr.toLocaleString()}` : null;
   };
 

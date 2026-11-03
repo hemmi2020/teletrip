@@ -126,7 +126,7 @@ const HotelSearchResults = () => {
   });
   const navigate = useNavigate();
   const { addToCart } = useCart();
-  const { formatPKR, convert } = useCurrency();
+  const { formatPKR, convert, applyCommission } = useCurrency();
   const [selectedHotel, setSelectedHotel] = useState(null);
   const [notification, setNotification] = useState({ show: false, message: '', type: 'success' });
   const [galleryOpen, setGalleryOpen] = useState(false);
@@ -1838,7 +1838,8 @@ const HotelSearchResults = () => {
                 const checkIn = searchParams.get("checkIn");
                 const checkOut = searchParams.get("checkOut");
                 const nights = checkIn && checkOut ? Math.ceil((new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60 * 24)) : 1;
-                const totalPrice = parseFloat(hotel.price);
+                const rawPrice = parseFloat(hotel.price) || 0;
+                const totalPrice = applyCommission ? applyCommission(rawPrice) : rawPrice;
                 const pricePerNight = nights > 0 ? (totalPrice / nights) : totalPrice;
                 const roomTypes = [...new Set((hotel.rooms || []).map(r => r.name))];
 
@@ -1868,9 +1869,9 @@ const HotelSearchResults = () => {
                             </div>
                           </div>
                           <div className="text-right flex-shrink-0">
-                            <div className="text-lg font-bold text-blue-600 leading-tight">{hotel.currency || 'EUR'} {totalPrice.toFixed(0)}</div>
-                            {formatPKR(totalPrice) && <div className="text-[11px] text-gray-400">≈ {formatPKR(totalPrice)}</div>}
-                            <div className="text-[10px] text-gray-400">{hotel.currency || 'EUR'} {pricePerNight.toFixed(0)}/night · {nights}n</div>
+                            <div className="text-lg font-bold text-blue-600 leading-tight">{hotel.currency || 'AED'} {totalPrice.toFixed(0)}</div>
+                            {formatPKR(totalPrice, hotel.currency, true) && <div className="text-[11px] text-gray-400">≈ {formatPKR(totalPrice, hotel.currency, true)}</div>}
+                            <div className="text-[10px] text-gray-400">{hotel.currency || 'AED'} {pricePerNight.toFixed(0)}/night · {nights}n</div>
                             {hotelReviews[hotel.id] && hotelReviews[hotel.id].numReviews > 0 && (
                               <div className="flex items-center gap-1 mt-0.5 justify-end">
                                 <RatingCircles rating={hotelReviews[hotel.id].rating} size="w-2 h-2" />
@@ -1961,6 +1962,7 @@ const HotelSearchResults = () => {
           searchParams={searchParams}
           formatPKR={formatPKR}
           convert={convert}
+          applyCommission={applyCommission}
           onAddToCart={handleAddToCart}
           onMultiRoomAddToCart={handleMultiRoomAddToCart}
           openGallery={(idx = 0, customImages = null, title = '') => {

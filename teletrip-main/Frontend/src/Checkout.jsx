@@ -98,20 +98,20 @@ const Checkout = () => {
     }
   }, [user]);
   
-  // Convert EUR to PKR when component loads
+  // Convert currency to PKR when component loads
   useEffect(() => {
     const convertCurrency = async () => {
-      // Check if items are in EUR
       const firstItem = checkoutItems[0];
-      if (!firstItem || firstItem.currency !== 'EUR') {
-        return; // Already in PKR or other currency
+      const cur = firstItem?.currency || 'AED';
+      if (cur === 'PKR') {
+        return; // Already in PKR
       }
       
       setIsLoadingConversion(true);
       try {
         const response = await axios.post(
           `${import.meta.env.VITE_BASE_URL}/api/currency/convert`,
-          { amount: totalAmount, currency: 'EUR' },
+          { amount: totalAmount, currency: cur },
           { headers: { 'Content-Type': 'application/json' } }
         );
         
@@ -1117,7 +1117,7 @@ const handlePaymentSubmit = () => {
                     ? parseFloat(item.price || 0)
                     : parseFloat(item.totalPrice || item.net || item.price || 0);
                   const eurStr = `${item.currency || 'EUR'} ${itemTotal.toFixed(2)}`;
-                  const pkrStr = formatPKR(itemTotal);
+                  const pkrStr = formatPKR(itemTotal, item.currency);
                   return pkrStr ? `${eurStr} (≈ ${pkrStr})` : eurStr;
                 })()}
               </p>
@@ -1141,9 +1141,9 @@ const handlePaymentSubmit = () => {
           <span>Total Amount:</span>
           <span className="text-blue-600 text-right">
               <div className="text-xs text-gray-500 font-normal">Hotelbeds Booking Currency</div>
-              <div className="font-bold">{checkoutItems[0]?.currency || 'EUR'} {parseFloat(totalAmount).toFixed(2)}</div>
-              {(formatPKR(totalAmount) || currencyConversion?.totalPKR) && (
-                <div className="text-sm text-green-600">≈ {formatPKR(totalAmount) || `PKR ${Math.round(currencyConversion.totalPKR).toLocaleString()}`} <span className="text-xs text-gray-500">(for local payment)</span></div>
+              <div className="font-bold">{checkoutItems[0]?.currency || 'AED'} {parseFloat(totalAmount).toFixed(2)}</div>
+              {(formatPKR(totalAmount, checkoutItems[0]?.currency) || currencyConversion?.totalPKR) && (
+                <div className="text-sm text-green-600">≈ {formatPKR(totalAmount, checkoutItems[0]?.currency) || `PKR ${Math.round(currencyConversion.totalPKR).toLocaleString()}`} <span className="text-xs text-gray-500">(for local payment)</span></div>
               )}
             </span>
         </div>

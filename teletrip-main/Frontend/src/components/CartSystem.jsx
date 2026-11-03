@@ -650,7 +650,12 @@ export const SlideOutCart = ({ isOpen, onClose, onProceedToCheckout }) => {
           const data = await res.json();
           if (data.success) {
             const r = data.data;
-            setPkrRate({ rate: r.exchangeRate, markup: r.markupPerEuro || 0, txFee: r.transactionFeePercentage || 0 });
+            setPkrRate({
+              rates: r.rates || { AED: 75.39, EUR: 309.84, USD: 276.69 },
+              rate: r.rates?.AED || r.exchangeRate || 75.39,
+              commission: r.commissionPercentage || 0,
+              txFee: r.serviceChargePercentage ?? r.transactionFeePercentage ?? 1
+            });
           }
         }
       } catch (e) { /* silent */ }
@@ -658,17 +663,19 @@ export const SlideOutCart = ({ isOpen, onClose, onProceedToCheckout }) => {
     if (isOpen) fetchRate();
   }, [isOpen]);
 
-  const toPKR = (amountEUR) => {
-    if (!pkrRate || !amountEUR) return null;
-    const base = amountEUR * pkrRate.rate;
-    const markup = amountEUR * pkrRate.markup;
-    const subtotal = base + markup;
-    const fee = (subtotal * pkrRate.txFee) / 100;
-    return Math.round(subtotal + fee);
+  const toPKR = (amount, currency = 'AED') => {
+    if (!pkrRate || !amount) return null;
+    const cur = (currency || 'AED').toUpperCase();
+    const rate = pkrRate.rates?.[cur] || pkrRate.rate || 75.39;
+    const comm = pkrRate.commission || 0;
+    const retail = amount * (1 + comm / 100);
+    const base = retail * rate;
+    const fee = (base * (pkrRate.txFee || 1)) / 100;
+    return Math.round(base + fee);
   };
 
-  const fmtPKR = (amountEUR) => {
-    const pkr = toPKR(amountEUR);
+  const fmtPKR = (amount, currency = 'AED') => {
+    const pkr = toPKR(amount, currency);
     return pkr !== null ? `PKR ${pkr.toLocaleString()}` : null;
   };
 
@@ -816,7 +823,7 @@ export const SlideOutCart = ({ isOpen, onClose, onProceedToCheckout }) => {
                         <span className="text-[11px] text-gray-400">{formatShortDate(item.checkIn)} → {formatShortDate(item.checkOut)}</span>
                         <div className="text-right">
                           <span className="text-[14px] font-bold text-gray-900">{item.currency || 'EUR'} {totalPrice.toFixed(0)}</span>
-                          {fmtPKR(totalPrice) && <span className="text-[11px] text-gray-400 block">≈ {fmtPKR(totalPrice)}</span>}
+                          {fmtPKR(totalPrice, item.currency) && <span className="text-[11px] text-gray-400 block">≈ {fmtPKR(totalPrice, item.currency)}</span>}
                           {!isActivity && !isTransfer && <span className="text-[10px] text-gray-400 block">{item.currency || 'EUR'} {item.price?.toFixed(0)}/night</span>}
                         </div>
                       </div>
@@ -834,7 +841,7 @@ export const SlideOutCart = ({ isOpen, onClose, onProceedToCheckout }) => {
                 <span className="text-[13px] text-gray-500">Total</span>
                 <div className="text-right">
                   <div className="text-xl font-bold text-gray-900">{items[0]?.currency || 'EUR'} {getTotalPrice().toFixed(2)}</div>
-                  {fmtPKR(getTotalPrice()) && <div className="text-[11px] text-gray-400">≈ {fmtPKR(getTotalPrice())} (charged amount)</div>}
+                  {fmtPKR(getTotalPrice(), items[0]?.currency) && <div className="text-[11px] text-gray-400">≈ {fmtPKR(getTotalPrice(), items[0]?.currency)} (charged amount)</div>}
                 </div>
               </div>
               <button onClick={handleCheckoutClick} className="w-full bg-blue-600 text-white py-2.5 rounded-lg font-semibold hover:bg-blue-700 transition-colors text-[14px]">

@@ -719,7 +719,7 @@ const ActivitySearchResults = () => {
                           </div>
                           <div className="text-right flex-shrink-0">
                             {activity.pricing?.amount
-                              ? <div className="text-base sm:text-lg font-bold text-blue-600 leading-tight whitespace-nowrap">{formatPKR(activity.pricing.amount) || `${activity.pricing.currency} ${parseFloat(activity.pricing.amount).toFixed(0)}`}</div>
+                              ? <div className="text-base sm:text-lg font-bold text-blue-600 leading-tight whitespace-nowrap">{formatPKR(activity.pricing.amount, activity.pricing.currency) || `${activity.pricing.currency} ${parseFloat(activity.pricing.amount).toFixed(0)}`}</div>
                               : <span className="text-[11px] text-gray-400">On request</span>}
                             <div className="text-[10px] text-gray-400">per person</div>
                           </div>
@@ -774,7 +774,7 @@ const ActivitySearchResults = () => {
                   {selectedActivity.pricing?.amount && (
                     <div className="text-right">
                       <div className="text-[10px] text-gray-400">from</div>
-                      <div className="text-base font-bold text-blue-600 leading-tight">{formatPKR(selectedActivity.pricing.amount) || `${selectedActivity.pricing.currency} ${parseFloat(selectedActivity.pricing.amount).toFixed(0)}`}</div>
+                      <div className="text-base font-bold text-blue-600 leading-tight">{formatPKR(selectedActivity.pricing.amount, selectedActivity.pricing.currency) || `${selectedActivity.pricing.currency} ${parseFloat(selectedActivity.pricing.amount).toFixed(0)}`}</div>
                       <div className="text-[10px] text-gray-400">per person</div>
                     </div>
                   )}
@@ -909,14 +909,14 @@ const ActivitySearchResults = () => {
                                 {mod.duration && <span className="text-[11px] text-gray-400 ml-2">{mod.duration}</span>}
                               </div>
                             </div>
-                            {bestPrice?.amount && <span className="text-[14px] font-bold text-blue-600">{formatPKR(bestPrice.amount) || `${bestPrice.currency} ${parseFloat(bestPrice.amount).toFixed(2)}`}</span>}
+                            {bestPrice?.amount && <span className="text-[14px] font-bold text-blue-600">{formatPKR(bestPrice.amount, bestPrice.currency) || `${bestPrice.currency} ${parseFloat(bestPrice.amount).toFixed(2)}`}</span>}
                           </div>
                           {isSelected && mod.pricing && mod.pricing.length > 1 && (
                             <div className="mt-2 pt-2 border-t border-blue-100 space-y-1">
                               {mod.pricing.map((p, pi) => (
                                 <div key={pi} className="flex items-center justify-between text-[12px]">
                                   <span className="text-gray-500">{p.paxType === 'ADULT' ? 'Adult' : p.paxType === 'CHILD' ? 'Child' : p.paxType || 'Per person'}</span>
-                                  <span className="font-medium text-gray-700">{formatPKR(p.amount) || `${p.currency} ${parseFloat(p.amount || 0).toFixed(2)}`}</span>
+                                  <span className="font-medium text-gray-700">{formatPKR(p.amount, p.currency) || `${p.currency} ${parseFloat(p.amount || 0).toFixed(2)}`}</span>
                                 </div>
                               ))}
                             </div>
@@ -980,7 +980,7 @@ const ActivitySearchResults = () => {
                     <span className="text-lg font-bold text-blue-600">
                       {(() => {
                         const amt = selectedModality?.pricing?.[0]?.amount || selectedActivity.pricing?.amount || 0;
-                        return formatPKR(amt) || `${selectedModality?.pricing?.[0]?.currency || selectedActivity.pricing?.currency || 'EUR'} ${parseFloat(amt).toFixed(2)}`;
+                        return formatPKR(amt, selectedModality?.pricing?.[0]?.currency || selectedActivity.pricing?.currency) || `${selectedModality?.pricing?.[0]?.currency || selectedActivity.pricing?.currency || 'EUR'} ${parseFloat(amt).toFixed(2)}`;
                       })()}
                     </span>
                   </div>

@@ -1,292 +1,312 @@
-const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
+const https = require('https');
 const CurrencySettings = require('../models/currencySettings.model');
 
-// Cache for exchange rates (valid for 1 hour)
-let rateCache = {
-  rate: null,
+// Cache for live exchange rates (valid for 1 hour)
+let ratesCache = {
+  rates: null,
   timestamp: null,
-  ttl: 3600000 // 1 hour in milliseconds
+  ttl: 3600000 // 1 hour
+};
+
+// Fallback rates to PKR if external API is unreachable
+const FALLBACK_RATES_TO_PKR = {
+  AED: 75.39,
+  EUR: 309.84,
+  USD: 276.69,
+  GBP: 370.90,
+  PKR: 1.00
 };
 
 /**
- * Get EUR to PKR exchange rate
- * Priority: 1) Admin setting, 2) Cached external API, 3) Fresh external API, 4) Fallback
+ * Fetch JSON helper using standard Node https
  */
-async function getExchangeRate() {
+function fetchJSON(url) {
+  return new Promise((resolve, reject) => {
+    const req = https.get(url, { timeout: 4000 }, (res) => {
+      let data = '';
+      res.on('data', chunk => data += chunk);
+      res.on('end', () => {
+        try {
+          resolve(JSON.parse(data));
+        } catch (e) {
+          reject(e);
+        }
+      });
+    });
+    req.on('timeout', () => {
+      req.destroy();
+      reject(new Error('Request timed out'));
+    });
+    req.on('error', reject);
+  });
+}
+
+/**
+ * Fetch live cross-rates to PKR from external API
+ * Normalizes rates so 1 unit of foreign currency = X PKR
+ */
+async function fetchLiveRates() {
   try {
-    // Priority 1: Check admin-configured exchange rate
-    const settings = await CurrencySettings.findOne({ isActive: true });
-    if (settings && settings.exchangeRate && settings.exchangeRate > 0) {
-      console.log('💰 Using admin-configured exchange rate:', settings.exchangeRate);
-      return settings.exchangeRate;
+    if (ratesCache.rates && ratesCache.timestamp && (Date.now() - ratesCache.timestamp < ratesCache.ttl)) {
+      return ratesCache.rates;
     }
 
-    // Priority 2: Check cache
-    if (rateCache.rate && rateCache.timestamp && (Date.now() - rateCache.timestamp < rateCache.ttl)) {
-      console.log('💰 Using cached exchange rate:', rateCache.rate);
-      return rateCache.rate;
-    }
+    console.log('🔄 Fetching fresh exchange rates from ExchangeRate-API...');
+    const data = await fetchJSON('https://api.exchangerate-api.com/v4/latest/USD');
+    const pkr = data.rates?.PKR || 276.69;
 
-    // Priority 3: Fetch fresh from external API
-    console.log('💰 Fetching fresh exchange rate from ExchangeRate-API...');
-    const response = await fetch('https://api.exchangerate-api.com/v4/latest/EUR');
-    
-    if (!response.ok) {
-      console.error('❌ ExchangeRate-API returned status:', response.status);
-      throw new Error(`ExchangeRate-API error: ${response.status}`);
-    }
+    const liveRates = {
+      AED: data.rates?.AED ? Math.round((pkr / data.rates.AED) * 100) / 100 : FALLBACK_RATES_TO_PKR.AED,
+      EUR: data.rates?.EUR ? Math.round((pkr / data.rates.EUR) * 100) / 100 : FALLBACK_RATES_TO_PKR.EUR,
+      USD: Math.round(pkr * 100) / 100,
+      GBP: data.rates?.GBP ? Math.round((pkr / data.rates.GBP) * 100) / 100 : FALLBACK_RATES_TO_PKR.GBP,
+      PKR: 1.00
+    };
 
-    const data = await response.json();
-    console.log('📊 ExchangeRate-API response:', data);
-    
-    if (!data.rates || !data.rates.PKR) {
-      throw new Error('PKR rate not found in response');
-    }
-    
-    const rate = data.rates.PKR;
-
-    // Update cache
-    rateCache = {
-      rate,
+    ratesCache = {
+      rates: liveRates,
       timestamp: Date.now(),
       ttl: 3600000
     };
 
-    console.log(`✅ Exchange rate: 1 EUR = ${rate} PKR`);
-    return rate;
-
+    console.log('✅ Live Rates to PKR cached:', liveRates);
+    return liveRates;
   } catch (error) {
-    console.error('❌ Exchange rate fetch error:', error.message);
-    
-    // Fallback to cached rate if available
-    if (rateCache.rate) {
-      console.log('⚠️ Using stale cached rate:', rateCache.rate);
-      return rateCache.rate;
-    }
-    
-    // Ultimate fallback
-    console.log('⚠️ Using fallback rate: 300 PKR');
-    return 300; // Fallback rate
+    console.error('⚠️ Exchange rate fetch error, using fallbacks:', error.message);
+    return ratesCache.rates || FALLBACK_RATES_TO_PKR;
   }
 }
 
 /**
- * Get admin-configured markup per EUR
+ * Get active CurrencySettings document, creating defaults if not yet created
  */
-async function getMarkupPerEuro() {
+async function getOrCreateSettings() {
   try {
+    const mongoose = require('mongoose');
+    if (mongoose.connection.readyState !== 1) {
+      return null;
+    }
     let settings = await CurrencySettings.findOne({ isActive: true });
-    
-    // Create default settings if none exist
     if (!settings) {
       settings = await CurrencySettings.create({
-        markupPerEuro: 20,
+        commissionPercentage: 0,
+        serviceChargePercentage: 1,
+        primaryCurrency: 'AED',
+        manualRates: { AED: null, EUR: null, USD: null, GBP: null },
+        autoFetchRates: true,
+        markupPerEuro: 0,
         transactionFeePercentage: 1,
         isActive: true
       });
-      console.log('✅ Created default currency settings: 20 PKR markup per EUR, 1% transaction fee');
+      console.log('✅ Created default currency settings');
     }
-
-    return settings.markupPerEuro;
-  } catch (error) {
-    console.error('❌ Error fetching markup:', error.message);
-    return 20; // Default fallback
-  }
-}
-
-/**
- * Get admin-configured transaction fee percentage
- */
-async function getTransactionFeePercentage() {
-  try {
-    let settings = await CurrencySettings.findOne({ isActive: true });
-    
-    if (!settings) {
-      settings = await CurrencySettings.create({
-        markupPerEuro: 20,
-        transactionFeePercentage: 1,
-        isActive: true
-      });
-    }
-
-    return settings.transactionFeePercentage;
-  } catch (error) {
-    console.error('❌ Error fetching transaction fee:', error.message);
-    return 1; // Default fallback
-  }
-}
-
-/**
- * Convert EUR to PKR with admin markup and transaction fee
- * @param {number} amountInEUR - Amount in EUR
- * @returns {Promise<Object>} - Conversion details
- */
-async function convertEURtoPKR(amountInEUR) {
-  try {
-    const [exchangeRate, markupPerEuro, transactionFeePercentage] = await Promise.all([
-      getExchangeRate(),
-      getMarkupPerEuro(),
-      getTransactionFeePercentage()
-    ]);
-
-    // Calculate base PKR amount
-    const basePKR = amountInEUR * exchangeRate;
-    
-    // Calculate markup (markup per EUR * number of EURs)
-    const markupAmount = amountInEUR * markupPerEuro;
-    
-    // Subtotal before transaction fee
-    const subtotal = basePKR + markupAmount;
-    
-    // Calculate transaction fee (percentage of subtotal)
-    const transactionFee = (subtotal * transactionFeePercentage) / 100;
-    
-    // Total PKR with markup and transaction fee
-    const totalPKR = subtotal + transactionFee;
-
-    const result = {
-      amountInEUR,
-      exchangeRate,
-      markupPerEuro,
-      transactionFeePercentage,
-      basePKR: Math.round(basePKR * 100) / 100,
-      markupAmount: Math.round(markupAmount * 100) / 100,
-      subtotal: Math.round(subtotal * 100) / 100,
-      transactionFee: Math.round(transactionFee * 100) / 100,
-      totalPKR: Math.round(totalPKR * 100) / 100,
-      currency: 'PKR'
-    };
-
-    console.log('💱 Currency Conversion:', result);
-    return result;
-
-  } catch (error) {
-    console.error('❌ Currency conversion error:', error.message);
-    throw error;
-  }
-}
-
-/**
- * Update exchange rate (Admin only)
- * Set to null to auto-fetch from external API
- */
-async function updateExchangeRate(newRate, adminId) {
-  try {
-    let settings = await CurrencySettings.findOne({ isActive: true });
-    
-    if (!settings) {
-      settings = new CurrencySettings({
-        exchangeRate: newRate,
-        markupPerEuro: 20,
-        transactionFeePercentage: 1,
-        isActive: true,
-        lastUpdatedBy: adminId
-      });
-    } else {
-      settings.exchangeRate = newRate;
-      settings.lastUpdatedBy = adminId;
-    }
-
-    await settings.save();
-    console.log(`✅ Exchange rate updated to ${newRate} PKR per EUR by admin ${adminId}`);
-    
     return settings;
-  } catch (error) {
-    console.error('❌ Error updating exchange rate:', error.message);
-    throw error;
+  } catch (err) {
+    console.error('Error fetching settings doc:', err.message);
+    return null;
   }
 }
 
 /**
- * Update markup per EUR (Admin only)
+ * Get effective exchange rates (respects admin manual overrides)
  */
-async function updateMarkup(newMarkup, adminId) {
-  try {
-    let settings = await CurrencySettings.findOne({ isActive: true });
-    
-    if (!settings) {
-      settings = new CurrencySettings({
-        markupPerEuro: newMarkup,
-        transactionFeePercentage: 1,
-        isActive: true,
-        lastUpdatedBy: adminId
-      });
-    } else {
-      settings.markupPerEuro = newMarkup;
-      settings.lastUpdatedBy = adminId;
-    }
+async function getEffectiveRates() {
+  const [settings, live] = await Promise.all([
+    getOrCreateSettings(),
+    fetchLiveRates()
+  ]);
 
-    await settings.save();
-    console.log(`✅ Markup updated to ${newMarkup} PKR per EUR by admin ${adminId}`);
-    
-    return settings;
-  } catch (error) {
-    console.error('❌ Error updating markup:', error.message);
-    throw error;
+  const effective = { ...live };
+
+  if (settings && settings.manualRates) {
+    ['AED', 'EUR', 'USD', 'GBP'].forEach(cur => {
+      const manual = settings.manualRates[cur];
+      if (manual && manual > 0 && settings.autoFetchRates === false) {
+        effective[cur] = manual;
+      } else if (manual && manual > 0) {
+        effective[cur] = manual;
+      }
+    });
   }
+
+  return { effective, settings };
 }
 
 /**
- * Update transaction fee percentage (Admin only)
- */
-async function updateTransactionFee(newFeePercentage, adminId) {
-  try {
-    let settings = await CurrencySettings.findOne({ isActive: true });
-    
-    if (!settings) {
-      settings = new CurrencySettings({
-        markupPerEuro: 20,
-        transactionFeePercentage: newFeePercentage,
-        isActive: true,
-        lastUpdatedBy: adminId
-      });
-    } else {
-      settings.transactionFeePercentage = newFeePercentage;
-      settings.lastUpdatedBy = adminId;
-    }
-
-    await settings.save();
-    console.log(`✅ Transaction fee updated to ${newFeePercentage}% by admin ${adminId}`);
-    
-    return settings;
-  } catch (error) {
-    console.error('❌ Error updating transaction fee:', error.message);
-    throw error;
-  }
-}
-
-/**
- * Get current currency settings
+ * Get currency settings payload for API / Frontend
  */
 async function getCurrencySettings() {
-  try {
-    const [settings, exchangeRate] = await Promise.all([
-      CurrencySettings.findOne({ isActive: true }),
-      getExchangeRate()
-    ]);
+  const { effective, settings } = await getEffectiveRates();
 
-    return {
-      exchangeRate: settings?.exchangeRate || null,
-      autoFetchRate: !settings?.exchangeRate,
-      currentEffectiveRate: exchangeRate,
-      markupPerEuro: settings?.markupPerEuro || 20,
-      transactionFeePercentage: settings?.transactionFeePercentage || 1,
-      lastUpdated: settings?.updatedAt,
-      lastUpdatedBy: settings?.lastUpdatedBy
-    };
-  } catch (error) {
-    console.error('❌ Error fetching currency settings:', error.message);
-    throw error;
+  return {
+    primaryCurrency: settings?.primaryCurrency || 'AED',
+    rates: effective,
+    exchangeRate: effective[settings?.primaryCurrency || 'AED'] || 75.39,
+    commissionPercentage: settings?.commissionPercentage ?? 0,
+    serviceChargePercentage: settings?.serviceChargePercentage ?? settings?.transactionFeePercentage ?? 1,
+    transactionFeePercentage: settings?.serviceChargePercentage ?? settings?.transactionFeePercentage ?? 1,
+    markupPerEuro: settings?.markupPerEuro || 0,
+    manualRates: settings?.manualRates || { AED: null, EUR: null, USD: null, GBP: null },
+    autoFetchRates: settings?.autoFetchRates ?? true,
+    lastUpdated: settings?.updatedAt || new Date().toISOString()
+  };
+}
+
+/**
+ * Convert any currency to PKR with admin commission & service charges
+ * @param {number} amount - Amount in supplier currency
+ * @param {string} fromCurrency - 'AED' | 'EUR' | 'USD' | 'GBP'
+ * @param {Object} options - { applyCommission: boolean }
+ */
+async function convertCurrency(amount, fromCurrency = 'AED', options = {}) {
+  const num = parseFloat(amount) || 0;
+  const cur = (fromCurrency || 'AED').toUpperCase();
+  const applyCommission = options.applyCommission !== false;
+
+  const { effective, settings } = await getEffectiveRates();
+  const exRate = effective[cur] || effective.AED || 75.39;
+
+  const commPct = settings?.commissionPercentage ?? 0;
+  const servicePct = settings?.serviceChargePercentage ?? settings?.transactionFeePercentage ?? 1;
+
+  // 1. Commission / Markup
+  const commissionAmount = applyCommission ? (num * (commPct / 100)) : 0;
+  const retailAmount = num + commissionAmount;
+
+  // 2. Base PKR conversion
+  const basePKR = retailAmount * exRate;
+
+  // 3. Service charge / transaction fee
+  const serviceChargeAmount = (basePKR * (servicePct / 100));
+
+  // 4. Final total PKR
+  const totalPKR = basePKR + serviceChargeAmount;
+
+  return {
+    netAmount: Math.round(num * 100) / 100,
+    fromCurrency: cur,
+    commissionPercentage: commPct,
+    commissionAmount: Math.round(commissionAmount * 100) / 100,
+    retailAmount: Math.round(retailAmount * 100) / 100,
+    exchangeRate: exRate,
+    basePKR: Math.round(basePKR * 100) / 100,
+    serviceChargePercentage: servicePct,
+    serviceChargeAmount: Math.round(serviceChargeAmount * 100) / 100,
+    totalPKR: Math.round(totalPKR * 100) / 100,
+    currency: 'PKR',
+    // Legacy compatibility fields:
+    amountInEUR: cur === 'EUR' ? num : Math.round((num * (effective[cur] / (effective.EUR || 309.84))) * 100) / 100,
+    markupPerEuro: settings?.markupPerEuro || 0,
+    markupAmount: Math.round(commissionAmount * 100) / 100,
+    transactionFeePercentage: servicePct,
+    transactionFee: Math.round(serviceChargeAmount * 100) / 100,
+    subtotal: Math.round(basePKR * 100) / 100
+  };
+}
+
+/**
+ * Legacy convertEURtoPKR for backwards compatibility
+ */
+async function convertEURtoPKR(amountInEUR) {
+  return convertCurrency(amountInEUR, 'EUR');
+}
+
+/**
+ * Legacy exchange rate getter
+ */
+async function getExchangeRate() {
+  const { effective, settings } = await getEffectiveRates();
+  return effective[settings?.primaryCurrency || 'AED'] || 75.39;
+}
+
+/**
+ * Legacy markup getter
+ */
+async function getMarkupPerEuro() {
+  const settings = await getOrCreateSettings();
+  return settings?.markupPerEuro || 0;
+}
+
+/**
+ * Legacy transaction fee getter
+ */
+async function getTransactionFeePercentage() {
+  const settings = await getOrCreateSettings();
+  return settings?.serviceChargePercentage ?? settings?.transactionFeePercentage ?? 1;
+}
+
+/**
+ * Update whole settings object (Admin only)
+ */
+async function updateSettings(updates, adminId) {
+  let settings = await getOrCreateSettings();
+  if (!settings) {
+    settings = new CurrencySettings({ isActive: true });
   }
+
+  if (updates.commissionPercentage !== undefined) {
+    settings.commissionPercentage = Math.max(0, Math.min(100, parseFloat(updates.commissionPercentage) || 0));
+  }
+  if (updates.serviceChargePercentage !== undefined) {
+    settings.serviceChargePercentage = Math.max(0, Math.min(20, parseFloat(updates.serviceChargePercentage) || 0));
+    settings.transactionFeePercentage = settings.serviceChargePercentage;
+  }
+  if (updates.primaryCurrency) {
+    settings.primaryCurrency = updates.primaryCurrency.toUpperCase();
+  }
+  if (updates.autoFetchRates !== undefined) {
+    settings.autoFetchRates = Boolean(updates.autoFetchRates);
+  }
+  if (updates.manualRates && typeof updates.manualRates === 'object') {
+    settings.manualRates = {
+      AED: updates.manualRates.AED ? parseFloat(updates.manualRates.AED) : null,
+      EUR: updates.manualRates.EUR ? parseFloat(updates.manualRates.EUR) : null,
+      USD: updates.manualRates.USD ? parseFloat(updates.manualRates.USD) : null,
+      GBP: updates.manualRates.GBP ? parseFloat(updates.manualRates.GBP) : null
+    };
+  }
+  if (updates.markupPerEuro !== undefined) {
+    settings.markupPerEuro = parseFloat(updates.markupPerEuro) || 0;
+  }
+  if (adminId) {
+    settings.lastUpdatedBy = adminId;
+  }
+
+  await settings.save();
+  console.log(`✅ Currency & Commission settings updated by admin ${adminId}:`, updates);
+  return getCurrencySettings();
+}
+
+/**
+ * Legacy update functions
+ */
+async function updateMarkup(newMarkup, adminId) {
+  return updateSettings({ markupPerEuro: newMarkup }, adminId);
+}
+
+async function updateTransactionFee(newFee, adminId) {
+  return updateSettings({ serviceChargePercentage: newFee }, adminId);
+}
+
+async function updateExchangeRate(newRate, adminId) {
+  const settings = await getOrCreateSettings();
+  const primary = settings?.primaryCurrency || 'AED';
+  const manual = { ...(settings?.manualRates || {}) };
+  manual[primary] = newRate ? parseFloat(newRate) : null;
+  return updateSettings({ manualRates: manual, autoFetchRates: !newRate }, adminId);
 }
 
 module.exports = {
+  fetchLiveRates,
+  getEffectiveRates,
+  getCurrencySettings,
+  convertCurrency,
   convertEURtoPKR,
   getExchangeRate,
   getMarkupPerEuro,
   getTransactionFeePercentage,
-  updateExchangeRate,
+  updateSettings,
   updateMarkup,
   updateTransactionFee,
-  getCurrencySettings
+  updateExchangeRate
 };

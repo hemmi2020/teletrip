@@ -330,7 +330,7 @@ const TransferSearch = () => {
               )}
               {sortedTransfers.map((t, idx) => {
                     const price = parseFloat(t.price?.amount || 0);
-                    const pkrPrice = formatPKR(price);
+                    const pkrPrice = formatPKR(price, t.price?.currency);
                     const typeLabel = t.transferType === 'PRIVATE' ? 'Private' : t.transferType === 'SHARED' ? 'Shared' : t.transferType || 'Transfer';
                     const details = t.transferDetails || [];
                     const durationInfo = details.find(d => /duration|journey|time|min/i.test(d.name || d.description || ''));
@@ -545,7 +545,7 @@ const TransferSearch = () => {
             <div style={{flexShrink:0, paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 60px)'}} className="border-t border-gray-100 px-4 py-3 bg-white sm:pb-3 flex items-center justify-between gap-3">
               <div>
                 <div className="text-[10px] text-gray-400 uppercase tracking-wide">Total</div>
-                <div className="text-[17px] font-bold text-blue-600 leading-tight">{formatPKR(parseFloat(selectedTransfer.price?.amount || 0)) || '...'}</div>
+                <div className="text-[17px] font-bold text-blue-600 leading-tight">{formatPKR(parseFloat(selectedTransfer.price?.amount || 0), selectedTransfer.price?.currency) || '...'}</div>
               </div>
               <button
                 onClick={() => handleAddToCart(selectedTransfer)}

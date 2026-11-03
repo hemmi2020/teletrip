@@ -55,6 +55,7 @@ export const HotelDetailModal = ({
   searchParams,
   formatPKR,
   convert,
+  applyCommission: propApplyCommission,
   onAddToCart,
   onMultiRoomAddToCart,
   openGallery,
@@ -250,11 +251,11 @@ export const HotelDetailModal = ({
             <div className="text-left sm:text-right flex-shrink-0">
               <span className="text-[10px] text-white/70 block uppercase tracking-wider font-semibold">from</span>
               <div className="text-xl sm:text-2xl font-black text-white leading-tight drop-shadow">
-                {hotel.currency || 'EUR'} {parseFloat(hotel.price || 0).toFixed(0)}
+                {hotel.currency || 'AED'} {(propApplyCommission ? propApplyCommission(parseFloat(hotel.price || 0)) : parseFloat(hotel.price || 0)).toFixed(0)}
               </div>
-              {formatPKR && formatPKR(parseFloat(hotel.price || 0)) && (
+              {formatPKR && formatPKR(propApplyCommission ? propApplyCommission(parseFloat(hotel.price || 0)) : parseFloat(hotel.price || 0), hotel.currency, true) && (
                 <div className="text-[11px] text-white/80 font-medium">
-                  ≈ {formatPKR(parseFloat(hotel.price || 0))}
+                  ≈ {formatPKR(propApplyCommission ? propApplyCommission(parseFloat(hotel.price || 0)) : parseFloat(hotel.price || 0), hotel.currency, true)}
                 </div>
               )}
               <div className="text-[10px] text-white/70">{nights} {nights === 1 ? 'night' : 'nights'}</div>
@@ -421,7 +422,8 @@ export const HotelDetailModal = ({
                         {/* Rates under this Room */}
                         <div className="divide-y divide-gray-100">
                           {filteredRates.map((rate, idx) => {
-                            const totalEur = parseFloat(rate.net);
+                            const rawNet = parseFloat(rate.net) || 0;
+                            const totalEur = propApplyCommission ? propApplyCommission(rawNet) : rawNet;
                             const perNightEur = nights > 0 ? totalEur / nights : totalEur;
                             const hasFreeCancellation = rate.rateClass !== 'NRF' && rate.cancellationPolicies?.length > 0 &&
                               (parseFloat(rate.cancellationPolicies[0]?.amount || 0) === 0 || new Date() < new Date(rate.cancellationPolicies[0].from));
@@ -513,14 +515,14 @@ export const HotelDetailModal = ({
                                 <div className="text-right flex sm:flex-col items-center sm:items-end justify-between w-full md:w-auto gap-3 pt-2 md:pt-0 border-t md:border-0 border-gray-100 flex-shrink-0">
                                   <div>
                                     <div className="text-lg font-extrabold text-blue-600">
-                                      {hotel.currency || 'EUR'} {totalEur.toFixed(2)}
+                                      {hotel.currency || 'AED'} {totalEur.toFixed(2)}
                                     </div>
                                     <div className="text-[11px] text-gray-400">
-                                      {hotel.currency || 'EUR'} {perNightEur.toFixed(0)} / night · {nights}n
+                                      {hotel.currency || 'AED'} {perNightEur.toFixed(0)} / night · {nights}n
                                     </div>
-                                    {formatPKR && formatPKR(totalEur) && (
+                                    {formatPKR && formatPKR(totalEur, hotel.currency, true) && (
                                       <div className="text-[11px] text-gray-500 font-medium">
-                                        ≈ {formatPKR(totalEur)}
+                                        ≈ {formatPKR(totalEur, hotel.currency, true)}
                                       </div>
                                     )}
                                   </div>
@@ -701,14 +703,14 @@ export const HotelDetailModal = ({
             </span>
             <div className="flex items-baseline gap-2">
               <span className="text-2xl font-black text-blue-600">
-                {hotel.currency || 'EUR'}{' '}
+                {hotel.currency || 'AED'}{' '}
                 {isMultiRoom
                   ? multiRoomTotal.toFixed(2)
-                  : (parseFloat(hotel.price || 0) * nights).toFixed(2)}
+                  : ((propApplyCommission ? propApplyCommission(parseFloat(hotel.price || 0)) : parseFloat(hotel.price || 0)) * nights).toFixed(2)}
               </span>
               {formatPKR && (
                 <span className="text-xs font-semibold text-gray-500">
-                  ≈ {formatPKR(isMultiRoom ? multiRoomTotal : parseFloat(hotel.price || 0) * nights)}
+                  ≈ {formatPKR(isMultiRoom ? multiRoomTotal : ((propApplyCommission ? propApplyCommission(parseFloat(hotel.price || 0)) : parseFloat(hotel.price || 0)) * nights), hotel.currency, true)}
                 </span>
               )}
             </div>
