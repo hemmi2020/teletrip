@@ -1,5 +1,6 @@
 const transferLocations = require('../data/transferLocations.json');
 const path = require('path');
+const fs = require('fs');
 
 // In-memory cache for master destinations & countries
 let indexedDestinations = null;
