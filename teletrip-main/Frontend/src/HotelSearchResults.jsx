@@ -132,6 +132,7 @@ const HotelSearchResults = () => {
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [galleryIndex, setGalleryIndex] = useState(0);
   const [galleryImages, setGalleryImages] = useState([]);
+  const [galleryTitle, setGalleryTitle] = useState('');
   const [hotelContentData, setHotelContentData] = useState(null);
   const [loadingContent, setLoadingContent] = useState(false);
 
@@ -1962,16 +1963,24 @@ const HotelSearchResults = () => {
           convert={convert}
           onAddToCart={handleAddToCart}
           onMultiRoomAddToCart={handleMultiRoomAddToCart}
-          openGallery={(idx) => {
+          openGallery={(idx = 0, customImages = null, title = '') => {
+            if (customImages && customImages.length > 0) {
+              setGalleryImages(customImages);
+              setGalleryIndex(idx || 0);
+              setGalleryTitle(title || '');
+              setGalleryOpen(true);
+              return;
+            }
             const rawImages = (hotelContentData?.images && hotelContentData.images.length > 0)
               ? hotelContentData.images
               : (selectedHotel?.images || []);
             const allImages = rawImages
-              .map(img => img.path ? `https://photos.hotelbeds.com/giata/original/${img.path}` : (typeof img === 'string' ? img : null))
+              .map(img => img.path ? `https://photos.hotelbeds.com/giata/original/${img.path.replace(/^\/+/, '')}` : (typeof img === 'string' ? img : null))
               .filter(Boolean);
             if (allImages.length === 0 && selectedHotel?.thumbnail) allImages.push(selectedHotel.thumbnail);
             setGalleryImages(allImages);
             setGalleryIndex(idx || 0);
+            setGalleryTitle(title || selectedHotel?.name || '');
             setGalleryOpen(true);
           }}
           onSelectRoomDetail={(room) => setSelectedRoomDetail(room)}
@@ -2012,7 +2021,7 @@ const HotelSearchResults = () => {
                   return roomImages.length > 0 ? (
                     <div className="grid grid-cols-2 gap-1 mb-4 rounded-xl overflow-hidden">
                       {roomImages.slice(0, 4).map((img, i) => (
-                        <div key={i} className="aspect-video overflow-hidden cursor-pointer" onClick={() => { setGalleryImages(roomImages); setGalleryIndex(i); setGalleryOpen(true); }}>
+                        <div key={i} className="aspect-video overflow-hidden cursor-pointer" onClick={() => { setGalleryImages(roomImages); setGalleryIndex(i); setGalleryTitle(selectedRoomDetail.name + ' Photos'); setGalleryOpen(true); }}>
                           <img src={img} alt="" className="w-full h-full object-cover hover:scale-105 transition-transform" onError={(e) => e.target.style.display = 'none'} />
                         </div>
                       ))}
@@ -2076,9 +2085,41 @@ const HotelSearchResults = () => {
         {galleryOpen && galleryImages.length > 0 && (
           <div className="fixed inset-0 z-[200] bg-black/95 flex flex-col">
             {/* Top bar */}
-            <div className="flex items-center justify-between px-4 py-3 flex-shrink-0">
-              <span className="text-white/70 text-sm">{galleryIndex + 1} / {galleryImages.length}</span>
-              <button onClick={() => setGalleryOpen(false)} className="p-2.5 rounded-full bg-white/15 hover:bg-white/25 transition-colors"><X className="w-5 h-5 text-white" /></button>
+            <div className="flex items-center justify-between px-4 py-3 flex-shrink-0 border-b border-white/10">
+              <div className="flex items-center gap-3 min-w-0 pr-4">
+                {galleryTitle && (
+                  <span className="text-white font-medium text-sm sm:text-base truncate max-w-[200px] sm:max-w-md">
+                    {galleryTitle}
+                  </span>
+                )}
+                <span className="text-white/70 text-xs sm:text-sm flex-shrink-0">
+                  ({galleryIndex + 1} / {galleryImages.length})
+                </span>
+              </div>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                {galleryTitle && selectedHotel && galleryTitle !== selectedHotel.name && (
+                  <button
+                    onClick={() => {
+                      const rawImages = (hotelContentData?.images && hotelContentData.images.length > 0)
+                        ? hotelContentData.images
+                        : (selectedHotel?.images || []);
+                      const allImages = rawImages
+                        .map(img => img.path ? `https://photos.hotelbeds.com/giata/original/${img.path.replace(/^\/+/, '')}` : (typeof img === 'string' ? img : null))
+                        .filter(Boolean);
+                      if (allImages.length === 0 && selectedHotel?.thumbnail) allImages.push(selectedHotel.thumbnail);
+                      setGalleryImages(allImages);
+                      setGalleryIndex(0);
+                      setGalleryTitle(selectedHotel.name);
+                    }}
+                    className="text-xs px-2.5 py-1 rounded-full bg-white/15 hover:bg-white/25 text-white transition-colors"
+                  >
+                    View All Hotel Photos
+                  </button>
+                )}
+                <button onClick={() => setGalleryOpen(false)} className="p-2 sm:p-2.5 rounded-full bg-white/15 hover:bg-white/25 transition-colors">
+                  <X className="w-5 h-5 text-white" />
+                </button>
+              </div>
             </div>
             {/* Main image */}
             <div className="flex-1 flex items-center justify-center px-4 relative min-h-0">

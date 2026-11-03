@@ -4,6 +4,7 @@ import {
   MapPin,
   Bed,
   ImageIcon,
+  Camera,
   Info,
   CheckCircle,
   XCircle,
@@ -20,6 +21,31 @@ import {
   Utensils as Restaurant,
   Sparkles as Spa
 } from 'lucide-react';
+
+function getRoomImages(roomCode, rawImages) {
+  if (!roomCode || !rawImages || !rawImages.length) return [];
+  const code = roomCode.toLowerCase().trim();
+  let matches = rawImages.filter(img => img.roomCode && img.roomCode.toLowerCase() === code);
+  if (matches.length === 0) {
+    matches = rawImages.filter(img => img.roomCode && (code.includes(img.roomCode.toLowerCase()) || img.roomCode.toLowerCase().includes(code)));
+  }
+  if (matches.length === 0) {
+    const roomType = code.split('.')[0];
+    if (roomType && roomType.length >= 3) {
+      matches = rawImages.filter(img => 
+        (img.roomType && img.roomType.toLowerCase() === roomType) ||
+        (img.roomCode && img.roomCode.toLowerCase().startsWith(roomType + '.'))
+      );
+    }
+  }
+  return matches
+    .map(img => {
+      if (!img.path) return (typeof img === 'string' ? img : null);
+      const clean = img.path.replace(/^\/+/, '');
+      return clean.startsWith('http') ? clean : `https://photos.hotelbeds.com/giata/original/${clean}`;
+    })
+    .filter(Boolean);
+}
 
 export const HotelDetailModal = ({
   isOpen = true,
@@ -313,12 +339,13 @@ export const HotelDetailModal = ({
                     const filteredRates = (room.rates || []).filter(filterRate);
                     if (filteredRates.length === 0) return null;
 
-                    // Find room image if available
-                    const roomImages = (hotel.images || [])
-                      .filter(img => img.roomCode === room.code)
-                      .map(img => img.path ? `https://photos.hotelbeds.com/giata/original/${img.path}` : null)
-                      .filter(Boolean);
+                    // Find room-specific images using intelligent matching
+                    const allPoolImages = (hotelContentData?.images && hotelContentData.images.length > 0)
+                      ? hotelContentData.images
+                      : (hotel.images || []);
+                    const roomImages = getRoomImages(room.code, allPoolImages);
                     const roomImg = roomImages[0] || headerBg;
+                    const hasRoomPhotos = roomImages.length > 0;
 
                     return (
                       <div key={room.code} id={`room-${room.code}`} className="border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm hover:shadow transition-shadow">
@@ -327,17 +354,41 @@ export const HotelDetailModal = ({
                           <div className="flex items-center gap-3 min-w-0">
                             {roomImg && (
                               <div
-                                className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 cursor-pointer border border-gray-200"
-                                onClick={() => openGallery && openGallery(0)}
-                                title="Click to view room photos"
+                                className="w-14 h-14 sm:w-16 sm:h-16 rounded-lg overflow-hidden flex-shrink-0 cursor-pointer border border-gray-200 relative group"
+                                onClick={() => {
+                                  if (hasRoomPhotos && openGallery) {
+                                    openGallery(0, roomImages, `${room.name} (${roomImages.length} Photos)`);
+                                  } else if (openGallery) {
+                                    openGallery(0, null, hotel.name);
+                                  }
+                                }}
+                                title={hasRoomPhotos ? `Click to view ${roomImages.length} room photos` : "Click to view hotel photos"}
                               >
-                                <img src={roomImg} alt={room.name} className="w-full h-full object-cover hover:scale-105 transition-transform" />
+                                <img src={roomImg} alt={room.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
+                                {hasRoomPhotos && (
+                                  <span className="absolute bottom-0 inset-x-0 bg-black/60 text-white text-[9px] font-semibold text-center py-0.5 backdrop-blur-[1px]">
+                                    {roomImages.length} 📷
+                                  </span>
+                                )}
                               </div>
                             )}
                             <div className="min-w-0">
                               <div className="flex items-center gap-1.5">
                                 <Bed className="w-4 h-4 text-blue-600 flex-shrink-0" />
                                 <h3 className="text-sm font-bold text-gray-900 truncate">{room.name}</h3>
+                                {hasRoomPhotos && openGallery && (
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      openGallery(0, roomImages, `${room.name} (${roomImages.length} Photos)`);
+                                    }}
+                                    className="inline-flex items-center gap-1 text-[11px] font-medium text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-2 py-0.5 rounded transition-colors flex-shrink-0"
+                                    title="View room photos"
+                                  >
+                                    <Camera className="w-3 h-3" />
+                                    <span>{roomImages.length} Room Photo{roomImages.length > 1 ? 's' : ''}</span>
+                                  </button>
+                                )}
                                 {onSelectRoomDetail && (
                                   <button
                                     onClick={(e) => { e.stopPropagation(); onSelectRoomDetail(room); }}
