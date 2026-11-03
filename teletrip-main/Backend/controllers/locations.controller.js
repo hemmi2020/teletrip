@@ -62,7 +62,13 @@ exports.getTransferLocations = async (req, res) => {
           const apiKey = process.env.HOTELBEDS_API_KEY;
           const secret = process.env.HOTELBEDS_SECRET;
           const isLive = (process.env.HOTELBEDS_ENV || 'test').toLowerCase() === 'live';
-          const contentBase = process.env.HOTELBEDS_CONTENT_URL || (isLive ? 'https://api.hotelbeds.com/hotel-content-api/1.0' : 'https://api.test.hotelbeds.com/hotel-content-api/1.0');
+          let contentBase = (process.env.HOTELBEDS_CONTENT_URL || '').trim();
+          if (!contentBase) {
+            contentBase = isLive ? 'https://api.hotelbeds.com/hotel-content-api/1.0' : 'https://api.test.hotelbeds.com/hotel-content-api/1.0';
+          } else {
+            contentBase = contentBase.replace(/\/+$/, '');
+            if (!contentBase.includes('/hotel-content-api')) contentBase += '/hotel-content-api/1.0';
+          }
           const timestamp = Math.floor(Date.now() / 1000);
           const sig = crypto.createHash('sha256').update(apiKey + secret + timestamp).digest('hex');
 
@@ -152,7 +158,13 @@ async function getCountriesData() {
     const crypto = require('crypto');
     const fetch = (await import('node-fetch')).default;
     const isLive = (process.env.HOTELBEDS_ENV || 'test').toLowerCase() === 'live';
-    const contentBase = process.env.HOTELBEDS_CONTENT_URL || (isLive ? 'https://api.hotelbeds.com/hotel-content-api/1.0' : 'https://api.test.hotelbeds.com/hotel-content-api/1.0');
+    let contentBase = (process.env.HOTELBEDS_CONTENT_URL || '').trim();
+          if (!contentBase) {
+            contentBase = isLive ? 'https://api.hotelbeds.com/hotel-content-api/1.0' : 'https://api.test.hotelbeds.com/hotel-content-api/1.0';
+          } else {
+            contentBase = contentBase.replace(/\/+$/, '');
+            if (!contentBase.includes('/hotel-content-api')) contentBase += '/hotel-content-api/1.0';
+          }
     const apiKey = process.env.HOTELBEDS_API_KEY || (isLive ? 'f879ffbe1a15cfa78d4fc6770ec7c8e7' : '106700a0f2f1e2aa1d4c2b16daae70b2');
     const secret = process.env.HOTELBEDS_SECRET || (isLive ? 'qLevQhmgdb' : '018e478aa6');
     const timestamp = Math.floor(Date.now() / 1000);

@@ -25,11 +25,22 @@ if ((process.env.HOTELBEDS_MTLS_CERT || process.env.HOTELBEDS_MTLS_CERT_PATH) &&
 }
 
 console.log('[Config] Hotelbeds base URL:', HOTELBEDS_BASE_URL);
-const HOTELBEDS_CONTENT_URL = process.env.HOTELBEDS_CONTENT_URL || (
-    HOTELBEDS_ENV === 'live' 
-        ? 'https://api.hotelbeds.com/hotel-content-api/1.0' 
-        : 'https://api.test.hotelbeds.com/hotel-content-api/1.0'
-);
+function getNormalizedContentUrl(rawUrl, isLive) {
+    let url = (rawUrl || '').trim();
+    if (!url) {
+        return isLive 
+            ? 'https://api.hotelbeds.com/hotel-content-api/1.0' 
+            : 'https://api.test.hotelbeds.com/hotel-content-api/1.0';
+    }
+    url = url.replace(/\/+$/, '');
+    if (!url.includes('/hotel-content-api')) {
+        url += '/hotel-content-api/1.0';
+    }
+    return url;
+}
+
+const HOTELBEDS_CONTENT_URL = getNormalizedContentUrl(process.env.HOTELBEDS_CONTENT_URL, HOTELBEDS_ENV === 'live');
+console.log('[Config] Hotelbeds content URL:', HOTELBEDS_CONTENT_URL);
 const TRIPADVISOR_API_KEY = process.env.TRIPADVISOR_API_KEY;
 
 // Generate signature for Hotelbeds API 
@@ -147,65 +158,80 @@ router.post('/search-suggestions', async (req, res) => {
     }
 });
 
+// In-memory cache for hotel images & basic content to keep responses sub-second
+const hotelContentCache = new Map();
+
 // Function to fetch hotel images and details in safe batches (max 50 codes per URL to prevent HTTP 414)
 async function fetchHotelContent(hotelCodes) {
     try {
         const cleanCodes = [...new Set((Array.isArray(hotelCodes) ? hotelCodes : [hotelCodes]).map(c => parseInt(c)).filter(Boolean))];
         if (cleanCodes.length === 0) return {};
 
-        // Fetch content for up to 100 hotels to maintain sub-second response times and prevent CDN timeouts
-        const codesToFetch = cleanCodes.slice(0, 100);
-        const CHUNK_SIZE = 50;
-        const chunks = [];
-        for (let i = 0; i < codesToFetch.length; i += CHUNK_SIZE) {
-            chunks.push(codesToFetch.slice(i, i + CHUNK_SIZE));
+        const contentMap = {};
+        const missingCodes = [];
+
+        // Check in-memory cache first
+        for (const code of cleanCodes) {
+            if (hotelContentCache.has(code)) {
+                contentMap[code] = hotelContentCache.get(code);
+            } else {
+                missingCodes.push(code);
+            }
         }
 
-        const contentMap = {};
-        const agent = getMTLSAgent();
-
-        await Promise.all(chunks.map(async (chunk) => {
-            try {
-                const timestamp = Math.floor(Date.now() / 1000);
-                const signature = generateHotelbedsSignature(HOTELBEDS_API_KEY, HOTELBEDS_SECRET, timestamp);
-                const codesParam = chunk.join(',');
-                const contentUrl = `${HOTELBEDS_CONTENT_URL}/hotels?fields=images,facilities,amenities,accommodationTypeCode,chainCode,segmentCodes&language=ENG&from=1&to=100&codes=${codesParam}`;
-
-                const response = await fetch(contentUrl, {
-                    method: 'GET',
-                    headers: {
-                        'Accept': 'application/json',
-                        'Accept-Encoding': 'gzip',
-                        'Api-key': HOTELBEDS_API_KEY,
-                        'X-Signature': signature,
-                        'X-Timestamp': timestamp.toString()
-                    },
-                    timeout: 15000,
-                    ...(agent && { agent })
-                });
-
-                if (!response.ok) {
-                    console.error(`Hotel Content API Error (status ${response.status}) for chunk of ${chunk.length} hotels`);
-                    return;
-                }
-
-                const data = await response.json();
-                if (data.hotels && Array.isArray(data.hotels)) {
-                    data.hotels.forEach(hotel => {
-                        contentMap[hotel.code] = {
-                            images: hotel.images || [],
-                            facilities: hotel.facilities || [],
-                            amenities: hotel.amenities || [],
-                            accommodationTypeCode: hotel.accommodationTypeCode || null,
-                            chainCode: hotel.chain?.content || hotel.chainCode || null,
-                            segmentCodes: hotel.segmentCodes || [],
-                        };
-                    });
-                }
-            } catch (chunkErr) {
-                console.error('Error fetching hotel content chunk:', chunkErr.message);
+        // Fetch up to 250 missing hotels in parallel batches of 50
+        const codesToFetch = missingCodes.slice(0, 250);
+        if (codesToFetch.length > 0) {
+            const CHUNK_SIZE = 50;
+            const chunks = [];
+            for (let i = 0; i < codesToFetch.length; i += CHUNK_SIZE) {
+                chunks.push(codesToFetch.slice(i, i + CHUNK_SIZE));
             }
-        }));
+
+            await Promise.all(chunks.map(async (chunk) => {
+                try {
+                    const timestamp = Math.floor(Date.now() / 1000);
+                    const signature = generateHotelbedsSignature(HOTELBEDS_API_KEY, HOTELBEDS_SECRET, timestamp);
+                    const codesParam = chunk.join(',');
+                    const contentUrl = `${HOTELBEDS_CONTENT_URL}/hotels?fields=images,facilities,amenities,accommodationTypeCode,chainCode,segmentCodes&language=ENG&from=1&to=100&codes=${codesParam}`;
+
+                    const response = await fetch(contentUrl, {
+                        method: 'GET',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Accept-Encoding': 'gzip',
+                            'Api-key': HOTELBEDS_API_KEY,
+                            'X-Signature': signature,
+                            'X-Timestamp': timestamp.toString()
+                        },
+                        timeout: 15000
+                    });
+
+                    if (!response.ok) {
+                        console.error(`Hotel Content API Error (status ${response.status}) for chunk of ${chunk.length} hotels`);
+                        return;
+                    }
+
+                    const data = await response.json();
+                    if (data.hotels && Array.isArray(data.hotels)) {
+                        data.hotels.forEach(hotel => {
+                            const entry = {
+                                images: hotel.images || [],
+                                facilities: hotel.facilities || [],
+                                amenities: hotel.amenities || [],
+                                accommodationTypeCode: hotel.accommodationTypeCode || null,
+                                chainCode: hotel.chain?.content || hotel.chainCode || null,
+                                segmentCodes: hotel.segmentCodes || [],
+                            };
+                            contentMap[hotel.code] = entry;
+                            hotelContentCache.set(hotel.code, entry);
+                        });
+                    }
+                } catch (chunkErr) {
+                    console.error('Error fetching hotel content chunk:', chunkErr.message);
+                }
+            }));
+        }
 
         return contentMap;
     } catch (error) {
@@ -267,7 +293,8 @@ async function enhanceHotelsWithContent(hotels) {
                     (img.typeCode && img.typeCode.toUpperCase() === 'GEN')
                 ) || content.images[0];
                 if (mainImage && mainImage.path) {
-                    thumbnail = `https://photos.hotelbeds.com/giata/bigger/${mainImage.path}`;
+                    const cleanPath = mainImage.path.replace(/^\/+/, '');
+                    thumbnail = cleanPath.startsWith('http') ? cleanPath : `https://photos.hotelbeds.com/giata/bigger/${cleanPath}`;
                 }
             }
 

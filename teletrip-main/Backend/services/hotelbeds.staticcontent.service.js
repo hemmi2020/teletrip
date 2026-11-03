@@ -23,11 +23,21 @@ const HOTELBEDS_API_KEY = process.env.HOTELBEDS_API_KEY || '106700a0f2f1e2aa1d4c
 const HOTELBEDS_SECRET = process.env.HOTELBEDS_SECRET || '018e478aa6';
 // Content API uses standard endpoint (Hotelbeds hosts only booking flow /hotel-api on api-mtls)
 const HOTELBEDS_ENV = (process.env.HOTELBEDS_ENV || 'test').toLowerCase();
-const CONTENT_BASE_URL = process.env.HOTELBEDS_CONTENT_URL || (
-  HOTELBEDS_ENV === 'live'
-    ? 'https://api.hotelbeds.com/hotel-content-api/1.0'
-    : 'https://api.test.hotelbeds.com/hotel-content-api/1.0'
-);
+function getNormalizedContentUrl(rawUrl, isLive) {
+    let url = (rawUrl || '').trim();
+    if (!url) {
+        return isLive 
+            ? 'https://api.hotelbeds.com/hotel-content-api/1.0' 
+            : 'https://api.test.hotelbeds.com/hotel-content-api/1.0';
+    }
+    url = url.replace(/\/+$/, '');
+    if (!url.includes('/hotel-content-api')) {
+        url += '/hotel-content-api/1.0';
+    }
+    return url;
+}
+
+const CONTENT_BASE_URL = getNormalizedContentUrl(process.env.HOTELBEDS_CONTENT_URL, (process.env.HOTELBEDS_ENV || 'test').toLowerCase() === 'live');
 
 const StaticContent = require('../models/staticContent.model');
 
