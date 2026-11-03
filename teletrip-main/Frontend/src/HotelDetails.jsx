@@ -473,7 +473,13 @@ const HotelDetails = () => {
                   paidFacilities: contentData.data.paidFacilities || (contentData.data.facilities || []).filter(f => f.indFee === true),
                   freeFacilities: (contentData.data.facilities || []).filter(f => f.indFee !== true),
                   roomPaidFacilities: contentData.data.roomPaidFacilities || [],
-                  rooms: updatedRooms
+                  rooms: updatedRooms,
+                  images: (contentData.data.images && contentData.data.images.length > 0)
+                    ? contentData.data.images
+                    : (prev.images || []),
+                  thumbnail: prev.thumbnail || (contentData.data.images?.[0]?.path
+                    ? `https://photos.hotelbeds.com/giata/bigger/${contentData.data.images[0].path}`
+                    : prev.thumbnail)
                 };
               });
             }

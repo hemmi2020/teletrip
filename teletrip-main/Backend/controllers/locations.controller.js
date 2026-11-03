@@ -1,4 +1,43 @@
 const transferLocations = require('../data/transferLocations.json');
+const path = require('path');
+
+// In-memory cache for master destinations & countries
+let indexedDestinations = null;
+let indexedCountries = null;
+
+const CITY_ALIASES = {
+  'mallorca': 'majorca',
+  'palma': 'majorca',
+  'palma de mallorca': 'majorca',
+  'mecca': 'makkah',
+  'medina': 'madinah',
+  'usa': 'united states',
+  'america': 'united states',
+  'uk': 'united kingdom',
+  'england': 'united kingdom',
+  'britain': 'united kingdom',
+  'uae': 'united arab emirates',
+  'emirates': 'united arab emirates'
+};
+
+function loadDestinationsIndex() {
+  if (indexedDestinations && indexedCountries) {
+    return { destinations: indexedDestinations, countries: indexedCountries };
+  }
+  try {
+    const destPath = path.resolve(__dirname, '../data/hotelbedsDestinations.json');
+    const countryPath = path.resolve(__dirname, '../data/hotelbedsCountries.json');
+    if (fs.existsSync(destPath) && fs.existsSync(countryPath)) {
+      indexedDestinations = JSON.parse(fs.readFileSync(destPath, 'utf8'));
+      indexedCountries = JSON.parse(fs.readFileSync(countryPath, 'utf8'));
+      return { destinations: indexedDestinations, countries: indexedCountries };
+    }
+  } catch (err) {
+    console.warn('[LOCATIONS] Could not load static JSON index:', err.message);
+  }
+  return { destinations: [], countries: {} };
+}
+
 
 exports.getTransferLocations = async (req, res) => {
   try {
@@ -239,46 +278,90 @@ exports.searchLocations = async (req, res) => {
     }
 
     const query = q.toLowerCase().trim();
+    const aliasQuery = CITY_ALIASES[query] || null;
     const results = [];
+    const seen = new Set();
 
-    // Search cities & countries
-    const countries = await getCountriesData();
-    for (const country of countries) {
-      // Match country
-      if (country.country.toLowerCase().includes(query)) {
-        results.push({
-          type: 'country',
-          name: country.country,
-          city: '',
-          country: country.country,
-          countryCode: country.iso3,
-          displayName: country.country
-        });
-      }
-      // Match cities
-      if (country.cities) {
-        for (const city of country.cities) {
-          const cityName = typeof city === 'string' ? city : (city.name || '');
-          const destCode = typeof city === 'object' ? (city.code || '') : '';
-          if (cityName.toLowerCase().includes(query)) {
+    const { destinations, countries } = loadDestinationsIndex();
+
+    // 1. Search through Hotelbeds master destinations (7,423 real worldwide cities/destinations)
+    if (destinations && destinations.length > 0) {
+      for (const dest of destinations) {
+        const destNameLower = dest.name.toLowerCase();
+        const countryNameLower = (dest.country || '').toLowerCase();
+        const codeLower = (dest.code || '').toLowerCase();
+
+        const matchesCity = destNameLower.startsWith(query) || 
+                            destNameLower.includes(query) || 
+                            codeLower === query ||
+                            (aliasQuery && (destNameLower.startsWith(aliasQuery) || destNameLower.includes(aliasQuery)));
+
+        const matchesCountry = countryNameLower.startsWith(query) || 
+                               countryNameLower === query ||
+                               (aliasQuery && countryNameLower === aliasQuery);
+
+        if (matchesCity) {
+          const key = 'city-' + dest.code;
+          if (!seen.has(key)) {
+            seen.add(key);
             results.push({
               type: 'city',
-              name: cityName,
-              city: cityName,
-              country: country.country,
-              countryCode: country.iso3,
-              destinationCode: destCode,
-              displayName: `${cityName}, ${country.country}`
+              name: dest.name,
+              city: dest.name,
+              country: dest.country,
+              countryCode: dest.countryCode,
+              destinationCode: dest.code,
+              displayName: dest.name + ', ' + dest.country
             });
           }
-          if (results.length >= 30) break;
+        } else if (matchesCountry && results.length < 40) {
+          const key = 'city-' + dest.code;
+          if (!seen.has(key)) {
+            seen.add(key);
+            results.push({
+              type: 'city',
+              name: dest.name,
+              city: dest.name,
+              country: dest.country,
+              countryCode: dest.countryCode,
+              destinationCode: dest.code,
+              displayName: dest.name + ', ' + dest.country
+            });
+          }
         }
+        if (results.length >= 60) break;
       }
-      if (results.length >= 30) break;
     }
 
-    // Sort: cities first, then countries
+    // 2. Check Countries for direct country matches
+    if (countries) {
+      for (const [code, countryName] of Object.entries(countries)) {
+        const cLower = countryName.toLowerCase();
+        if (cLower.startsWith(query) || cLower.includes(query) || code.toLowerCase() === query || (aliasQuery && cLower === aliasQuery)) {
+          const key = 'country-' + code;
+          if (!seen.has(key)) {
+            seen.add(key);
+            results.push({
+              type: 'country',
+              name: countryName,
+              city: '',
+              country: countryName,
+              countryCode: code,
+              displayName: countryName
+            });
+          }
+        }
+      }
+    }
+
+    // Sort: exact matches first, then prefix, then substring; cities before countries
     results.sort((a, b) => {
+      const aName = a.name.toLowerCase();
+      const bName = b.name.toLowerCase();
+      const aExact = aName === query ? 0 : (aName.startsWith(query) ? 1 : 2);
+      const bExact = bName === query ? 0 : (bName.startsWith(query) ? 1 : 2);
+      if (aExact !== bExact) return aExact - bExact;
+
       const order = { city: 0, country: 1 };
       return (order[a.type] || 2) - (order[b.type] || 2);
     });

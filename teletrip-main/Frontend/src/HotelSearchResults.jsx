@@ -877,6 +877,13 @@ const HotelSearchResults = () => {
               occupancies[0].paxes = childAges.map(age => ({ type: 'CH', age }));
             }
           }
+        } else {
+          // Backward compatibility — flat params
+          occupancies = [{ rooms, adults, children: children > 0 ? children : 0 }];
+          if (children > 0 && childAges.length > 0) {
+            occupancies[0].paxes = childAges.map(age => ({ type: 'CH', age }));
+          }
+        }
         // Ensure child ages are always provided whenever children > 0 (Hotelbeds requirement)
         occupancies = occupancies.map(occ => {
           if (occ.children > 0 && (!occ.paxes || occ.paxes.length === 0)) {
@@ -1956,8 +1963,11 @@ const HotelSearchResults = () => {
           onAddToCart={handleAddToCart}
           onMultiRoomAddToCart={handleMultiRoomAddToCart}
           openGallery={(idx) => {
-            const allImages = (selectedHotel?.images || [])
-              .map(img => img.path ? `https://photos.hotelbeds.com/giata/original/${img.path}` : null)
+            const rawImages = (hotelContentData?.images && hotelContentData.images.length > 0)
+              ? hotelContentData.images
+              : (selectedHotel?.images || []);
+            const allImages = rawImages
+              .map(img => img.path ? `https://photos.hotelbeds.com/giata/original/${img.path}` : (typeof img === 'string' ? img : null))
               .filter(Boolean);
             if (allImages.length === 0 && selectedHotel?.thumbnail) allImages.push(selectedHotel.thumbnail);
             setGalleryImages(allImages);
@@ -1992,7 +2002,10 @@ const HotelSearchResults = () => {
               <div className="overflow-y-auto flex-1 p-4" style={{ scrollbarWidth: 'thin' }}>
                 {/* Room images */}
                 {(() => {
-                  const roomImages = (selectedHotel?.images || [])
+                  const rawImages = (hotelContentData?.images && hotelContentData.images.length > 0)
+                    ? hotelContentData.images
+                    : (selectedHotel?.images || []);
+                  const roomImages = rawImages
                     .filter(img => img.roomCode === selectedRoomDetail.code)
                     .map(img => img.path ? `https://photos.hotelbeds.com/giata/original/${img.path}` : null)
                     .filter(Boolean);
