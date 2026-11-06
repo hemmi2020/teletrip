@@ -30,19 +30,19 @@ export default function DesignLabPage() {
           {/* Brand & Breadcrumb */}
           <div className="flex items-center gap-3">
             <Link
-              to="/hotel-search-results?city=Dubai&checkIn=2026-11-15&checkOut=2026-11-18&adults=2&rooms=1"
+              to="/design-lab"
               className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500 transition-colors"
-              title="Return to live search"
+              title="Back to Design Lab Hub"
             >
               <ArrowLeft className="w-5 h-5" />
             </Link>
             <div>
               <div className="flex items-center gap-2">
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-blue-600 text-white tracking-widest uppercase">
-                  Design Lab
+                  Design Lab 01
                 </span>
                 <h1 className="text-sm sm:text-base font-extrabold text-gray-900">
-                  Hotel Search & Booking Experience Audit
+                  Hotel Search Results & Filter System
                 </h1>
               </div>
               <p className="text-[11px] text-gray-500">

@@ -44,7 +44,12 @@ import NotFound from './pages/NotFound';
 import ErrorPage from './pages/ErrorPage';
 
 // Design Lab (Interactive Exploration & Audit)
+import DesignLabHub from './design-lab/DesignLabHub';
 import DesignLabPage from './design-lab/DesignLabPage';
+import HotelModalLab from './design-lab/HotelModalLab';
+import CartCheckoutLab from './design-lab/CartCheckoutLab';
+import ReviewsLab from './design-lab/ReviewsLab';
+import HeroSearchLab from './design-lab/HeroSearchLab';
 
 // Error Boundary
 class ErrorBoundary extends React.Component {
@@ -132,8 +137,19 @@ const AppContent = () => {
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/admin/dashboard" element={<ProtectedAdminRoute><AdminDashboard /></ProtectedAdminRoute>} />
           <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
-          <Route path="/__design_lab" element={<DesignLabPage />} />
-          <Route path="/design-lab" element={<DesignLabPage />} />
+          {/* Design Lab Audit Suite - Dedicated URLs for Client Review */}
+          <Route path="/__design_lab" element={<DesignLabHub />} />
+          <Route path="/design-lab" element={<DesignLabHub />} />
+          <Route path="/design-lab/search" element={<DesignLabPage />} />
+          <Route path="/__design_lab/search" element={<DesignLabPage />} />
+          <Route path="/design-lab/hotel-modal" element={<HotelModalLab />} />
+          <Route path="/__design_lab/hotel-modal" element={<HotelModalLab />} />
+          <Route path="/design-lab/cart" element={<CartCheckoutLab />} />
+          <Route path="/__design_lab/cart" element={<CartCheckoutLab />} />
+          <Route path="/design-lab/reviews" element={<ReviewsLab />} />
+          <Route path="/__design_lab/reviews" element={<ReviewsLab />} />
+          <Route path="/design-lab/hero-search" element={<HeroSearchLab />} />
+          <Route path="/__design_lab/hero-search" element={<HeroSearchLab />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </div>

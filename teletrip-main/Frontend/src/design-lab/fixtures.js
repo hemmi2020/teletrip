@@ -160,3 +160,6 @@ export const mockQuickFilters = [
   { id: "downtown", label: "📍 Downtown / Burj", count: 23, activeColor: "purple" }
 ];
 
+export const DUBAI_HOTEL_FIXTURES = mockHotels;
+
+
