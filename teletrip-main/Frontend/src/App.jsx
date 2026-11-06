@@ -43,6 +43,9 @@ import DestinationPage from './pages/DestinationPage';
 import NotFound from './pages/NotFound';
 import ErrorPage from './pages/ErrorPage';
 
+// Design Lab (Interactive Exploration & Audit)
+import DesignLabPage from './design-lab/DesignLabPage';
+
 // Error Boundary
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -129,6 +132,8 @@ const AppContent = () => {
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/admin/dashboard" element={<ProtectedAdminRoute><AdminDashboard /></ProtectedAdminRoute>} />
           <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
+          <Route path="/__design_lab" element={<DesignLabPage />} />
+          <Route path="/design-lab" element={<DesignLabPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </div>
