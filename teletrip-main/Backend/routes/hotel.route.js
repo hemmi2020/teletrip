@@ -298,20 +298,21 @@ async function enhanceHotelsWithContent(hotels) {
                 }
             }
 
-            const amenities = [];
+            const amenitiesSet = new Set();
             if (content.facilities) {
                 content.facilities.forEach(facility => {
                     switch (facility.facilityCode) {
-                        case 20: amenities.push('WIFI'); break;
-                        case 15: amenities.push('BREAKFAST'); break;
-                        case 50: amenities.push('PARKING'); break;
-                        case 110: amenities.push('POOL'); break;
-                        case 70: amenities.push('GYM'); break;
-                        case 260: amenities.push('SPA'); break;
-                        case 440: amenities.push('RESTAURANT'); break;
+                        case 20: amenitiesSet.add('WIFI'); break;
+                        case 15: amenitiesSet.add('BREAKFAST'); break;
+                        case 50: amenitiesSet.add('PARKING'); break;
+                        case 110: amenitiesSet.add('POOL'); break;
+                        case 70: amenitiesSet.add('GYM'); break;
+                        case 260: amenitiesSet.add('SPA'); break;
+                        case 440: amenitiesSet.add('RESTAURANT'); break;
                     }
                 });
             }
+            const amenities = Array.from(amenitiesSet);
 
             return {
                 ...hotel,

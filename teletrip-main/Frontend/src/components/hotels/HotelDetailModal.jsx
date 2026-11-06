@@ -870,7 +870,7 @@ export const HotelDetailModal = ({
                 <div className="space-y-2">
                   <h4 className="text-xs font-bold uppercase text-gray-700">Popular Amenities</h4>
                   <div className="flex flex-wrap gap-2">
-                    {hotel.amenities.map((amenity, i) => (
+                    {[...new Set(hotel.amenities.map(a => (typeof a === 'string' ? a.trim() : (a?.name || String(a))).trim()))].filter(Boolean).map((amenity, i) => (
                       <span key={i} className="text-xs px-3 py-1 bg-gray-100 text-gray-700 rounded-full font-medium">
                         ✓ {amenity}
                       </span>
@@ -895,11 +895,22 @@ export const HotelDetailModal = ({
                     Hotelbeds Transparency Notice: The following services are optional and incur additional fees payable directly to the property upon use.
                   </p>
                   <div className="flex flex-wrap gap-1.5 pt-1">
-                    {hotelContentData.facilities.filter(f => f.indFee === true).map((f, i) => (
-                      <span key={`paid-${i}`} className="text-[11px] px-2.5 py-1 bg-white text-amber-900 rounded-lg border border-amber-200 font-medium shadow-2xs">
-                        {f.description || `Facility ${f.code}`} (Extra Fee)
-                      </span>
-                    ))}
+                    {(() => {
+                      const seenPaid = new Set();
+                      return hotelContentData.facilities
+                        .filter(f => f.indFee === true)
+                        .filter(f => {
+                          const desc = (f.description || `Facility ${f.code}`).trim().toLowerCase();
+                          if (seenPaid.has(desc)) return false;
+                          seenPaid.add(desc);
+                          return true;
+                        })
+                        .map((f, i) => (
+                          <span key={`paid-${i}`} className="text-[11px] px-2.5 py-1 bg-white text-amber-900 rounded-lg border border-amber-200 font-medium shadow-2xs">
+                            {f.description || `Facility ${f.code}`} (Extra Fee)
+                          </span>
+                        ));
+                    })()}
                   </div>
                 </div>
               )}
@@ -912,12 +923,24 @@ export const HotelDetailModal = ({
                     Complimentary Inclusions (No Extra Fee)
                   </h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {hotelContentData.facilities.filter(f => f.indFee !== true).slice(0, 20).map((f, i) => (
-                      <div key={`free-${i}`} className="p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-xs text-gray-700 flex items-center gap-2">
-                        <CheckCircle className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
-                        <span>{f.description || `Facility ${f.code}`}</span>
-                      </div>
-                    ))}
+                    {(() => {
+                      const seenFree = new Set();
+                      return hotelContentData.facilities
+                        .filter(f => f.indFee !== true)
+                        .filter(f => {
+                          const desc = (f.description || `Facility ${f.code}`).trim().toLowerCase();
+                          if (seenFree.has(desc)) return false;
+                          seenFree.add(desc);
+                          return true;
+                        })
+                        .slice(0, 20)
+                        .map((f, i) => (
+                          <div key={`free-${i}`} className="p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-xs text-gray-700 flex items-center gap-2">
+                            <CheckCircle className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
+                            <span>{f.description || `Facility ${f.code}`}</span>
+                          </div>
+                        ));
+                    })()}
                   </div>
                 </div>
               )}

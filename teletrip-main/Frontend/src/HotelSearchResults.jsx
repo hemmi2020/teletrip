@@ -1010,7 +1010,7 @@ const HotelSearchResults = () => {
             price: hotel.minRate || cheapestRate?.net || "N/A",
             currency: hotel.currency || "EUR",
             images: hotel.images || [],
-            amenities: hotel.amenities || [],
+            amenities: [...new Set(hotel.amenities || [])],
             facilities: hotel.facilities || [],
             type: hotel.accommodationTypeCode || hotel.type || "H",
             cancellationPolicy: cancellationPolicy,
