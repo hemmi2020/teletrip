@@ -171,12 +171,13 @@ export default function ComingSoonGate() {
               </button>
             </form>
 
-            {/* Quick 1-click Tip */}
+            {/* Secure Footer Notice */}
             <div className="mt-5 pt-4 border-t border-gray-100 flex items-center justify-between text-[11px] text-gray-400">
-              <span>Direct Link Support:</span>
-              <code className="text-blue-600 font-medium bg-blue-50 px-2 py-0.5 rounded-md">
-                ?preview=telitrip2026
-              </code>
+              <span className="flex items-center gap-1.5">
+                <ShieldCheck className="w-3.5 h-3.5 text-blue-600" />
+                <span>Authorized Personnel Access</span>
+              </span>
+              <span>v2.0 Preview</span>
             </div>
           </div>
         </div>

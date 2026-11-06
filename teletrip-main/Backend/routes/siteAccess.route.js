@@ -7,7 +7,8 @@ const { createSiteAccessToken, verifySiteAccessToken, TOKEN_TTL_SECONDS } = requ
  * GET /api/site-access/status
  */
 router.get('/status', (req, res) => {
-    const isEnabled = process.env.SITE_ACCESS_ENABLED === 'true';
+    // Gate is active unless explicitly disabled via SITE_ACCESS_ENABLED=false
+    const isEnabled = process.env.SITE_ACCESS_ENABLED !== 'false';
     const clientToken = req.headers['x-site-access-token'] || req.cookies?.['telitrip_site_access'];
     const isUnlocked = !isEnabled || (clientToken && verifySiteAccessToken(clientToken));
 
@@ -23,17 +24,6 @@ router.get('/status', (req, res) => {
  * POST /api/site-access/verify
  */
 router.post('/verify', (req, res) => {
-    const isEnabled = process.env.SITE_ACCESS_ENABLED === 'true';
-
-    // If gate is disabled globally, approve immediately
-    if (!isEnabled) {
-        return res.json({
-            success: true,
-            enabled: false,
-            message: 'Site is public'
-        });
-    }
-
     const { passcode } = req.body || {};
     const configuredPasscode = process.env.SITE_ACCESS_PASSCODE || 'telitrip2026';
 
@@ -54,7 +44,7 @@ router.post('/verify', (req, res) => {
     // Passcode correct -> Generate 7-day token
     const token = createSiteAccessToken();
 
-    // Optionally set cookie
+    // Set cookie
     res.cookie('telitrip_site_access', token, {
         maxAge: TOKEN_TTL_SECONDS * 1000,
         httpOnly: false, // Accessible to frontend client

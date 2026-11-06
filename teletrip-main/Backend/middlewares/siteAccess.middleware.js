@@ -45,11 +45,11 @@ function verifySiteAccessToken(token) {
 
 /**
  * Site Access Guard Middleware
- * Restricts public traffic when SITE_ACCESS_ENABLED=true
+ * Restricts public traffic unless explicitly disabled via SITE_ACCESS_ENABLED=false
  */
 function siteAccessGuard(req, res, next) {
-    // 1. If feature toggle is disabled, allow all traffic immediately (instant launch switch)
-    if (process.env.SITE_ACCESS_ENABLED !== 'true') {
+    // 1. If feature toggle is explicitly disabled, allow all traffic immediately (instant launch switch)
+    if (process.env.SITE_ACCESS_ENABLED === 'false') {
         return next();
     }
 
