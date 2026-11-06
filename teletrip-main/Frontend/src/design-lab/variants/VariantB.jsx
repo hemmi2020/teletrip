@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Star, MapPin, Sparkles, Navigation, Layers, Compass, CheckCircle, SlidersHorizontal, X } from 'lucide-react';
+import { Star, MapPin, Sparkles, Navigation, Layers, Compass, CheckCircle, SlidersHorizontal, X, ExternalLink } from 'lucide-react';
 import { mockHotels } from '../fixtures';
 import { FilterSidebar } from '../components/FilterSidebar';
 
@@ -25,43 +25,54 @@ export const VariantB = ({ onSelectHotel }) => {
     return true;
   });
 
+  const activeHotel = mockHotels.find(h => h.id === selectedPin) || mockHotels[0];
+
   return (
     <div className="space-y-4 text-left">
       {/* ── RATIONALE BANNER ── */}
       <div className="p-3.5 bg-emerald-50/80 border border-emerald-200/80 rounded-xl text-xs text-emerald-900 flex items-center justify-between gap-3">
         <div>
           <span className="font-extrabold uppercase tracking-wide mr-2 text-emerald-700">Design Thesis:</span>
-          <strong>Split-Pane Spatial Discovery with Filter Sidebar.</strong> Synchronizes interactive map pins, cards, and full-fidelity filters.
+          <strong>Live Split-Pane Interactive Map.</strong> Real interactive Dubai Google Map with smooth card list synchronization, zero lag, and full filter sidebar.
         </div>
         <span className="px-2 py-0.5 rounded-full bg-emerald-700 text-white font-bold text-[10px] shrink-0">
-          Airbnb Luxe / Google Travel
+          Interactive Map Sync
         </span>
       </div>
 
       {/* Mobile View Switcher */}
       <div className="flex md:hidden bg-gray-100 p-1 rounded-xl gap-1">
         <button
+          type="button"
           onClick={() => setMobileTab('list')}
-          className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${mobileTab === 'list' ? 'bg-white shadow-xs text-gray-900' : 'text-gray-500'}`}
+          className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+            mobileTab === 'list' ? 'bg-white shadow-xs text-gray-900' : 'text-gray-500'
+          }`}
         >
           List ({filteredHotels.length})
         </button>
         <button
+          type="button"
           onClick={() => setMobileTab('map')}
-          className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${mobileTab === 'map' ? 'bg-white shadow-xs text-gray-900' : 'text-gray-500'}`}
+          className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+            mobileTab === 'map' ? 'bg-white shadow-xs text-gray-900' : 'text-gray-500'
+          }`}
         >
-          Map View
+          Interactive Map
         </button>
         <button
+          type="button"
           onClick={() => setMobileTab('filters')}
-          className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${mobileTab === 'filters' ? 'bg-white shadow-xs text-gray-900' : 'text-gray-500'}`}
+          className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+            mobileTab === 'filters' ? 'bg-white shadow-xs text-gray-900' : 'text-gray-500'
+          }`}
         >
           Filters
         </button>
       </div>
 
-      {/* ── 3-PANE SPLIT CONTAINER: SIDEBAR + CARDS + MAP ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 min-h-[620px]">
+      {/* ── 3-PANE SPLIT CONTAINER: SIDEBAR + CARDS + LIVE MAP ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 min-h-[640px]">
         {/* Left: Filter Sidebar (3 cols on desktop) */}
         <div className={`lg:col-span-3 ${mobileTab === 'filters' ? 'block' : 'hidden lg:block'}`}>
           <FilterSidebar
@@ -83,31 +94,29 @@ export const VariantB = ({ onSelectHotel }) => {
         </div>
 
         {/* Center: Responsive Hotel Grid (5 cols on desktop) */}
-        <div className={`lg:col-span-5 space-y-4 ${mobileTab === 'map' || mobileTab === 'filters' ? 'hidden lg:block' : 'block'}`}>
+        <div className={`lg:col-span-5 space-y-3.5 ${mobileTab === 'map' || mobileTab === 'filters' ? 'hidden lg:block' : 'block'}`}>
           <div className="flex items-center justify-between text-xs text-gray-500 pb-1">
             <span className="font-bold text-gray-800">{filteredHotels.length} properties in Dubai</span>
-            <span>Hover card to locate on map</span>
+            <span className="text-[11px] text-gray-400">Click card to highlight on map</span>
           </div>
 
-          <div className="space-y-3.5 max-h-[750px] overflow-y-auto pr-1">
+          <div className="space-y-3.5 max-h-[720px] overflow-y-auto pr-1">
             {filteredHotels.map((hotel) => {
               const isSelected = selectedPin === hotel.id;
               return (
                 <div
                   key={hotel.id}
-                  onMouseEnter={() => setSelectedPin(hotel.id)}
                   onClick={() => {
                     setSelectedPin(hotel.id);
-                    if (onSelectHotel) onSelectHotel(hotel);
                   }}
-                  className={`bg-white rounded-2xl border overflow-hidden transition-all duration-200 cursor-pointer flex flex-col sm:flex-row justify-between ${
+                  className={`bg-white rounded-2xl border overflow-hidden transition-all duration-150 cursor-pointer flex flex-col sm:flex-row justify-between ${
                     isSelected
-                      ? 'border-blue-600 ring-2 ring-blue-500/20 shadow-lg scale-[1.01]'
+                      ? 'border-blue-600 ring-2 ring-blue-500/20 shadow-md'
                       : 'border-gray-200 hover:border-gray-300 shadow-2xs'
                   }`}
                 >
                   <div className="sm:w-44 h-36 relative overflow-hidden shrink-0">
-                    <img src={hotel.thumbnail} alt={hotel.name} className="w-full h-full object-cover" />
+                    <img src={hotel.thumbnail} alt={hotel.name} className="w-full h-full object-cover" loading="lazy" />
                     <span className="absolute top-2 left-2 bg-black/70 backdrop-blur-md text-white text-[9px] font-bold px-2 py-0.5 rounded-full">
                       ★ {hotel.rating}
                     </span>
@@ -125,7 +134,19 @@ export const VariantB = ({ onSelectHotel }) => {
                         <span className="text-[9px] text-gray-400 block uppercase font-bold">Total Stay</span>
                         <span className="text-sm font-black text-blue-600">AED {hotel.priceAED.toLocaleString()}</span>
                       </div>
-                      <span className="text-[11px] text-amber-700 font-bold">≈ PKR {hotel.pricePKR.toLocaleString()}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[11px] text-amber-700 font-bold">≈ PKR {hotel.pricePKR.toLocaleString()}</span>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (onSelectHotel) onSelectHotel(hotel);
+                          }}
+                          className="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-[11px] font-bold"
+                        >
+                          View
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -134,46 +155,40 @@ export const VariantB = ({ onSelectHotel }) => {
           </div>
         </div>
 
-        {/* Right: Interactive Synchronized Map (4 cols on desktop) */}
-        <div className={`lg:col-span-4 rounded-3xl overflow-hidden border border-gray-200 bg-slate-900 relative shadow-inner min-h-[400px] ${mobileTab === 'list' || mobileTab === 'filters' ? 'hidden lg:block' : 'block'}`}>
-          <img
-            src="https://images.pexels.com/photos/2044434/pexels-photo-2044434.jpeg"
-            alt="Dubai satellite map background"
-            className="w-full h-full object-cover opacity-60 filter contrast-125"
+        {/* Right: Real Interactive Map (4 cols on desktop) */}
+        <div className={`lg:col-span-4 rounded-3xl overflow-hidden border border-gray-200 bg-slate-100 relative shadow-sm min-h-[460px] lg:min-h-[720px] ${mobileTab === 'list' || mobileTab === 'filters' ? 'hidden lg:block' : 'block'}`}>
+          {/* Live Google Map Embed centered on Dubai */}
+          <iframe
+            title="Interactive Dubai Hotels Map"
+            src={`https://maps.google.com/maps?q=${encodeURIComponent(activeHotel.name + ', ' + activeHotel.address + ', Dubai')}&t=m&z=13&ie=UTF8&iwloc=&output=embed`}
+            className="w-full h-full border-0 absolute inset-0"
+            loading="lazy"
           />
-          <div className="absolute inset-0 bg-slate-950/40" />
 
-          {/* Interactive Floating Price Pins */}
-          <div className="absolute top-20 left-16 z-20">
-            <button
-              onClick={() => setSelectedPin("107748")}
-              className={`px-2.5 py-1 rounded-full text-xs font-black shadow-lg transition-all cursor-pointer ${
-                selectedPin === "107748" ? 'bg-blue-600 text-white scale-110 ring-4 ring-white/60' : 'bg-white text-gray-900 hover:scale-105'
-              }`}
-            >
-              AED 606
-            </button>
+          {/* Map Top Header Badge */}
+          <div className="absolute top-3 left-3 right-3 z-10 flex items-center justify-between gap-2 pointer-events-none">
+            <span className="px-3 py-1 rounded-full bg-white/95 backdrop-blur-md text-gray-900 text-[11px] font-black shadow-md border border-gray-200 pointer-events-auto">
+              📍 Live Interactive Map: {activeHotel.name}
+            </span>
           </div>
 
-          <div className="absolute top-36 right-20 z-20">
-            <button
-              onClick={() => setSelectedPin("6807")}
-              className={`px-2.5 py-1 rounded-full text-xs font-black shadow-lg transition-all cursor-pointer ${
-                selectedPin === "6807" ? 'bg-blue-600 text-white scale-110 ring-4 ring-white/60' : 'bg-white text-gray-900 hover:scale-105'
-              }`}
-            >
-              AED 1,450
-            </button>
-          </div>
+          {/* Active Hotel Floating Bottom Card */}
+          <div className="absolute bottom-4 left-3 right-3 z-10 bg-white/95 backdrop-blur-md rounded-2xl p-3 shadow-xl border border-gray-200 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <img src={activeHotel.thumbnail} alt="" className="w-12 h-12 rounded-xl object-cover shrink-0 border border-gray-200" />
+              <div className="min-w-0">
+                <h4 className="font-extrabold text-xs text-gray-900 truncate">{activeHotel.name}</h4>
+                <div className="text-[10px] text-gray-500">{activeHotel.zone} · ★ {activeHotel.rating}</div>
+                <div className="text-xs font-black text-blue-600">AED {activeHotel.priceAED.toLocaleString()} total</div>
+              </div>
+            </div>
 
-          <div className="absolute bottom-24 left-24 z-20">
             <button
-              onClick={() => setSelectedPin("10243")}
-              className={`px-2.5 py-1 rounded-full text-xs font-black shadow-lg transition-all cursor-pointer ${
-                selectedPin === "10243" ? 'bg-blue-600 text-white scale-110 ring-4 ring-white/60' : 'bg-white text-gray-900 hover:scale-105'
-              }`}
+              type="button"
+              onClick={() => onSelectHotel && onSelectHotel(activeHotel)}
+              className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shrink-0 shadow-xs cursor-pointer"
             >
-              AED 3,150
+              Select Hotel
             </button>
           </div>
         </div>
