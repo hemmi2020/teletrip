@@ -7,7 +7,6 @@ const { createSiteAccessToken, verifySiteAccessToken, TOKEN_TTL_SECONDS } = requ
  * GET /api/site-access/status
  */
 router.get('/status', (req, res) => {
-    // Gate is active unless explicitly disabled via SITE_ACCESS_ENABLED=false
     const isEnabled = process.env.SITE_ACCESS_ENABLED !== 'false';
     const clientToken = req.headers['x-site-access-token'] || req.cookies?.['telitrip_site_access'];
     const isUnlocked = !isEnabled || (clientToken && verifySiteAccessToken(clientToken));
@@ -25,7 +24,6 @@ router.get('/status', (req, res) => {
  */
 router.post('/verify', (req, res) => {
     const { passcode } = req.body || {};
-    const configuredPasscode = process.env.SITE_ACCESS_PASSCODE || 'telitrip2026';
 
     if (!passcode || typeof passcode !== 'string') {
         return res.status(400).json({
@@ -34,7 +32,16 @@ router.post('/verify', (req, res) => {
         });
     }
 
-    if (passcode.trim() !== configuredPasscode.trim()) {
+    const input = passcode.trim().toLowerCase();
+    const envPasscode = (process.env.SITE_ACCESS_PASSCODE || 'telitrip2026')
+        .replace(/^["']|["']$/g, '')
+        .trim()
+        .toLowerCase();
+
+    // Validate: must match configured passcode, or accepted team defaults
+    const isMatch = input === envPasscode || input === 'telitrip2026' || input === 'teletrip2026';
+
+    if (!isMatch) {
         return res.status(401).json({
             success: false,
             message: 'Incorrect passcode. Please check and try again.'

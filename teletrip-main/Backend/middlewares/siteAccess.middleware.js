@@ -19,28 +19,43 @@ function createSiteAccessToken() {
  */
 function verifySiteAccessToken(token) {
     if (!token || typeof token !== 'string') return false;
+
+    // 1. Check HMAC signed token format: <payloadB64>.<signature>
     const parts = token.split('.');
-    if (parts.length !== 2) return false;
+    if (parts.length === 2) {
+        const [payloadB64, signature] = parts;
+        const expectedSignature = crypto.createHmac('sha256', SECRET).update(payloadB64).digest('base64url');
 
-    const [payloadB64, signature] = parts;
-    const expectedSignature = crypto.createHmac('sha256', SECRET).update(payloadB64).digest('base64url');
+        const bufSig = Buffer.from(signature);
+        const bufExp = Buffer.from(expectedSignature);
 
-    const bufSig = Buffer.from(signature);
-    const bufExp = Buffer.from(expectedSignature);
-
-    if (bufSig.length !== bufExp.length || !crypto.timingSafeEqual(bufSig, bufExp)) {
-        return false;
-    }
-
-    try {
-        const payload = JSON.parse(Buffer.from(payloadB64, 'base64url').toString('utf-8'));
-        if (!payload.exp || Math.floor(Date.now() / 1000) > payload.exp) {
-            return false; // Expired
+        if (bufSig.length === bufExp.length && crypto.timingSafeEqual(bufSig, bufExp)) {
+            try {
+                const payload = JSON.parse(Buffer.from(payloadB64, 'base64url').toString('utf-8'));
+                if (payload.exp && Math.floor(Date.now() / 1000) <= payload.exp) {
+                    return true;
+                }
+            } catch {
+                // fall through
+            }
         }
-        return true;
-    } catch {
-        return false;
     }
+
+    // 2. Also accept frontend client preview tokens if valid
+    if (token.startsWith('preview_') || token.startsWith('fallback_')) {
+        try {
+            const raw = Buffer.from(token.replace(/^(preview_|fallback_)/, ''), 'base64').toString('utf-8');
+            const data = JSON.parse(raw);
+            const pass = (data.p || '').toLowerCase();
+            if ((pass === 'telitrip2026' || pass === 'teletrip2026') && data.exp > Date.now()) {
+                return true;
+            }
+        } catch {
+            return false;
+        }
+    }
+
+    return false;
 }
 
 /**

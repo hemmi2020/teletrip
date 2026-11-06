@@ -1,9 +1,9 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import axios from 'axios';
 
 const SiteAccessContext = createContext(null);
 
 const STORAGE_KEY = 'telitrip_site_access_token';
-const EXPECTED_PASSCODE = 'telitrip2026';
 
 // Compute backend API base
 const getBackendBase = () => {
@@ -14,33 +14,52 @@ const getBackendBase = () => {
   return '';
 };
 
+// Helper to get stored token
+const getStoredToken = () => {
+  try {
+    return localStorage.getItem(STORAGE_KEY) || null;
+  } catch {
+    return null;
+  }
+};
+
+// Helper to store token
+const storeToken = (token) => {
+  try {
+    if (token) {
+      localStorage.setItem(STORAGE_KEY, token);
+      axios.defaults.headers.common['x-site-access-token'] = token;
+    } else {
+      localStorage.removeItem(STORAGE_KEY);
+      delete axios.defaults.headers.common['x-site-access-token'];
+    }
+  } catch {
+    // ignore storage errors
+  }
+};
+
+// ── GLOBAL INTERCEPTORS FOR BOTH FETCH AND AXIOS ──
+// Set initial axios default header if token is present
+const initialToken = getStoredToken();
+if (initialToken) {
+  axios.defaults.headers.common['x-site-access-token'] = initialToken;
+}
+
+// Axios Request Interceptor: ensures all axios calls (hotelApi, transfers, activities) carry the access token
+axios.interceptors.request.use((config) => {
+  const token = getStoredToken();
+  if (token) {
+    config.headers = config.headers || {};
+    config.headers['x-site-access-token'] = token;
+  }
+  return config;
+});
+
 export const SiteAccessProvider = ({ children }) => {
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isGateEnabled, setIsGateEnabled] = useState(true);
   const [error, setError] = useState(null);
-
-  // Helper to get stored token
-  const getStoredToken = () => {
-    try {
-      return localStorage.getItem(STORAGE_KEY) || null;
-    } catch {
-      return null;
-    }
-  };
-
-  // Helper to store token
-  const storeToken = (token) => {
-    try {
-      if (token) {
-        localStorage.setItem(STORAGE_KEY, token);
-      } else {
-        localStorage.removeItem(STORAGE_KEY);
-      }
-    } catch {
-      // ignore storage errors
-    }
-  };
 
   // Monkey-patch window.fetch to automatically append x-site-access-token header
   useEffect(() => {
@@ -72,7 +91,7 @@ export const SiteAccessProvider = ({ children }) => {
   // Strict passcode verification
   const verifyPasscode = useCallback(async (passcode) => {
     setError(null);
-    const clean = (passcode || '').trim();
+    const clean = (passcode || '').trim().toLowerCase();
 
     if (!clean) {
       const msg = 'Please enter the preview passcode';
@@ -81,13 +100,14 @@ export const SiteAccessProvider = ({ children }) => {
     }
 
     // STRICT PASSCODE CHECK: Typing random text will NEVER unlock the site
-    if (clean !== EXPECTED_PASSCODE) {
+    const isValidPasscode = clean === 'telitrip2026' || clean === 'teletrip2026';
+    if (!isValidPasscode) {
       const msg = 'Incorrect passcode. Please check and try again.';
       setError(msg);
       return { success: false, message: msg };
     }
 
-    // Passcode is verified! Call backend to fetch official token or generate local session token
+    // Passcode is verified! Call backend to fetch official HMAC token
     try {
       const backendUrl = getBackendBase();
       const res = await window.fetch(`${backendUrl}/api/site-access/verify`, {
@@ -102,7 +122,7 @@ export const SiteAccessProvider = ({ children }) => {
       setIsUnlocked(true);
       setError(null);
       return { success: true };
-    } catch (err) {
+    } catch {
       const validToken = 'preview_' + btoa(JSON.stringify({ v: 1, p: clean, exp: Date.now() + 7 * 86400000 }));
       storeToken(validToken);
       setIsUnlocked(true);
@@ -150,14 +170,17 @@ export const SiteAccessProvider = ({ children }) => {
       // 3. Stored token validation
       if (storedToken.startsWith('preview_') || storedToken.startsWith('fallback_')) {
         try {
-          const payload = JSON.parse(atob(storedToken.replace(/^(preview_|fallback_)/, '')));
-          if (payload?.p === EXPECTED_PASSCODE && payload?.exp > Date.now()) {
+          const raw = atob(storedToken.replace(/^(preview_|fallback_)/, ''));
+          const payload = JSON.parse(raw);
+          const p = (payload?.p || '').toLowerCase();
+          if ((p === 'telitrip2026' || p === 'teletrip2026') && payload?.exp > Date.now()) {
+            axios.defaults.headers.common['x-site-access-token'] = storedToken;
             setIsUnlocked(true);
             setIsLoading(false);
             return;
           }
         } catch {
-          // invalid token format
+          // invalid token
         }
       }
 
@@ -169,23 +192,20 @@ export const SiteAccessProvider = ({ children }) => {
         });
         if (res.ok) {
           const data = await res.json();
-          if (data.unlocked === true && data.enabled !== false) {
+          if (data.unlocked === true || data.enabled === false) {
+            axios.defaults.headers.common['x-site-access-token'] = storedToken;
             setIsUnlocked(true);
           } else {
-            // Verify if stored token was legitimate
-            if (storedToken.startsWith('preview_')) {
-              setIsUnlocked(true);
-            } else {
-              storeToken(null);
-              setIsUnlocked(false);
-            }
+            storeToken(null);
+            setIsUnlocked(false);
           }
         } else {
           storeToken(null);
           setIsUnlocked(false);
         }
-      } catch (err) {
+      } catch {
         if (storedToken.startsWith('preview_')) {
+          axios.defaults.headers.common['x-site-access-token'] = storedToken;
           setIsUnlocked(true);
         } else {
           storeToken(null);
