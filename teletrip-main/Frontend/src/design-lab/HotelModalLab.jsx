@@ -23,23 +23,30 @@ import {
   Sparkles,
   Wifi,
   Eye,
-  SlidersHorizontal
+  SlidersHorizontal,
+  Coffee,
+  Bath,
+  Tv,
+  ShieldCheck,
+  Check,
+  Maximize2
 } from 'lucide-react';
 import { FeedbackOverlay } from './FeedbackOverlay';
-import { DUBAI_HOTEL_FIXTURES } from './fixtures';
+import { DUBAI_HOTEL_FIXTURES, mockHotels } from './fixtures';
 
 export default function HotelModalLab() {
   const [viewportWidth, setViewportWidth] = useState('100%');
-  const [selectedStyle, setSelectedStyle] = useState('category_shortcuts'); // 'category_shortcuts' | 'split_matrix' | 'drawer_sheet'
+  const [selectedStyle, setSelectedStyle] = useState('category_shortcuts'); // 'category_shortcuts' | 'split_studio' | 'b2b_matrix'
   const [activeCategory, setActiveCategory] = useState('All');
   const [rateFilter, setRateFilter] = useState('all');
   const [expandedRooms, setExpandedRooms] = useState({ 'DLX.KNG': true });
-  const [isModalOpen, setIsModalOpen] = useState(true);
+  const [selectedStudioRoomIdx, setSelectedStudioRoomIdx] = useState(1); // Deluxe King by default
+  const [selectedMatrixRoomIdx, setSelectedMatrixRoomIdx] = useState(1);
   const [cartCount, setCartCount] = useState(0);
 
-  const sampleHotel = DUBAI_HOTEL_FIXTURES[0]; // Atlantis The Royal
+  const sampleHotel = DUBAI_HOTEL_FIXTURES[0] || mockHotels[0];
 
-  // Extended rooms fixture for realistic scroll audit (8 distinct room options)
+  // Extended rooms fixture for realistic scroll audit (6 distinct room options)
   const fullRooms = [
     {
       code: 'STD.KG',
@@ -50,6 +57,7 @@ export default function HotelModalLab() {
       view: 'Palm Island View',
       photosCount: 6,
       image: 'https://images.pexels.com/photos/271624/pexels-photo-271624.jpeg',
+      amenitiesList: ['King Bed', 'Marble Bathroom', 'Nespresso Coffee', 'High-Speed WiFi', 'Balcony'],
       rates: [
         {
           key: 'r1',
@@ -79,6 +87,7 @@ export default function HotelModalLab() {
       view: 'Arabian Sea Full View',
       photosCount: 8,
       image: 'https://images.pexels.com/photos/261102/pexels-photo-261102.jpeg',
+      amenitiesList: ['Sea View Balcony', 'Deep Soaking Tub', 'Walk-in Rain Shower', '65" Smart TV', 'Luxury Bathrobes'],
       rates: [
         {
           key: 'r3',
@@ -94,7 +103,7 @@ export default function HotelModalLab() {
           net: 2120,
           freeCancel: true,
           cancelUntil: 'Free cancellation up to 3 days before check-in',
-          promo: 'Exclusive Welcome Amenity',
+          promo: 'Best Value Recommendation',
           allotment: 2
         },
         {
@@ -117,6 +126,7 @@ export default function HotelModalLab() {
       view: 'Palm Jumeirah & Skyline',
       photosCount: 5,
       image: 'https://images.pexels.com/photos/164595/pexels-photo-164595.jpeg',
+      amenitiesList: ['2 Queen Beds', 'Skyline View', 'Work Desk', 'Premium Sound System'],
       rates: [
         {
           key: 'r6',
@@ -137,6 +147,7 @@ export default function HotelModalLab() {
       view: 'Dubai Skyline & Marina View',
       photosCount: 11,
       image: 'https://images.pexels.com/photos/189296/pexels-photo-189296.jpeg',
+      amenitiesList: ['Living Room & Lounge', 'Private Sun Terrace', 'Club Lounge Access', 'Butler On-Call'],
       rates: [
         {
           key: 'r7',
@@ -151,13 +162,14 @@ export default function HotelModalLab() {
     },
     {
       code: 'STE.EXE',
-      name: 'Sky Terrace Grand Suite with Private Plunge Pool',
+      name: 'Sky Terrace Grand Suite with Plunge Pool',
       category: 'Suites',
       size: '140 sqm / 1,506 sqft',
       bed: '1 Master Bedroom + Dining Area',
       view: 'Panoramic Palm View',
       photosCount: 14,
       image: 'https://images.pexels.com/photos/271618/pexels-photo-271618.jpeg',
+      amenitiesList: ['Private Heated Plunge Pool', 'Outdoor Dining Area', '24/7 Royal Butler', 'Complimentary Minibar'],
       rates: [
         {
           key: 'r8',
@@ -179,6 +191,7 @@ export default function HotelModalLab() {
       view: 'Waterpark & Sea View',
       photosCount: 9,
       image: 'https://images.pexels.com/photos/279746/pexels-photo-279746.jpeg',
+      amenitiesList: ['Two Private En-suites', 'Kitchenette & Dining', 'Kids Play Station', 'Direct Waterpark Access'],
       rates: [
         {
           key: 'r9',
@@ -243,7 +256,7 @@ export default function HotelModalLab() {
                 </h1>
               </div>
               <p className="text-[11px] text-gray-500">
-                Solving lengthy room scrolling, category navigation shortcuts, rate cards, and small mobile responsiveness
+                Solving lengthy room scrolling with 3 best-in-class responsive layouts
               </p>
             </div>
           </div>
@@ -254,29 +267,29 @@ export default function HotelModalLab() {
               <button
                 type="button"
                 onClick={() => setSelectedStyle('category_shortcuts')}
-                className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
+                className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
                   selectedStyle === 'category_shortcuts' ? 'bg-white text-blue-600 shadow-xs font-bold' : 'text-gray-600'
                 }`}
               >
-                Style 1: Category Chips & Accordion
+                Option 1: Category Chips & Accordion (Approved)
               </button>
               <button
                 type="button"
-                onClick={() => setSelectedStyle('split_matrix')}
-                className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
-                  selectedStyle === 'split_matrix' ? 'bg-white text-blue-600 shadow-xs font-bold' : 'text-gray-600'
+                onClick={() => setSelectedStyle('split_studio')}
+                className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                  selectedStyle === 'split_studio' ? 'bg-white text-blue-600 shadow-xs font-bold' : 'text-gray-600'
                 }`}
               >
-                Style 2: Matrix Comparison Table
+                Option 2: Split-Pane Spatial Studio (New)
               </button>
               <button
                 type="button"
-                onClick={() => setSelectedStyle('drawer_sheet')}
-                className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
-                  selectedStyle === 'drawer_sheet' ? 'bg-white text-blue-600 shadow-xs font-bold' : 'text-gray-600'
+                onClick={() => setSelectedStyle('b2b_matrix')}
+                className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                  selectedStyle === 'b2b_matrix' ? 'bg-white text-blue-600 shadow-xs font-bold' : 'text-gray-600'
                 }`}
               >
-                Style 3: Visual Luxe Bottom Sheet
+                Option 3: B2B Rate Comparison Matrix (New)
               </button>
             </div>
 
@@ -327,7 +340,7 @@ export default function HotelModalLab() {
           className="transition-all duration-300 relative rounded-3xl overflow-hidden shadow-2xl bg-white border border-gray-200 max-h-[88vh] flex flex-col"
         >
           {/* ── MODAL HEADER WITH HERO PHOTO ── */}
-          <div className="relative flex-shrink-0 text-white min-h-[160px] sm:min-h-[200px] flex flex-col justify-between p-4 sm:p-6 overflow-hidden">
+          <div className="relative flex-shrink-0 text-white min-h-[160px] sm:min-h-[190px] flex flex-col justify-between p-4 sm:p-6 overflow-hidden">
             <img
               src={sampleHotel.thumbnail}
               alt={sampleHotel.name}
@@ -352,7 +365,7 @@ export default function HotelModalLab() {
               <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  className="px-3 py-1 rounded-full bg-black/50 hover:bg-black/70 backdrop-blur-md text-white text-xs font-semibold flex items-center gap-1.5 border border-white/30"
+                  className="px-3 py-1 rounded-full bg-black/50 hover:bg-black/70 backdrop-blur-md text-white text-xs font-semibold flex items-center gap-1.5 border border-white/30 cursor-pointer"
                 >
                   <Camera className="w-3.5 h-3.5 text-blue-300" />
                   <span>34 Photos</span>
@@ -384,13 +397,15 @@ export default function HotelModalLab() {
             </div>
           </div>
 
-          {/* ── STYLE 1: ROOM CATEGORY SHORTCUTS & ACCORDION ── */}
+          {/* ════════════════════════════════════════════════════════════════════
+              OPTION 1: CATEGORY CHIPS & ACCORDION (APPROVED)
+             ════════════════════════════════════════════════════════════════════ */}
           {selectedStyle === 'category_shortcuts' && (
             <>
               {/* Category Shortcuts Bar */}
               <div className="flex-shrink-0 bg-slate-50 border-b border-gray-200 p-3 space-y-2">
                 <div className="flex items-center justify-between text-xs font-semibold text-gray-700">
-                  <span className="flex items-center gap-1.5">
+                  <span className="flex items-center gap-1.5 font-bold">
                     <Layers className="w-4 h-4 text-blue-600" />
                     Room Type Shortcuts ({fullRooms.length} available):
                   </span>
@@ -398,7 +413,7 @@ export default function HotelModalLab() {
                     <button
                       type="button"
                       onClick={expandAll}
-                      className="text-[11px] text-blue-600 hover:underline cursor-pointer"
+                      className="text-[11px] text-blue-600 hover:underline cursor-pointer font-semibold"
                     >
                       Expand All
                     </button>
@@ -406,7 +421,7 @@ export default function HotelModalLab() {
                     <button
                       type="button"
                       onClick={collapseAll}
-                      className="text-[11px] text-gray-500 hover:underline cursor-pointer"
+                      className="text-[11px] text-gray-500 hover:underline cursor-pointer font-semibold"
                     >
                       Collapse All
                     </button>
@@ -473,13 +488,12 @@ export default function HotelModalLab() {
                         isExpanded ? 'border-blue-300 ring-2 ring-blue-100' : 'border-gray-200 hover:border-gray-300'
                       }`}
                     >
-                      {/* Room Summary Header (Always Visible) */}
+                      {/* Room Summary Header */}
                       <div
                         onClick={() => toggleRoom(room.code)}
                         className="p-3.5 flex items-center justify-between gap-3 cursor-pointer select-none bg-white hover:bg-gray-50/80 transition-colors"
                       >
                         <div className="flex items-center gap-3 min-w-0 flex-1">
-                          {/* Room Thumbnail Photo with photo count badge */}
                           <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden shrink-0 border border-gray-200 relative">
                             <img src={room.image} alt={room.name} className="w-full h-full object-cover" />
                             <span className="absolute bottom-0 inset-x-0 bg-black/60 text-white text-[8px] font-bold text-center py-0.5">
@@ -570,7 +584,6 @@ export default function HotelModalLab() {
                                 </div>
                               </div>
 
-                              {/* Price & Select Rate CTA */}
                               <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-0 border-gray-100">
                                 <div className="text-left sm:text-right">
                                   <div className="text-base sm:text-lg font-black text-blue-600 leading-tight">
@@ -601,95 +614,283 @@ export default function HotelModalLab() {
             </>
           )}
 
-          {/* ── STYLE 2: MATRIX COMPARISON TABLE ── */}
-          {selectedStyle === 'split_matrix' && (
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl text-xs text-blue-900 font-medium flex items-center gap-2">
-                <SlidersHorizontal className="w-4 h-4 text-blue-600 shrink-0" />
-                <span>Matrix View: Compare all room types directly against board options with zero endless scrolling.</span>
+          {/* ════════════════════════════════════════════════════════════════════
+              OPTION 2: SPLIT-PANE SPATIAL STUDIO LAYOUT (NEW & POLISHED)
+             ════════════════════════════════════════════════════════════════════ */}
+          {selectedStyle === 'split_studio' && (
+            <div className="flex-1 flex flex-col overflow-hidden bg-slate-50">
+              {/* Room Horizontal Selector Bar */}
+              <div className="flex-shrink-0 bg-white border-b border-gray-200 p-3 flex items-center gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+                <span className="text-xs font-extrabold text-gray-700 shrink-0 mr-1 flex items-center gap-1">
+                  <Bed className="w-4 h-4 text-blue-600" /> Choose Room:
+                </span>
+                {fullRooms.map((r, i) => (
+                  <button
+                    key={r.code}
+                    type="button"
+                    onClick={() => setSelectedStudioRoomIdx(i)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-2 cursor-pointer border ${
+                      selectedStudioRoomIdx === i
+                        ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                        : 'bg-gray-50 hover:bg-gray-100 text-gray-700 border-gray-200'
+                    }`}
+                  >
+                    <span>{r.name}</span>
+                    <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${selectedStudioRoomIdx === i ? 'bg-white/20' : 'bg-gray-200'}`}>
+                      {r.rates.length} rates
+                    </span>
+                  </button>
+                ))}
               </div>
 
-              <div className="overflow-x-auto border border-gray-200 rounded-2xl bg-white shadow-xs">
-                <table className="w-full text-left text-xs border-collapse">
-                  <thead>
-                    <tr className="bg-gray-100 text-gray-700 uppercase font-black text-[10px] border-b border-gray-200">
-                      <th className="p-3">Room Type</th>
-                      <th className="p-3">Specs</th>
-                      <th className="p-3">Room Only</th>
-                      <th className="p-3">Breakfast Included</th>
-                      <th className="p-3">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100">
-                    {fullRooms.map((r) => (
-                      <tr key={r.code} className="hover:bg-blue-50/40 transition-colors">
-                        <td className="p-3">
-                          <div className="flex items-center gap-2.5">
-                            <img src={r.image} alt="" className="w-12 h-12 rounded-lg object-cover" />
-                            <div>
-                              <div className="font-extrabold text-gray-900">{r.name}</div>
-                              <span className="text-[10px] text-blue-600 font-semibold">{r.category}</span>
+              {/* 2-Pane Split Workspace */}
+              {(() => {
+                const room = fullRooms[selectedStudioRoomIdx] || fullRooms[0];
+                return (
+                  <div className="flex-1 overflow-y-auto grid grid-cols-1 lg:grid-cols-12 gap-6 p-4 sm:p-6">
+                    {/* Left Pane (5 Cols): Room Media & Detailed Amenities */}
+                    <div className="lg:col-span-5 space-y-4">
+                      <div className="rounded-2xl overflow-hidden border border-gray-200 bg-white shadow-xs">
+                        <div className="h-56 relative group">
+                          <img src={room.image} alt={room.name} className="w-full h-full object-cover" />
+                          <span className="absolute top-2.5 left-2.5 bg-black/75 backdrop-blur-md text-white text-[10px] font-bold px-2.5 py-1 rounded-full">
+                            {room.category}
+                          </span>
+                          <span className="absolute bottom-2.5 right-2.5 bg-black/70 backdrop-blur-md text-white text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1">
+                            <Camera className="w-3 h-3 text-blue-300" />
+                            <span>{room.photosCount} photos</span>
+                          </span>
+                        </div>
+
+                        <div className="p-4 space-y-3">
+                          <div>
+                            <h3 className="font-extrabold text-base text-gray-900 leading-snug">{room.name}</h3>
+                            <div className="text-xs text-blue-600 font-semibold mt-0.5">{room.view}</div>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-2 text-xs text-gray-600 pt-1">
+                            <div className="p-2 bg-gray-50 rounded-xl">
+                              <span className="text-[10px] text-gray-400 block font-bold uppercase">Room Size</span>
+                              <span className="font-bold text-gray-900">{room.size}</span>
+                            </div>
+                            <div className="p-2 bg-gray-50 rounded-xl">
+                              <span className="text-[10px] text-gray-400 block font-bold uppercase">Bed Config</span>
+                              <span className="font-bold text-gray-900">{room.bed}</span>
                             </div>
                           </div>
-                        </td>
-                        <td className="p-3 text-gray-500 font-medium text-[11px]">
-                          <div>{r.size}</div>
-                          <div>{r.bed}</div>
-                        </td>
-                        <td className="p-3">
-                          <div className="font-bold text-gray-900">AED 1,450</div>
-                          <div className="text-[10px] text-emerald-600 font-medium">Free Cancel</div>
-                        </td>
-                        <td className="p-3">
-                          <div className="font-bold text-blue-600">AED 1,680</div>
-                          <div className="text-[10px] text-amber-600 font-semibold">Special Offer</div>
-                        </td>
-                        <td className="p-3">
-                          <button
-                            type="button"
-                            onClick={() => setCartCount(c => c + 1)}
-                            className="px-3 py-1.5 bg-blue-600 text-white rounded-lg font-bold text-xs hover:bg-blue-700"
-                          >
-                            Book
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+
+                          <div className="space-y-1.5 pt-2 border-t border-gray-100">
+                            <span className="text-[11px] font-extrabold uppercase tracking-wider text-gray-400 block">
+                              Included Room Features:
+                            </span>
+                            <div className="flex flex-wrap gap-1.5">
+                              {room.amenitiesList.map((am, idx) => (
+                                <span key={idx} className="text-[11px] font-medium bg-blue-50/70 text-blue-900 border border-blue-100 px-2 py-0.5 rounded-lg flex items-center gap-1">
+                                  <Check className="w-3 h-3 text-blue-600" /> {am}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Right Pane (7 Cols): Rate Package Cards Deck */}
+                    <div className="lg:col-span-7 space-y-3">
+                      <div className="flex items-center justify-between pb-1">
+                        <span className="text-xs font-extrabold text-gray-700">
+                          Select Rate Option for {room.name}:
+                        </span>
+                        <span className="text-[11px] text-gray-400">Guaranteed Hotelbeds Availability</span>
+                      </div>
+
+                      {room.rates.map((rate, ri) => (
+                        <div
+                          key={rate.key}
+                          className={`p-4 rounded-2xl border transition-all shadow-xs bg-white space-y-3 ${
+                            ri === 1 ? 'border-blue-500 ring-2 ring-blue-100' : 'border-gray-200 hover:border-gray-300'
+                          }`}
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="text-xs font-black text-gray-900 bg-gray-100 px-2.5 py-1 rounded-lg">
+                                  {rate.board}
+                                </span>
+                                {ri === 1 && (
+                                  <span className="text-[10px] font-black uppercase tracking-wider bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-2 py-0.5 rounded-full shadow-2xs">
+                                    ★ Most Popular Choice
+                                  </span>
+                                )}
+                              </div>
+
+                              <div className="flex items-center gap-2 text-xs text-gray-600 pt-1">
+                                {rate.freeCancel ? (
+                                  <span className="text-emerald-700 font-bold flex items-center gap-1">
+                                    <CheckCircle className="w-3.5 h-3.5" /> {rate.cancelUntil}
+                                  </span>
+                                ) : (
+                                  <span className="text-rose-600 font-semibold flex items-center gap-1">
+                                    <XCircle className="w-3.5 h-3.5" /> Non-Refundable
+                                  </span>
+                                )}
+                              </div>
+
+                              {rate.promo && (
+                                <div className="text-[11px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md inline-flex items-center gap-1 mt-1 border border-amber-200">
+                                  <Tag className="w-3 h-3 text-amber-600" />
+                                  <span>{rate.promo}</span>
+                                </div>
+                              )}
+                            </div>
+
+                            <div className="text-right shrink-0">
+                              <span className="text-[9px] text-gray-400 uppercase font-bold block">Rate / Night</span>
+                              <div className="text-lg font-black text-blue-600">
+                                AED {rate.net.toLocaleString()}
+                              </div>
+                              <div className="text-[10px] text-gray-500 font-semibold">
+                                ≈ PKR {(rate.net * 76).toLocaleString()}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="pt-3 border-t border-gray-100 flex items-center justify-between">
+                            <span className="text-[11px] text-gray-500 flex items-center gap-1">
+                              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" /> Instant confirmation
+                            </span>
+
+                            <button
+                              type="button"
+                              onClick={() => setCartCount(c => c + 1)}
+                              className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-black rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer active:scale-95"
+                            >
+                              <ShoppingCart className="w-3.5 h-3.5" />
+                              Select Rate
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           )}
 
-          {/* ── STYLE 3: VISUAL LUXE BOTTOM SHEET ── */}
-          {selectedStyle === 'drawer_sheet' && (
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {fullRooms.map((r) => (
-                  <div key={r.code} className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-xs hover:shadow-md transition-shadow">
-                    <div className="h-44 relative">
-                      <img src={r.image} alt="" className="w-full h-full object-cover" />
-                      <span className="absolute top-2.5 left-2.5 bg-black/70 backdrop-blur-md text-white text-[10px] font-bold px-2.5 py-1 rounded-full">
-                        {r.category}
-                      </span>
-                      <span className="absolute bottom-2.5 right-2.5 bg-blue-600 text-white font-extrabold text-xs px-2.5 py-1 rounded-lg">
-                        from AED 1,450
-                      </span>
-                    </div>
-                    <div className="p-4 space-y-2">
-                      <h4 className="font-extrabold text-sm text-gray-900">{r.name}</h4>
-                      <p className="text-xs text-gray-500">{r.size} · {r.bed}</p>
-                      <button
-                        type="button"
-                        onClick={() => setCartCount(c => c + 1)}
-                        className="w-full py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold rounded-xl text-xs transition-colors"
-                      >
-                        View Rates & Inclusions →
-                      </button>
-                    </div>
-                  </div>
+          {/* ════════════════════════════════════════════════════════════════════
+              OPTION 3: B2B RATE COMPARISON MATRIX (NEW & ACCURATE)
+             ════════════════════════════════════════════════════════════════════ */}
+          {selectedStyle === 'b2b_matrix' && (
+            <div className="flex-1 flex flex-col overflow-hidden bg-white">
+              {/* Top Tabs */}
+              <div className="p-3 bg-slate-50 border-b border-gray-200 flex items-center justify-between">
+                <span className="text-xs font-extrabold text-gray-800 flex items-center gap-1.5">
+                  <SlidersHorizontal className="w-4 h-4 text-blue-600" />
+                  Side-by-Side Rate Matrix Comparison
+                </span>
+                <span className="text-[11px] text-gray-500">Pick a room to compare its inclusions:</span>
+              </div>
+
+              {/* Room Tabs */}
+              <div className="p-3 flex items-center gap-2 border-b border-gray-100 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+                {fullRooms.map((r, i) => (
+                  <button
+                    key={r.code}
+                    onClick={() => setSelectedMatrixRoomIdx(i)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap cursor-pointer transition-all ${
+                      selectedMatrixRoomIdx === i
+                        ? 'bg-blue-600 text-white shadow-xs'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    {r.name}
+                  </button>
                 ))}
               </div>
+
+              {/* 3-Column Comparison Table for Selected Room */}
+              {(() => {
+                const room = fullRooms[selectedMatrixRoomIdx] || fullRooms[0];
+                return (
+                  <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
+                    <div className="p-4 rounded-2xl bg-slate-50 border border-gray-200 flex items-center gap-4">
+                      <img src={room.image} alt="" className="w-20 h-20 rounded-xl object-cover border border-gray-200" />
+                      <div>
+                        <span className="text-[10px] font-bold uppercase text-blue-600 bg-blue-50 px-2 py-0.5 rounded">
+                          {room.category}
+                        </span>
+                        <h3 className="font-extrabold text-base text-gray-900 mt-1">{room.name}</h3>
+                        <p className="text-xs text-gray-500">{room.size} · {room.bed} · {room.view}</p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {room.rates.map((rate, ri) => (
+                        <div
+                          key={rate.key}
+                          className={`rounded-2xl border p-4 flex flex-col justify-between space-y-4 shadow-xs ${
+                            ri === 1 ? 'border-blue-500 bg-blue-50/20 ring-2 ring-blue-100' : 'border-gray-200 bg-white'
+                          }`}
+                        >
+                          <div className="space-y-3">
+                            <div className="flex justify-between items-start">
+                              <span className="font-extrabold text-xs text-gray-900 bg-gray-100 px-2.5 py-1 rounded-lg">
+                                {rate.board}
+                              </span>
+                              {ri === 1 && (
+                                <span className="text-[9px] font-black uppercase bg-blue-600 text-white px-2 py-0.5 rounded-full">
+                                  Recommended
+                                </span>
+                              )}
+                            </div>
+
+                            <div className="space-y-2 text-xs pt-1">
+                              <div className="flex items-center justify-between pb-1 border-b border-gray-100">
+                                <span className="text-gray-500">Cancellation</span>
+                                <span className={rate.freeCancel ? 'text-emerald-700 font-bold' : 'text-rose-600 font-bold'}>
+                                  {rate.freeCancel ? 'Free' : 'Non-Refundable'}
+                                </span>
+                              </div>
+
+                              <div className="flex items-center justify-between pb-1 border-b border-gray-100">
+                                <span className="text-gray-500">Payment Terms</span>
+                                <span className="font-semibold text-gray-800">Pay Online Now</span>
+                              </div>
+
+                              <div className="flex items-center justify-between pb-1 border-b border-gray-100">
+                                <span className="text-gray-500">Allotment</span>
+                                <span className="font-semibold text-blue-600">{rate.allotment} left</span>
+                              </div>
+
+                              <div className="flex items-center justify-between pb-1 border-b border-gray-100">
+                                <span className="text-gray-500">Tourism Dirham</span>
+                                <span className="text-[11px] text-amber-800 font-medium">AED 20/night (at hotel)</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="pt-3 border-t border-gray-200 space-y-2">
+                            <div className="text-center">
+                              <span className="text-[9px] text-gray-400 uppercase font-bold block">Rate Per Night</span>
+                              <div className="text-xl font-black text-blue-600">AED {rate.net.toLocaleString()}</div>
+                              <div className="text-xs text-amber-700 font-bold">≈ PKR {(rate.net * 76).toLocaleString()}</div>
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => setCartCount(c => c + 1)}
+                              className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-black text-xs rounded-xl shadow-xs transition-all cursor-pointer"
+                            >
+                              Book This Plan
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           )}
 
@@ -728,4 +929,3 @@ export default function HotelModalLab() {
     </div>
   );
 }
-

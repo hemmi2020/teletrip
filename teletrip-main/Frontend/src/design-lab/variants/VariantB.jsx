@@ -1,10 +1,29 @@
 import React, { useState } from 'react';
-import { Star, MapPin, Sparkles, Navigation, Layers, Compass, CheckCircle } from 'lucide-react';
+import { Star, MapPin, Sparkles, Navigation, Layers, Compass, CheckCircle, SlidersHorizontal, X } from 'lucide-react';
 import { mockHotels } from '../fixtures';
+import { FilterSidebar } from '../components/FilterSidebar';
 
 export const VariantB = ({ onSelectHotel }) => {
   const [selectedPin, setSelectedPin] = useState(mockHotels[1].id);
-  const [mobileTab, setMobileTab] = useState('list'); // 'list' | 'map'
+  const [mobileTab, setMobileTab] = useState('list'); // 'list' | 'map' | 'filters'
+  const [selectedStars, setSelectedStars] = useState([]);
+  const [priceRange, setPriceRange] = useState([200, 3500]);
+  const [selectedBoards, setSelectedBoards] = useState([]);
+  const [freeCancelOnly, setFreeCancelOnly] = useState(false);
+  const [luxuryOnly, setLuxuryOnly] = useState(false);
+  const [selectedZones, setSelectedZones] = useState([]);
+  const [selectedAmenities, setSelectedAmenities] = useState([]);
+
+  const filteredHotels = mockHotels.filter(h => {
+    if (luxuryOnly && (!h.isLuxuryCollection && h.stars < 5)) return false;
+    if (freeCancelOnly && !h.hasFreeCancellation) return false;
+    if (selectedStars.length > 0 && !selectedStars.includes(h.stars)) return false;
+    if (h.priceAED > priceRange[1]) return false;
+    if (selectedBoards.length > 0 && !selectedBoards.includes(h.boardName)) return false;
+    if (selectedZones.length > 0 && !selectedZones.includes(h.zone)) return false;
+    if (selectedAmenities.length > 0 && !selectedAmenities.some(a => (h.amenities || []).includes(a))) return false;
+    return true;
+  });
 
   return (
     <div className="space-y-4 text-left">
@@ -12,7 +31,7 @@ export const VariantB = ({ onSelectHotel }) => {
       <div className="p-3.5 bg-emerald-50/80 border border-emerald-200/80 rounded-xl text-xs text-emerald-900 flex items-center justify-between gap-3">
         <div>
           <span className="font-extrabold uppercase tracking-wide mr-2 text-emerald-700">Design Thesis:</span>
-          <strong>Split-Pane Spatial Discovery.</strong> Travel decisions are fundamentally geographic. Synchronizes a reactive interactive map with hotel cards so users immediately see neighborhood and proximity value.
+          <strong>Split-Pane Spatial Discovery with Filter Sidebar.</strong> Synchronizes interactive map pins, cards, and full-fidelity filters.
         </div>
         <span className="px-2 py-0.5 rounded-full bg-emerald-700 text-white font-bold text-[10px] shrink-0">
           Airbnb Luxe / Google Travel
@@ -20,32 +39,58 @@ export const VariantB = ({ onSelectHotel }) => {
       </div>
 
       {/* Mobile View Switcher */}
-      <div className="flex md:hidden bg-gray-100 p-1 rounded-xl">
+      <div className="flex md:hidden bg-gray-100 p-1 rounded-xl gap-1">
         <button
           onClick={() => setMobileTab('list')}
           className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${mobileTab === 'list' ? 'bg-white shadow-xs text-gray-900' : 'text-gray-500'}`}
         >
-          Card List ({mockHotels.length})
+          List ({filteredHotels.length})
         </button>
         <button
           onClick={() => setMobileTab('map')}
           className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${mobileTab === 'map' ? 'bg-white shadow-xs text-gray-900' : 'text-gray-500'}`}
         >
-          Interactive Map
+          Map View
+        </button>
+        <button
+          onClick={() => setMobileTab('filters')}
+          className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${mobileTab === 'filters' ? 'bg-white shadow-xs text-gray-900' : 'text-gray-500'}`}
+        >
+          Filters
         </button>
       </div>
 
-      {/* ── SPLIT CONTAINER ── */}
+      {/* ── 3-PANE SPLIT CONTAINER: SIDEBAR + CARDS + MAP ── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 min-h-[620px]">
-        {/* Left: Responsive Hotel Grid (7 cols) */}
-        <div className={`lg:col-span-7 space-y-4 ${mobileTab === 'map' ? 'hidden lg:block' : 'block'}`}>
+        {/* Left: Filter Sidebar (3 cols on desktop) */}
+        <div className={`lg:col-span-3 ${mobileTab === 'filters' ? 'block' : 'hidden lg:block'}`}>
+          <FilterSidebar
+            selectedStars={selectedStars}
+            setSelectedStars={setSelectedStars}
+            priceRange={priceRange}
+            setPriceRange={setPriceRange}
+            selectedBoards={selectedBoards}
+            setSelectedBoards={setSelectedBoards}
+            freeCancelOnly={freeCancelOnly}
+            setFreeCancelOnly={setFreeCancelOnly}
+            luxuryOnly={luxuryOnly}
+            setLuxuryOnly={setLuxuryOnly}
+            selectedZones={selectedZones}
+            setSelectedZones={setSelectedZones}
+            selectedAmenities={selectedAmenities}
+            setSelectedAmenities={setSelectedAmenities}
+          />
+        </div>
+
+        {/* Center: Responsive Hotel Grid (5 cols on desktop) */}
+        <div className={`lg:col-span-5 space-y-4 ${mobileTab === 'map' || mobileTab === 'filters' ? 'hidden lg:block' : 'block'}`}>
           <div className="flex items-center justify-between text-xs text-gray-500 pb-1">
-            <span className="font-bold text-gray-800">{mockHotels.length} properties in Dubai</span>
-            <span>Sorted by Recommended</span>
+            <span className="font-bold text-gray-800">{filteredHotels.length} properties in Dubai</span>
+            <span>Hover card to locate on map</span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {mockHotels.map((hotel) => {
+          <div className="space-y-3.5 max-h-[750px] overflow-y-auto pr-1">
+            {filteredHotels.map((hotel) => {
               const isSelected = selectedPin === hotel.id;
               return (
                 <div
@@ -55,50 +100,32 @@ export const VariantB = ({ onSelectHotel }) => {
                     setSelectedPin(hotel.id);
                     if (onSelectHotel) onSelectHotel(hotel);
                   }}
-                  className={`bg-white rounded-2xl border overflow-hidden transition-all duration-200 cursor-pointer flex flex-col justify-between ${
+                  className={`bg-white rounded-2xl border overflow-hidden transition-all duration-200 cursor-pointer flex flex-col sm:flex-row justify-between ${
                     isSelected
                       ? 'border-blue-600 ring-2 ring-blue-500/20 shadow-lg scale-[1.01]'
-                      : 'border-gray-200 hover:border-gray-300 hover:shadow-md'
+                      : 'border-gray-200 hover:border-gray-300 shadow-2xs'
                   }`}
                 >
-                  {/* Card Image */}
-                  <div className="relative h-44 overflow-hidden">
+                  <div className="sm:w-44 h-36 relative overflow-hidden shrink-0">
                     <img src={hotel.thumbnail} alt={hotel.name} className="w-full h-full object-cover" />
-                    <div className="absolute top-2.5 left-2.5 flex flex-col gap-1 items-start">
-                      {hotel.isLuxuryCollection && (
-                        <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-black/80 text-amber-300 backdrop-blur-sm border border-amber-400/40">
-                          ✨ Luxury
-                        </span>
-                      )}
-                    </div>
-                    <div className="absolute top-2.5 right-2.5 px-2 py-0.5 bg-black/60 backdrop-blur-md rounded-full text-[10px] font-bold text-white">
+                    <span className="absolute top-2 left-2 bg-black/70 backdrop-blur-md text-white text-[9px] font-bold px-2 py-0.5 rounded-full">
                       ★ {hotel.rating}
-                    </div>
+                    </span>
                   </div>
 
-                  {/* Card Body */}
-                  <div className="p-3.5 space-y-2 flex-1 flex flex-col justify-between">
+                  <div className="p-3.5 flex-1 flex flex-col justify-between">
                     <div>
-                      <h4 className="font-bold text-sm text-gray-900 leading-snug line-clamp-1">{hotel.name}</h4>
-                      <p className="text-[11px] text-gray-500 flex items-center gap-1 mt-0.5">
-                        <MapPin className="w-3 h-3 text-blue-500 shrink-0" />
-                        <span className="truncate">{hotel.zone}</span>
-                      </p>
+                      <div className="text-[10px] text-blue-600 font-bold uppercase tracking-wider">{hotel.zone}</div>
+                      <h4 className="font-extrabold text-sm text-gray-900 leading-snug line-clamp-1">{hotel.name}</h4>
+                      <p className="text-xs text-gray-500 mt-1">{hotel.distanceKm} km from center</p>
                     </div>
 
-                    <div className="pt-2 border-t border-gray-100 flex items-end justify-between">
+                    <div className="pt-2 flex items-baseline justify-between border-t border-gray-100">
                       <div>
-                        <span className="text-[9px] text-gray-400 block uppercase">from</span>
-                        <div className="text-base font-black text-blue-700 leading-tight">
-                          AED {hotel.priceAED.toLocaleString()}
-                        </div>
-                        <div className="text-[10px] font-semibold text-gray-500">
-                          ≈ PKR {hotel.pricePKR.toLocaleString()}
-                        </div>
+                        <span className="text-[9px] text-gray-400 block uppercase font-bold">Total Stay</span>
+                        <span className="text-sm font-black text-blue-600">AED {hotel.priceAED.toLocaleString()}</span>
                       </div>
-                      <button className="px-3 py-1.5 bg-blue-50 hover:bg-blue-600 hover:text-white text-blue-700 rounded-lg text-xs font-bold transition-all">
-                        View
-                      </button>
+                      <span className="text-[11px] text-amber-700 font-bold">≈ PKR {hotel.pricePKR.toLocaleString()}</span>
                     </div>
                   </div>
                 </div>
@@ -107,96 +134,50 @@ export const VariantB = ({ onSelectHotel }) => {
           </div>
         </div>
 
-        {/* Right: Simulated Interactive Map (5 cols) */}
-        <div className={`lg:col-span-5 h-[500px] lg:h-auto rounded-2xl overflow-hidden border border-gray-200 relative bg-slate-100 shadow-inner ${mobileTab === 'list' ? 'hidden lg:block' : 'block'}`}>
-          {/* Simulated Map Canvas Texture */}
-          <div
-            className="absolute inset-0 opacity-80"
-            style={{
-              backgroundImage: `radial-gradient(#94a3b8 1px, transparent 1px), radial-gradient(#cbd5e1 1px, #f1f5f9 1px)`,
-              backgroundSize: `24px 24px`,
-              backgroundPosition: `0 0, 12px 12px`
-            }}
+        {/* Right: Interactive Synchronized Map (4 cols on desktop) */}
+        <div className={`lg:col-span-4 rounded-3xl overflow-hidden border border-gray-200 bg-slate-900 relative shadow-inner min-h-[400px] ${mobileTab === 'list' || mobileTab === 'filters' ? 'hidden lg:block' : 'block'}`}>
+          <img
+            src="https://images.pexels.com/photos/2044434/pexels-photo-2044434.jpeg"
+            alt="Dubai satellite map background"
+            className="w-full h-full object-cover opacity-60 filter contrast-125"
           />
+          <div className="absolute inset-0 bg-slate-950/40" />
 
-          {/* Map Top Bar Controls */}
-          <div className="absolute top-3 inset-x-3 flex items-center justify-between pointer-events-none z-10">
-            <div className="px-3 py-1.5 rounded-full bg-white/95 backdrop-blur-md shadow-md text-xs font-bold text-gray-800 flex items-center gap-1.5 pointer-events-auto">
-              <Compass className="w-3.5 h-3.5 text-blue-600" />
-              <span>Dubai, UAE</span>
-            </div>
-            <div className="px-3 py-1.5 rounded-full bg-white/95 backdrop-blur-md shadow-md text-xs font-bold text-gray-700 pointer-events-auto flex items-center gap-1">
-              <Layers className="w-3.5 h-3.5 text-gray-500" />
-              <span>Landmarks Active</span>
-            </div>
+          {/* Interactive Floating Price Pins */}
+          <div className="absolute top-20 left-16 z-20">
+            <button
+              onClick={() => setSelectedPin("107748")}
+              className={`px-2.5 py-1 rounded-full text-xs font-black shadow-lg transition-all cursor-pointer ${
+                selectedPin === "107748" ? 'bg-blue-600 text-white scale-110 ring-4 ring-white/60' : 'bg-white text-gray-900 hover:scale-105'
+              }`}
+            >
+              AED 606
+            </button>
           </div>
 
-          {/* Landmarks */}
-          <div className="absolute top-[42%] left-[45%] text-[10px] font-bold text-gray-500 bg-white/80 px-2 py-0.5 rounded-md shadow-xs pointer-events-none">
-            🏙️ Burj Khalifa / Downtown
+          <div className="absolute top-36 right-20 z-20">
+            <button
+              onClick={() => setSelectedPin("6807")}
+              className={`px-2.5 py-1 rounded-full text-xs font-black shadow-lg transition-all cursor-pointer ${
+                selectedPin === "6807" ? 'bg-blue-600 text-white scale-110 ring-4 ring-white/60' : 'bg-white text-gray-900 hover:scale-105'
+              }`}
+            >
+              AED 1,450
+            </button>
           </div>
-          <div className="absolute top-[20%] left-[30%] text-[10px] font-bold text-gray-500 bg-white/80 px-2 py-0.5 rounded-md shadow-xs pointer-events-none">
-            🌊 Dubai Creek
+
+          <div className="absolute bottom-24 left-24 z-20">
+            <button
+              onClick={() => setSelectedPin("10243")}
+              className={`px-2.5 py-1 rounded-full text-xs font-black shadow-lg transition-all cursor-pointer ${
+                selectedPin === "10243" ? 'bg-blue-600 text-white scale-110 ring-4 ring-white/60' : 'bg-white text-gray-900 hover:scale-105'
+              }`}
+            >
+              AED 3,150
+            </button>
           </div>
-
-          {/* Interactive Price Marker Pins */}
-          {mockHotels.map((h, i) => {
-            const isSelected = selectedPin === h.id;
-            // Spread mock pins realistically across the canvas
-            const topPositions = ['28%', '46%', '62%', '40%'];
-            const leftPositions = ['35%', '48%', '58%', '38%'];
-
-            return (
-              <div
-                key={h.id}
-                onClick={() => setSelectedPin(h.id)}
-                style={{ top: topPositions[i], left: leftPositions[i] }}
-                className={`absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer transition-all duration-200 z-20 ${
-                  isSelected ? 'scale-110 z-30' : 'hover:scale-105'
-                }`}
-              >
-                <div
-                  className={`px-3 py-1.5 rounded-full font-black text-xs shadow-xl flex items-center gap-1 transition-all ${
-                    isSelected
-                      ? 'bg-blue-600 text-white ring-4 ring-blue-300'
-                      : 'bg-white text-gray-900 border border-gray-200 hover:bg-gray-50'
-                  }`}
-                >
-                  <span>AED {h.priceAED}</span>
-                </div>
-              </div>
-            );
-          })}
-
-          {/* Active Pin Mini-Card Overlay at Bottom */}
-          {(() => {
-            const activeHotel = mockHotels.find(h => h.id === selectedPin) || mockHotels[0];
-            return (
-              <div className="absolute bottom-3 inset-x-3 bg-white p-3 rounded-xl shadow-xl border border-gray-200 flex items-center gap-3 z-30 animate-in fade-in slide-in-from-bottom-2 duration-150">
-                <img src={activeHotel.thumbnail} alt="" className="w-16 h-16 rounded-lg object-cover shrink-0" />
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-1">
-                    <span className="font-extrabold text-xs text-gray-900 truncate">{activeHotel.name}</span>
-                    <span className="text-[10px] text-amber-500 font-bold shrink-0">★ {activeHotel.rating}</span>
-                  </div>
-                  <p className="text-[11px] text-gray-500 truncate">{activeHotel.zone}</p>
-                  <div className="text-xs font-black text-blue-600 mt-0.5">
-                    AED {activeHotel.priceAED} <span className="text-[10px] text-gray-400 font-normal">/ stay</span>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => onSelectHotel && onSelectHotel(activeHotel)}
-                  className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg shrink-0 cursor-pointer"
-                >
-                  Details
-                </button>
-              </div>
-            );
-          })()}
         </div>
       </div>
     </div>
   );
 };
-
