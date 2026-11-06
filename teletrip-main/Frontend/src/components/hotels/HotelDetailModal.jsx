@@ -97,63 +97,24 @@ export const HotelDetailModal = ({
   priceMin = "",
   priceMax = ""
 }) => {
-  const [activeTab, setActiveTab] = useState('rooms'); // 'rooms', 'overview', 'facilities', 'policies'
-  const [rateFilter, setRateFilter] = useState('all'); // 'all', 'breakfast', 'free_cancel', 'packages'
-  const [selectedCategory, setSelectedCategory] = useState('all'); // 'all' or category name
-  const [expandedRooms, setExpandedRooms] = useState(() => {
-    // By default expand the first room; collapse the rest for compact scannability
+  // ── 1. ALL HOOKS CALLED UNCONDITIONALLY AT THE VERY TOP (REACT RULES OF HOOKS COMPLIANT) ──
+  const [activeTab, setActiveTab] = useState('rooms'); // Hook 1
+  const [rateFilter, setRateFilter] = useState('all'); // Hook 2
+  const [selectedCategory, setSelectedCategory] = useState('all'); // Hook 3
+  const [expandedRooms, setExpandedRooms] = useState(() => { // Hook 4
     const initial = {};
     if (hotel?.rooms?.[0]?.code) {
       initial[hotel.rooms[0].code] = true;
     }
-    // If only 1 or 2 rooms, expand both
     if (hotel?.rooms && hotel.rooms.length <= 2) {
       hotel.rooms.forEach(r => { initial[r.code] = true; });
     }
     return initial;
   });
 
-  if (!isOpen || !hotel) return null;
-
-  const checkIn = searchParams?.get("checkIn") || "";
-  const checkOut = searchParams?.get("checkOut") || "";
-  const nights = checkIn && checkOut
-    ? Math.max(1, Math.ceil((new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60 * 24)))
-    : 1;
-
-  // Images processing: prioritize whichever array has more images (hotel.images from search vs hotelContentData.images)
-  const rawPool = (hotelContentData?.images && hotelContentData.images.length >= (hotel?.images?.length || 0))
-    ? hotelContentData.images
-    : (hotel?.images && hotel.images.length > 0 ? hotel.images : (hotelContentData?.images || []));
-
-  const allImages = rawPool
-    .map(img => {
-      if (!img) return null;
-      if (typeof img === 'string') return img;
-      if (img.path) {
-        const clean = img.path.replace(/^\/+/, '');
-        return clean.startsWith('http') ? clean : `https://photos.hotelbeds.com/giata/original/${clean}`;
-      }
-      return null;
-    })
-    .filter(Boolean);
-  if (allImages.length === 0 && hotel?.thumbnail) allImages.push(hotel.thumbnail);
-  if (allImages.length === 0) allImages.push('https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg');
-
-  const headerBg = allImages[0] || hotel.thumbnail || 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg';
-
-  // Multi-room config
-  const roomConfigsParam = searchParams?.get("roomConfigs");
-  const roomConfigs = roomConfigsParam
-    ? (() => {
-        try { return JSON.parse(roomConfigsParam); }
-        catch (e) { return [{ adults: parseInt(searchParams?.get("adults") || "2"), children: 0 }]; }
-      })()
-    : [{ adults: parseInt(searchParams?.get("adults") || "2"), children: 0 }];
-  const isMultiRoom = roomConfigs.length > 1;
-
   // Filter rates for each room
   const filterRate = (rate) => {
+    if (!rate) return false;
     const isFree = rate.rateClass !== 'NRF' && rate.cancellationPolicies?.length > 0 &&
       (parseFloat(rate.cancellationPolicies[0]?.amount || 0) === 0 || new Date() < new Date(rate.cancellationPolicies[0].from));
 
@@ -174,19 +135,18 @@ export const HotelDetailModal = ({
     if (priceMax && ratePkr > parseFloat(priceMax)) return false;
 
     // Modal quick rate filter pills
-    if (rateFilter === 'breakfast' && !rate.boardName.toLowerCase().includes('breakfast')) return false;
+    if (rateFilter === 'breakfast' && !rate.boardName?.toLowerCase().includes('breakfast')) return false;
     if (rateFilter === 'free_cancel' && !isFree) return false;
     if (rateFilter === 'packages' && !rate.packaging) return false;
 
     return true;
   };
 
-  // Group rooms into category types for shortcut pills
+  // Group rooms into category types for shortcut pills (Hook 5)
   const roomCategories = useMemo(() => {
     if (!hotel?.rooms || !hotel.rooms.length) return [];
     const counts = {};
     hotel.rooms.forEach(room => {
-      // Check if room has at least 1 rate matching active rateFilter
       const hasMatchingRates = (room.rates || []).some(filterRate);
       if (hasMatchingRates) {
         const cat = getRoomCategory(room);
@@ -221,7 +181,7 @@ export const HotelDetailModal = ({
     }));
   }, [hotel?.rooms, rateFilter, selectedBoards, selectedCancellation, selectedPackaging, selectedPromos, priceMin, priceMax]);
 
-  // Total matching rooms count
+  // Total matching rooms count (Hook 6)
   const totalMatchingRooms = useMemo(() => {
     if (!hotel?.rooms) return 0;
     return hotel.rooms.filter(room => {
@@ -232,20 +192,24 @@ export const HotelDetailModal = ({
     }).length;
   }, [hotel?.rooms, selectedCategory, rateFilter, selectedBoards, selectedCancellation, selectedPackaging, selectedPromos, priceMin, priceMax]);
 
-  // Accordion toggle helpers
-  const toggleRoom = (code) => {
-    setExpandedRooms(prev => ({
-      ...prev,
-      [code]: !prev[code]
-    }));
-  };
-
+  // Accordion toggle helpers (Hook 7)
   const areAllExpanded = useMemo(() => {
     if (!hotel?.rooms?.length) return false;
     const activeRooms = hotel.rooms.filter(r => (r.rates || []).some(filterRate));
     if (!activeRooms.length) return false;
     return activeRooms.every(r => expandedRooms[r.code]);
   }, [hotel?.rooms, expandedRooms, rateFilter]);
+
+  // ── 2. CONDITIONAL EXIT AFTER ALL HOOKS HAVE BEEN EXECUTED ──
+  if (!isOpen || !hotel) return null;
+
+  // ── 3. SAFE DATA DERIVATIONS ──
+  const toggleRoom = (code) => {
+    setExpandedRooms(prev => ({
+      ...prev,
+      [code]: !prev[code]
+    }));
+  };
 
   const toggleExpandAll = () => {
     if (areAllExpanded) {
@@ -257,11 +221,47 @@ export const HotelDetailModal = ({
     }
   };
 
+  const checkIn = searchParams?.get("checkIn") || "";
+  const checkOut = searchParams?.get("checkOut") || "";
+  const nights = checkIn && checkOut
+    ? Math.max(1, Math.ceil((new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60 * 24)))
+    : 1;
+
+  // Images processing
+  const rawPool = (hotelContentData?.images && hotelContentData.images.length >= (hotel?.images?.length || 0))
+    ? hotelContentData.images
+    : (hotel?.images && hotel.images.length > 0 ? hotel.images : (hotelContentData?.images || []));
+
+  const allImages = rawPool
+    .map(img => {
+      if (!img) return null;
+      if (typeof img === 'string') return img;
+      if (img.path) {
+        const clean = img.path.replace(/^\/+/, '');
+        return clean.startsWith('http') ? clean : `https://photos.hotelbeds.com/giata/original/${clean}`;
+      }
+      return null;
+    })
+    .filter(Boolean);
+  if (allImages.length === 0 && hotel?.thumbnail) allImages.push(hotel.thumbnail);
+  if (allImages.length === 0) allImages.push('https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg');
+
+  const headerBg = allImages[0] || hotel.thumbnail || 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg';
+
+  // Multi-room config
+  const roomConfigsParam = searchParams?.get("roomConfigs");
+  const roomConfigs = roomConfigsParam
+    ? (() => {
+        try { return JSON.parse(roomConfigsParam); }
+        catch (e) { return [{ adults: parseInt(searchParams?.get("adults") || "2"), children: 0 }]; }
+      })()
+    : [{ adults: parseInt(searchParams?.get("adults") || "2"), children: 0 }];
+  const isMultiRoom = roomConfigs.length > 1;
+
   const handleSelectRateForRoom = (room, rate) => {
     if (isMultiRoom) {
       setRoomSelections(prev => {
         const next = { ...prev, [activeRoomTab]: { room, rate } };
-        // Auto-advance to next unselected tab
         const nextUnselected = roomConfigs.findIndex((_, i) => i > activeRoomTab && !next[i]);
         if (nextUnselected !== -1) setActiveRoomTab(nextUnselected);
         return next;

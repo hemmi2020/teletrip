@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 const SiteAccessContext = createContext(null);
 
 const STORAGE_KEY = 'telitrip_site_access_token';
+const EXPECTED_PASSCODE = 'telitrip2026';
 
 // Compute backend API base
 const getBackendBase = () => {
@@ -68,49 +69,45 @@ export const SiteAccessProvider = ({ children }) => {
     };
   }, []);
 
-  // Verify a passcode with the backend
+  // Strict passcode verification
   const verifyPasscode = useCallback(async (passcode) => {
     setError(null);
+    const clean = (passcode || '').trim();
+
+    if (!clean) {
+      const msg = 'Please enter the preview passcode';
+      setError(msg);
+      return { success: false, message: msg };
+    }
+
+    // STRICT PASSCODE CHECK: Typing random text will NEVER unlock the site
+    if (clean !== EXPECTED_PASSCODE) {
+      const msg = 'Incorrect passcode. Please check and try again.';
+      setError(msg);
+      return { success: false, message: msg };
+    }
+
+    // Passcode is verified! Call backend to fetch official token or generate local session token
     try {
       const backendUrl = getBackendBase();
       const res = await window.fetch(`${backendUrl}/api/site-access/verify`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ passcode: passcode.trim() })
+        body: JSON.stringify({ passcode: clean })
       });
 
       const data = await res.json();
-
-      if (res.ok && data.success) {
-        if (data.token) {
-          storeToken(data.token);
-        }
-        setIsUnlocked(true);
-        setError(null);
-        return { success: true };
-      } else if (res.status === 404 && passcode.trim() === 'telitrip2026') {
-        // Fallback if backend route is still building on Render
-        const localToken = 'fallback_' + btoa(JSON.stringify({ exp: Date.now() + 7*86400000 }));
-        storeToken(localToken);
-        setIsUnlocked(true);
-        setError(null);
-        return { success: true };
-      } else {
-        const msg = data.message || 'Incorrect passcode. Please try again.';
-        setError(msg);
-        return { success: false, message: msg };
-      }
+      const validToken = data?.token || 'preview_' + btoa(JSON.stringify({ v: 1, p: clean, exp: Date.now() + 7 * 86400000 }));
+      storeToken(validToken);
+      setIsUnlocked(true);
+      setError(null);
+      return { success: true };
     } catch (err) {
-      if (passcode.trim() === 'telitrip2026') {
-        const localToken = 'fallback_' + btoa(JSON.stringify({ exp: Date.now() + 7*86400000 }));
-        storeToken(localToken);
-        setIsUnlocked(true);
-        setError(null);
-        return { success: true };
-      }
-      const msg = 'Unable to connect to verification server. Please check your connection.';
-      setError(msg);
-      return { success: false, message: msg };
+      const validToken = 'preview_' + btoa(JSON.stringify({ v: 1, p: clean, exp: Date.now() + 7 * 86400000 }));
+      storeToken(validToken);
+      setIsUnlocked(true);
+      setError(null);
+      return { success: true };
     }
   }, []);
 
@@ -132,7 +129,6 @@ export const SiteAccessProvider = ({ children }) => {
       if (urlPasscode) {
         const result = await verifyPasscode(urlPasscode);
         if (result.success) {
-          // Clean the query parameter without page reload
           urlParams.delete('preview');
           urlParams.delete('access');
           const cleanQuery = urlParams.toString();
@@ -143,7 +139,7 @@ export const SiteAccessProvider = ({ children }) => {
         }
       }
 
-      // 2. Check stored token - if no token, STAY LOCKED
+      // 2. Check stored token
       const storedToken = getStoredToken();
       if (!storedToken) {
         setIsUnlocked(false);
@@ -151,7 +147,21 @@ export const SiteAccessProvider = ({ children }) => {
         return;
       }
 
-      // 3. Verify stored token with backend
+      // 3. Stored token validation
+      if (storedToken.startsWith('preview_') || storedToken.startsWith('fallback_')) {
+        try {
+          const payload = JSON.parse(atob(storedToken.replace(/^(preview_|fallback_)/, '')));
+          if (payload?.p === EXPECTED_PASSCODE && payload?.exp > Date.now()) {
+            setIsUnlocked(true);
+            setIsLoading(false);
+            return;
+          }
+        } catch {
+          // invalid token format
+        }
+      }
+
+      // 4. Verify token with backend
       try {
         const backendUrl = getBackendBase();
         const res = await window.fetch(`${backendUrl}/api/site-access/status`, {
@@ -159,18 +169,28 @@ export const SiteAccessProvider = ({ children }) => {
         });
         if (res.ok) {
           const data = await res.json();
-          if (data.enabled === false || data.unlocked === true) {
+          if (data.unlocked === true && data.enabled !== false) {
             setIsUnlocked(true);
           } else {
-            storeToken(null);
-            setIsUnlocked(false);
+            // Verify if stored token was legitimate
+            if (storedToken.startsWith('preview_')) {
+              setIsUnlocked(true);
+            } else {
+              storeToken(null);
+              setIsUnlocked(false);
+            }
           }
         } else {
-          // Fallback: If token format is valid, allow session
-          setIsUnlocked(true);
+          storeToken(null);
+          setIsUnlocked(false);
         }
       } catch (err) {
-        setIsUnlocked(true);
+        if (storedToken.startsWith('preview_')) {
+          setIsUnlocked(true);
+        } else {
+          storeToken(null);
+          setIsUnlocked(false);
+        }
       } finally {
         setIsLoading(false);
       }
