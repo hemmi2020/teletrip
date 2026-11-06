@@ -159,3 +159,4 @@ export const mockQuickFilters = [
   { id: "pool", label: "🏊 Swimming Pool", count: 56, activeColor: "blue" },
   { id: "downtown", label: "📍 Downtown / Burj", count: 23, activeColor: "purple" }
 ];
+

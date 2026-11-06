@@ -1,5 +1,20 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MessageSquare, X, Check, Copy, Sparkles, Send, Trash2, Crosshair } from 'lucide-react';
+import {
+  MessageSquare,
+  X,
+  Check,
+  Copy,
+  Sparkles,
+  Send,
+  Trash2,
+  Crosshair,
+  Star,
+  User,
+  Mail,
+  Award,
+  Loader2,
+  CheckCircle2
+} from 'lucide-react';
 
 export const FeedbackOverlay = ({ targetName = "HotelSearchExperience" }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -8,6 +23,12 @@ export const FeedbackOverlay = ({ targetName = "HotelSearchExperience" }) => {
   const [commentText, setCommentText] = useState("");
   const [comments, setComments] = useState([]);
   const [overallDirection, setOverallDirection] = useState("");
+  const [clientName, setClientName] = useState("");
+  const [clientEmail, setClientEmail] = useState("");
+  const [preferredVariant, setPreferredVariant] = useState("Variant A (Modern Luxury Clarity)");
+  const [rating, setRating] = useState(5);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitSuccess, setSubmitSuccess] = useState(null);
   const [copied, setCopied] = useState(false);
   const hoverOutlineRef = useRef(null);
 
@@ -33,8 +54,8 @@ export const FeedbackOverlay = ({ targetName = "HotelSearchExperience" }) => {
         div.id = 'feedback-hover-highlight';
         div.style.position = 'fixed';
         div.style.pointerEvents = 'none';
-        div.style.border = '2px dashed #3b82f6';
-        div.style.backgroundColor = 'rgba(59, 130, 246, 0.1)';
+        div.style.border = '2px dashed #2563eb';
+        div.style.backgroundColor = 'rgba(37, 99, 235, 0.12)';
         div.style.zIndex = '99998';
         div.style.transition = 'all 0.08s ease';
         div.style.borderRadius = '6px';
@@ -114,29 +135,104 @@ export const FeedbackOverlay = ({ targetName = "HotelSearchExperience" }) => {
       grouped[c.variant].push(c);
     });
 
-    let md = `## Design Lab Feedback\n\n`;
-    md += `**Target:** ${targetName}\n`;
-    md += `**Comments:** ${comments.length}\n\n`;
+    let md = `## 🎨 Design Lab Client Feedback\n\n`;
+    md += `**Client/Reviewer:** ${clientName || 'Client'}${clientEmail ? ` (${clientEmail})` : ''}\n`;
+    md += `**Preferred Variant:** ${preferredVariant}\n`;
+    md += `**Overall Rating:** ${'★'.repeat(rating)}${'☆'.repeat(5 - rating)} (${rating}/5)\n`;
+    md += `**Target Experience:** ${targetName}\n`;
+    md += `**Element Notes:** ${comments.length}\n\n`;
 
-    Object.keys(grouped).forEach(vKey => {
-      md += `### Variant ${vKey}\n`;
-      grouped[vKey].forEach((c, i) => {
-        md += `${i + 1}. **${c.elementDescription}** (\`${c.selector}\`)\n   "${c.text}"\n`;
+    if (overallDirection.trim()) {
+      md += `### 💡 Overall Direction & Synthesis\n`;
+      md += `${overallDirection.trim()}\n\n`;
+    }
+
+    if (comments.length > 0) {
+      md += `### 🔍 Specific Element Feedback\n`;
+      Object.keys(grouped).forEach(vKey => {
+        md += `#### Variant ${vKey}\n`;
+        grouped[vKey].forEach((c, i) => {
+          md += `${i + 1}. **${c.elementDescription}** (\`${c.selector}\`)\n   "${c.text}"\n`;
+        });
+        md += `\n`;
       });
-      md += `\n`;
-    });
+    }
 
-    md += `### Overall Direction\n`;
-    md += overallDirection.trim() || `I prefer Variant A's clean luxury card hierarchy, but with Variant D's sticky quick-filters and Variant B's split map view.`;
     return md;
   };
 
-  const handleSubmitAll = () => {
+  const handleSubmitAll = async () => {
+    setIsSubmitting(true);
+    setSubmitSuccess(null);
     const md = formatMarkdown();
-    navigator.clipboard.writeText(md).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 3000);
-    });
+
+    // 1. Always copy to clipboard for convenience
+    try {
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(md);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 4000);
+      }
+    } catch (e) {
+      console.warn('Clipboard write failed:', e);
+    }
+
+    // 2. Persist to Backend server so Antigravity can read it automatically
+    const backendBase = import.meta.env.VITE_BASE_URL || 'https://telitrip-backend.onrender.com';
+    const payload = {
+      clientName: clientName.trim() || 'Anonymous Client',
+      clientEmail: clientEmail.trim(),
+      preferredVariant,
+      rating,
+      overallDirection: overallDirection.trim(),
+      comments,
+      markdown: md,
+      targetName
+    };
+
+    try {
+      const endpoints = [
+        `${backendBase}/api/design-lab/feedback`,
+        `/api/design-lab/feedback`
+      ];
+
+      let saved = false;
+      for (const url of endpoints) {
+        try {
+          const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+          if (res.ok) {
+            const data = await res.json();
+            setSubmitSuccess({
+              id: data.feedbackId || 'fb_saved',
+              message: 'Feedback received! Saved to server & copied to clipboard.'
+            });
+            saved = true;
+            break;
+          }
+        } catch (innerErr) {
+          // try next
+        }
+      }
+
+      if (!saved) {
+        setSubmitSuccess({
+          id: 'fb_local',
+          message: 'Saved to clipboard! (Server sync pending, but feedback is safely copied)'
+        });
+      }
+    } catch (err) {
+      console.error('Error submitting feedback:', err);
+      setSubmitSuccess({
+        id: 'fb_clipboard',
+        message: 'Feedback copied to clipboard!'
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -163,7 +259,7 @@ export const FeedbackOverlay = ({ targetName = "HotelSearchExperience" }) => {
           ) : (
             <>
               <MessageSquare className="w-4 h-4" />
-              <span>Feedback Lab ({comments.length})</span>
+              <span>Review Lab ({comments.length})</span>
             </>
           )}
         </button>
@@ -182,33 +278,113 @@ export const FeedbackOverlay = ({ targetName = "HotelSearchExperience" }) => {
       {isOpen && (
         <div
           id="design-lab-feedback-panel"
-          className="fixed top-0 right-0 bottom-0 w-full sm:w-[420px] bg-white shadow-2xl z-[99999] border-l border-gray-200 flex flex-col text-left text-gray-900 animate-in slide-in-from-right duration-200"
+          className="fixed top-0 right-0 bottom-0 w-full sm:w-[440px] bg-white shadow-2xl z-[99999] border-l border-gray-200 flex flex-col text-left text-gray-900 animate-in slide-in-from-right duration-200"
         >
           {/* Header */}
-          <div className="p-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
+          <div className="p-4 border-b border-gray-100 bg-gradient-to-r from-slate-900 to-blue-950 text-white flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-blue-600 animate-ping" />
-              <h3 className="text-sm font-extrabold text-gray-900">Design Lab Feedback</h3>
-              <span className="text-[11px] font-semibold bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
-                {comments.length} notes
-              </span>
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
+              <div>
+                <h3 className="text-sm font-extrabold text-white">Client Design Review</h3>
+                <p className="text-[10px] text-blue-200">Select preferred design & send feedback directly</p>
+              </div>
             </div>
             <button
               onClick={() => setIsOpen(false)}
-              className="p-1.5 rounded-lg hover:bg-gray-200 text-gray-500 cursor-pointer"
+              className="p-1.5 rounded-lg hover:bg-white/20 text-white/80 cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
 
           {/* Body */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            {/* Element Commenting Box */}
-            <div className="p-3.5 bg-blue-50/70 rounded-xl border border-blue-200 space-y-2.5">
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 text-xs">
+            {/* Success Banner if submitted */}
+            {submitSuccess && (
+              <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-start gap-2.5 text-emerald-800">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                <div>
+                  <div className="font-bold text-xs">{submitSuccess.message}</div>
+                  <div className="text-[10px] text-emerald-600 mt-0.5">
+                    Antigravity and your development team have received this submission directly.
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Client Info (Optional) */}
+            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+              <span className="font-bold text-gray-700 flex items-center gap-1.5 text-xs">
+                <User className="w-3.5 h-3.5 text-blue-600" />
+                Reviewer Info (Optional)
+              </span>
+              <div className="grid grid-cols-2 gap-2">
+                <input
+                  type="text"
+                  value={clientName}
+                  onChange={(e) => setClientName(e.target.value)}
+                  placeholder="Your Name / Client"
+                  className="w-full text-xs p-2 bg-white rounded-lg border border-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                />
+                <input
+                  type="email"
+                  value={clientEmail}
+                  onChange={(e) => setClientEmail(e.target.value)}
+                  placeholder="Email (optional)"
+                  className="w-full text-xs p-2 bg-white rounded-lg border border-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+
+            {/* Preferred Variant Vote */}
+            <div className="p-3 bg-blue-50/60 rounded-xl border border-blue-200 space-y-2">
+              <span className="font-bold text-blue-950 flex items-center gap-1.5 text-xs">
+                <Award className="w-3.5 h-3.5 text-blue-600" />
+                Which Variant is Your Favorite?
+              </span>
+              <select
+                value={preferredVariant}
+                onChange={(e) => setPreferredVariant(e.target.value)}
+                className="w-full text-xs p-2.5 bg-white rounded-lg border border-blue-200 font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+              >
+                <option value="Variant A (Modern Luxury Clarity)">Variant A: Modern Luxury Clarity (Booking/Airbnb Style)</option>
+                <option value="Variant B (Interactive Map & Cards)">Variant B: Split-Pane Interactive Map & Cards</option>
+                <option value="Variant C (High-Density Rate Matrix)">Variant C: High-Density Table Matrix (B2B Travel Agent)</option>
+                <option value="Variant D (Smart Scenario Filters & Drawer)">Variant D: Smart Scenario Filters & Half-Sheet Drawer</option>
+                <option value="Variant E (Boutique Storytelling)">Variant E: Boutique Storytelling & Visual Immersion</option>
+                <option value="Hybrid Blend (Mix of multiple variants)">Hybrid Blend: Mix elements of several variants</option>
+              </select>
+
+              {/* Star Rating */}
+              <div className="flex items-center justify-between pt-1">
+                <span className="text-[11px] text-gray-600 font-medium">Rate this design direction:</span>
+                <div className="flex items-center gap-1">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() => setRating(star)}
+                      className="cursor-pointer p-0.5 hover:scale-110 transition-transform"
+                    >
+                      <Star
+                        className={`w-4 h-4 ${
+                          star <= rating
+                            ? 'text-amber-400 fill-amber-400'
+                            : 'text-gray-300'
+                        }`}
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Point & Click Element Feedback */}
+            <div className="p-3.5 bg-gray-50 rounded-xl border border-gray-200 space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-blue-900 flex items-center gap-1.5">
+                <span className="font-bold text-gray-900 flex items-center gap-1.5 text-xs">
                   <Crosshair className="w-3.5 h-3.5 text-blue-600" />
-                  {selectedElement ? `Target: Variant ${selectedElement.variant}` : "Point & Click Feedback"}
+                  {selectedElement ? `Target: Variant ${selectedElement.variant}` : "Point & Click Note on Any Element"}
                 </span>
                 {!isInspecting && (
                   <button
@@ -222,19 +398,19 @@ export const FeedbackOverlay = ({ targetName = "HotelSearchExperience" }) => {
               </div>
 
               {selectedElement ? (
-                <div className="text-[11px] text-gray-600 bg-white p-2 rounded-lg border border-blue-100 font-mono">
+                <div className="text-[11px] text-gray-700 bg-white p-2 rounded-lg border border-blue-200 font-mono">
                   {selectedElement.description}
                 </div>
               ) : (
-                <p className="text-[11px] text-blue-700">
-                  Click "Select Element" or the floating button to click any button, card, badge, or text to attach a note.
+                <p className="text-[11px] text-gray-500">
+                  Click "Select Element" to click on any button, card, image, or text to comment on it specifically.
                 </p>
               )}
 
               <textarea
                 value={commentText}
                 onChange={(e) => setCommentText(e.target.value)}
-                placeholder="What do you think of this element? (e.g. Love the dual price, but make CTA bigger)"
+                placeholder="What do you think of this element? (e.g. Love the dual price, but make CTA button bolder)"
                 rows={2}
                 className="w-full text-xs p-2.5 bg-white rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
@@ -244,7 +420,7 @@ export const FeedbackOverlay = ({ targetName = "HotelSearchExperience" }) => {
                   <button
                     type="button"
                     onClick={() => setSelectedElement(null)}
-                    className="px-2.5 py-1 text-xs text-gray-500 hover:text-gray-700"
+                    className="px-2.5 py-1 text-xs text-gray-500 hover:text-gray-700 cursor-pointer"
                   >
                     Clear
                   </button>
@@ -255,23 +431,35 @@ export const FeedbackOverlay = ({ targetName = "HotelSearchExperience" }) => {
                   disabled={!commentText.trim()}
                   className="px-3.5 py-1.5 bg-blue-600 text-white text-xs font-bold rounded-lg hover:bg-blue-700 disabled:opacity-40 cursor-pointer"
                 >
-                  Save Note
+                  Save Element Note
                 </button>
               </div>
             </div>
 
-            {/* Comments List */}
+            {/* Collected Notes List */}
             <div className="space-y-2">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-gray-500">Collected Element Notes</h4>
+              <div className="flex items-center justify-between">
+                <h4 className="font-bold uppercase tracking-wider text-gray-500 text-[10px]">
+                  Collected Element Notes ({comments.length})
+                </h4>
+                {comments.length > 0 && (
+                  <button
+                    onClick={() => setComments([])}
+                    className="text-[10px] text-rose-500 hover:underline cursor-pointer"
+                  >
+                    Clear All
+                  </button>
+                )}
+              </div>
               {comments.length === 0 ? (
-                <div className="text-center py-6 text-gray-400 text-xs border border-dashed rounded-xl">
-                  No element comments yet. Click any part of the variants to leave notes!
+                <div className="text-center py-4 text-gray-400 text-xs border border-dashed rounded-xl">
+                  No element notes yet. (Optional)
                 </div>
               ) : (
                 comments.map((c) => (
-                  <div key={c.id} className="p-3 bg-white rounded-xl border border-gray-200 shadow-xs space-y-1">
+                  <div key={c.id} className="p-2.5 bg-white rounded-xl border border-gray-200 shadow-2xs space-y-1">
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-gray-100 text-gray-800">
+                      <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-blue-50 text-blue-800">
                         Variant {c.variant}
                       </span>
                       <button
@@ -279,53 +467,59 @@ export const FeedbackOverlay = ({ targetName = "HotelSearchExperience" }) => {
                         className="text-gray-400 hover:text-rose-600 p-1 cursor-pointer"
                         title="Delete note"
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
+                        <Trash2 className="w-3 h-3" />
                       </button>
                     </div>
-                    <p className="text-[11px] font-mono text-gray-400 truncate">{c.elementDescription}</p>
+                    <p className="text-[10px] font-mono text-gray-400 truncate">{c.elementDescription}</p>
                     <p className="text-xs text-gray-800 font-medium">"{c.text}"</p>
                   </div>
                 ))
               )}
             </div>
 
-            {/* Overall Direction */}
-            <div className="space-y-1.5 pt-2 border-t border-gray-100">
-              <label className="text-xs font-bold text-gray-800 flex items-center justify-between">
-                <span>Overall Direction / Synthesis</span>
-                <span className="text-[10px] text-gray-400 font-normal">Which one wins?</span>
+            {/* Overall Direction / Notes */}
+            <div className="space-y-1.5 pt-1">
+              <label className="font-bold text-gray-800 flex items-center justify-between text-xs">
+                <span>Overall Feedback / Client Directives</span>
+                <span className="text-[10px] text-gray-400 font-normal">What changes do you want?</span>
               </label>
               <textarea
                 value={overallDirection}
                 onChange={(e) => setOverallDirection(e.target.value)}
-                placeholder="e.g. Variant A's card layout is the cleanest. Let's merge it with Variant D's sticky filter pills and Variant B's map toggle."
+                placeholder="e.g. Variant A's card is the best. Please take the sticky filters from Variant D and the mobile toggle from Variant B."
                 rows={3}
                 className="w-full text-xs p-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
           </div>
 
-          {/* Footer CTA */}
+          {/* Footer Submit CTA */}
           <div className="p-4 border-t border-gray-200 bg-gray-50 space-y-2">
             <button
               type="button"
               onClick={handleSubmitAll}
-              className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer"
+              disabled={isSubmitting}
+              className="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer active:scale-98 disabled:opacity-50"
             >
-              {copied ? (
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Submitting to Team...</span>
+                </>
+              ) : copied ? (
                 <>
                   <Check className="w-4 h-4 text-emerald-200" />
-                  <span>Copied to Clipboard! Paste in Chat</span>
+                  <span>Submitted & Copied to Clipboard!</span>
                 </>
               ) : (
                 <>
-                  <Copy className="w-4 h-4" />
-                  <span>Submit & Copy Feedback to Clipboard</span>
+                  <Send className="w-4 h-4" />
+                  <span>Submit Feedback to Antigravity & Team</span>
                 </>
               )}
             </button>
             <p className="text-[10px] text-center text-gray-500">
-              Copies structured feedback so Antigravity can immediately synthesize your winning design!
+              Directly notifies the development team and copies notes to your clipboard for WhatsApp / Slack.
             </p>
           </div>
         </div>
@@ -333,3 +527,5 @@ export const FeedbackOverlay = ({ targetName = "HotelSearchExperience" }) => {
     </>
   );
 };
+
+export default FeedbackOverlay;

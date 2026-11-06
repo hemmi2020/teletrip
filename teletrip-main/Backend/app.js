@@ -27,6 +27,7 @@ const currencyRoutes = require('./routes/currency.route');
 const destinationsRoutes = require('./routes/destinations.route');
 const emailRoutes = require('./routes/email.route');
 const siteAccessRoutes = require('./routes/siteAccess.route');
+const designLabRoutes = require('./routes/designLab.route');
 const { siteAccessGuard } = require('./middlewares/siteAccess.middleware');
 require('./models/blacklistToken.model');
 require('./models/notification.model');
@@ -157,6 +158,7 @@ app.use('/api/financial', financialRoutes);
 app.use('/api/bookings', bookingManagementRoutes);
 app.use('/api/currency', currencyRoutes);
 app.use('/api/destinations', destinationsRoutes);
+app.use('/api/design-lab', designLabRoutes);
 
 console.log('userRoutes:', typeof userRoutes);
 console.log('hotelRoutes:', typeof hotelRoutes);

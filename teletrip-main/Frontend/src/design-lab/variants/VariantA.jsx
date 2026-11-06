@@ -188,3 +188,4 @@ export const VariantA = ({ onSelectHotel }) => {
     </div>
   );
 };
+

@@ -152,3 +152,4 @@ export const VariantC = ({ onSelectHotel }) => {
     </div>
   );
 };
+
