@@ -93,6 +93,18 @@ function getRoomImages(roomCode, rawImages) {
       );
     }
   }
+  if (matches.length === 0) {
+    const parts = code.split('.');
+    if (parts.length > 1) {
+      const charCode = parts[1].split('-')[0].toLowerCase();
+      if (charCode.length >= 2) {
+        matches = rawImages.filter(img => 
+          (img.characteristicCode && img.characteristicCode.toLowerCase() === charCode) ||
+          (img.roomCode && img.roomCode.toLowerCase().endsWith('.' + charCode))
+        );
+      }
+    }
+  }
   return matches
     .map(img => {
       if (!img) return null;
@@ -251,6 +263,49 @@ export const HotelDetailModal = ({
     return activeRooms.every(r => expandedRooms[r.code]);
   }, [hotel?.rooms, expandedRooms, rateFilter]);
 
+  // Raw image pool from search or details (Hook 8)
+  const rawPool = useMemo(() => {
+    if (!hotel && !hotelContentData) return [];
+    if (hotelContentData?.images && hotelContentData.images.length >= (hotel?.images?.length || 0)) {
+      return hotelContentData.images;
+    }
+    return (hotel?.images && hotel.images.length > 0 ? hotel.images : (hotelContentData?.images || []));
+  }, [hotel?.images, hotelContentData?.images]);
+
+  // Categorized image albums (Hook 9)
+  const imageAlbums = useMemo(() => buildImageAlbums(rawPool), [rawPool]);
+
+  // All processed image URLs (Hook 10)
+  const allImages = useMemo(() => {
+    const list = rawPool
+      .map(img => {
+        if (!img) return null;
+        if (typeof img === 'string') return img;
+        if (img.path) {
+          const clean = img.path.replace(/^\/+/, '');
+          return clean.startsWith('http') ? clean : `https://photos.hotelbeds.com/giata/original/${clean}`;
+        }
+        return null;
+      })
+      .filter(Boolean);
+    if (list.length === 0 && hotel?.thumbnail) list.push(hotel.thumbnail);
+    if (list.length === 0) list.push('https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg');
+    return list;
+  }, [rawPool, hotel?.thumbnail]);
+
+  // Deduplicated popular amenities (Hook 11)
+  const uniqueAmenities = useMemo(() => {
+    if (!hotel?.amenities) return [];
+    const map = new Map();
+    hotel.amenities.forEach(a => {
+      const str = (typeof a === 'string' ? a : (a?.name || String(a))).trim();
+      if (str && !map.has(str.toLowerCase())) {
+        map.set(str.toLowerCase(), str.toUpperCase());
+      }
+    });
+    return Array.from(map.values());
+  }, [hotel?.amenities]);
+
   // ── 2. CONDITIONAL EXIT AFTER ALL HOOKS HAVE BEEN EXECUTED ──
   if (!isOpen || !hotel) return null;
 
@@ -278,27 +333,7 @@ export const HotelDetailModal = ({
     ? Math.max(1, Math.ceil((new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60 * 24)))
     : 1;
 
-  // Images processing
-  const rawPool = (hotelContentData?.images && hotelContentData.images.length >= (hotel?.images?.length || 0))
-    ? hotelContentData.images
-    : (hotel?.images && hotel.images.length > 0 ? hotel.images : (hotelContentData?.images || []));
-
-  const allImages = rawPool
-    .map(img => {
-      if (!img) return null;
-      if (typeof img === 'string') return img;
-      if (img.path) {
-        const clean = img.path.replace(/^\/+/, '');
-        return clean.startsWith('http') ? clean : `https://photos.hotelbeds.com/giata/original/${clean}`;
-      }
-      return null;
-    })
-    .filter(Boolean);
-  if (allImages.length === 0 && hotel?.thumbnail) allImages.push(hotel.thumbnail);
-  if (allImages.length === 0) allImages.push('https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg');
-
   const headerBg = allImages[0] || hotel.thumbnail || 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg';
-  const imageAlbums = useMemo(() => buildImageAlbums(rawPool), [rawPool]);
 
   // Multi-room config
   const roomConfigsParam = searchParams?.get("roomConfigs");
@@ -367,6 +402,11 @@ export const HotelDetailModal = ({
                   <Star key={i} className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-400 fill-current drop-shadow" />
                 ))}
               </div>
+              {(hotel.stars >= 5 || hotel.isLuxuryCollection || hotel.establishmentProfiles?.includes('119')) && (
+                <span className="inline-flex items-center gap-1 px-2 sm:px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-bold bg-gradient-to-r from-amber-500/30 via-yellow-400/40 to-amber-500/30 text-amber-200 border border-amber-300/60 shadow-md backdrop-blur-sm">
+                  <span>✨</span> Luxury Collection
+                </span>
+              )}
               {hotel.rating && (
                 <span className="text-[10px] sm:text-[11px] font-bold bg-amber-500/90 text-white px-1.5 sm:px-2 py-0.5 rounded-full shadow-sm">
                   ★ {hotel.rating}
@@ -420,9 +460,9 @@ export const HotelDetailModal = ({
               <div className="text-lg sm:text-2xl font-black text-white leading-tight drop-shadow">
                 {hotel.currency || 'AED'} {startingPrice.toFixed(0)}
               </div>
-              {formatPKR && formatPKR(startingPrice, hotel.currency, true) && (
+              {formatPKR && formatPKR(startingPrice, hotel.currency || 'AED', true) && (
                 <div className="text-[10px] sm:text-[11px] text-white/80 font-medium">
-                  ≈ {formatPKR(startingPrice, hotel.currency, true)}
+                  ≈ {formatPKR(startingPrice, hotel.currency || 'AED', true)}
                 </div>
               )}
               <div className="text-[9px] sm:text-[10px] text-white/70">{nights} {nights === 1 ? 'night' : 'nights'}</div>
@@ -583,7 +623,7 @@ export const HotelDetailModal = ({
               {/* ── ROOM CARDS ACCORDION LIST ── */}
               <div className="space-y-3">
                 {hotel.rooms && hotel.rooms.length > 0 ? (
-                  hotel.rooms.map(room => {
+                  hotel.rooms.map((room, rIdx) => {
                     const filteredRates = (room.rates || []).filter(filterRate);
                     if (filteredRates.length === 0) return null;
 
@@ -600,8 +640,20 @@ export const HotelDetailModal = ({
                     if (!roomImages.length) {
                       roomImages = getRoomImages(room.code, hotel.images);
                     }
-                    const roomImg = roomImages[0] || headerBg;
                     const hasRoomPhotos = roomImages.length > 0;
+
+                    // Fallback to distinct room photos from hotel's Rooms album
+                    const roomAlbumImages = imageAlbums['Rooms'] || [];
+                    const fallbackRoomImg = roomAlbumImages.length > 0
+                      ? roomAlbumImages[rIdx % roomAlbumImages.length]
+                      : (allImages[rIdx % allImages.length] || headerBg);
+
+                    const roomImg = hasRoomPhotos ? roomImages[0] : fallbackRoomImg;
+                    const photosToOpen = hasRoomPhotos ? roomImages : (roomAlbumImages.length > 0 ? roomAlbumImages : allImages);
+                    const initialAlbum = hasRoomPhotos ? 'Rooms' : (roomAlbumImages.length > 0 ? 'Rooms' : 'All');
+                    const galleryTitle = hasRoomPhotos 
+                      ? `${room.name} (${roomImages.length} Photos)` 
+                      : `${room.name} - Hotel Rooms (${photosToOpen.length} Photos)`;
 
                     // Calculate lowest rate for this room
                     const minNet = filteredRates.reduce((min, r) => {
@@ -632,24 +684,26 @@ export const HotelDetailModal = ({
                                 className="w-13 h-13 sm:w-16 sm:h-16 rounded-lg overflow-hidden flex-shrink-0 cursor-pointer border border-gray-200 relative group"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  if (hasRoomPhotos && openGallery) {
-                                    openGallery(0, roomImages, `${room.name} (${roomImages.length} Photos)`, imageAlbums, 'Rooms');
-                                  } else if (openGallery) {
-                                    openGallery(0, allImages, hotel.name, imageAlbums, 'All');
+                                  if (openGallery) {
+                                    openGallery(0, photosToOpen, galleryTitle, imageAlbums, initialAlbum);
                                   }
                                 }}
-                                title={hasRoomPhotos ? `Click to view ${roomImages.length} room photos` : "Click to view hotel photos"}
+                                title={hasRoomPhotos ? `Click to view ${roomImages.length} room photos` : `Click to view hotel room photos`}
                               >
                                 <img
                                   src={roomImg}
                                   alt={room.name}
                                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                                 />
-                                {hasRoomPhotos && (
+                                {hasRoomPhotos ? (
                                   <span className="absolute bottom-0 inset-x-0 bg-black/65 text-white text-[9px] font-semibold text-center py-0.5 backdrop-blur-[1px]">
                                     {roomImages.length} 📷
                                   </span>
-                                )}
+                                ) : roomAlbumImages.length > 0 ? (
+                                  <span className="absolute bottom-0 inset-x-0 bg-black/55 text-white/90 text-[8px] font-semibold text-center py-0.5 backdrop-blur-[1px]">
+                                    Room Photo
+                                  </span>
+                                ) : null}
                               </div>
                             )}
 
@@ -671,17 +725,17 @@ export const HotelDetailModal = ({
                                 <span className="text-blue-600 font-medium">
                                   {filteredRates.length} rate option{filteredRates.length !== 1 ? 's' : ''}
                                 </span>
-                                {hasRoomPhotos && openGallery && (
+                                {openGallery && (
                                   <button
                                     type="button"
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      openGallery(0, roomImages, `${room.name} (${roomImages.length} Photos)`);
+                                      openGallery(0, photosToOpen, galleryTitle, imageAlbums, initialAlbum);
                                     }}
-                                    className="hidden sm:inline-flex items-center gap-1 text-[10px] font-medium text-blue-600 hover:underline"
+                                    className="hidden sm:inline-flex items-center gap-1 text-[10px] font-medium text-blue-600 hover:underline cursor-pointer"
                                   >
                                     <Camera className="w-2.5 h-2.5" />
-                                    <span>{roomImages.length} Photos</span>
+                                    <span>{hasRoomPhotos ? `${roomImages.length} Room Photos` : `${photosToOpen.length} Photos`}</span>
                                   </button>
                                 )}
                               </div>
@@ -696,9 +750,9 @@ export const HotelDetailModal = ({
                                 <div className="text-xs sm:text-sm font-black text-blue-600 leading-tight">
                                   {hotel.currency || 'AED'} {roomLowestTotal.toFixed(0)}
                                 </div>
-                                {formatPKR && formatPKR(roomLowestTotal, hotel.currency, true) && (
+                                {formatPKR && formatPKR(roomLowestTotal, hotel.currency || 'AED', true) && (
                                   <div className="text-[10px] text-gray-500 font-medium hidden sm:block">
-                                    ≈ {formatPKR(roomLowestTotal, hotel.currency, true)}
+                                    ≈ {formatPKR(roomLowestTotal, hotel.currency || 'AED', true)}
                                   </div>
                                 )}
                               </div>
@@ -823,9 +877,9 @@ export const HotelDetailModal = ({
                                       <div className="text-[10px] sm:text-[11px] text-gray-400">
                                         {hotel.currency || 'AED'} {perNightEur.toFixed(0)} / night · {nights}n
                                       </div>
-                                      {formatPKR && formatPKR(totalEur, hotel.currency, true) && (
+                                      {formatPKR && formatPKR(totalEur, hotel.currency || 'AED', true) && (
                                         <div className="text-[10px] sm:text-[11px] text-gray-500 font-medium">
-                                          ≈ {formatPKR(totalEur, hotel.currency, true)}
+                                          ≈ {formatPKR(totalEur, hotel.currency || 'AED', true)}
                                         </div>
                                       )}
                                     </div>
@@ -924,11 +978,11 @@ export const HotelDetailModal = ({
               </div>
 
               {/* General Amenities Chips */}
-              {hotel.amenities && hotel.amenities.length > 0 && (
+              {uniqueAmenities && uniqueAmenities.length > 0 && (
                 <div className="space-y-2">
                   <h4 className="text-xs font-bold uppercase text-gray-700">Popular Amenities</h4>
                   <div className="flex flex-wrap gap-2">
-                    {[...new Set(hotel.amenities.map(a => (typeof a === 'string' ? a.trim() : (a?.name || String(a))).trim()))].filter(Boolean).map((amenity, i) => (
+                    {uniqueAmenities.map((amenity, i) => (
                       <span key={i} className="text-xs px-3 py-1 bg-gray-100 text-gray-700 rounded-full font-medium">
                         ✓ {amenity}
                       </span>
@@ -1050,7 +1104,7 @@ export const HotelDetailModal = ({
               </span>
               {formatPKR && (
                 <span className="text-[11px] sm:text-xs font-semibold text-gray-500">
-                  ≈ {formatPKR(isMultiRoom ? multiRoomTotal : startingPrice, hotel.currency, true)}
+                  ≈ {formatPKR(isMultiRoom ? multiRoomTotal : startingPrice, hotel.currency || 'AED', true)}
                 </span>
               )}
             </div>

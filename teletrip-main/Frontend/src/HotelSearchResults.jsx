@@ -1057,16 +1057,25 @@ const HotelSearchResults = () => {
           const isFreeCancel = cheapestRate?.rateClass !== 'NRF' && cancellationPolicy.length > 0 &&
             (parseFloat(cancellationPolicy[0]?.amount || 0) === 0 || new Date() < new Date(cancellationPolicy[0].from));
 
+          const stars = parseStars(hotel.categoryName || hotel.categoryCode);
+          const is5Star = stars >= 5 || (hotel.categoryName || '').includes('5');
+          const rawSegments = (hotel.segmentCodes || []).map(s => String(s.segmentCode || s));
+          const hasLuxurySegment = rawSegments.includes('119');
+          const isLuxury = Boolean(hotel.luxury || is5Star || hasLuxurySegment);
+          const establishmentProfiles = isLuxury && !rawSegments.includes('119')
+            ? ['119', ...rawSegments]
+            : rawSegments;
+
           return {
             id: hotel.code,
             name: hotel.name,
             category: hotel.categoryName || hotel.categoryCode || "N/A",
-            stars: parseStars(hotel.categoryName || hotel.categoryCode),
+            stars: stars,
             address: `${hotel.destinationName}, ${hotel.zoneName}`,
             zone: hotel.zoneName || "Unknown",
             thumbnail: hotel.thumbnail,
             price: hotel.minRate || cheapestRate?.net || "N/A",
-            currency: hotel.currency || "EUR",
+            currency: hotel.currency || "AED",
             images: hotel.images || [],
             amenities: [...new Set(hotel.amenities || [])],
             facilities: hotel.facilities || [],
@@ -1084,9 +1093,10 @@ const HotelSearchResults = () => {
             chain: hotel.chainCode || hotel.chain || null,
             packaging: allRates.some(r => r.packaging === true),
             exclusiveDeal: hotel.exclusiveDeal || allRates.some(r => r.exclusiveDeal === true),
-            luxury: hotel.luxury || false,
+            luxury: isLuxury,
+            isLuxuryCollection: isLuxury,
             preferred: hotel.preferred || false,
-            establishmentProfiles: hotel.segmentCodes || [],
+            establishmentProfiles: establishmentProfiles,
             rooms: hotel.rooms || [],
             code: hotel.code,
             latitude: hotel.latitude,
@@ -1962,11 +1972,16 @@ const HotelSearchResults = () => {
                               <div className="flex items-center gap-0.5 flex-shrink-0">
                                 {[...Array(hotel.stars)].map((_, i) => <Star key={i} className="w-2.5 h-2.5 text-amber-400 fill-current" />)}
                               </div>
+                              {(hotel.isLuxuryCollection || hotel.stars >= 5 || hotel.establishmentProfiles?.includes('119')) && (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-900 border border-amber-300 shadow-xs">
+                                  <span>✨</span> Luxury Collection
+                                </span>
+                              )}
                             </div>
                           </div>
                           <div className="text-right flex-shrink-0">
                             <div className="text-lg font-bold text-blue-600 leading-tight">{hotel.currency || 'AED'} {totalPrice.toFixed(0)}</div>
-                            {formatPKR(totalPrice, hotel.currency, true) && <div className="text-[11px] text-gray-400">≈ {formatPKR(totalPrice, hotel.currency, true)}</div>}
+                            {formatPKR(totalPrice, hotel.currency || 'AED', true) && <div className="text-[11px] text-gray-400">≈ {formatPKR(totalPrice, hotel.currency || 'AED', true)}</div>}
                             <div className="text-[10px] text-gray-400">{hotel.currency || 'AED'} {pricePerNight.toFixed(0)}/night · {nights}n</div>
                             {hotelReviews[hotel.id] && hotelReviews[hotel.id].numReviews > 0 ? (
                               <button

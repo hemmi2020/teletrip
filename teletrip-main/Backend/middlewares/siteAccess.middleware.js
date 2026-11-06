@@ -79,6 +79,7 @@ function siteAccessGuard(req, res, next) {
     const isWhitelisted = 
         path === '/health' ||
         path.startsWith('/api/site-access') ||
+        path.startsWith('/api/currency') ||
         path.startsWith('/api/payments/webhook') ||
         path.startsWith('/api/payments/hbl') ||
         path.startsWith('/api/payments/callback');
