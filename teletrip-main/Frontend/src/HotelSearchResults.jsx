@@ -133,8 +133,62 @@ const HotelSearchResults = () => {
   const [galleryIndex, setGalleryIndex] = useState(0);
   const [galleryImages, setGalleryImages] = useState([]);
   const [galleryTitle, setGalleryTitle] = useState('');
+  const [galleryAlbums, setGalleryAlbums] = useState(null);
+  const [activeGalleryAlbum, setActiveGalleryAlbum] = useState('All');
   const [hotelContentData, setHotelContentData] = useState(null);
   const [loadingContent, setLoadingContent] = useState(false);
+
+  // Helper to categorize hotel images into intuitive albums
+  const buildImageAlbums = useCallback((rawImages) => {
+    const albums = {
+      'All': [],
+      'Rooms': [],
+      'General View': [],
+      'Lobby': [],
+      'Restaurant': [],
+      'Conference': [],
+      'Pool & Facilities': []
+    };
+
+    (rawImages || []).forEach(img => {
+      let url = null;
+      if (typeof img === 'string') {
+        url = img;
+      } else if (img && img.path) {
+        const clean = img.path.replace(/^\/+/, '');
+        url = clean.startsWith('http') ? clean : `https://photos.hotelbeds.com/giata/original/${clean}`;
+      }
+      if (!url) return;
+
+      albums['All'].push(url);
+
+      const typeCode = String(img.imageTypeCode || img.typeCode || img.type?.code || '').toUpperCase();
+      const typeDesc = String(img.type || img.type?.description?.content || '').toLowerCase();
+      const hasRoom = Boolean(img.roomCode || img.roomType);
+
+      if (typeCode === 'HAB' || hasRoom || typeDesc.includes('room') || typeDesc.includes('suite') || typeDesc.includes('bedroom')) {
+        albums['Rooms'].push(url);
+      } else if (typeCode === 'GEN' || typeDesc.includes('general') || typeDesc.includes('view') || typeDesc.includes('exterior') || typeDesc.includes('facade')) {
+        albums['General View'].push(url);
+      } else if (typeCode === 'LOB' || typeDesc.includes('lobby') || typeDesc.includes('reception') || typeDesc.includes('entrance')) {
+        albums['Lobby'].push(url);
+      } else if (typeCode === 'RES' || typeCode === 'BAR' || typeDesc.includes('restaurant') || typeDesc.includes('dining') || typeDesc.includes('bar') || typeDesc.includes('buffet') || typeDesc.includes('breakfast')) {
+        albums['Restaurant'].push(url);
+      } else if (typeCode === 'CON' || typeDesc.includes('conference') || typeDesc.includes('meeting') || typeDesc.includes('event') || typeDesc.includes('hall')) {
+        albums['Conference'].push(url);
+      } else if (typeCode === 'SPO' || typeCode === 'TER' || typeDesc.includes('pool') || typeDesc.includes('spa') || typeDesc.includes('gym') || typeDesc.includes('terrace') || typeDesc.includes('beach') || typeDesc.includes('fitness')) {
+        albums['Pool & Facilities'].push(url);
+      } else {
+        albums['General View'].push(url);
+      }
+    });
+
+    const cleanAlbums = {};
+    Object.entries(albums).forEach(([k, list]) => {
+      if (list.length > 0) cleanAlbums[k] = list;
+    });
+    return cleanAlbums;
+  }, []);
 
   // Multi-room tab state
   const [activeRoomTab, setActiveRoomTab] = useState(0);
@@ -762,32 +816,36 @@ const HotelSearchResults = () => {
     fetchContent();
   }, [selectedHotel]);
 
+  // Debounced address search via backend proxy
+  useEffect(() => {
+    if (addressSearch.trim().length < 3) {
+      setAddressSuggestions([]);
+      setShowAddressSuggestions(false);
+      return;
+    }
+    setLoadingAddress(true);
+    const city = searchParams.get("city") || '';
+    const timer = setTimeout(async () => {
+      try {
+        const q = `${addressSearch}, ${city}`;
+        const res = await fetch(`${API_BASE_URL.replace('/api', '')}/api/locations/address?q=${encodeURIComponent(q)}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.data.length > 0) {
+            setAddressSuggestions(data.data);
+            setShowAddressSuggestions(true);
+          } else {
+            setShowAddressSuggestions(false);
+          }
+        }
+      } catch (err) { /* silent */ }
+      finally { setLoadingAddress(false); }
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [addressSearch, searchParams]);
+
   // HELPER FUNCTION
   const getRatingColor = (rating) => {
-
-    // Debounced address search via backend proxy
-    useEffect(() => {
-      if (addressSearch.trim().length < 3) { setAddressSuggestions([]); setShowAddressSuggestions(false); return; }
-      setLoadingAddress(true);
-      const city = searchParams.get("city") || '';
-      const timer = setTimeout(async () => {
-        try {
-          const q = `${addressSearch}, ${city}`;
-          const res = await fetch(`${API_BASE_URL.replace('/api', '')}/api/locations/address?q=${encodeURIComponent(q)}`);
-          if (res.ok) {
-            const data = await res.json();
-            if (data.success && data.data.length > 0) {
-              setAddressSuggestions(data.data);
-              setShowAddressSuggestions(true);
-            } else {
-              setShowAddressSuggestions(false);
-            }
-          }
-        } catch (err) { /* silent */ }
-        finally { setLoadingAddress(false); }
-      }, 500);
-      return () => clearTimeout(timer);
-    }, [addressSearch, searchParams]);
     if (rating >= 4.5) return "bg-green-600";
     if (rating >= 3.5) return "bg-green-500";
     if (rating >= 2.5) return "bg-yellow-500";
@@ -1115,7 +1173,12 @@ const HotelSearchResults = () => {
   const filteredHotels = useMemo(() => hotels.filter(hotel => {
     if (hotelNameSearch && !hotel.name.toLowerCase().includes(hotelNameSearch.toLowerCase())) return false;
     if (selectedSight && hotel.zone !== selectedSight) return false;
-    if (addressSearch && !hotel.address.toLowerCase().includes(addressSearch.toLowerCase())) return false;
+    if (addressSearch && addressSearch.trim().length >= 3) {
+      const qTerms = addressSearch.toLowerCase().split(/[,\s]+/).filter(t => t.length > 2);
+      const targetText = `${hotel.name || ''} ${hotel.address || ''} ${hotel.zone || ''} ${hotel.destinationName || ''}`.toLowerCase();
+      const matches = qTerms.length > 0 ? qTerms.some(term => targetText.includes(term)) : targetText.includes(addressSearch.toLowerCase());
+      if (!matches) return false;
+    }
     if (selectedBoards.length > 0 && !hotel.boards.some(b => selectedBoards.includes(b))) return false;
     if (selectedCategories.length > 0 && !selectedCategories.includes(hotel.category)) return false;
     if (selectedZones.length > 0 && !selectedZones.includes(hotel.zone)) return false;
@@ -1706,13 +1769,13 @@ const HotelSearchResults = () => {
         >
           <Filter className="w-4 h-4" />
           <span>Filters</span>
-          {(selectedAmenities.length + selectedAccommodationTypes.length + selectedBoards.length + selectedCategories.length + selectedZones.length + selectedReviewRatings.length + selectedPromos.length + selectedDiscounts.length + selectedChains.length + selectedEstablishment.length + (hotelNameSearch ? 1 : 0) + (selectedCancellation ? 1 : 0) + (priceMin ? 1 : 0) + (priceMax ? 1 : 0)) > 0 && (
+          {(selectedAmenities.length + selectedAccommodationTypes.length + selectedBoards.length + selectedCategories.length + selectedZones.length + selectedReviewRatings.length + selectedPromos.length + selectedDiscounts.length + selectedChains.length + selectedEstablishment.length + (hotelNameSearch ? 1 : 0) + (selectedCancellation ? 1 : 0) + (priceMin ? 1 : 0) + (priceMax ? 1 : 0) + (selectedSight ? 1 : 0) + (addressSearch ? 1 : 0)) > 0 && (
             <span style={{
               backgroundColor: '#fff', color: '#2563eb', fontSize: 11,
               fontWeight: 700, borderRadius: 99, width: 20, height: 20,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
-              {selectedAmenities.length + selectedAccommodationTypes.length + selectedBoards.length + selectedCategories.length + selectedZones.length + selectedReviewRatings.length + selectedPromos.length + selectedDiscounts.length + selectedChains.length + selectedEstablishment.length + (hotelNameSearch ? 1 : 0) + (selectedCancellation ? 1 : 0) + (priceMin ? 1 : 0) + (priceMax ? 1 : 0)}
+              {selectedAmenities.length + selectedAccommodationTypes.length + selectedBoards.length + selectedCategories.length + selectedZones.length + selectedReviewRatings.length + selectedPromos.length + selectedDiscounts.length + selectedChains.length + selectedEstablishment.length + (hotelNameSearch ? 1 : 0) + (selectedCancellation ? 1 : 0) + (priceMin ? 1 : 0) + (priceMax ? 1 : 0) + (selectedSight ? 1 : 0) + (addressSearch ? 1 : 0)}
             </span>
           )}
         </button>
@@ -1722,12 +1785,24 @@ const HotelSearchResults = () => {
           isOpen={showMobileFilters}
           onClose={() => setShowMobileFilters(false)}
           onReset={clearFilters}
-          activeCount={selectedAmenities.length + selectedAccommodationTypes.length + selectedBoards.length + selectedCategories.length + selectedZones.length + selectedReviewRatings.length + selectedPromos.length + selectedDiscounts.length + selectedChains.length + selectedEstablishment.length + (hotelNameSearch ? 1 : 0) + (selectedCancellation ? 1 : 0) + (priceMin ? 1 : 0) + (priceMax ? 1 : 0)}
+          activeCount={selectedAmenities.length + selectedAccommodationTypes.length + selectedBoards.length + selectedCategories.length + selectedZones.length + selectedReviewRatings.length + selectedPromos.length + selectedDiscounts.length + selectedChains.length + selectedEstablishment.length + (hotelNameSearch ? 1 : 0) + (selectedCancellation ? 1 : 0) + (priceMin ? 1 : 0) + (priceMax ? 1 : 0) + (selectedSight ? 1 : 0) + (addressSearch ? 1 : 0)}
           sections={[
             {
               key: 'hotelName', label: 'Hotel Name', type: 'search',
               placeholder: 'Search hotel name...',
               value: hotelNameSearch, onChange: setHotelNameSearch,
+            },
+            {
+              key: 'distance', label: 'Distance From', type: 'distance',
+              selectedSight: selectedSight,
+              onSelectSight: setSelectedSight,
+              sightOptions: dynamicZones,
+              addressSearch: addressSearch,
+              onAddressSearchChange: setAddressSearch,
+              addressSuggestions: addressSuggestions,
+              showAddressSuggestions: showAddressSuggestions,
+              setShowAddressSuggestions: setShowAddressSuggestions,
+              loadingAddress: loadingAddress,
             },
             ...(dynamicBoards.length > 0 ? [{
               key: 'board', label: 'Board', type: 'checkbox',
@@ -1850,9 +1925,30 @@ const HotelSearchResults = () => {
                   >
                     {/* Image */}
                     <div className="sm:w-56 lg:w-64 relative overflow-hidden flex-shrink-0">
-                      <img loading="lazy" src={hotel.thumbnail || "https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg"} alt={hotel.name} className="w-full aspect-video sm:aspect-auto sm:h-full object-cover group-hover:scale-105 transition-transform duration-500" onError={(e) => (e.target.src = "https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg")} />
+                      <img
+                        loading="lazy"
+                        src={hotel.thumbnail || (hotel.images && hotel.images[0]?.path ? `https://photos.hotelbeds.com/giata/original/${hotel.images[0].path.replace(/^\/+/, '')}` : "https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg")}
+                        alt={hotel.name}
+                        className="w-full aspect-video sm:aspect-auto sm:h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        onError={(e) => {
+                          const src = e.target.src || '';
+                          if (src.includes('/giata/bigger/')) {
+                            e.target.src = src.replace('/giata/bigger/', '/giata/original/');
+                          } else if (src.includes('/giata/original/')) {
+                            e.target.src = src.replace('/giata/original/', '/giata/medium/');
+                          } else {
+                            e.target.src = "https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg";
+                          }
+                        }}
+                      />
                       {hotel.hasFreeCancellation && (
                         <div className="absolute top-2 left-2 bg-green-600/90 text-white px-2 py-0.5 rounded text-[10px] font-medium">Free cancellation</div>
+                      )}
+                      {(hotel.promos?.length > 0 || hotel.discounts?.length > 0) && (
+                        <div className="absolute top-2 right-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white px-2 py-0.5 rounded text-[10px] font-bold shadow-sm flex items-center gap-1">
+                          <Tag className="w-2.5 h-2.5" />
+                          <span>{hotel.promos?.[0] || 'Promo Offer'}</span>
+                        </div>
                       )}
                     </div>
 
@@ -1872,11 +1968,32 @@ const HotelSearchResults = () => {
                             <div className="text-lg font-bold text-blue-600 leading-tight">{hotel.currency || 'AED'} {totalPrice.toFixed(0)}</div>
                             {formatPKR(totalPrice, hotel.currency, true) && <div className="text-[11px] text-gray-400">≈ {formatPKR(totalPrice, hotel.currency, true)}</div>}
                             <div className="text-[10px] text-gray-400">{hotel.currency || 'AED'} {pricePerNight.toFixed(0)}/night · {nights}n</div>
-                            {hotelReviews[hotel.id] && hotelReviews[hotel.id].numReviews > 0 && (
-                              <div className="flex items-center gap-1 mt-0.5 justify-end">
+                            {hotelReviews[hotel.id] && hotelReviews[hotel.id].numReviews > 0 ? (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openReviewsModal(hotel);
+                                }}
+                                className="flex items-center gap-1 mt-0.5 justify-end cursor-pointer group/rev hover:opacity-80 transition-opacity bg-transparent border-0 p-0"
+                                title="Click to view traveler reviews"
+                              >
                                 <RatingCircles rating={hotelReviews[hotel.id].rating} size="w-2 h-2" />
-                                <span className="text-[10px] text-gray-400">{hotelReviews[hotel.id].numReviews.toLocaleString()}</span>
-                              </div>
+                                <span className="text-[10px] text-gray-500 group-hover/rev:text-blue-600 font-medium">
+                                  {hotelReviews[hotel.id].numReviews.toLocaleString()} reviews
+                                </span>
+                              </button>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openReviewsModal(hotel);
+                                }}
+                                className="flex items-center gap-1 mt-0.5 justify-end cursor-pointer text-[10px] text-blue-600 hover:underline bg-transparent border-0 p-0"
+                              >
+                                <span>See reviews</span>
+                              </button>
                             )}
                           </div>
                         </div>
@@ -1965,22 +2082,29 @@ const HotelSearchResults = () => {
           applyCommission={applyCommission}
           onAddToCart={handleAddToCart}
           onMultiRoomAddToCart={handleMultiRoomAddToCart}
-          openGallery={(idx = 0, customImages = null, title = '') => {
-            if (customImages && customImages.length > 0) {
-              setGalleryImages(customImages);
-              setGalleryIndex(idx || 0);
-              setGalleryTitle(title || '');
-              setGalleryOpen(true);
-              return;
-            }
+          openGallery={(idx = 0, customImages = null, title = '', customAlbums = null, initialAlbum = 'All') => {
             const rawImages = (hotelContentData?.images && hotelContentData.images.length >= (selectedHotel?.images?.length || 0))
               ? hotelContentData.images
               : (selectedHotel?.images && selectedHotel.images.length > 0 ? selectedHotel.images : (hotelContentData?.images || []));
-            const allImages = rawImages
-              .map(img => img.path ? `https://photos.hotelbeds.com/giata/original/${img.path.replace(/^\/+/, '')}` : (typeof img === 'string' ? img : null))
-              .filter(Boolean);
+
+            const computedAlbums = customAlbums || buildImageAlbums(rawImages);
+            const allImages = (computedAlbums['All'] && computedAlbums['All'].length > 0)
+              ? computedAlbums['All']
+              : rawImages.map(img => img.path ? `https://photos.hotelbeds.com/giata/original/${img.path.replace(/^\/+/, '')}` : (typeof img === 'string' ? img : null)).filter(Boolean);
+
             if (allImages.length === 0 && selectedHotel?.thumbnail) allImages.push(selectedHotel.thumbnail);
-            setGalleryImages(allImages);
+
+            setGalleryAlbums(computedAlbums);
+            setActiveGalleryAlbum(initialAlbum || 'All');
+
+            if (customImages && customImages.length > 0) {
+              setGalleryImages(customImages);
+            } else if (initialAlbum && computedAlbums[initialAlbum] && computedAlbums[initialAlbum].length > 0) {
+              setGalleryImages(computedAlbums[initialAlbum]);
+            } else {
+              setGalleryImages(allImages);
+            }
+
             setGalleryIndex(idx || 0);
             setGalleryTitle(title || selectedHotel?.name || '');
             setGalleryOpen(true);
@@ -2112,17 +2236,46 @@ const HotelSearchResults = () => {
                       setGalleryImages(allImages);
                       setGalleryIndex(0);
                       setGalleryTitle(selectedHotel.name);
+                      setActiveGalleryAlbum('All');
                     }}
-                    className="text-xs px-2.5 py-1 rounded-full bg-white/15 hover:bg-white/25 text-white transition-colors"
+                    className="text-xs px-2.5 py-1 rounded-full bg-white/15 hover:bg-white/25 text-white transition-colors cursor-pointer"
                   >
                     View All Hotel Photos
                   </button>
                 )}
-                <button onClick={() => setGalleryOpen(false)} className="p-2 sm:p-2.5 rounded-full bg-white/15 hover:bg-white/25 transition-colors">
+                <button onClick={() => setGalleryOpen(false)} className="p-2 sm:p-2.5 rounded-full bg-white/15 hover:bg-white/25 transition-colors cursor-pointer">
                   <X className="w-5 h-5 text-white" />
                 </button>
               </div>
             </div>
+
+            {/* Category / Album Tabs Bar */}
+            {galleryAlbums && Object.keys(galleryAlbums).length > 1 && (
+              <div className="flex items-center gap-2 px-4 py-2 bg-black/60 border-b border-white/10 overflow-x-auto flex-shrink-0" style={{ scrollbarWidth: 'thin' }}>
+                {Object.entries(galleryAlbums).map(([catKey, catImages]) => {
+                  if (!catImages || catImages.length === 0) return null;
+                  const isActive = activeGalleryAlbum === catKey;
+                  return (
+                    <button
+                      key={catKey}
+                      type="button"
+                      onClick={() => {
+                        setActiveGalleryAlbum(catKey);
+                        setGalleryImages(catImages);
+                        setGalleryIndex(0);
+                      }}
+                      className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                        isActive
+                          ? 'bg-blue-600 text-white shadow-sm ring-2 ring-white/30'
+                          : 'bg-white/10 text-white/80 hover:bg-white/20'
+                      }`}
+                    >
+                      {catKey} ({catImages.length})
+                    </button>
+                  );
+                })}
+              </div>
+            )}
             {/* Main image */}
             <div className="flex-1 flex items-center justify-center px-4 relative min-h-0">
               <button onClick={() => setGalleryIndex(prev => prev > 0 ? prev - 1 : galleryImages.length - 1)} className="absolute left-2 sm:left-6 p-2.5 rounded-full bg-white/10 hover:bg-white/20 transition-colors z-10"><ChevronDown className="w-5 h-5 text-white rotate-90" /></button>

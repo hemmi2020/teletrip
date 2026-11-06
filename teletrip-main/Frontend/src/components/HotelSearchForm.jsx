@@ -905,86 +905,47 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
   const getTotalChildren = () => roomConfigs.reduce((sum, r) => sum + r.children, 0);
   const getAllChildAges = () => roomConfigs.flatMap(r => r.childAges);
 
-  // Debounced location search via API (cities + countries + hotels)
+  // Debounced unified search via API (destinations + hotels in one search, Bedsonline style)
   useEffect(() => {
     if (searchQuery.trim().length < 2) {
       setFilteredLocations([]);
+      setHotelSuggestions([]);
       return;
     }
     setIsLoadingLocations(true);
     const timer = setTimeout(async () => {
       try {
         const API_BASE = import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
-        const res = await fetch(`${API_BASE}/api/locations/search?q=${encodeURIComponent(searchQuery.trim())}`);
-        if (!res.ok) throw new Error('API unavailable');
-        const data = await res.json();
-        if (data.success) {
-          setFilteredLocations(data.data || []);
+        const queryTerm = searchQuery.trim();
+
+        const [locRes, hotelRes] = await Promise.allSettled([
+          fetch(`${API_BASE}/api/locations/search?q=${encodeURIComponent(queryTerm)}`),
+          fetch(`${API_BASE}/api/hotels/search-by-name?q=${encodeURIComponent(queryTerm)}&limit=12`)
+        ]);
+
+        let locs = [];
+        if (locRes.status === 'fulfilled' && locRes.value.ok) {
+          const data = await locRes.value.json();
+          if (data.success) locs = data.data || [];
         }
+
+        let hotels = [];
+        if (hotelRes.status === 'fulfilled' && hotelRes.value.ok) {
+          const hData = await hotelRes.value.json();
+          if (hData.success) hotels = hData.data || [];
+        }
+
+        setFilteredLocations(locs);
+        setHotelSuggestions(hotels);
+        setShowLocationDropdown(true);
       } catch (err) {
-        // Fallback: search CountriesNow directly
-        try {
-          const res = await fetch('https://countriesnow.space/api/v0.1/countries/');
-          const data = await res.json();
-          if (!data.error) {
-            const query = searchQuery.toLowerCase().trim();
-            const results = [];
-            data.data.forEach(country => {
-              if (country.country.toLowerCase().includes(query)) {
-                results.push({ type: 'country', name: country.country, city: '', country: country.country, countryCode: country.iso3, displayName: country.country });
-              }
-              (country.cities || []).forEach(city => {
-                if (city.toLowerCase().includes(query) && results.length < 30) {
-                  results.push({ type: 'city', name: city, city, country: country.country, countryCode: country.iso3, displayName: `${city}, ${country.country}` });
-                }
-              });
-            });
-            setFilteredLocations(results.slice(0, 30));
-          }
-        } catch (fallbackErr) {
-          console.error('Fallback search failed:', fallbackErr);
-        }
+        console.warn('Search error:', err.message);
       } finally {
         setIsLoadingLocations(false);
       }
     }, 300);
     return () => clearTimeout(timer);
   }, [searchQuery]);
-
-  // Debounced hotel name search from local index
-  useEffect(() => {
-    if (hotelNameQuery.trim().length < 2) {
-      setHotelSuggestions([]);
-      setSelectedHotelCode(null);
-      return;
-    }
-    setIsLoadingHotels(true);
-    const timer = setTimeout(async () => {
-      try {
-        const API_BASE = import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
-        // If destination is already selected, filter hotel suggestions by that destination
-        let destFilter = '';
-        if (selectedLocation?.destinationCode) {
-          destFilter = `&destination=${selectedLocation.destinationCode}`;
-        } else if (selectedLocation?.city || selectedLocation?.name) {
-          destFilter = `&city=${encodeURIComponent(selectedLocation.city || selectedLocation.name)}`;
-        }
-        const res = await fetch(`${API_BASE}/api/hotels/search-by-name?q=${encodeURIComponent(hotelNameQuery.trim())}&limit=10${destFilter}`);
-        if (res.ok) {
-          const data = await res.json();
-          if (data.success) {
-            setHotelSuggestions(data.data || []);
-            setShowHotelDropdown(true);
-          }
-        }
-      } catch (err) {
-        console.warn('Hotel name search failed:', err.message);
-      } finally {
-        setIsLoadingHotels(false);
-      }
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [hotelNameQuery, selectedLocation]);
 
   // Handle clicks outside dropdowns
   useEffect(() => {
@@ -1011,7 +972,23 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
 
   const handleLocationSelect = (location) => {
     setSelectedLocation(location);
+    setSelectedHotelCode(null);
     setSearchQuery(location.displayName || location.name);
+    setShowLocationDropdown(false);
+  };
+
+  const handleHotelSelect = (hotel) => {
+    setSelectedHotelCode(hotel.code);
+    setSelectedLocation({
+      type: 'hotel',
+      code: hotel.code,
+      name: hotel.name,
+      city: hotel.zoneName || hotel.destinationName || hotel.city || '',
+      destinationCode: hotel.destinationCode || '',
+      country: hotel.countryCode || hotel.country || '',
+      countryCode: hotel.countryCode || ''
+    });
+    setSearchQuery(hotel.name);
     setShowLocationDropdown(false);
   };
 
@@ -1020,37 +997,37 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
     setShowLocationDropdown(true);
     if (e.target.value.trim() === '') {
       setSelectedLocation(null);
+      setSelectedHotelCode(null);
     }
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    if (!selectedLocation && !selectedHotelCode) {
-      alert('Please select a destination or a specific hotel');
+    if (!selectedLocation && !selectedHotelCode && !searchQuery.trim()) {
+      alert('Please enter a destination or hotel name');
       return;
     }
 
     const checkIn = format(dateRange[0].startDate, 'yyyy-MM-dd');
     const checkOut = format(dateRange[0].endDate, 'yyyy-MM-dd');
 
-    const city = selectedLocation?.city || selectedLocation?.name || '';
+    const isHotel = selectedLocation?.type === 'hotel' || Boolean(selectedHotelCode);
+    const hotelCode = selectedHotelCode || (selectedLocation?.type === 'hotel' ? selectedLocation.code : null);
+    const hotelName = selectedLocation?.type === 'hotel' ? selectedLocation.name : (hotelNameQuery || '');
+    const city = selectedLocation?.city || selectedLocation?.name || (!hotelCode ? searchQuery.trim() : '');
     const country = selectedLocation?.country || selectedLocation?.countryCode || '';
+    const destinationCode = selectedLocation?.destinationCode || '';
+
     const totalAdults = getTotalAdults();
     const totalChildren = getTotalChildren();
     const allChildAges = getAllChildAges();
     let url = `/hotel-search-results?checkIn=${checkIn}&checkOut=${checkOut}&rooms=${roomConfigs.length}&adults=${totalAdults}&children=${totalChildren}`;
     if (country) url += `&country=${encodeURIComponent(country)}`;
     if (city) url += `&city=${encodeURIComponent(city)}`;
-    if (hotelNameQuery.trim()) {
-      url += `&hotelName=${encodeURIComponent(hotelNameQuery.trim())}`;
-    }
-    if (selectedHotelCode) {
-      url += `&hotelCode=${selectedHotelCode}`;
-    }
-    if (selectedLocation?.destinationCode) {
-      url += `&destinationCode=${encodeURIComponent(selectedLocation.destinationCode)}`;
-    }
+    if (destinationCode) url += `&destinationCode=${encodeURIComponent(destinationCode)}`;
+    if (hotelCode) url += `&hotelCode=${hotelCode}`;
+    if (hotelName) url += `&hotelName=${encodeURIComponent(hotelName)}`;
     if (selectedLocation?.lat || selectedLocation?.latitude) {
       url += `&latitude=${selectedLocation.lat || selectedLocation.latitude}&longitude=${selectedLocation.lon || selectedLocation.longitude}`;
     }
@@ -1124,125 +1101,145 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
 
           {activeTab === 'stays' && (
             <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
-              {/* Location + Hotel Name - Two separate fields */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-                {/* Location Search (City/Country) */}
-                <div className="relative" ref={locationRef}>
-                  <label className={`block text-xs sm:text-sm font-medium ${lbl} mb-1.5 sm:mb-2 text-left`}>
-                    Destination <span className="text-red-500">*</span>
-                  </label>
-                  <div className={`flex items-center w-full border bg-white rounded-lg focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent px-3 py-2.5 sm:py-3 gap-2 ${selectedLocation ? 'border-green-300 bg-green-50/30' : 'border-gray-300'}`}>
-                    <MapPin className={`flex-shrink-0 ${selectedLocation ? 'text-green-500' : 'text-gray-400'}`} size={18} />
-                    <input
-                      type="text"
-                      value={searchQuery}
-                      onChange={handleSearchInputChange}
-                      onFocus={() => setShowLocationDropdown(true)}
-                      placeholder="Dubai, Makkah, Istanbul..."
-                      className="flex-1 min-w-0 outline-none bg-transparent text-gray-700 text-sm sm:text-base placeholder-gray-400"
-                    />
-                    {searchQuery && (
-                      <button type="button" onClick={() => { setSearchQuery(''); setSelectedLocation(null); setFilteredLocations([]); }} className="text-gray-400 hover:text-gray-600 flex-shrink-0"><X size={16} /></button>
-                    )}
-                  </div>
-                  {showLocationDropdown && searchQuery.trim() !== '' && (
-                    <div className="absolute left-0 right-0 top-full mt-1 z-[220] bg-white border border-gray-200 rounded-xl shadow-2xl max-h-[60vh] overflow-y-auto" style={{scrollbarWidth:'thin'}}>
-                      {isLoadingLocations ? (
-                        <div className="p-4 text-center text-gray-400 text-sm">Searching...</div>
-                      ) : filteredLocations.length > 0 ? (
-                        <div>
-                          <div className="px-3 pt-2.5 pb-1.5 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Destinations</div>
-                          {filteredLocations.filter(l => l.type !== 'hotel').map((location, index) => (
-                            <div key={`loc-${index}`} onClick={() => handleLocationSelect(location)} className="px-3 py-2 hover:bg-blue-50 cursor-pointer transition-colors flex items-center gap-2.5">
-                              <MapPin size={15} className="text-blue-600 flex-shrink-0" />
-                              <div className="min-w-0 flex-1">
-                                <div className="text-[13px] font-medium text-gray-800 truncate">{location.city || location.country || location.name}</div>
-                                <div className="text-[11px] text-gray-400 truncate">{location.type === 'country' ? 'Country' : `City in ${location.country}`}</div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="p-4 text-center text-gray-400 text-sm">No destinations found</div>
-                      )}
-                    </div>
+              {/* Unified Destination or Hotel Search Field (Bedsonline style) */}
+              <div className="relative" ref={locationRef}>
+                <label className={`block text-xs sm:text-sm font-medium ${lbl} mb-1.5 sm:mb-2 text-left`}>
+                  Destination or Hotel Name <span className="text-red-500">*</span>
+                </label>
+                <div className={`flex items-center w-full border bg-white rounded-lg focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent px-3 py-2.5 sm:py-3 gap-2 ${
+                  selectedHotelCode
+                    ? 'border-emerald-400 bg-emerald-50/20'
+                    : selectedLocation
+                    ? 'border-blue-400 bg-blue-50/20'
+                    : 'border-gray-300'
+                }`}>
+                  {selectedHotelCode ? (
+                    <Building2 className="flex-shrink-0 text-emerald-600" size={18} />
+                  ) : (
+                    <MapPin className={`flex-shrink-0 ${selectedLocation ? 'text-blue-600' : 'text-gray-400'}`} size={18} />
+                  )}
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={handleSearchInputChange}
+                    onFocus={() => { if (filteredLocations.length > 0 || hotelSuggestions.length > 0) setShowLocationDropdown(true); }}
+                    placeholder="Search destination, city, or hotel name (e.g. Dubai, Atlantis...)"
+                    className="flex-1 min-w-0 outline-none bg-transparent text-gray-700 text-sm sm:text-base placeholder-gray-400"
+                  />
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSearchQuery('');
+                        setSelectedLocation(null);
+                        setSelectedHotelCode(null);
+                        setFilteredLocations([]);
+                        setHotelSuggestions([]);
+                      }}
+                      className="text-gray-400 hover:text-gray-600 flex-shrink-0 cursor-pointer"
+                    >
+                      <X size={16} />
+                    </button>
                   )}
                 </div>
 
-                {/* Hotel Name Search with Autocomplete */}
-                <div className="relative" ref={hotelNameRef}>
-                  <label className={`block text-xs sm:text-sm font-medium ${lbl} mb-1.5 sm:mb-2 text-left`}>
-                    Hotel Name <span className="text-gray-400 text-xs font-normal">(optional)</span>
-                  </label>
-                  <div className={`flex items-center w-full border bg-white rounded-lg focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent px-3 py-2.5 sm:py-3 gap-2 ${selectedHotelCode ? 'border-green-300 bg-green-50/30' : 'border-gray-300'}`}>
-                    <Building2 className={`flex-shrink-0 ${selectedHotelCode ? 'text-green-500' : 'text-gray-400'}`} size={18} />
-                    <input
-                      type="text"
-                      value={hotelNameQuery}
-                      onChange={(e) => { setHotelNameQuery(e.target.value); setSelectedHotelCode(null); }}
-                      onFocus={() => { if (hotelSuggestions.length > 0) setShowHotelDropdown(true); }}
-                      placeholder="Search by hotel name..."
-                      className="flex-1 min-w-0 outline-none bg-transparent text-gray-700 text-sm sm:text-base placeholder-gray-400"
-                    />
-                    {hotelNameQuery && (
-                      <button type="button" onClick={() => { setHotelNameQuery(''); setSelectedHotelCode(null); setHotelSuggestions([]); }} className="text-gray-400 hover:text-gray-600 flex-shrink-0"><X size={16} /></button>
+                {/* Selected Status Indicator */}
+                {selectedHotelCode && (
+                  <p className="text-[11px] text-emerald-600 mt-1 px-1 flex items-center gap-1">
+                    <span>🏨</span> Direct hotel search: <span className="font-semibold">{searchQuery}</span>
+                  </p>
+                )}
+                {!selectedHotelCode && selectedLocation && (
+                  <p className="text-[11px] text-blue-600 mt-1 px-1 flex items-center gap-1">
+                    <span>📍</span> City / destination search: <span className="font-semibold">{selectedLocation.name || selectedLocation.city}</span>
+                  </p>
+                )}
+
+                {/* Unified Dropdown with Grouped Results */}
+                {showLocationDropdown && searchQuery.trim().length >= 2 && (
+                  <div className="absolute left-0 right-0 top-full mt-1 z-[220] bg-white border border-gray-200 rounded-xl shadow-2xl max-h-[60vh] overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
+                    {isLoadingLocations ? (
+                      <div className="p-4 text-center text-gray-400 text-sm flex items-center justify-center gap-2">
+                        <span className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                        <span>Searching destinations and hotels...</span>
+                      </div>
+                    ) : (filteredLocations.length > 0 || hotelSuggestions.length > 0) ? (
+                      <div>
+                        {/* Section 1: Destinations */}
+                        {filteredLocations.filter(l => l.type !== 'hotel').length > 0 && (
+                          <div>
+                            <div className="px-3 pt-2.5 pb-1 text-[11px] font-bold text-gray-500 uppercase tracking-wider bg-gray-50/80 border-b border-gray-100 flex items-center gap-1.5">
+                              <MapPin size={13} className="text-blue-600" />
+                              <span>Destinations & Cities</span>
+                            </div>
+                            {filteredLocations.filter(l => l.type !== 'hotel').map((location, index) => (
+                              <div
+                                key={`loc-${index}`}
+                                onClick={() => handleLocationSelect(location)}
+                                className="px-3.5 py-2.5 hover:bg-blue-50 cursor-pointer transition-colors flex items-center gap-2.5 border-b border-gray-50 last:border-0"
+                              >
+                                <MapPin size={16} className="text-blue-500 flex-shrink-0" />
+                                <div className="min-w-0 flex-1">
+                                  <div className="text-[13px] font-semibold text-gray-800 truncate">{location.city || location.name}</div>
+                                  <div className="text-[11px] text-gray-400 truncate">{location.type === 'country' ? 'Country' : `${location.country || ''}${location.destinationCode ? ` · ${location.destinationCode}` : ''}`}</div>
+                                </div>
+                                <span className="text-[10px] bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full font-medium">City</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Section 2: Hotels */}
+                        {(hotelSuggestions.length > 0 || filteredLocations.filter(l => l.type === 'hotel').length > 0) && (
+                          <div>
+                            <div className="px-3 pt-2.5 pb-1 text-[11px] font-bold text-gray-500 uppercase tracking-wider bg-gray-50/80 border-b border-gray-100 flex items-center gap-1.5">
+                              <Building2 size={13} className="text-emerald-600" />
+                              <span>Hotels & Properties</span>
+                            </div>
+                            {/* MongoDB/Cache Hotels */}
+                            {hotelSuggestions.map((hotel, idx) => (
+                              <div
+                                key={`h-${idx}`}
+                                onClick={() => handleHotelSelect(hotel)}
+                                className="px-3.5 py-2.5 hover:bg-emerald-50 cursor-pointer transition-colors flex items-center gap-2.5 border-b border-gray-50 last:border-0"
+                              >
+                                <Building2 size={16} className="text-emerald-600 flex-shrink-0" />
+                                <div className="min-w-0 flex-1">
+                                  <div className="text-[13px] font-semibold text-gray-800 truncate">{hotel.name}</div>
+                                  <div className="text-[11px] text-gray-400 truncate">
+                                    {hotel.zoneName || hotel.destinationName || ''} {hotel.countryCode ? `· ${hotel.countryCode}` : ''}
+                                  </div>
+                                </div>
+                                <span className="text-[10px] bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full font-medium">Hotel</span>
+                              </div>
+                            ))}
+                            {/* Locations API Hotels */}
+                            {filteredLocations.filter(l => l.type === 'hotel').map((hotel, idx) => (
+                              <div
+                                key={`lh-${idx}`}
+                                onClick={() => handleHotelSelect(hotel)}
+                                className="px-3.5 py-2.5 hover:bg-emerald-50 cursor-pointer transition-colors flex items-center gap-2.5 border-b border-gray-50 last:border-0"
+                              >
+                                <Building2 size={16} className="text-emerald-600 flex-shrink-0" />
+                                <div className="min-w-0 flex-1">
+                                  <div className="text-[13px] font-semibold text-gray-800 truncate">{hotel.name}</div>
+                                  <div className="text-[11px] text-gray-400 truncate">
+                                    {hotel.city || hotel.destinationCode || ''} {hotel.countryCode ? `· ${hotel.countryCode}` : ''}
+                                  </div>
+                                </div>
+                                <span className="text-[10px] bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full font-medium">Hotel</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="p-4 text-center text-gray-400 text-sm">
+                        No destinations or hotels found for "{searchQuery}"
+                      </div>
                     )}
                   </div>
-                  {selectedHotelCode && (
-                    <p className="text-[11px] text-green-600 mt-1 px-1 flex items-center gap-1">
-                      <span>✓</span> Direct search for this hotel
-                    </p>
-                  )}
-                  {!selectedHotelCode && hotelNameQuery.trim().length >= 2 && !isLoadingHotels && hotelSuggestions.length === 0 && !showHotelDropdown && (
-                    <p className="text-[11px] text-gray-400 mt-1 px-1">No matching hotels found. Results will filter by name.</p>
-                  )}
-                  {/* Hotel suggestions dropdown */}
-                  {showHotelDropdown && !selectedHotelCode && hotelSuggestions.length > 0 && (
-                    <div className="absolute left-0 right-0 top-full mt-1 z-[210] bg-white border border-gray-200 rounded-xl shadow-2xl max-h-[50vh] overflow-y-auto" style={{scrollbarWidth:'thin'}}>
-                      <div className="px-3 pt-2.5 pb-1.5 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
-                        Hotels {selectedLocation ? `in ${selectedLocation.city || selectedLocation.name}` : ''}
-                      </div>
-                      {hotelSuggestions.map((hotel, idx) => (
-                        <div
-                          key={idx}
-                          onClick={() => {
-                            setHotelNameQuery(hotel.name);
-                            setSelectedHotelCode(hotel.code);
-                            setShowHotelDropdown(false);
-                            // Auto-fill destination from hotel data
-                            if (!selectedLocation) {
-                              const cityName = hotel.zoneName || hotel.destinationName || hotel.destinationCode || '';
-                              const countryCode = hotel.countryCode || '';
-                              const displayName = cityName + (countryCode ? `, ${countryCode}` : '');
-                              setSearchQuery(displayName);
-                              setSelectedLocation({
-                                type: 'city',
-                                name: cityName,
-                                city: cityName,
-                                country: countryCode,
-                                countryCode: countryCode,
-                                destinationCode: hotel.destinationCode || '',
-                                displayName: displayName
-                              });
-                            }
-                          }}
-                          className="px-3 py-2.5 hover:bg-blue-50 cursor-pointer transition-colors flex items-center gap-2.5 border-b border-gray-50 last:border-0"
-                        >
-                          <Building2 size={15} className="text-blue-600 flex-shrink-0" />
-                          <div className="min-w-0 flex-1">
-                            <div className="text-[13px] font-medium text-gray-800 truncate">{hotel.name}</div>
-                            <div className="text-[11px] text-gray-400 truncate">{hotel.zoneName || hotel.destinationName || hotel.destinationCode || ''}{hotel.countryCode ? ` · ${hotel.countryCode}` : ''}{hotel.categoryCode ? ` · ${hotel.categoryCode}` : ''}</div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  {showHotelDropdown && !selectedHotelCode && isLoadingHotels && (
-                    <div className="absolute left-0 right-0 top-full mt-1 z-[210] bg-white border border-gray-200 rounded-xl shadow-lg p-3 text-center text-sm text-gray-400">
-                      <span className="animate-pulse">Searching hotels...</span>
-                    </div>
-                  )}
-                </div>
+                )}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">

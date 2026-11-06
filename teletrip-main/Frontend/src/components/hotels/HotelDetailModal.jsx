@@ -26,6 +26,57 @@ import {
   ChevronsUpDown
 } from 'lucide-react';
 
+function buildImageAlbums(rawImages) {
+  const albums = {
+    'All': [],
+    'Rooms': [],
+    'General View': [],
+    'Lobby': [],
+    'Restaurant': [],
+    'Conference': [],
+    'Pool & Facilities': []
+  };
+
+  (rawImages || []).forEach(img => {
+    let url = null;
+    if (typeof img === 'string') {
+      url = img;
+    } else if (img && img.path) {
+      const clean = img.path.replace(/^\/+/, '');
+      url = clean.startsWith('http') ? clean : `https://photos.hotelbeds.com/giata/original/${clean}`;
+    }
+    if (!url) return;
+
+    albums['All'].push(url);
+
+    const typeCode = String(img.imageTypeCode || img.typeCode || img.type?.code || '').toUpperCase();
+    const typeDesc = String(img.type || img.type?.description?.content || '').toLowerCase();
+    const hasRoom = Boolean(img.roomCode || img.roomType);
+
+    if (typeCode === 'HAB' || hasRoom || typeDesc.includes('room') || typeDesc.includes('suite') || typeDesc.includes('bedroom')) {
+      albums['Rooms'].push(url);
+    } else if (typeCode === 'GEN' || typeDesc.includes('general') || typeDesc.includes('view') || typeDesc.includes('exterior') || typeDesc.includes('facade')) {
+      albums['General View'].push(url);
+    } else if (typeCode === 'LOB' || typeDesc.includes('lobby') || typeDesc.includes('reception') || typeDesc.includes('entrance')) {
+      albums['Lobby'].push(url);
+    } else if (typeCode === 'RES' || typeCode === 'BAR' || typeDesc.includes('restaurant') || typeDesc.includes('dining') || typeDesc.includes('bar') || typeDesc.includes('buffet') || typeDesc.includes('breakfast')) {
+      albums['Restaurant'].push(url);
+    } else if (typeCode === 'CON' || typeDesc.includes('conference') || typeDesc.includes('meeting') || typeDesc.includes('event') || typeDesc.includes('hall')) {
+      albums['Conference'].push(url);
+    } else if (typeCode === 'SPO' || typeCode === 'TER' || typeDesc.includes('pool') || typeDesc.includes('spa') || typeDesc.includes('gym') || typeDesc.includes('terrace') || typeDesc.includes('beach') || typeDesc.includes('fitness')) {
+      albums['Pool & Facilities'].push(url);
+    } else {
+      albums['General View'].push(url);
+    }
+  });
+
+  const cleanAlbums = {};
+  Object.entries(albums).forEach(([k, list]) => {
+    if (list.length > 0) cleanAlbums[k] = list;
+  });
+  return cleanAlbums;
+}
+
 function getRoomImages(roomCode, rawImages) {
   if (!roomCode || !rawImages || !rawImages.length) return [];
   const code = roomCode.toLowerCase().trim();
@@ -247,6 +298,7 @@ export const HotelDetailModal = ({
   if (allImages.length === 0) allImages.push('https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg');
 
   const headerBg = allImages[0] || hotel.thumbnail || 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg';
+  const imageAlbums = useMemo(() => buildImageAlbums(rawPool), [rawPool]);
 
   // Multi-room config
   const roomConfigsParam = searchParams?.get("roomConfigs");
@@ -328,7 +380,7 @@ export const HotelDetailModal = ({
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
-                  if (openGallery) openGallery(0, allImages, hotel.name);
+                  if (openGallery) openGallery(0, allImages, hotel.name, imageAlbums, 'All');
                 }}
                 className="px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-md border border-white/30 text-white text-[11px] sm:text-xs font-semibold flex items-center gap-1.5 transition-all shadow-md cursor-pointer active:scale-95"
                 title="View all photos in gallery"
@@ -581,9 +633,9 @@ export const HotelDetailModal = ({
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   if (hasRoomPhotos && openGallery) {
-                                    openGallery(0, roomImages, `${room.name} (${roomImages.length} Photos)`);
+                                    openGallery(0, roomImages, `${room.name} (${roomImages.length} Photos)`, imageAlbums, 'Rooms');
                                   } else if (openGallery) {
-                                    openGallery(0, allImages, hotel.name);
+                                    openGallery(0, allImages, hotel.name, imageAlbums, 'All');
                                   }
                                 }}
                                 title={hasRoomPhotos ? `Click to view ${roomImages.length} room photos` : "Click to view hotel photos"}
@@ -720,12 +772,18 @@ export const HotelDetailModal = ({
                                       <span>{rate.allotment} room{rate.allotment !== 1 ? 's' : ''} left</span>
                                     </div>
 
-                                    {/* Promotional Offers */}
-                                    {rate.offers && rate.offers.length > 0 && (
-                                      <div className="flex gap-1 flex-wrap pt-0.5">
-                                        {rate.offers.map((offer, oi) => (
-                                          <span key={oi} className="text-[10px] px-2 py-0.5 bg-amber-50 text-amber-800 rounded-full flex items-center gap-1 font-semibold border border-amber-200">
-                                            <Tag className="w-2.5 h-2.5" />
+                                    {/* Promotional Offers & Discounts */}
+                                    {((rate.promotions && rate.promotions.length > 0) || (rate.offers && rate.offers.length > 0)) && (
+                                      <div className="flex gap-1.5 flex-wrap pt-0.5">
+                                        {(rate.promotions || []).map((promo, pi) => (
+                                          <span key={`p-${pi}`} className="text-[10px] px-2 py-0.5 bg-gradient-to-r from-emerald-50 to-teal-50 text-emerald-800 rounded-full flex items-center gap-1 font-bold border border-emerald-200">
+                                            <Tag className="w-2.5 h-2.5 text-emerald-600" />
+                                            {promo.name || promo.code || 'Special Offer'}
+                                          </span>
+                                        ))}
+                                        {(rate.offers || []).map((offer, oi) => (
+                                          <span key={`o-${oi}`} className="text-[10px] px-2 py-0.5 bg-amber-50 text-amber-800 rounded-full flex items-center gap-1 font-semibold border border-amber-200">
+                                            <Tag className="w-2.5 h-2.5 text-amber-600" />
                                             {offer.name}
                                           </span>
                                         ))}
@@ -841,7 +899,7 @@ export const HotelDetailModal = ({
                 <div className="flex items-center justify-between">
                   <h4 className="text-xs font-bold uppercase text-gray-700">Photo Gallery Preview</h4>
                   <button
-                    onClick={() => openGallery && openGallery(0)}
+                    onClick={() => openGallery && openGallery(0, allImages, hotel.name, imageAlbums, 'All')}
                     className="text-xs text-blue-600 hover:underline font-semibold flex items-center gap-1 cursor-pointer"
                   >
                     View all {allImages.length} photos in gallery →
@@ -851,7 +909,7 @@ export const HotelDetailModal = ({
                   {allImages.slice(0, 4).map((img, i) => (
                     <div
                       key={i}
-                      onClick={() => openGallery && openGallery(i)}
+                      onClick={() => openGallery && openGallery(i, allImages, hotel.name, imageAlbums, 'All')}
                       className="aspect-video rounded-xl overflow-hidden cursor-pointer bg-gray-100 relative group"
                     >
                       <img src={img} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform" />

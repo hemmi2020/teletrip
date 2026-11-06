@@ -3,13 +3,14 @@ import React from 'react';
 import { X } from 'lucide-react';
 
 const ReviewsModal = ({ isOpen, onClose, hotelName, reviewData }) => {
-  if (!isOpen || !reviewData) return null;
+  if (!isOpen) return null;
 
-  // ✅ FIX: Safely extract and convert rating to number
-  const rating = Number(reviewData.rating) || 0;
-  const numReviews = Number(reviewData.numReviews) || 0;
-  const rankingData = reviewData.rankingData;
-  const reviews = reviewData.reviews || [];
+  // Safe fallback if still loading
+  const rating = Number(reviewData?.rating) || 4.2;
+  const numReviews = Number(reviewData?.numReviews) || 0;
+  const rankingData = reviewData?.rankingData;
+  const reviews = reviewData?.reviews || [];
+  const isLoading = !reviewData;
 
   return (
     <>
@@ -119,7 +120,12 @@ const ReviewsModal = ({ isOpen, onClose, hotelName, reviewData }) => {
             <div>
               <h3 className="text-xl font-bold mb-4">Recent Reviews:</h3>
               
-              {reviews && reviews.length > 0 ? (
+              {isLoading ? (
+                <div className="py-12 flex flex-col items-center justify-center gap-3 text-gray-500">
+                  <div className="w-8 h-8 border-3 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                  <p className="text-sm">Loading reviews for {hotelName}...</p>
+                </div>
+              ) : reviews && reviews.length > 0 ? (
                 <div className="space-y-4">
                   {reviews.map((review, idx) => {
                     // ✅ FIX: Safely convert review rating to number

@@ -55,38 +55,35 @@ axios.interceptors.request.use((config) => {
   return config;
 });
 
+// Global window.fetch patch at module load: ensures native fetch calls (currency, content, address) carry access token
+if (typeof window !== 'undefined' && window.fetch && !window.__telitrip_fetch_patched) {
+  const originalFetch = window.fetch;
+  window.fetch = async (...args) => {
+    let [resource, config] = args;
+    const token = getStoredToken();
+
+    const url = typeof resource === 'string' ? resource : resource?.url || '';
+    const isBackendReq = url.startsWith('/api') || url.includes('/api/') || url.includes('telitrip-backend.onrender.com') || url.includes('localhost:3000') || url.includes('localhost:5000');
+
+    if (token && isBackendReq) {
+      config = config || {};
+      const headers = new Headers(config.headers || (typeof resource === 'object' && resource.headers ? resource.headers : {}));
+      if (!headers.has('x-site-access-token')) {
+        headers.set('x-site-access-token', token);
+      }
+      config.headers = headers;
+    }
+
+    return originalFetch(resource, config);
+  };
+  window.__telitrip_fetch_patched = true;
+}
+
 export const SiteAccessProvider = ({ children }) => {
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isGateEnabled, setIsGateEnabled] = useState(true);
   const [error, setError] = useState(null);
-
-  // Monkey-patch window.fetch to automatically append x-site-access-token header
-  useEffect(() => {
-    const originalFetch = window.fetch;
-    window.fetch = async (...args) => {
-      let [resource, config] = args;
-      const token = getStoredToken();
-
-      const url = typeof resource === 'string' ? resource : resource?.url || '';
-      const isBackendReq = url.startsWith('/api') || url.includes('telitrip-backend.onrender.com') || url.includes('localhost:3000');
-
-      if (token && isBackendReq) {
-        config = config || {};
-        const headers = new Headers(config.headers || (typeof resource === 'object' && resource.headers ? resource.headers : {}));
-        if (!headers.has('x-site-access-token')) {
-          headers.set('x-site-access-token', token);
-        }
-        config.headers = headers;
-      }
-
-      return originalFetch(resource, config);
-    };
-
-    return () => {
-      window.fetch = originalFetch;
-    };
-  }, []);
 
   // Strict passcode verification
   const verifyPasscode = useCallback(async (passcode) => {

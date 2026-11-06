@@ -187,6 +187,70 @@ const FilterSection = ({ section }) => {
             />
           )}
 
+          {/* Distance from: Popular sight & Specific address */}
+          {section.type === 'distance' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div>
+                <label style={{ fontSize: 12, color: '#6b7280', display: 'block', marginBottom: 4, fontWeight: 500 }}>
+                  Popular sight / Zone
+                </label>
+                <select
+                  value={section.selectedSight || ''}
+                  onChange={e => section.onSelectSight(e.target.value)}
+                  style={{ ...S.searchInput, appearance: 'auto', padding: '8px 12px', fontSize: 14 }}
+                >
+                  <option value="">All sights / zones</option>
+                  {(section.sightOptions || []).map(opt => (
+                    <option key={opt} value={opt}>{opt}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div style={{ position: 'relative' }}>
+                <label style={{ fontSize: 12, color: '#6b7280', display: 'block', marginBottom: 4, fontWeight: 500 }}>
+                  Specific address / Landmark
+                </label>
+                <input
+                  type="text"
+                  value={section.addressSearch || ''}
+                  onChange={e => section.onAddressSearchChange(e.target.value)}
+                  placeholder="Street, landmark, point of interest..."
+                  style={{ ...S.searchInput, padding: '8px 12px', fontSize: 14 }}
+                />
+                {section.addressSuggestions && section.addressSuggestions.length > 0 && (
+                  <div style={{
+                    marginTop: 6,
+                    backgroundColor: '#fff',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: 8,
+                    maxHeight: 160,
+                    overflowY: 'auto',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                  }}>
+                    {section.addressSuggestions.map((s, idx) => (
+                      <div
+                        key={idx}
+                        onClick={() => {
+                          section.onAddressSearchChange(s.short || s.display);
+                          if (section.setShowAddressSuggestions) section.setShowAddressSuggestions(false);
+                        }}
+                        style={{
+                          padding: '8px 12px',
+                          borderBottom: '1px solid #f3f4f6',
+                          cursor: 'pointer',
+                          fontSize: 13
+                        }}
+                      >
+                        <div style={{ fontWeight: 600, color: '#1f2937' }}>{s.short}</div>
+                        <div style={{ fontSize: 11, color: '#9ca3af', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.display}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Price range */}
           {section.type === 'range' && (
             <div style={S.rangeRow}>

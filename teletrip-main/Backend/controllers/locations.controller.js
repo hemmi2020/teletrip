@@ -367,7 +367,35 @@ exports.searchLocations = async (req, res) => {
       }
     }
 
-    // Sort: exact matches first, then prefix, then substring; cities before countries
+    // 3. Search hotels from HotelIndex for unified search
+    try {
+      const HotelIndex = require('../models/hotelIndex.model');
+      const hotels = await HotelIndex.find({
+        name: { $regex: query, $options: 'i' }
+      })
+      .select('code name destinationCode destinationName countryCode zoneName')
+      .limit(12)
+      .lean();
+
+      if (hotels && hotels.length > 0) {
+        hotels.forEach(h => {
+          results.push({
+            type: 'hotel',
+            code: h.code,
+            name: h.name,
+            city: h.zoneName || h.destinationName || '',
+            destinationCode: h.destinationCode || '',
+            country: h.countryCode || '',
+            countryCode: h.countryCode || '',
+            displayName: `${h.name} (${h.zoneName || h.destinationName || h.destinationCode || ''}, ${h.countryCode || ''})`
+          });
+        });
+      }
+    } catch (hErr) {
+      // HotelIndex collection optional
+    }
+
+    // Sort: exact matches first, then prefix, then substring; cities before countries, hotels distinct
     results.sort((a, b) => {
       const aName = a.name.toLowerCase();
       const bName = b.name.toLowerCase();
@@ -375,11 +403,11 @@ exports.searchLocations = async (req, res) => {
       const bExact = bName === query ? 0 : (bName.startsWith(query) ? 1 : 2);
       if (aExact !== bExact) return aExact - bExact;
 
-      const order = { city: 0, country: 1 };
-      return (order[a.type] || 2) - (order[b.type] || 2);
+      const order = { city: 0, hotel: 1, country: 2 };
+      return (order[a.type] || 3) - (order[b.type] || 3);
     });
 
-    res.json({ success: true, data: results.slice(0, 40) });
+    res.json({ success: true, data: results.slice(0, 50) });
   } catch (error) {
     console.error('Location search error:', error);
     res.status(500).json({ success: false, error: error.message });
@@ -392,15 +420,49 @@ exports.searchAddress = async (req, res) => {
     if (!q || q.length < 3) return res.json({ success: true, data: [] });
 
     const fetch = (await import('node-fetch')).default;
+    
+    // 1. Try OpenCage first if key is present
+    try {
+      const opencageKey = process.env.GEOCODING_API_KEY;
+      if (opencageKey) {
+        const ocRes = await fetch(
+          `https://api.opencagedata.com/geocode/v1/json?q=${encodeURIComponent(q)}&key=${opencageKey}&limit=6`,
+          { headers: { 'User-Agent': 'TeleTrip/1.0' }, timeout: 5000 }
+        );
+        if (ocRes.ok) {
+          const ocData = await ocRes.json();
+          if (ocData.results && ocData.results.length > 0) {
+            const results = ocData.results.map(r => ({
+              display: r.formatted,
+              short: r.components?.road || r.components?.suburb || r.components?.neighbourhood || r.formatted.split(',')[0],
+              type: r.components?._type || 'address',
+              lat: String(r.geometry.lat),
+              lon: String(r.geometry.lng)
+            }));
+            return res.json({ success: true, data: results });
+          }
+        }
+      }
+    } catch (ocErr) {
+      // fall through to Nominatim
+    }
+
+    // 2. Nominatim lookup
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 6000);
     const response = await fetch(
       `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&addressdetails=1&limit=8`,
-      { headers: { 'User-Agent': 'Telitrip/1.0 (travel booking)', 'Accept-Language': 'en' } }
+      {
+        headers: { 'User-Agent': 'Telitrip/1.0 (travel booking; contact@telitrip.com)', 'Accept-Language': 'en' },
+        signal: controller.signal
+      }
     );
+    clearTimeout(timeout);
 
     if (!response.ok) return res.json({ success: true, data: [] });
 
     const data = await response.json();
-    const results = data.map(d => ({
+    const results = (data || []).map(d => ({
       display: d.display_name,
       short: d.name || d.display_name.split(',')[0],
       type: d.type,
@@ -410,7 +472,7 @@ exports.searchAddress = async (req, res) => {
 
     res.json({ success: true, data: results });
   } catch (error) {
-    console.error('Address search error:', error.message);
+    console.error('searchAddress error:', error.message);
     res.json({ success: true, data: [] });
   }
 };

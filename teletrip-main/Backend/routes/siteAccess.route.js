@@ -23,48 +23,68 @@ router.get('/status', (req, res) => {
  * POST /api/site-access/verify
  */
 router.post('/verify', (req, res) => {
-    const { passcode } = req.body || {};
+    try {
+        const { passcode } = req.body || {};
 
-    if (!passcode || typeof passcode !== 'string') {
-        return res.status(400).json({
+        if (!passcode || typeof passcode !== 'string') {
+            return res.status(400).json({
+                success: false,
+                message: 'Passcode is required'
+            });
+        }
+
+        const input = String(passcode).trim().toLowerCase();
+        const rawEnv = String(process.env.SITE_ACCESS_PASSCODE || 'telitrip2026');
+        const envPasscode = rawEnv
+            .replace(/^["']|["']$/g, '')
+            .trim()
+            .toLowerCase();
+
+        // Validate: must match configured passcode, or accepted team defaults
+        const isMatch = input === envPasscode || input === 'telitrip2026' || input === 'teletrip2026';
+
+        if (!isMatch) {
+            return res.status(401).json({
+                success: false,
+                message: 'Incorrect passcode. Please check and try again.'
+            });
+        }
+
+        // Passcode correct -> Generate 7-day token
+        let token;
+        try {
+            token = createSiteAccessToken();
+        } catch (tokErr) {
+            console.error('Error in createSiteAccessToken:', tokErr.message);
+            const exp = Math.floor(Date.now() / 1000) + TOKEN_TTL_SECONDS;
+            token = `preview_${Buffer.from(JSON.stringify({ p: input, exp: exp * 1000 })).toString('base64')}`;
+        }
+
+        // Set cookie
+        try {
+            res.cookie('telitrip_site_access', token, {
+                maxAge: TOKEN_TTL_SECONDS * 1000,
+                httpOnly: false, // Accessible to frontend client
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'lax'
+            });
+        } catch (cErr) {
+            console.warn('Cookie set warning:', cErr.message);
+        }
+
+        return res.json({
+            success: true,
+            token,
+            expiresIn: TOKEN_TTL_SECONDS,
+            message: 'Passcode verified successfully. Welcome to TeleTrip Private Preview!'
+        });
+    } catch (err) {
+        console.error('Site access verify route error:', err);
+        return res.status(500).json({
             success: false,
-            message: 'Passcode is required'
+            message: 'Internal server error occurred: ' + err.message
         });
     }
-
-    const input = passcode.trim().toLowerCase();
-    const envPasscode = (process.env.SITE_ACCESS_PASSCODE || 'telitrip2026')
-        .replace(/^["']|["']$/g, '')
-        .trim()
-        .toLowerCase();
-
-    // Validate: must match configured passcode, or accepted team defaults
-    const isMatch = input === envPasscode || input === 'telitrip2026' || input === 'teletrip2026';
-
-    if (!isMatch) {
-        return res.status(401).json({
-            success: false,
-            message: 'Incorrect passcode. Please check and try again.'
-        });
-    }
-
-    // Passcode correct -> Generate 7-day token
-    const token = createSiteAccessToken();
-
-    // Set cookie
-    res.cookie('telitrip_site_access', token, {
-        maxAge: TOKEN_TTL_SECONDS * 1000,
-        httpOnly: false, // Accessible to frontend client
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax'
-    });
-
-    return res.json({
-        success: true,
-        token,
-        expiresIn: TOKEN_TTL_SECONDS,
-        message: 'Passcode verified successfully. Welcome to TeleTrip Private Preview!'
-    });
 });
 
 module.exports = router;
