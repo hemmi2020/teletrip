@@ -48,7 +48,7 @@ const paymentSchema = new mongoose.Schema({
     type: String,
     required: true,
     default: 'PKR',
-    enum: ['PKR', 'USD', 'EUR', 'GBP'],
+    enum: ['PKR', 'USD', 'EUR', 'GBP', 'AED'],
     uppercase: true
   },
   

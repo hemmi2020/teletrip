@@ -467,7 +467,16 @@ const ProfileForm = ({ profile, onSave, onCancel, loading }) => {
 
 // Booking Card Component
 const BookingCard = ({ booking, onCancel, onViewDetails, onPayNow, onVoucher, toPKR }) => {
-  const bookingCurrency = booking.pricing?.currency || booking.currency || booking.hotelBooking?.currency || 'AED';
+  const bookingCurrency = (
+    booking.backup?.hotelbedsBookingData?.booking?.hotel?.currency ||
+    booking.backup?.hotelbedsBookingData?.booking?.currency ||
+    booking.hotelBooking?.currency ||
+    booking.currencyConversion?.originalCurrency ||
+    booking.currencyConversion?.fromCurrency ||
+    booking.pricing?.currency ||
+    booking.currency ||
+    'AED'
+  ).toUpperCase();
   const convertPKR = (amt, cur) => toPKR ? toPKR(amt, cur || bookingCurrency) : formatCurrency(amt);
   const [activityName, setActivityName] = React.useState(null);
   const [showDetails, setShowDetails] = React.useState(false);
@@ -518,23 +527,23 @@ const BookingCard = ({ booking, onCancel, onViewDetails, onPayNow, onVoucher, to
   const isBeforeDeadline = earliestPolicy && now < new Date(earliestPolicy.from);
   const freeCancellation = isBeforeDeadline ? earliestPolicy : null;
 
-  // Accurately compute refund and penalty without mixing raw EUR into PKR totals
+  // Accurately compute refund and penalty without mixing supplier currency into PKR totals
   const totalCustomerAmount = booking.pricing?.totalAmount || booking.totalAmount || 0;
-  const supplierTotalEUR = parseFloat(booking.hotelBooking?.totalNet || booking.backup?.hotelbedsBookingData?.booking?.totalNet || 0);
+  const supplierTotal = parseFloat(booking.hotelBooking?.totalNet || booking.backup?.hotelbedsBookingData?.booking?.totalNet || 0);
   const activePolicy = sortedPolicies.slice().reverse().find(p => now >= new Date(p.from)) || earliestPolicy;
-  const penaltyAmountEUR = !isBeforeDeadline && activePolicy ? parseFloat(activePolicy.amount || 0) : 0;
+  const penaltyAmount = !isBeforeDeadline && activePolicy ? parseFloat(activePolicy.amount || 0) : 0;
 
   let refundAmount = totalCustomerAmount;
   let penaltyDisplay = '';
-  if (!isBeforeDeadline && penaltyAmountEUR > 0) {
-    if (supplierTotalEUR > 0) {
-      const penaltyRatio = Math.min(1, penaltyAmountEUR / supplierTotalEUR);
+  if (!isBeforeDeadline && penaltyAmount > 0) {
+    if (supplierTotal > 0) {
+      const penaltyRatio = Math.min(1, penaltyAmount / supplierTotal);
       const penaltyInBookingCurrency = totalCustomerAmount * penaltyRatio;
       refundAmount = Math.max(0, totalCustomerAmount - penaltyInBookingCurrency);
       penaltyDisplay = convertPKR(penaltyInBookingCurrency);
     } else {
-      refundAmount = Math.max(0, totalCustomerAmount - penaltyAmountEUR);
-      penaltyDisplay = convertPKR(penaltyAmountEUR);
+      refundAmount = Math.max(0, totalCustomerAmount - penaltyAmount);
+      penaltyDisplay = convertPKR(penaltyAmount);
     }
   }
 
@@ -956,7 +965,7 @@ const AccountDashboard = () => {
     if (!amount) return formatCurrency(0);
     const cur = (currency || 'AED').toUpperCase();
     if (cur === 'PKR') return formatCurrency(Math.round(amount));
-    const rate = pkrRate?.rates?.[cur] || pkrRate?.rate || 75.39;
+    const rate = pkrRate?.rates?.[cur] || (cur === 'AED' ? 75.39 : cur === 'EUR' ? 309.84 : cur === 'USD' ? 276.69 : pkrRate?.rate || 75.39);
     const comm = pkrRate?.commission || 0;
     const fee = pkrRate?.txFee || 1;
     const retail = amount * (1 + comm / 100);
@@ -1491,7 +1500,14 @@ const AccountDashboard = () => {
                               </div>
                               <div className="text-right">
                                 <p className="text-sm font-medium text-gray-900">
-                                  {toPKR(booking.totalAmount)}
+                                  {toPKR(
+                                    booking.pricing?.totalAmount || booking.totalAmount,
+                                    booking.backup?.hotelbedsBookingData?.booking?.hotel?.currency ||
+                                    booking.backup?.hotelbedsBookingData?.booking?.currency ||
+                                    booking.hotelBooking?.currency ||
+                                    booking.pricing?.currency ||
+                                    'AED'
+                                  )}
                                 </p>
                                 <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                                   {booking.status}
@@ -1519,7 +1535,9 @@ const AccountDashboard = () => {
                           {dashboardStats.payments.slice(0, 3).map((payment, index) => (
                             <div key={payment._id || index} className="flex items-center justify-between">
                               <div>
-                                <p className="font-medium text-gray-900">{toPKR(payment.amount)}</p>
+                                <p className="font-medium text-gray-900">
+                                  {toPKR(payment.amount, payment.currency || payment.currencyConversion?.originalCurrency || 'AED')}
+                                </p>
                                 <p className="text-sm text-gray-500">{formatDate(payment.createdAt)}</p>
                               </div>
                               <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
@@ -1889,7 +1907,7 @@ const AccountDashboard = () => {
                                   <div>
                                     <span className="text-gray-500">Amount:</span>
                                     <span className="ml-2 font-semibold text-yellow-700">
-                                      {toPKR(payment.amount)}
+                                      {toPKR(payment.amount, payment.currency || payment.currencyConversion?.originalCurrency || 'AED')}
                                     </span>
                                   </div>
                                 </div>
@@ -1965,7 +1983,7 @@ const AccountDashboard = () => {
                             </div>
                             <div className="flex items-center justify-between text-sm">
                               <span className="text-gray-500">Booking: {payment.bookingId?.bookingReference || 'N/A'}</span>
-                              <span className="font-semibold text-gray-900">{toPKR(payment.amount)}</span>
+                              <span className="font-semibold text-gray-900">{toPKR(payment.amount, payment.currency || payment.currencyConversion?.originalCurrency || 'AED')}</span>
                             </div>
                             <div className="flex items-center justify-between text-[12px] text-gray-400">
                               <span>{formatDate(payment.createdAt)}</span>
@@ -2017,7 +2035,7 @@ const AccountDashboard = () => {
                                   {formatDate(payment.createdAt)}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                  {toPKR(payment.amount)}
+                                  {toPKR(payment.amount, payment.currency || payment.currencyConversion?.originalCurrency || 'AED')}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                   <div className="flex items-center">
@@ -2326,7 +2344,7 @@ const AccountDashboard = () => {
                 <div className="flex justify-between"><span className="text-gray-500">Date</span><span className="text-gray-900">{formatDate(receiptPayment.createdAt)}</span></div>
                 <div className="flex justify-between"><span className="text-gray-500">Method</span><span className="text-gray-900">{receiptPayment.paymentMethod || 'Card'}</span></div>
                 <div className="flex justify-between"><span className="text-gray-500">Status</span><span className={`font-medium ${receiptPayment.status === 'completed' ? 'text-green-600' : 'text-yellow-600'}`}>{receiptPayment.status}</span></div>
-                <div className="border-t border-gray-200 pt-2 mt-2 flex justify-between"><span className="text-gray-700 font-medium">Amount</span><span className="text-lg font-bold text-gray-900">{toPKR(receiptPayment.amount)}</span></div>
+                <div className="border-t border-gray-200 pt-2 mt-2 flex justify-between"><span className="text-gray-700 font-medium">Amount</span><span className="text-lg font-bold text-gray-900">{toPKR(receiptPayment.amount, receiptPayment.currency || receiptPayment.currencyConversion?.originalCurrency || 'AED')}</span></div>
               </div>
             </div>
             <div className="px-6 pb-5">

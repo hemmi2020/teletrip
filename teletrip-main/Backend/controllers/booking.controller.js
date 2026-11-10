@@ -255,7 +255,13 @@ module.exports.createBooking = asyncErrorHandler(async (req, res) => {
     
     bookingData.hotelbedsReference = hbBooking.reference;
     bookingData.status = 'confirmed';
-    bookingData.pricing.currency = hbBooking.currency || req.body.currency || 'AED';
+    const resolvedSupplierCurrency = (hbBooking.currency || hbHotel.currency || req.body.currency || 'AED').toUpperCase();
+    bookingData.pricing.currency = resolvedSupplierCurrency;
+    bookingData.hotelBooking.currency = resolvedSupplierCurrency;
+    if (bookingData.currencyConversion) {
+      bookingData.currencyConversion.originalCurrency = resolvedSupplierCurrency;
+      bookingData.currencyConversion.fromCurrency = resolvedSupplierCurrency;
+    }
     
     // Extract certification-required fields from Hotelbeds response
     bookingData.hotelBooking.hotelCode = hbHotel.code || null;
@@ -267,7 +273,6 @@ module.exports.createBooking = asyncErrorHandler(async (req, res) => {
     bookingData.hotelBooking.latitude = hbHotel.latitude || null;
     bookingData.hotelBooking.longitude = hbHotel.longitude || null;
     bookingData.hotelBooking.confirmationNumber = hbBooking.reference || null;
-    bookingData.hotelBooking.currency = hbBooking.currency || req.body.currency || 'AED';
 
     // ✅ MANDATORY: Fetch hotel phone from Content API for voucher display
     try {

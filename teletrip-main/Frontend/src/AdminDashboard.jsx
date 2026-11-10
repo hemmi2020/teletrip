@@ -1292,30 +1292,39 @@ const AdminDashboard = () => {
             const isBeforeDeadline = earliestPolicy && now < new Date(earliestPolicy.from);
             const freeCancellation = isBeforeDeadline ? earliestPolicy : null;
 
+            const itemCurrency = (
+              item.backup?.hotelbedsBookingData?.booking?.hotel?.currency ||
+              item.backup?.hotelbedsBookingData?.booking?.currency ||
+              item.hotelBooking?.currency ||
+              item.pricing?.currency ||
+              item.currency ||
+              'AED'
+            ).toUpperCase();
+
             const totalCustomerAmount = item.pricing?.totalAmount || item.totalAmount || 0;
-            const supplierTotalEUR = parseFloat(item.hotelBooking?.totalNet || item.backup?.hotelbedsBookingData?.booking?.totalNet || 0);
+            const supplierTotal = parseFloat(item.hotelBooking?.totalNet || item.backup?.hotelbedsBookingData?.booking?.totalNet || 0);
             const activePolicy = sortedPolicies.slice().reverse().find(p => now >= new Date(p.from)) || earliestPolicy;
-            const penaltyAmountEUR = !isBeforeDeadline && activePolicy ? parseFloat(activePolicy.amount || 0) : 0;
+            const penaltyAmount = !isBeforeDeadline && activePolicy ? parseFloat(activePolicy.amount || 0) : 0;
 
             let refundAmount = totalCustomerAmount;
             let penaltyInBookingCurrency = 0;
-            if (!isBeforeDeadline && penaltyAmountEUR > 0) {
-              if (supplierTotalEUR > 0) {
-                const penaltyRatio = Math.min(1, penaltyAmountEUR / supplierTotalEUR);
+            if (!isBeforeDeadline && penaltyAmount > 0) {
+              if (supplierTotal > 0) {
+                const penaltyRatio = Math.min(1, penaltyAmount / supplierTotal);
                 penaltyInBookingCurrency = totalCustomerAmount * penaltyRatio;
                 refundAmount = Math.max(0, totalCustomerAmount - penaltyInBookingCurrency);
               } else {
-                refundAmount = Math.max(0, totalCustomerAmount - penaltyAmountEUR);
-                penaltyInBookingCurrency = penaltyAmountEUR;
+                refundAmount = Math.max(0, totalCustomerAmount - penaltyAmount);
+                penaltyInBookingCurrency = penaltyAmount;
               }
             }
             
             const nights = item.nights || item.travelDates?.duration || 1;
-            const displayPrice = formatPKR ? formatPKR(totalCustomerAmount) : `PKR ${totalCustomerAmount}`;
-            const displayRefund = formatPKR ? formatPKR(refundAmount) : (convert ? `PKR ${Math.round(convert(refundAmount)).toLocaleString()}` : `PKR ${refundAmount.toFixed(2)}`);
+            const displayPrice = formatPKR ? formatPKR(totalCustomerAmount, itemCurrency, true) : `PKR ${totalCustomerAmount}`;
+            const displayRefund = formatPKR ? formatPKR(refundAmount, itemCurrency, true) : (convert ? `PKR ${Math.round(convert(refundAmount, itemCurrency, true)).toLocaleString()}` : `PKR ${refundAmount.toFixed(2)}`);
             const displayFee = penaltyInBookingCurrency > 0 
-              ? (formatPKR ? formatPKR(penaltyInBookingCurrency) : `PKR ${Math.round(penaltyInBookingCurrency).toLocaleString()}`)
-              : (cancellationPolicies.length > 0 && convert ? `PKR ${Math.round(convert(cancellationPolicies[0].amount)).toLocaleString()}` : '');
+              ? (formatPKR ? formatPKR(penaltyInBookingCurrency, itemCurrency, true) : `PKR ${Math.round(penaltyInBookingCurrency).toLocaleString()}`)
+              : (cancellationPolicies.length > 0 && convert ? `PKR ${Math.round(convert(cancellationPolicies[0].amount, itemCurrency, false)).toLocaleString()}` : '');
             
             displayDetails = (
               <div>
@@ -1323,7 +1332,10 @@ const AdminDashboard = () => {
                   {item.hotelId?.name || item.hotelBooking?.hotelName || item.hotelBooking?.rooms?.[0]?.hotelName || 'Booking'}
                 </p>
                 <p className="text-sm text-gray-500 truncate">
-                  {item.hotelId?.location?.city || item.hotelBooking?.hotelAddress?.city || ''} • {nights} night{nights !== 1 ? 's' : ''}
+                  {item.hotelId?.location?.city || item.hotelBooking?.hotelAddress?.city || ''} • {nights} night{nights !== 1 ? 's' : ''} • <span className="font-semibold text-gray-900">{displayPrice}</span>
+                  {itemCurrency !== 'PKR' && (
+                    <span className="text-xs text-gray-400 ml-1">({itemCurrency} {totalCustomerAmount.toFixed(2)})</span>
+                  )}
                 </p>
                 <p className="text-xs text-gray-400 truncate">
                   Guest: {item.guestInfo?.primaryGuest?.firstName || item.user?.fullname?.firstname || 'N/A'} • 
@@ -1361,8 +1373,17 @@ const AdminDashboard = () => {
             const paymentMethod = item.paymentMethod || 'Credit Card';
             const bookingRef = item.bookingId?.bookingReference || item.bookingReference;
             const userEmail = item.userId?.email || item.user?.email;
+            const paymentCurrency = (
+              item.currency ||
+              item.currencyConversion?.originalCurrency ||
+              item.bookingId?.hotelBooking?.currency ||
+              item.bookingId?.backup?.hotelbedsBookingData?.booking?.hotel?.currency ||
+              item.bookingId?.backup?.hotelbedsBookingData?.booking?.currency ||
+              item.bookingId?.pricing?.currency ||
+              'AED'
+            ).toUpperCase();
             
-            console.log('Payment item:', { paymentMethod: item.paymentMethod, status: item.status, id: item._id });
+            console.log('Payment item:', { paymentMethod: item.paymentMethod, status: item.status, id: item._id, currency: paymentCurrency });
             
             displayDetails = (
               <div>
@@ -1370,7 +1391,10 @@ const AdminDashboard = () => {
                   {userEmail || 'Guest Payment'}
                 </p>
                 <p className="text-sm text-gray-500 truncate">
-                  {bookingRef ? `Booking: ${bookingRef}` : paymentMethod} • {formatPKR ? formatPKR(item.amount || 0) : `PKR ${item.amount?.toFixed(2) || 0}`}
+                  {bookingRef ? `Booking: ${bookingRef}` : paymentMethod} • {formatPKR ? formatPKR(item.amount || 0, paymentCurrency, true) : `PKR ${item.amount?.toFixed(2) || 0}`}
+                  {paymentCurrency !== 'PKR' && (
+                    <span className="text-xs text-gray-400 ml-1">({paymentCurrency} {Number(item.amount || 0).toFixed(2)})</span>
+                  )}
                 </p>
               </div>
             );

@@ -6,6 +6,15 @@ const CancellationPolicyCalculator = ({ booking }) => {
   const [penalty, setPenalty] = useState(0);
   const [policyDetails, setPolicyDetails] = useState(null);
 
+  const bookingCurrency = (
+    booking?.backup?.hotelbedsBookingData?.booking?.hotel?.currency ||
+    booking?.backup?.hotelbedsBookingData?.booking?.currency ||
+    booking?.hotelBooking?.currency ||
+    booking?.pricing?.currency ||
+    booking?.currency ||
+    'AED'
+  ).toUpperCase();
+
   useEffect(() => {
     calculateRefund();
   }, [booking]);
@@ -83,14 +92,14 @@ const CancellationPolicyCalculator = ({ booking }) => {
           <div className="bg-gray-50 rounded-lg p-4">
             <p className="text-sm text-gray-600 mb-1">Original Amount</p>
             <p className="text-2xl font-bold text-gray-900">
-              €{(booking.totalAmount || 0).toFixed(2)}
+              {bookingCurrency} {(booking.totalAmount || 0).toFixed(2)}
             </p>
           </div>
 
           <div className="bg-red-50 rounded-lg p-4">
             <p className="text-sm text-red-600 mb-1">Cancellation Penalty</p>
             <p className="text-2xl font-bold text-red-600">
-              -€{penalty.toFixed(2)}
+              -{bookingCurrency} {penalty.toFixed(2)}
             </p>
             <p className="text-xs text-red-500 mt-1">
               ({policyDetails?.penaltyPercentage}%)
@@ -101,7 +110,7 @@ const CancellationPolicyCalculator = ({ booking }) => {
         <div className="bg-green-50 border-2 border-green-200 rounded-lg p-4">
           <p className="text-sm text-green-700 mb-1">Refund Amount</p>
           <p className="text-3xl font-bold text-green-600">
-            €{refundAmount.toFixed(2)}
+            {bookingCurrency} {refundAmount.toFixed(2)}
           </p>
           <p className="text-xs text-green-600 mt-1">
             ({policyDetails?.refundPercentage}% of total)

@@ -2589,16 +2589,31 @@ module.exports.createPayOnSiteBooking = asyncErrorHandler(async (req, res) => {
       });
     }
 
+    const resolvedSupplierCurrency = (
+      hotelbedsResult?.hotelbedsData?.booking?.hotel?.currency ||
+      hotelbedsResult?.hotelbedsData?.booking?.currency ||
+      currency ||
+      'AED'
+    ).toUpperCase();
+
     const newBooking = await Booking.create({
       user: userId,
       bookingType: 'hotel',
       bookingReference: bookingReference,
       status: hotelbedsReference ? 'confirmed' : 'pending',
-      currencyConversion: currencyConversion || null,
+      currencyConversion: currencyConversion ? {
+        ...currencyConversion,
+        originalCurrency: resolvedSupplierCurrency,
+        fromCurrency: resolvedSupplierCurrency
+      } : {
+        originalAmount: paymentAmount,
+        originalCurrency: resolvedSupplierCurrency,
+        conversionDate: new Date()
+      },
       pricing: {
         basePrice: paymentAmount,
         totalAmount: paymentAmount,
-        currency: currency,
+        currency: resolvedSupplierCurrency,
         taxes: 0,
         fees: 0,
         discounts: 0
@@ -2631,7 +2646,7 @@ module.exports.createPayOnSiteBooking = asyncErrorHandler(async (req, res) => {
         supplier: hotelbedsResult?.hotelbedsData?.booking?.hotel?.supplier || hotelbedsResult?.hotelbedsData?.booking?.supplier || null,
         invoiceCompany: hotelbedsResult?.hotelbedsData?.booking?.invoiceCompany || null,
         totalNet: hotelbedsResult?.hotelbedsData?.booking?.totalNet || null,
-        currency: currency,
+        currency: resolvedSupplierCurrency,
         remark: bookingData.specialRequests || null
       },
       guestInfo: {

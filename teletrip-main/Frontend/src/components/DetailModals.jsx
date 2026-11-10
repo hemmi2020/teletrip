@@ -5,6 +5,7 @@ import {
   XCircle, AlertCircle, FileText, Image, Star, DollarSign, Loader2
 } from 'lucide-react';
 import { AdminDashboardAPI } from '../services/adminApi';
+import { useCurrency } from '../context/CurrencyContext';
 
 // Modal Wrapper Component
 const Modal = ({ isOpen, onClose, title, children, size = 'lg' }) => {
@@ -238,6 +239,17 @@ export const UserProfileModal = ({ isOpen, onClose, user, onUpdate }) => {
 export const BookingDetailsModal = ({ isOpen, onClose, booking }) => {
   if (!booking) return null;
 
+  const { formatPKR } = useCurrency();
+  const bookingCurrency = (
+    booking.backup?.hotelbedsBookingData?.booking?.hotel?.currency ||
+    booking.backup?.hotelbedsBookingData?.booking?.currency ||
+    booking.hotelBooking?.currency ||
+    booking.currencyConversion?.originalCurrency ||
+    booking.pricing?.currency ||
+    booking.currency ||
+    'AED'
+  ).toUpperCase();
+
   const nights = booking.nights || booking.travelDates?.duration || booking.hotelBooking?.rooms?.[0]?.nights || 1;
   
   const bookingData = {
@@ -359,20 +371,30 @@ export const BookingDetailsModal = ({ isOpen, onClose, booking }) => {
         {/* Room Details */}
         <div>
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Room Details</h3>
-          {bookingData.hotelBooking?.rooms?.map((room, index) => (
-            <div key={index} className="p-4 bg-gray-50 rounded-lg mb-3">
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className="font-medium text-gray-900">{room.roomName}</p>
-                  <p className="text-sm text-gray-600">{room.boardName}</p>
-                  <p className="text-sm text-gray-500 mt-1">
-                    {room.adults} Adult(s) {room.children > 0 && `• ${room.children} Child(ren)`}
-                  </p>
+          {bookingData.hotelBooking?.rooms?.map((room, index) => {
+            const roomAmount = parseFloat(room.net || room.netPrice || room.sellingPrice || 0);
+            return (
+              <div key={index} className="p-4 bg-gray-50 rounded-lg mb-3">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="font-medium text-gray-900">{room.roomName}</p>
+                    <p className="text-sm text-gray-600">{room.boardName}</p>
+                    <p className="text-sm text-gray-500 mt-1">
+                      {room.adults} Adult(s) {room.children > 0 && `• ${room.children} Child(ren)`}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-lg font-bold text-blue-600">
+                      {formatPKR ? formatPKR(roomAmount, bookingCurrency, false) : `${bookingCurrency} ${roomAmount.toFixed(2)}`}
+                    </p>
+                    {bookingCurrency !== 'PKR' && roomAmount > 0 && (
+                      <p className="text-xs text-gray-400">({bookingCurrency} {roomAmount.toFixed(2)})</p>
+                    )}
+                  </div>
                 </div>
-                <p className="text-lg font-bold text-blue-600">PKR {room.net}</p>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Payment Information */}
@@ -395,7 +417,12 @@ export const BookingDetailsModal = ({ isOpen, onClose, booking }) => {
             </div>
             <div className="flex justify-between text-lg font-bold pt-2 border-t">
               <span>Total Amount:</span>
-              <span className="text-blue-600">PKR {bookingData.totalAmount?.toLocaleString()}</span>
+              <span className="text-blue-600">
+                {formatPKR ? formatPKR(bookingData.totalAmount, bookingCurrency, true) : `PKR ${bookingData.totalAmount?.toLocaleString()}`}
+                {bookingCurrency !== 'PKR' && (
+                  <span className="text-sm text-gray-500 font-normal ml-2">({bookingCurrency} {Number(bookingData.totalAmount || 0).toFixed(2)})</span>
+                )}
+              </span>
             </div>
           </div>
         </div>

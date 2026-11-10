@@ -255,27 +255,43 @@ const BookingVoucher = ({ booking, onClose }) => {
   // Display dynamic customer retail pricing connected with CMS commission, exchange rate, and taxes/service charges.
   const storedConversion = booking.currencyConversion || booking.payment?.currencyConversion || null;
   const rawTotal = parseFloat(booking.pricing?.totalAmount || booking.totalAmount || 0);
-  const rawCurrency = (
-    storedConversion?.originalCurrency ||
-    storedConversion?.fromCurrency ||
-    booking.pricing?.currency ||
-    booking.currency ||
+
+  // Authoritative supplier currency:
+  // Live stock API responses (Hotelbeds/Bedsonline) are the primary source of truth.
+  const hbSupplierCurrency = (
+    hbHotel?.currency ||
     hbBooking?.currency ||
     hb.currency ||
+    booking.backup?.hotelbedsBookingData?.booking?.hotel?.currency ||
+    booking.backup?.hotelbedsBookingData?.booking?.currency ||
+    null
+  );
+
+  const rawCurrency = (
+    hbSupplierCurrency ||
+    booking.pricing?.currency ||
+    booking.currency ||
+    storedConversion?.originalCurrency ||
+    storedConversion?.fromCurrency ||
     'AED'
   ).toUpperCase();
 
   let customerPKR = null;
   let customerRetailCurrency = rawCurrency;
   let customerRetailAmount = rawTotal;
-  let exchangeRate = pkrRate?.rates?.[rawCurrency] || (rawCurrency === 'AED' ? 75.39 : 75.39);
+  let exchangeRate = pkrRate?.rates?.[rawCurrency] || (rawCurrency === 'AED' ? 75.39 : rawCurrency === 'EUR' ? 309.84 : rawCurrency === 'USD' ? 276.69 : 75.39);
   let serviceChargePct = pkrRate?.serviceChargePercentage ?? pkrRate?.transactionFeePercentage ?? 1;
   let commissionPct = pkrRate?.commissionPercentage ?? 0;
 
-  if (storedConversion && storedConversion.totalPKR) {
+  // Validate stored conversion: only use if currency matches the authoritative supplier currency
+  const isStoredConversionValid = storedConversion &&
+    storedConversion.totalPKR &&
+    (!storedConversion.originalCurrency || storedConversion.originalCurrency.toUpperCase() === rawCurrency);
+
+  if (isStoredConversionValid) {
     customerPKR = Math.round(storedConversion.totalPKR);
     customerRetailAmount = parseFloat(storedConversion.retailAmount || storedConversion.originalAmount || storedConversion.netAmount || rawTotal);
-    customerRetailCurrency = (storedConversion.originalCurrency || storedConversion.fromCurrency || rawCurrency).toUpperCase();
+    customerRetailCurrency = rawCurrency;
     exchangeRate = storedConversion.exchangeRate || exchangeRate;
     serviceChargePct = storedConversion.serviceChargePercentage ?? storedConversion.transactionFeePercentage ?? serviceChargePct;
     commissionPct = storedConversion.commissionPercentage ?? commissionPct;

@@ -5,6 +5,15 @@ const RefundAmountPreview = ({ booking, onConfirm }) => {
   const [customAmount, setCustomAmount] = useState('');
   const [refundType, setRefundType] = useState('full');
 
+  const bookingCurrency = (
+    booking?.backup?.hotelbedsBookingData?.booking?.hotel?.currency ||
+    booking?.backup?.hotelbedsBookingData?.booking?.currency ||
+    booking?.hotelBooking?.currency ||
+    booking?.pricing?.currency ||
+    booking?.currency ||
+    'AED'
+  ).toUpperCase();
+
   const calculateRefund = () => {
     const total = booking?.totalAmount || 0;
     
@@ -35,7 +44,7 @@ const RefundAmountPreview = ({ booking, onConfirm }) => {
         <div className="bg-gray-50 rounded-lg p-4">
           <p className="text-sm text-gray-600 mb-2">Original Booking Amount</p>
           <p className="text-3xl font-bold text-gray-900">
-            €{(booking?.totalAmount || 0).toFixed(2)}
+            {bookingCurrency} {(booking?.totalAmount || 0).toFixed(2)}
           </p>
         </div>
 
@@ -56,7 +65,7 @@ const RefundAmountPreview = ({ booking, onConfirm }) => {
                 <p className="font-medium">Full Refund</p>
                 <p className="text-sm text-gray-600">100% of booking amount</p>
               </div>
-              <p className="font-bold text-green-600">€{(booking?.totalAmount || 0).toFixed(2)}</p>
+              <p className="font-bold text-green-600">{bookingCurrency} {(booking?.totalAmount || 0).toFixed(2)}</p>
             </label>
 
             <label className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
@@ -72,7 +81,7 @@ const RefundAmountPreview = ({ booking, onConfirm }) => {
                 <p className="font-medium">Partial Refund</p>
                 <p className="text-sm text-gray-600">50% of booking amount</p>
               </div>
-              <p className="font-bold text-blue-600">€{((booking?.totalAmount || 0) * 0.5).toFixed(2)}</p>
+              <p className="font-bold text-blue-600">{bookingCurrency} {((booking?.totalAmount || 0) * 0.5).toFixed(2)}</p>
             </label>
 
             <label className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
@@ -108,18 +117,18 @@ const RefundAmountPreview = ({ booking, onConfirm }) => {
         <div className="border-t pt-4 space-y-2">
           <div className="flex justify-between text-sm">
             <span className="text-gray-600">Refund Amount</span>
-            <span className="font-medium">€{refundAmount.toFixed(2)}</span>
+            <span className="font-medium">{bookingCurrency} {refundAmount.toFixed(2)}</span>
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-gray-600 flex items-center">
               Processing Fee (3%)
               <TrendingDown className="w-3 h-3 ml-1 text-red-500" />
             </span>
-            <span className="font-medium text-red-600">-€{processingFee.toFixed(2)}</span>
+            <span className="font-medium text-red-600">-{bookingCurrency} {processingFee.toFixed(2)}</span>
           </div>
           <div className="flex justify-between text-lg font-bold pt-2 border-t">
             <span>Net Refund</span>
-            <span className="text-green-600">€{netRefund.toFixed(2)}</span>
+            <span className="text-green-600">{bookingCurrency} {netRefund.toFixed(2)}</span>
           </div>
         </div>
 

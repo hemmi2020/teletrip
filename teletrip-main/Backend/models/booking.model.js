@@ -465,7 +465,7 @@ const bookingSchema = new mongoose.Schema({
   // Currency conversion details
   currencyConversion: {
     originalAmount: Number,
-    originalCurrency: { type: String, default: 'EUR' },
+    originalCurrency: { type: String, default: 'AED' },
     exchangeRate: Number,
     markupPerEuro: Number,
     transactionFeePercentage: Number,

@@ -4,6 +4,7 @@ import {
   Hotel, Star, MapPin, Image, Wifi, Coffee, Tv, Wind,
   MessageSquare, Send, User, AlertCircle, Edit, Save
 } from 'lucide-react';
+import { useCurrency } from '../context/CurrencyContext';
 
 // Modal Wrapper
 const Modal = ({ isOpen, onClose, title, children, size = 'lg' }) => {
@@ -41,6 +42,20 @@ const Modal = ({ isOpen, onClose, title, children, size = 'lg' }) => {
 export const PaymentDetailsModal = ({ isOpen, onClose, payment }) => {
   if (!payment) return null;
 
+  const { formatPKR } = useCurrency();
+  const paymentCurrency = (
+    payment.currency ||
+    payment.currencyConversion?.originalCurrency ||
+    payment.bookingId?.hotelBooking?.currency ||
+    payment.bookingId?.backup?.hotelbedsBookingData?.booking?.hotel?.currency ||
+    payment.bookingId?.backup?.hotelbedsBookingData?.booking?.currency ||
+    payment.bookingId?.pricing?.currency ||
+    'AED'
+  ).toUpperCase();
+
+  const feePct = payment.currencyConversion?.serviceChargePercentage ?? payment.currencyConversion?.transactionFeePercentage ?? 1;
+  const numAmount = parseFloat(payment.amount || 0);
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Payment Transaction Details" size="lg">
       <div className="space-y-6">
@@ -49,7 +64,10 @@ export const PaymentDetailsModal = ({ isOpen, onClose, payment }) => {
           <div className="flex items-start justify-between">
             <div>
               <h2 className="text-2xl font-bold text-gray-900">
-                PKR {payment.amount?.toLocaleString()}
+                {formatPKR ? formatPKR(numAmount, paymentCurrency, true) : `PKR ${numAmount.toLocaleString()}`}
+                {paymentCurrency !== 'PKR' && (
+                  <span className="text-sm text-gray-500 font-normal ml-2">({paymentCurrency} {numAmount.toFixed(2)})</span>
+                )}
               </h2>
               <p className="text-gray-600">Transaction ID: {payment.transactionId || payment._id}</p>
               <p className="text-sm text-gray-500 mt-1">
@@ -81,15 +99,17 @@ export const PaymentDetailsModal = ({ isOpen, onClose, payment }) => {
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Payment Gateway:</span>
-                <span className="font-medium">HBL Pay</span>
+                <span className="font-medium">{payment.paymentMethod === 'pay_on_site' ? 'Pay at Office' : 'HBL Pay'}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Currency:</span>
-                <span className="font-medium">{payment.currency || 'PKR'}</span>
+                <span className="font-medium">{paymentCurrency}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Transaction Fee:</span>
-                <span className="font-medium">PKR {(payment.amount * 0.02).toFixed(2)}</span>
+                <span className="text-gray-600">Service Charges / Tax ({feePct}%):</span>
+                <span className="font-medium">
+                  {paymentCurrency} {(numAmount * (feePct / 100)).toFixed(2)}
+                </span>
               </div>
             </div>
           </div>
@@ -119,15 +139,24 @@ export const PaymentDetailsModal = ({ isOpen, onClose, payment }) => {
           <div className="space-y-2">
             <div className="flex justify-between">
               <span className="text-gray-600">Subtotal:</span>
-              <span>PKR {(payment.amount * 0.98).toFixed(2)}</span>
+              <span>
+                {formatPKR ? formatPKR(numAmount * (1 - feePct / 100), paymentCurrency, true) : `${paymentCurrency} ${(numAmount * (1 - feePct / 100)).toFixed(2)}`}
+              </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-600">Service Fee:</span>
-              <span>PKR {(payment.amount * 0.02).toFixed(2)}</span>
+              <span className="text-gray-600">Service Charges & Taxes ({feePct}%):</span>
+              <span>
+                {formatPKR ? formatPKR(numAmount * (feePct / 100), paymentCurrency, true) : `${paymentCurrency} ${(numAmount * (feePct / 100)).toFixed(2)}`}
+              </span>
             </div>
             <div className="flex justify-between text-lg font-bold pt-2 border-t">
               <span>Total Paid:</span>
-              <span className="text-green-600">PKR {payment.amount?.toLocaleString()}</span>
+              <span className="text-green-600">
+                {formatPKR ? formatPKR(numAmount, paymentCurrency, true) : `PKR ${numAmount.toLocaleString()}`}
+                {paymentCurrency !== 'PKR' && (
+                  <span className="text-sm text-gray-500 font-normal ml-2">({paymentCurrency} {numAmount.toFixed(2)})</span>
+                )}
+              </span>
             </div>
           </div>
         </div>
