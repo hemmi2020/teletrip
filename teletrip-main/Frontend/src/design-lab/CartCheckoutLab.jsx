@@ -297,7 +297,7 @@ export default function CartCheckoutLab() {
                       Payment Options
                     </h4>
 
-                    <div className="grid grid-cols-3 gap-2.5">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                       <button
                         type="button"
                         onClick={() => setPaymentMethod('card')}
@@ -441,7 +441,7 @@ export default function CartCheckoutLab() {
           {selectedStyle === 'stepped_flow' && (
             <div className="space-y-6 max-w-4xl mx-auto text-left">
               {/* Stepper Progress Bar */}
-              <div className="grid grid-cols-3 gap-2 pb-4 border-b border-gray-200">
+              <div className="flex flex-wrap sm:grid sm:grid-cols-3 gap-2 pb-4 border-b border-gray-200">
                 {[
                   { step: 1, title: '1. Itinerary Review', desc: 'Hotel & Dates' },
                   { step: 2, title: '2. Guest Details', desc: 'Contact & Names' },

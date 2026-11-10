@@ -83,10 +83,21 @@ export default function DesignLabPage() {
                 className={`p-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-all cursor-pointer ${
                   viewportWidth === '390px' ? 'bg-white text-gray-900 shadow-xs' : 'text-gray-500 hover:text-gray-700'
                 }`}
-                title="Mobile View (390px)"
+                title="Mobile View (390px - iPhone Pro)"
               >
                 <Smartphone className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Mobile</span>
+                <span className="hidden sm:inline">390px</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewportWidth('320px')}
+                className={`p-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-all cursor-pointer ${
+                  viewportWidth === '320px' ? 'bg-white text-gray-900 shadow-xs' : 'text-gray-500 hover:text-gray-700'
+                }`}
+                title="Small Mobile View (320px - iPhone SE)"
+              >
+                <Smartphone className="w-3.5 h-3.5 text-blue-600" />
+                <span className="hidden sm:inline">320px</span>
               </button>
             </div>
 
@@ -121,16 +132,16 @@ export default function DesignLabPage() {
       </header>
 
       {/* ── MAIN CONTENT CANVAS WITH VIEWPORT CONTAINER ── */}
-      <main className="flex-1 py-8 px-4 flex justify-center">
+      <main className="flex-1 py-4 sm:py-8 px-2 sm:px-4 flex justify-center">
         <div
           style={{ width: viewportWidth }}
-          className="transition-all duration-300 space-y-12 max-w-7xl"
+          className="transition-all duration-300 space-y-8 sm:space-y-12 max-w-7xl w-full"
         >
           {/* VARIANT A */}
           {(selectedVariant === 'ALL' || selectedVariant === 'A') && (
             <section
               data-variant="A"
-              className="bg-white p-4 sm:p-6 rounded-3xl border border-gray-200 shadow-sm space-y-4"
+              className="bg-white p-3 sm:p-6 rounded-2xl sm:rounded-3xl border border-gray-200 shadow-sm space-y-4"
             >
               <div className="flex items-center justify-between pb-3 border-b border-gray-100">
                 <div className="flex items-center gap-2">
@@ -154,7 +165,7 @@ export default function DesignLabPage() {
           {(selectedVariant === 'ALL' || selectedVariant === 'B') && (
             <section
               data-variant="B"
-              className="bg-white p-4 sm:p-6 rounded-3xl border border-gray-200 shadow-sm space-y-4"
+              className="bg-white p-3 sm:p-6 rounded-2xl sm:rounded-3xl border border-gray-200 shadow-sm space-y-4"
             >
               <div className="flex items-center justify-between pb-3 border-b border-gray-100">
                 <div className="flex items-center gap-2">
@@ -178,7 +189,7 @@ export default function DesignLabPage() {
           {(selectedVariant === 'ALL' || selectedVariant === 'C') && (
             <section
               data-variant="C"
-              className="bg-white p-4 sm:p-6 rounded-3xl border border-gray-200 shadow-sm space-y-4"
+              className="bg-white p-3 sm:p-6 rounded-2xl sm:rounded-3xl border border-gray-200 shadow-sm space-y-4"
             >
               <div className="flex items-center justify-between pb-3 border-b border-gray-100">
                 <div className="flex items-center gap-2">
@@ -202,7 +213,7 @@ export default function DesignLabPage() {
           {(selectedVariant === 'ALL' || selectedVariant === 'D') && (
             <section
               data-variant="D"
-              className="bg-white p-4 sm:p-6 rounded-3xl border border-gray-200 shadow-sm space-y-4"
+              className="bg-white p-3 sm:p-6 rounded-2xl sm:rounded-3xl border border-gray-200 shadow-sm space-y-4"
             >
               <div className="flex items-center justify-between pb-3 border-b border-gray-100">
                 <div className="flex items-center gap-2">
@@ -226,7 +237,7 @@ export default function DesignLabPage() {
           {(selectedVariant === 'ALL' || selectedVariant === 'E') && (
             <section
               data-variant="E"
-              className="bg-white p-4 sm:p-6 rounded-3xl border border-gray-200 shadow-sm space-y-4"
+              className="bg-white p-3 sm:p-6 rounded-2xl sm:rounded-3xl border border-gray-200 shadow-sm space-y-4"
             >
               <div className="flex items-center justify-between pb-3 border-b border-gray-100">
                 <div className="flex items-center gap-2">

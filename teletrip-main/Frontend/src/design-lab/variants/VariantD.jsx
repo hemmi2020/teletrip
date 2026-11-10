@@ -158,19 +158,19 @@ export const VariantD = ({ onSelectHotel }) => {
       {/* Quick Peek Drawer */}
       {drawerHotel && (
         <div className="fixed inset-0 z-[120] flex justify-end bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
-          <div className="w-full max-w-md bg-white h-full shadow-2xl p-6 overflow-y-auto space-y-5 flex flex-col justify-between">
+          <div className="w-full max-w-md bg-white h-full shadow-2xl p-4 sm:p-6 overflow-y-auto space-y-4 sm:space-y-5 flex flex-col justify-between">
             <div className="space-y-4">
               <div className="flex items-center justify-between pb-3 border-b border-gray-100">
                 <span className="text-xs font-black uppercase tracking-wider text-purple-600">Quick Property Peek</span>
                 <button
                   onClick={() => setDrawerHotel(null)}
-                  className="p-1 rounded-lg hover:bg-gray-100 text-gray-500"
+                  className="p-1 rounded-lg hover:bg-gray-100 text-gray-500 min-h-[36px] min-w-[36px] flex items-center justify-center"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
-              <div className="h-52 rounded-2xl overflow-hidden relative">
+              <div className="h-44 sm:h-52 rounded-2xl overflow-hidden relative">
                 <img src={drawerHotel.thumbnail} alt="" className="w-full h-full object-cover" />
                 <span className="absolute bottom-2.5 left-2.5 bg-black/75 backdrop-blur-md text-white text-xs font-bold px-2.5 py-1 rounded-lg">
                   AED {drawerHotel.priceAED.toLocaleString()} / night
@@ -178,7 +178,7 @@ export const VariantD = ({ onSelectHotel }) => {
               </div>
 
               <div>
-                <h3 className="text-lg font-black text-gray-900">{drawerHotel.name}</h3>
+                <h3 className="text-base sm:text-lg font-black text-gray-900">{drawerHotel.name}</h3>
                 <p className="text-xs text-gray-500">{drawerHotel.address}</p>
               </div>
 
@@ -202,7 +202,7 @@ export const VariantD = ({ onSelectHotel }) => {
                 setDrawerHotel(null);
                 if (onSelectHotel) onSelectHotel(h);
               }}
-              className="w-full py-3.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-black text-xs shadow-md transition-all"
+              className="w-full min-h-[44px] py-3.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-black text-xs shadow-md transition-all cursor-pointer"
             >
               Open Full Modal & Book
             </button>
@@ -213,14 +213,14 @@ export const VariantD = ({ onSelectHotel }) => {
       {/* Mobile Drawer */}
       {isMobileFiltersOpen && (
         <div className="fixed inset-0 z-[120] lg:hidden flex justify-end bg-black/60 backdrop-blur-xs">
-          <div className="w-full max-w-sm bg-white h-full overflow-y-auto p-4 flex flex-col justify-between">
+          <div className="w-full max-w-xs sm:max-w-sm bg-white h-full overflow-y-auto p-4 flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between pb-3 border-b border-gray-100">
                 <span className="font-extrabold text-sm text-gray-900">Filters</span>
                 <button
                   type="button"
                   onClick={() => setIsMobileFiltersOpen(false)}
-                  className="p-1 rounded-lg text-gray-500 hover:bg-gray-100"
+                  className="p-1 rounded-lg text-gray-500 hover:bg-gray-100 min-h-[36px] min-w-[36px] flex items-center justify-center"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -244,11 +244,11 @@ export const VariantD = ({ onSelectHotel }) => {
                 />
               </div>
             </div>
-            <div className="pt-4 border-t border-gray-100">
+            <div className="pt-4 border-t border-gray-100 pb-safe">
               <button
                 type="button"
                 onClick={() => setIsMobileFiltersOpen(false)}
-                className="w-full py-3 bg-purple-600 text-white rounded-xl font-bold text-xs"
+                className="w-full min-h-[44px] py-3 bg-purple-600 text-white rounded-xl font-bold text-xs shadow-md"
               >
                 Apply Filters ({filteredHotels.length} Hotels)
               </button>

@@ -151,7 +151,18 @@ export default function HeroSearchLab() {
                 }`}
               >
                 <Smartphone className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Mobile (390px)</span>
+                <span className="hidden sm:inline">390px</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewportWidth('320px')}
+                className={`p-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-all cursor-pointer ${
+                  viewportWidth === '320px' ? 'bg-white text-gray-900 shadow-xs' : 'text-gray-500'
+                }`}
+                title="Small Mobile View (320px)"
+              >
+                <Smartphone className="w-3.5 h-3.5 text-blue-600" />
+                <span className="hidden sm:inline">320px</span>
               </button>
             </div>
           </div>
@@ -159,7 +170,7 @@ export default function HeroSearchLab() {
       </header>
 
       {/* ── HERO PREVIEW CONTAINER ── */}
-      <main className="flex-1 py-10 px-4 flex justify-center items-start">
+      <main className="flex-1 py-4 sm:py-10 px-2 sm:px-4 flex justify-center items-start">
         <div
           style={{ width: viewportWidth }}
           className="transition-all duration-300 relative rounded-3xl overflow-hidden shadow-2xl min-h-[580px] flex flex-col justify-center items-center p-4 sm:p-10"
@@ -325,7 +336,7 @@ export default function HeroSearchLab() {
                     </div>
 
                     {isGuestPopoverOpen && (
-                      <div className="absolute top-full right-0 w-72 mt-2 bg-white rounded-2xl shadow-2xl border border-gray-200 p-4 z-50 space-y-3.5 animate-in fade-in duration-150">
+                      <div className="absolute top-full right-0 w-[calc(100vw-2rem)] max-w-xs sm:w-72 mt-2 bg-white rounded-2xl shadow-2xl border border-gray-200 p-4 z-50 space-y-3.5 animate-in fade-in duration-150">
                         <div className="flex items-center justify-between">
                           <div>
                             <div className="text-xs font-extrabold text-gray-900">Rooms</div>

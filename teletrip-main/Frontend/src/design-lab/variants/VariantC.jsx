@@ -185,22 +185,22 @@ export const VariantC = ({ onSelectHotel }) => {
 
                       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden divide-y divide-gray-100">
                         {hotel.roomsAvailable.map((room, ri) => (
-                          <div key={ri} className="p-3 flex items-center justify-between gap-3 text-xs hover:bg-blue-50/30">
+                          <div key={ri} className="p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs hover:bg-blue-50/30">
                             <div>
                               <div className="font-extrabold text-gray-900">{room.name}</div>
                               <div className="text-[10px] text-gray-400 font-mono">Code: {room.code} · {room.ratesCount} rate plans</div>
                             </div>
 
-                            <div className="flex items-center gap-4">
-                              <div className="text-right">
-                                <span className="font-black text-sm text-blue-600">AED {room.priceAED.toLocaleString()}</span>
+                            <div className="flex items-center justify-between sm:justify-end gap-3 pt-1.5 sm:pt-0 border-t sm:border-0 border-gray-100">
+                              <div className="text-left sm:text-right">
+                                <span className="font-black text-sm text-blue-600 block">AED {room.priceAED.toLocaleString()}</span>
                                 <span className="text-[10px] text-gray-400 block">≈ PKR {(room.priceAED * 76).toLocaleString()}</span>
                               </div>
 
                               <button
                                 type="button"
                                 onClick={() => onSelectHotel && onSelectHotel(hotel)}
-                                className="px-3 py-1.5 bg-blue-600 text-white rounded-lg font-bold text-xs hover:bg-blue-700 cursor-pointer"
+                                className="px-3.5 py-1.5 bg-blue-600 text-white rounded-lg font-bold text-xs hover:bg-blue-700 cursor-pointer min-h-[36px]"
                               >
                                 Select
                               </button>
@@ -220,14 +220,14 @@ export const VariantC = ({ onSelectHotel }) => {
       {/* Mobile Drawer */}
       {isMobileFiltersOpen && (
         <div className="fixed inset-0 z-[120] lg:hidden flex justify-end bg-black/60 backdrop-blur-xs">
-          <div className="w-full max-w-sm bg-white h-full overflow-y-auto p-4 flex flex-col justify-between">
+          <div className="w-full max-w-xs sm:max-w-sm bg-white h-full overflow-y-auto p-4 flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between pb-3 border-b border-gray-100">
                 <span className="font-extrabold text-sm text-gray-900">Filters</span>
                 <button
                   type="button"
                   onClick={() => setIsMobileFiltersOpen(false)}
-                  className="p-1 rounded-lg text-gray-500 hover:bg-gray-100"
+                  className="p-1 rounded-lg text-gray-500 hover:bg-gray-100 min-h-[36px] min-w-[36px] flex items-center justify-center"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -251,11 +251,11 @@ export const VariantC = ({ onSelectHotel }) => {
                 />
               </div>
             </div>
-            <div className="pt-4 border-t border-gray-100">
+            <div className="pt-4 border-t border-gray-100 pb-safe">
               <button
                 type="button"
                 onClick={() => setIsMobileFiltersOpen(false)}
-                className="w-full py-3 bg-blue-600 text-white rounded-xl font-bold text-xs"
+                className="w-full min-h-[44px] py-3 bg-blue-600 text-white rounded-xl font-bold text-xs shadow-md"
               >
                 Apply Filters ({filteredHotels.length} Hotels)
               </button>

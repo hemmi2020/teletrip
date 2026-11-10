@@ -79,97 +79,97 @@ export default function DesignLabHub() {
   return (
     <div className="min-h-screen bg-slate-950 text-white flex flex-col font-sans">
       {/* ── HEADER ── */}
-      <header className="border-b border-white/10 bg-slate-900/80 backdrop-blur-md px-6 py-4 sticky top-0 z-50">
+      <header className="border-b border-white/10 bg-slate-900/80 backdrop-blur-md px-4 sm:px-6 py-3.5 sm:py-4 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center font-black text-white shadow-md">
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            <span className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-blue-600 flex items-center justify-center font-black text-white shadow-md text-sm sm:text-base">
               T
             </span>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-base font-black text-white tracking-tight">TeleTrip</span>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-blue-500/20 text-blue-300 border border-blue-400/30 uppercase tracking-widest">
-                  Client Design Lab
+                <span className="text-sm sm:text-base font-black text-white tracking-tight">TeleTrip</span>
+                <span className="px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black bg-blue-500/20 text-blue-300 border border-blue-400/30 uppercase tracking-widest">
+                  Design Lab
                 </span>
               </div>
-              <p className="text-[11px] text-gray-400">Interactive UI/UX Review Suite for Stakeholder Feedback</p>
+              <p className="text-[10px] sm:text-[11px] text-gray-400">Interactive UI/UX Review Suite</p>
             </div>
           </div>
 
           <div className="flex items-center gap-2 text-xs">
             <span className="hidden sm:inline text-gray-400">Reviewing for:</span>
-            <span className="font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20 flex items-center gap-1.5">
+            <span className="font-bold text-emerald-400 bg-emerald-500/10 px-2 sm:px-2.5 py-1 rounded-full border border-emerald-500/20 flex items-center gap-1.5 text-[11px] sm:text-xs">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              Live Deployed Preview
+              Live Preview
             </span>
           </div>
         </div>
       </header>
 
       {/* ── HERO BANNER ── */}
-      <section className="py-12 px-6 border-b border-white/10 relative overflow-hidden bg-gradient-to-b from-slate-900 via-slate-950 to-slate-950">
-        <div className="max-w-5xl mx-auto text-center space-y-4 relative z-10">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-white/10 text-white border border-white/20 backdrop-blur-md">
+      <section className="py-8 sm:py-12 px-4 sm:px-6 border-b border-white/10 relative overflow-hidden bg-gradient-to-b from-slate-900 via-slate-950 to-slate-950">
+        <div className="max-w-5xl mx-auto text-center space-y-3 sm:space-y-4 relative z-10">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] sm:text-xs font-bold bg-white/10 text-white border border-white/20 backdrop-blur-md">
             <Sparkles className="w-3.5 h-3.5 text-amber-400" />
             Complete End-to-End Hotel Booking Experience
           </span>
-          <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight">
+          <h1 className="text-2xl sm:text-4xl md:text-5xl font-black text-white tracking-tight leading-tight">
             Client Design Review Hub
           </h1>
-          <p className="text-sm sm:text-base text-gray-300 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-xs sm:text-sm md:text-base text-gray-300 max-w-2xl mx-auto leading-relaxed">
             Explore and test each section with realistic Dubai hotel data. Use the interactive 
             feedback drawer to select your favorite options and submit notes directly to the development team.
           </p>
 
-          <div className="flex flex-wrap items-center justify-center gap-4 pt-2 text-xs text-gray-400">
+          <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 pt-2 text-[11px] sm:text-xs text-gray-400">
             <span className="flex items-center gap-1.5">
-              <CheckCircle2 className="w-4 h-4 text-emerald-400" /> Desktop, Tablet & Mobile Audit
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> Desktop, Tablet & Mobile Audit
             </span>
             <span className="flex items-center gap-1.5">
-              <CheckCircle2 className="w-4 h-4 text-emerald-400" /> Point & Click Element Notes
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> Point & Click Element Notes
             </span>
             <span className="flex items-center gap-1.5">
-              <CheckCircle2 className="w-4 h-4 text-emerald-400" /> Instant Server-Side Submission
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> Instant Server-Side Submission
             </span>
           </div>
         </div>
       </section>
 
       {/* ── SECTION LAB CARDS GRID ── */}
-      <main className="max-w-6xl mx-auto py-12 px-6 flex-1 w-full space-y-8">
+      <main className="max-w-6xl mx-auto py-8 sm:py-12 px-4 sm:px-6 flex-1 w-full space-y-6 sm:space-y-8">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-extrabold text-white flex items-center gap-2">
-            <Layers className="w-5 h-5 text-blue-400" />
+          <h2 className="text-base sm:text-lg font-extrabold text-white flex items-center gap-2">
+            <Layers className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400" />
             Select a Lab to Audit & Review:
           </h2>
-          <span className="text-xs text-gray-400">5 Distinct Sections Available</span>
+          <span className="text-[11px] sm:text-xs text-gray-400">5 Distinct Sections Available</span>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
           {labSections.map((section) => (
             <Link
               key={section.id}
               to={section.path}
-              className={`group relative p-6 rounded-3xl bg-slate-900/90 border border-white/10 hover:border-blue-500/50 transition-all duration-300 flex flex-col justify-between overflow-hidden shadow-xl hover:shadow-2xl hover:-translate-y-1 bg-gradient-to-br ${section.bgGradient}`}
+              className={`group relative p-4 sm:p-6 rounded-3xl bg-slate-900/90 border border-white/10 hover:border-blue-500/50 transition-all duration-300 flex flex-col justify-between overflow-hidden shadow-xl hover:shadow-2xl hover:-translate-y-1 bg-gradient-to-br ${section.bgGradient}`}
             >
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-2xl bg-white/10 group-hover:bg-blue-600 transition-colors flex items-center justify-center text-white">
-                      <section.icon className="w-5 h-5" />
+                  <div className="flex items-center gap-2.5 sm:gap-3">
+                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-white/10 group-hover:bg-blue-600 transition-colors flex items-center justify-center text-white">
+                      <section.icon className="w-4 h-4 sm:w-5 sm:h-5" />
                     </div>
                     <span className="text-xs font-mono font-bold text-gray-400 uppercase tracking-wider">
                       Lab {section.id}
                     </span>
                   </div>
 
-                  <span className={`text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full text-white shadow-xs ${section.badgeColor}`}>
+                  <span className={`text-[9px] sm:text-[10px] font-extrabold uppercase px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-white shadow-xs ${section.badgeColor}`}>
                     {section.badge}
                   </span>
                 </div>
 
-                <div className="space-y-1.5">
-                  <h3 className="text-lg font-extrabold text-white group-hover:text-blue-300 transition-colors">
+                <div className="space-y-1 sm:space-y-1.5">
+                  <h3 className="text-base sm:text-lg font-extrabold text-white group-hover:text-blue-300 transition-colors">
                     {section.title}
                   </h3>
                   <p className="text-xs text-gray-400 leading-relaxed">
@@ -177,7 +177,7 @@ export default function DesignLabHub() {
                   </p>
                 </div>
 
-                <div className="grid grid-cols-2 gap-1.5 pt-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 pt-2">
                   {section.features.map((feat, fi) => (
                     <span key={fi} className="text-[11px] text-gray-300 bg-white/5 px-2.5 py-1 rounded-lg border border-white/5 flex items-center gap-1.5">
                       <CheckCircle2 className="w-3 h-3 text-blue-400 shrink-0" />
@@ -187,7 +187,7 @@ export default function DesignLabHub() {
                 </div>
               </div>
 
-              <div className="pt-6 mt-4 border-t border-white/5 flex items-center justify-between text-xs font-bold text-blue-400 group-hover:text-blue-300">
+              <div className="pt-4 sm:pt-6 mt-3 sm:mt-4 border-t border-white/5 flex items-center justify-between text-xs font-bold text-blue-400 group-hover:text-blue-300">
                 <span>Open Interactive Audit</span>
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1.5 transition-transform" />
               </div>
@@ -196,13 +196,13 @@ export default function DesignLabHub() {
         </div>
 
         {/* Client Instructions Box */}
-        <div className="p-6 rounded-3xl bg-blue-950/40 border border-blue-500/30 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-          <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-blue-600 text-white flex items-center justify-center shrink-0">
-              <MessageSquare className="w-6 h-6" />
+        <div className="p-4 sm:p-6 rounded-3xl bg-blue-950/40 border border-blue-500/30 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div className="flex items-start gap-3 sm:gap-4">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-blue-600 text-white flex items-center justify-center shrink-0">
+              <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
             <div className="space-y-1">
-              <h4 className="text-sm font-extrabold text-white">
+              <h4 className="text-xs sm:text-sm font-extrabold text-white">
                 How to Submit Your Choices & Feedback
               </h4>
               <p className="text-xs text-blue-200/90 leading-relaxed">

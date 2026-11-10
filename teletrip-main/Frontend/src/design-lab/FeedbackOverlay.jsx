@@ -32,6 +32,42 @@ export const FeedbackOverlay = ({ targetName = "HotelSearchExperience" }) => {
   const [copied, setCopied] = useState(false);
   const hoverOutlineRef = useRef(null);
 
+  // Load saved draft from localStorage
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('design_lab_client_feedback');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.clientName) setClientName(parsed.clientName);
+        if (parsed.clientEmail) setClientEmail(parsed.clientEmail);
+        if (parsed.preferredVariant) setPreferredVariant(parsed.preferredVariant);
+        if (parsed.rating) setRating(parsed.rating);
+        if (parsed.overallDirection) setOverallDirection(parsed.overallDirection);
+        if (parsed.comments && Array.isArray(parsed.comments)) setComments(parsed.comments);
+      }
+    } catch (e) {
+      console.warn('Failed to load feedback from localStorage:', e);
+    }
+  }, []);
+
+  // Sync draft to localStorage whenever fields change
+  useEffect(() => {
+    try {
+      const draft = {
+        clientName,
+        clientEmail,
+        preferredVariant,
+        rating,
+        overallDirection,
+        comments,
+        targetName
+      };
+      localStorage.setItem('design_lab_client_feedback', JSON.stringify(draft));
+    } catch (e) {
+      // ignore
+    }
+  }, [clientName, clientEmail, preferredVariant, rating, overallDirection, comments, targetName]);
+
   // Inspector mode event listener
   useEffect(() => {
     if (!isInspecting) {
@@ -238,14 +274,14 @@ export const FeedbackOverlay = ({ targetName = "HotelSearchExperience" }) => {
   return (
     <>
       {/* Floating Trigger Button */}
-      <div id="design-lab-feedback-btn" className="fixed bottom-6 right-6 z-[99999] flex items-center gap-2">
+      <div id="design-lab-feedback-btn" className="fixed bottom-4 right-3 sm:bottom-6 sm:right-6 z-[99999] flex items-center gap-1.5 sm:gap-2">
         <button
           type="button"
           onClick={() => {
             setIsInspecting(!isInspecting);
             if (!isOpen) setIsOpen(true);
           }}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-full font-bold text-xs sm:text-sm shadow-xl transition-all cursor-pointer ${
+          className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-full font-bold text-xs sm:text-sm shadow-xl transition-all cursor-pointer ${
             isInspecting
               ? 'bg-amber-500 text-white ring-4 ring-amber-300 animate-pulse'
               : 'bg-blue-600 hover:bg-blue-700 text-white'
@@ -253,12 +289,12 @@ export const FeedbackOverlay = ({ targetName = "HotelSearchExperience" }) => {
         >
           {isInspecting ? (
             <>
-              <Crosshair className="w-4 h-4" />
-              <span>Click Any Element on Screen...</span>
+              <Crosshair className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <span>Tap Any Element...</span>
             </>
           ) : (
             <>
-              <MessageSquare className="w-4 h-4" />
+              <MessageSquare className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               <span>Review Lab ({comments.length})</span>
             </>
           )}
@@ -267,12 +303,20 @@ export const FeedbackOverlay = ({ targetName = "HotelSearchExperience" }) => {
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}
-          className="p-2.5 rounded-full bg-gray-900/90 text-white hover:bg-black shadow-lg cursor-pointer"
+          className="p-2 sm:p-2.5 rounded-full bg-gray-900/90 text-white hover:bg-black shadow-lg cursor-pointer"
           title="Toggle Feedback Drawer"
         >
-          <Sparkles className="w-4 h-4 text-amber-300" />
+          <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-300" />
         </button>
       </div>
+
+      {/* Mobile Backdrop Overlay */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-[99998] sm:hidden backdrop-blur-xs transition-opacity"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
 
       {/* Slide-out Feedback Drawer */}
       {isOpen && (
@@ -281,7 +325,7 @@ export const FeedbackOverlay = ({ targetName = "HotelSearchExperience" }) => {
           className="fixed top-0 right-0 bottom-0 w-full sm:w-[440px] bg-white shadow-2xl z-[99999] border-l border-gray-200 flex flex-col text-left text-gray-900 animate-in slide-in-from-right duration-200"
         >
           {/* Header */}
-          <div className="p-4 border-b border-gray-100 bg-gradient-to-r from-slate-900 to-blue-950 text-white flex items-center justify-between">
+          <div className="p-3.5 sm:p-4 border-b border-gray-100 bg-gradient-to-r from-slate-900 to-blue-950 text-white flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
               <div>
@@ -291,14 +335,15 @@ export const FeedbackOverlay = ({ targetName = "HotelSearchExperience" }) => {
             </div>
             <button
               onClick={() => setIsOpen(false)}
-              className="p-1.5 rounded-lg hover:bg-white/20 text-white/80 cursor-pointer"
+              className="p-1.5 rounded-lg hover:bg-white/20 text-white/80 cursor-pointer min-h-[36px] min-w-[36px] flex items-center justify-center"
+              aria-label="Close Feedback Drawer"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
 
           {/* Body */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4 text-xs">
+          <div className="flex-1 overflow-y-auto p-3.5 sm:p-4 space-y-3.5 sm:space-y-4 text-xs">
             {/* Success Banner if submitted */}
             {submitSuccess && (
               <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-start gap-2.5 text-emerald-800">
@@ -318,20 +363,20 @@ export const FeedbackOverlay = ({ targetName = "HotelSearchExperience" }) => {
                 <User className="w-3.5 h-3.5 text-blue-600" />
                 Reviewer Info (Optional)
               </span>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <input
                   type="text"
                   value={clientName}
                   onChange={(e) => setClientName(e.target.value)}
                   placeholder="Your Name / Client"
-                  className="w-full text-xs p-2 bg-white rounded-lg border border-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="w-full text-xs p-2.5 bg-white rounded-lg border border-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
                 <input
                   type="email"
                   value={clientEmail}
                   onChange={(e) => setClientEmail(e.target.value)}
                   placeholder="Email (optional)"
-                  className="w-full text-xs p-2 bg-white rounded-lg border border-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="w-full text-xs p-2.5 bg-white rounded-lg border border-gray-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
               </div>
             </div>
@@ -494,12 +539,12 @@ export const FeedbackOverlay = ({ targetName = "HotelSearchExperience" }) => {
           </div>
 
           {/* Footer Submit CTA */}
-          <div className="p-4 border-t border-gray-200 bg-gray-50 space-y-2">
+          <div className="p-3.5 sm:p-4 border-t border-gray-200 bg-gray-50 space-y-2 pb-6 sm:pb-4">
             <button
               type="button"
               onClick={handleSubmitAll}
               disabled={isSubmitting}
-              className="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer active:scale-98 disabled:opacity-50"
+              className="w-full min-h-[44px] py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer active:scale-98 disabled:opacity-50"
             >
               {isSubmitting ? (
                 <>

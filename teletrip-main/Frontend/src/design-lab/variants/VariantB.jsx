@@ -45,7 +45,7 @@ export const VariantB = ({ onSelectHotel }) => {
         <button
           type="button"
           onClick={() => setMobileTab('list')}
-          className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+          className={`flex-1 min-h-[38px] py-1.5 rounded-lg text-[11px] sm:text-xs font-bold transition-all cursor-pointer ${
             mobileTab === 'list' ? 'bg-white shadow-xs text-gray-900' : 'text-gray-500'
           }`}
         >
@@ -54,16 +54,16 @@ export const VariantB = ({ onSelectHotel }) => {
         <button
           type="button"
           onClick={() => setMobileTab('map')}
-          className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+          className={`flex-1 min-h-[38px] py-1.5 rounded-lg text-[11px] sm:text-xs font-bold transition-all cursor-pointer ${
             mobileTab === 'map' ? 'bg-white shadow-xs text-gray-900' : 'text-gray-500'
           }`}
         >
-          Interactive Map
+          Map View
         </button>
         <button
           type="button"
           onClick={() => setMobileTab('filters')}
-          className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+          className={`flex-1 min-h-[38px] py-1.5 rounded-lg text-[11px] sm:text-xs font-bold transition-all cursor-pointer ${
             mobileTab === 'filters' ? 'bg-white shadow-xs text-gray-900' : 'text-gray-500'
           }`}
         >
@@ -129,20 +129,20 @@ export const VariantB = ({ onSelectHotel }) => {
                       <p className="text-xs text-gray-500 mt-1">{hotel.distanceKm} km from center</p>
                     </div>
 
-                    <div className="pt-2 flex items-baseline justify-between border-t border-gray-100">
+                    <div className="pt-2 flex flex-wrap items-baseline justify-between gap-1.5 border-t border-gray-100">
                       <div>
                         <span className="text-[9px] text-gray-400 block uppercase font-bold">Total Stay</span>
                         <span className="text-sm font-black text-blue-600">AED {hotel.priceAED.toLocaleString()}</span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[11px] text-amber-700 font-bold">≈ PKR {hotel.pricePKR.toLocaleString()}</span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[11px] text-amber-700 font-bold whitespace-nowrap">≈ PKR {hotel.pricePKR.toLocaleString()}</span>
                         <button
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
                             if (onSelectHotel) onSelectHotel(hotel);
                           }}
-                          className="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-[11px] font-bold"
+                          className="px-2.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-[11px] font-bold min-h-[32px] cursor-pointer"
                         >
                           View
                         </button>
@@ -173,9 +173,9 @@ export const VariantB = ({ onSelectHotel }) => {
           </div>
 
           {/* Active Hotel Floating Bottom Card */}
-          <div className="absolute bottom-4 left-3 right-3 z-10 bg-white/95 backdrop-blur-md rounded-2xl p-3 shadow-xl border border-gray-200 flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <img src={activeHotel.thumbnail} alt="" className="w-12 h-12 rounded-xl object-cover shrink-0 border border-gray-200" />
+          <div className="absolute bottom-4 left-2 right-2 sm:left-3 sm:right-3 z-10 bg-white/95 backdrop-blur-md rounded-2xl p-2.5 sm:p-3 shadow-xl border border-gray-200 flex items-center justify-between gap-2 sm:gap-3">
+            <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+              <img src={activeHotel.thumbnail} alt="" className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl object-cover shrink-0 border border-gray-200" />
               <div className="min-w-0">
                 <h4 className="font-extrabold text-xs text-gray-900 truncate">{activeHotel.name}</h4>
                 <div className="text-[10px] text-gray-500">{activeHotel.zone} · ★ {activeHotel.rating}</div>
@@ -186,7 +186,7 @@ export const VariantB = ({ onSelectHotel }) => {
             <button
               type="button"
               onClick={() => onSelectHotel && onSelectHotel(activeHotel)}
-              className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shrink-0 shadow-xs cursor-pointer"
+              className="px-3 sm:px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shrink-0 shadow-xs cursor-pointer min-h-[36px]"
             >
               Select Hotel
             </button>

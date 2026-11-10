@@ -323,10 +323,21 @@ export default function HotelModalLab() {
                 className={`p-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-all cursor-pointer ${
                   viewportWidth === '390px' ? 'bg-white text-gray-900 shadow-xs' : 'text-gray-500'
                 }`}
-                title="Mobile View (390px)"
+                title="Mobile View (390px - iPhone Pro)"
               >
                 <Smartphone className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Mobile (390px)</span>
+                <span className="hidden sm:inline">390px</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewportWidth('320px')}
+                className={`p-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-all cursor-pointer ${
+                  viewportWidth === '320px' ? 'bg-white text-gray-900 shadow-xs' : 'text-gray-500'
+                }`}
+                title="Small Mobile View (320px - iPhone SE)"
+              >
+                <Smartphone className="w-3.5 h-3.5 text-blue-600" />
+                <span className="hidden sm:inline">320px</span>
               </button>
             </div>
           </div>
@@ -334,7 +345,7 @@ export default function HotelModalLab() {
       </header>
 
       {/* ── CANVAS VIEWPORT ── */}
-      <main className="flex-1 py-8 px-4 flex justify-center items-start">
+      <main className="flex-1 py-4 sm:py-8 px-2 sm:px-4 flex justify-center items-start">
         <div
           style={{ width: viewportWidth }}
           className="transition-all duration-300 relative rounded-3xl overflow-hidden shadow-2xl bg-white border border-gray-200 max-h-[88vh] flex flex-col"
@@ -895,21 +906,23 @@ export default function HotelModalLab() {
           )}
 
           {/* ── STICKY BOTTOM BOOKING DOCK ── */}
-          <div className="flex-shrink-0 bg-white border-t border-gray-200 p-3.5 sm:p-4 px-4 sm:px-6 flex items-center justify-between gap-4">
-            <div>
-              <span className="text-[10px] text-gray-400 block uppercase font-bold">Stay Total (3 nights)</span>
-              <div className="flex items-baseline gap-2">
-                <span className="text-lg sm:text-2xl font-black text-blue-600">AED 4,350</span>
-                <span className="text-xs sm:text-sm font-semibold text-gray-500">≈ PKR 330,600</span>
+          <div className="flex-shrink-0 bg-white border-t border-gray-200 p-3 sm:p-4 px-3 sm:px-6 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-4 pb-5 sm:pb-4 pb-safe">
+            <div className="flex items-baseline justify-between sm:block">
+              <div>
+                <span className="text-[10px] text-gray-400 block uppercase font-bold">Stay Total (3 nights)</span>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-lg sm:text-2xl font-black text-blue-600">AED 4,350</span>
+                  <span className="text-xs sm:text-sm font-semibold text-gray-500">≈ PKR 330,600</span>
+                </div>
               </div>
-              <span className="text-[10px] text-emerald-600 font-bold">Includes all taxes & resort fees</span>
+              <span className="text-[10px] text-emerald-600 font-bold hidden sm:block">Includes all taxes & resort fees</span>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 w-full sm:w-auto">
               <button
                 type="button"
                 onClick={() => setCartCount(c => c + 1)}
-                className="px-5 sm:px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-black text-xs sm:text-sm shadow-md transition-all flex items-center gap-2 cursor-pointer active:scale-95"
+                className="w-full sm:w-auto min-h-[44px] px-5 sm:px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-black text-xs sm:text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95"
               >
                 <ShoppingCart className="w-4 h-4" />
                 <span>Reserve Room</span>

@@ -268,7 +268,7 @@ export const VariantA = ({ onSelectHotel }) => {
                     <button
                       type="button"
                       onClick={() => onSelectHotel && onSelectHotel(hotel)}
-                      className="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-extrabold text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                      className="w-full min-h-[44px] py-2.5 px-4 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-extrabold text-xs rounded-xl shadow-md transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                     >
                       <span>Check Availability</span>
                       <ChevronRight className="w-4 h-4" />
@@ -284,14 +284,14 @@ export const VariantA = ({ onSelectHotel }) => {
       {/* ── MOBILE FILTER DRAWER (SLIDE-OVER) ── */}
       {isMobileFiltersOpen && (
         <div className="fixed inset-0 z-[120] lg:hidden flex justify-end bg-black/60 backdrop-blur-xs">
-          <div className="w-full max-w-sm bg-white h-full overflow-y-auto p-4 flex flex-col justify-between">
+          <div className="w-full max-w-xs sm:max-w-sm bg-white h-full overflow-y-auto p-4 flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between pb-3 border-b border-gray-100">
                 <span className="font-extrabold text-sm text-gray-900">Filters</span>
                 <button
                   type="button"
                   onClick={() => setIsMobileFiltersOpen(false)}
-                  className="p-1 rounded-lg text-gray-500 hover:bg-gray-100"
+                  className="p-1 rounded-lg text-gray-500 hover:bg-gray-100 min-h-[36px] min-w-[36px] flex items-center justify-center"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -316,11 +316,11 @@ export const VariantA = ({ onSelectHotel }) => {
                 />
               </div>
             </div>
-            <div className="pt-4 border-t border-gray-100">
+            <div className="pt-4 border-t border-gray-100 pb-safe">
               <button
                 type="button"
                 onClick={() => setIsMobileFiltersOpen(false)}
-                className="w-full py-3 bg-blue-600 text-white rounded-xl font-bold text-xs"
+                className="w-full min-h-[44px] py-3 bg-blue-600 text-white rounded-xl font-bold text-xs shadow-md"
               >
                 Apply Filters ({filteredHotels.length} Hotels)
               </button>

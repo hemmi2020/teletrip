@@ -496,7 +496,7 @@ export default function ReviewsLab() {
                     { metric: 'Service & Hospitality', tripAdvisor: '4.7 / 5.0', google: '4.8 / 5.0' },
                     { metric: 'Dining & Food Quality', tripAdvisor: '4.9 / 5.0', google: '4.7 / 5.0' }
                   ].map((row, idx) => (
-                    <div key={idx} className="p-3 bg-white rounded-xl border border-gray-200 grid grid-cols-12 items-center">
+                    <div key={idx} className="p-3 bg-white rounded-xl border border-gray-200 flex flex-col sm:grid sm:grid-cols-12 items-start sm:items-center gap-2">
                       <span className="col-span-6 font-bold text-gray-800">{row.metric}</span>
                       <span className="col-span-3 text-center text-emerald-700 font-mono font-bold">{row.tripAdvisor} (TA)</span>
                       <span className="col-span-3 text-center text-blue-700 font-mono font-bold">{row.google} (Google)</span>

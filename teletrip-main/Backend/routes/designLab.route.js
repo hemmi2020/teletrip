@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const fs = require('fs');
 const path = require('path');
+const DesignLabFeedback = require('../models/designLabFeedback.model');
 
 const FEEDBACK_FILE = path.join(__dirname, '..', 'data', 'design_lab_feedback.json');
 
@@ -18,15 +19,33 @@ function ensureFeedbackFile() {
 
 /**
  * GET /api/design-lab/feedback
- * Fetch all submitted feedback
+ * Fetch all submitted feedback (MongoDB primary, JSON file fallback)
  */
-router.get('/feedback', (req, res) => {
+router.get('/feedback', async (req, res) => {
     try {
+        let dbFeedback = [];
+        try {
+            dbFeedback = await DesignLabFeedback.find().sort({ createdAt: -1 }).lean();
+        } catch (dbErr) {
+            console.warn('[DesignLab] MongoDB fetch failed, falling back to disk:', dbErr.message);
+        }
+
+        if (dbFeedback && dbFeedback.length > 0) {
+            return res.json({
+                success: true,
+                source: 'mongodb',
+                count: dbFeedback.length,
+                feedback: dbFeedback
+            });
+        }
+
+        // Fallback to disk file
         ensureFeedbackFile();
         const content = fs.readFileSync(FEEDBACK_FILE, 'utf-8');
         const feedback = JSON.parse(content || '[]');
         return res.json({
             success: true,
+            source: 'disk',
             count: feedback.length,
             feedback
         });
@@ -42,9 +61,9 @@ router.get('/feedback', (req, res) => {
 
 /**
  * POST /api/design-lab/feedback
- * Submit new client/user feedback from Design Lab
+ * Submit new client/user feedback from Design Lab (MongoDB + JSON fallback)
  */
-router.post('/feedback', (req, res) => {
+router.post('/feedback', async (req, res) => {
     try {
         ensureFeedbackFile();
         const {
@@ -58,8 +77,9 @@ router.post('/feedback', (req, res) => {
             targetName = 'HotelSearchExperience'
         } = req.body || {};
 
+        const entryId = `fb_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
         const newEntry = {
-            id: `fb_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+            id: entryId,
             timestamp: new Date().toISOString(),
             clientName: String(clientName).trim() || 'Anonymous Client',
             clientEmail: String(clientEmail).trim(),
@@ -76,14 +96,24 @@ router.post('/feedback', (req, res) => {
             }
         };
 
-        const existingRaw = fs.readFileSync(FEEDBACK_FILE, 'utf-8');
-        const list = JSON.parse(existingRaw || '[]');
-        list.unshift(newEntry); // newest first
+        // 1. Persist to MongoDB
+        try {
+            await DesignLabFeedback.create(newEntry);
+            console.log(`[DesignLab] Saved feedback ${entryId} to MongoDB`);
+        } catch (dbErr) {
+            console.warn('[DesignLab] MongoDB save failed, falling back to disk only:', dbErr.message);
+        }
 
-        // Keep last 100 submissions
-        if (list.length > 100) list.length = 100;
-
-        fs.writeFileSync(FEEDBACK_FILE, JSON.stringify(list, null, 2), 'utf-8');
+        // 2. Persist to local JSON file for backup
+        try {
+            const existingRaw = fs.readFileSync(FEEDBACK_FILE, 'utf-8');
+            const list = JSON.parse(existingRaw || '[]');
+            list.unshift(newEntry); // newest first
+            if (list.length > 100) list.length = 100;
+            fs.writeFileSync(FEEDBACK_FILE, JSON.stringify(list, null, 2), 'utf-8');
+        } catch (fsErr) {
+            console.warn('[DesignLab] Local disk file write failed:', fsErr.message);
+        }
 
         console.log(`[DesignLab] Recorded new feedback from "${newEntry.clientName}" (${newEntry.preferredVariant}, ${newEntry.commentsCount} notes)`);
 
