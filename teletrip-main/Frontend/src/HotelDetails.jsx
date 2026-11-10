@@ -110,7 +110,7 @@ const useHotelCartIntegration = () => {
       rateKey: rate.rateKey,
       price: pricePerNight,
       pricePerNight: pricePerNight,
-      currency: hotel.currency || 'EUR',
+      currency: hotel.currency || 'AED',
       checkIn: checkIn,
       checkOut: checkOut,
       nights: nights,
@@ -421,7 +421,7 @@ const HotelDetails = () => {
           thumbnail: foundHotel.thumbnail,
           minRate: foundHotel.minRate,
           maxRate: foundHotel.maxRate,
-          currency: foundHotel.currency || "EUR",
+          currency: foundHotel.currency || "AED",
           coordinates: {
             lat: parseFloat(foundHotel.latitude),
             lng: parseFloat(foundHotel.longitude),
@@ -870,12 +870,12 @@ const HotelDetails = () => {
         <>
           {/* Per night price */}
           <div className="text-xs md:text-sm text-gray-600 mb-1">
-            {hotel.currency || '€'}{pricePerNight.toFixed(2)} per night
+            {hotel.currency || 'AED'} {pricePerNight.toFixed(2)} per night
           </div>
           
           {/* Total price - LARGE */}
           <div className="text-xl md:text-2xl font-bold text-blue-600">
-            {hotel.currency || '€'}{totalPrice.toFixed(2)}
+            {hotel.currency || 'AED'} {totalPrice.toFixed(2)}
           </div>
           
           {/* Clear label */}

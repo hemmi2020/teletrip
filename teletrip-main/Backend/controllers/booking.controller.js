@@ -161,11 +161,13 @@ module.exports.createBooking = asyncErrorHandler(async (req, res) => {
     // Status 
     status: 'pending',
     
+    currencyConversion: req.body.currencyConversion || null,
+
     // Pricing structure (required)
     pricing: {
       basePrice: totalAmount,       // ✅ Required field
       totalAmount: totalAmount,     // ✅ Required field
-      currency: 'PKR',
+      currency: req.body.currency || 'AED',
       taxes: 0,
       fees: 0,
       discounts: 0
@@ -253,7 +255,7 @@ module.exports.createBooking = asyncErrorHandler(async (req, res) => {
     
     bookingData.hotelbedsReference = hbBooking.reference;
     bookingData.status = 'confirmed';
-    bookingData.pricing.currency = hbBooking.currency || 'EUR';
+    bookingData.pricing.currency = hbBooking.currency || req.body.currency || 'AED';
     
     // Extract certification-required fields from Hotelbeds response
     bookingData.hotelBooking.hotelCode = hbHotel.code || null;
@@ -265,7 +267,7 @@ module.exports.createBooking = asyncErrorHandler(async (req, res) => {
     bookingData.hotelBooking.latitude = hbHotel.latitude || null;
     bookingData.hotelBooking.longitude = hbHotel.longitude || null;
     bookingData.hotelBooking.confirmationNumber = hbBooking.reference || null;
-    bookingData.hotelBooking.currency = hbBooking.currency || 'EUR';
+    bookingData.hotelBooking.currency = hbBooking.currency || req.body.currency || 'AED';
 
     // ✅ MANDATORY: Fetch hotel phone from Content API for voucher display
     try {

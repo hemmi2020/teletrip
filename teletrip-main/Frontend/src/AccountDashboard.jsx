@@ -137,7 +137,7 @@ const SuccessMessage = ({ message, onClose }) => (
 const DashboardStats = ({ stats, loading, toPKR }) => {
   if (loading) return <LoadingSpinner text="Loading statistics..." />;
 
-  const convertPKR = toPKR || ((v) => formatCurrency(v));
+  const convertPKR = (amt, cur = 'AED') => toPKR ? toPKR(amt, cur) : formatCurrency(amt);
 
   const statItems = [
     {
@@ -467,7 +467,8 @@ const ProfileForm = ({ profile, onSave, onCancel, loading }) => {
 
 // Booking Card Component
 const BookingCard = ({ booking, onCancel, onViewDetails, onPayNow, onVoucher, toPKR }) => {
-  const convertPKR = toPKR || ((v) => formatCurrency(v));
+  const bookingCurrency = booking.pricing?.currency || booking.currency || booking.hotelBooking?.currency || 'AED';
+  const convertPKR = (amt, cur) => toPKR ? toPKR(amt, cur || bookingCurrency) : formatCurrency(amt);
   const [activityName, setActivityName] = React.useState(null);
   const [showDetails, setShowDetails] = React.useState(false);
   
@@ -938,7 +939,12 @@ const AccountDashboard = () => {
           const data = await res.json();
           if (data.success) {
             const r = data.data;
-            setPkrRate({ rate: r.exchangeRate, markup: r.markupPerEuro || 0, txFee: r.transactionFeePercentage || 0 });
+            setPkrRate({
+              rates: r.rates || { AED: 75.39, EUR: 309.84, USD: 276.69 },
+              rate: r.rates?.AED || r.exchangeRate || 75.39,
+              commission: r.commissionPercentage || 0,
+              txFee: r.serviceChargePercentage ?? r.transactionFeePercentage ?? 1
+            });
           }
         }
       } catch (e) { /* silent */ }
@@ -946,13 +952,17 @@ const AccountDashboard = () => {
     if (user?.email) fetchRate();
   }, [user]);
 
-  const toPKR = (amountEUR) => {
-    if (!pkrRate || !amountEUR) return formatCurrency(0);
-    const base = amountEUR * pkrRate.rate;
-    const markup = amountEUR * pkrRate.markup;
-    const subtotal = base + markup;
-    const fee = (subtotal * pkrRate.txFee) / 100;
-    return formatCurrency(Math.round(subtotal + fee));
+  const toPKR = (amount, currency = 'AED') => {
+    if (!amount) return formatCurrency(0);
+    const cur = (currency || 'AED').toUpperCase();
+    if (cur === 'PKR') return formatCurrency(Math.round(amount));
+    const rate = pkrRate?.rates?.[cur] || pkrRate?.rate || 75.39;
+    const comm = pkrRate?.commission || 0;
+    const fee = pkrRate?.txFee || 1;
+    const retail = amount * (1 + comm / 100);
+    const base = retail * rate;
+    const total = base + (base * fee / 100);
+    return formatCurrency(Math.round(total));
   };
 
   // Edit states

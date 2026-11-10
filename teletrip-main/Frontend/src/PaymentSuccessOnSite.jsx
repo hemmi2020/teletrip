@@ -25,6 +25,7 @@ const PaymentSuccessOnSite = () => {
   } = bookingData;
 
   const roomsList = bookingDetails.roomsList || [];
+  const originalCurrency = bookingDetails.currency || (bookingDetails.roomsList?.[0]?.currency) || 'AED';
   const totalNetEUR = bookingDetails.totalNetEUR || 0;
   const nights = bookingDetails.nights ||
     (bookingDetails.checkIn && bookingDetails.checkOut
@@ -174,11 +175,11 @@ const PaymentSuccessOnSite = () => {
                         </div>
                         <div className="text-right">
                           <p className="text-sm font-bold text-gray-900">
-                            EUR {(room.netPrice || 0).toFixed(2)}
+                            {originalCurrency} {(room.netPrice || 0).toFixed(2)}
                           </p>
                           {(room.netPrice || 0) > 0 && roomNights > 0 && (
                             <p className="text-[10px] text-gray-400">
-                              {roomNights} night{roomNights !== 1 ? 's' : ''} × EUR {perNight.toFixed(2)}
+                              {roomNights} night{roomNights !== 1 ? 's' : ''} × {originalCurrency} {perNight.toFixed(2)}
                             </p>
                           )}
                         </div>
@@ -251,9 +252,9 @@ const PaymentSuccessOnSite = () => {
 
             <div className="space-y-3">
               <div className="flex justify-between items-center text-sm">
-                <span className="text-gray-500">Booking Amount (EUR)</span>
+                <span className="text-gray-500">Booking Amount ({originalCurrency})</span>
                 {totalNetEUR > 0 ? (
-                  <span className="font-semibold text-gray-900">EUR {totalNetEUR.toFixed(2)}</span>
+                  <span className="font-semibold text-gray-900">{originalCurrency} {totalNetEUR.toFixed(2)}</span>
                 ) : (
                   <span className="font-semibold text-gray-900">—</span>
                 )}

@@ -337,6 +337,8 @@ const Checkout = () => {
           checkOut: firstItem?.checkOut || new Date(Date.now() + 86400000).toISOString(),
           guests: firstItem?.guests || firstItem?.adults || 1,
           totalAmount: parseFloat(totalAmount),
+          currency: firstItem?.currency || 'AED',
+          currencyConversion: currencyConversion || null,
           boardType: firstItem?.boardName || 'Room Only',
           rateClass: firstItem?.rateClass || 'NOR',
           rateKey: firstItem?.rateKey, // ⚠️ CRITICAL: Pass rateKey for Hotelbeds booking
@@ -721,7 +723,7 @@ const handlePayOnSiteBooking = async () => {
           hotelbedsBookingRequest: hotelbedsBookingRequest
         },
         amount: parseFloat(totalAmount),
-        currency: 'EUR',
+        currency: firstItem?.currency || checkoutItems[0]?.currency || 'AED',
         currencyConversion: currencyConversion,
         confirmImmediately: true,
         bookingId: `HOTELBEDS_${Date.now()}`
@@ -1252,7 +1254,7 @@ const handlePaymentSubmit = () => {
             {paymentMethod === 'hblpay' ? (
               <>
                 <Lock className="w-4 h-4" />
-                <span>Pay with HBLPay - {checkoutItems[0]?.currency || 'EUR'} {parseFloat(totalAmount).toFixed(2)}</span>
+                <span>Pay with HBLPay - {checkoutItems[0]?.currency || 'AED'} {parseFloat(totalAmount).toFixed(2)}</span>
               </>
             ) : (
               <>

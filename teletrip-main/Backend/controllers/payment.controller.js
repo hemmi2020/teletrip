@@ -1705,12 +1705,14 @@ module.exports.initiateHBLPayPayment = asyncErrorHandler(async (req, res) => {
       userDetails: userData,
       bookingDetails: bookingData,
       currencyConversion: currencyConversion ? {
-        originalAmount: currencyConversion.amountInEUR,
-        originalCurrency: 'EUR',
+        originalAmount: currencyConversion.retailAmount || currencyConversion.netAmount || currencyConversion.amountInEUR || validAmount,
+        originalCurrency: (currencyConversion.fromCurrency || currencyConversion.originalCurrency || req.body.currency || 'AED').toUpperCase(),
         exchangeRate: currencyConversion.exchangeRate,
-        markupPerEuro: currencyConversion.markupPerEuro,
+        commissionPercentage: currencyConversion.commissionPercentage || 0,
+        serviceChargePercentage: currencyConversion.serviceChargePercentage || currencyConversion.transactionFeePercentage || 1,
+        markupPerEuro: currencyConversion.markupPerEuro || 0,
         basePKR: currencyConversion.basePKR,
-        markupAmount: currencyConversion.markupAmount,
+        markupAmount: currencyConversion.commissionAmount || currencyConversion.markupAmount || 0,
         totalPKR: currencyConversion.totalPKR,
         conversionDate: new Date()
       } : null,
@@ -2359,7 +2361,9 @@ module.exports.extractHBLData = (req, res) => {
 
 module.exports.createPayOnSiteBooking = asyncErrorHandler(async (req, res) => {
   const startTime = Date.now();
-  const { bookingData, userData, amount, currency = 'PKR', bookingId } = req.body;
+  const { bookingData, userData, amount, bookingId, currencyConversion } = req.body;
+  const effectiveCurrency = req.body.currency || bookingData?.currency || bookingData?.items?.[0]?.currency || 'AED';
+  const currency = effectiveCurrency;
   const userId = req.user._id;
 
   console.log('🏨 Creating Pay on Site booking:', {
@@ -2590,6 +2594,7 @@ module.exports.createPayOnSiteBooking = asyncErrorHandler(async (req, res) => {
       bookingType: 'hotel',
       bookingReference: bookingReference,
       status: hotelbedsReference ? 'confirmed' : 'pending',
+      currencyConversion: currencyConversion || null,
       pricing: {
         basePrice: paymentAmount,
         totalAmount: paymentAmount,

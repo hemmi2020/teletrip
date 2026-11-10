@@ -822,9 +822,9 @@ export const SlideOutCart = ({ isOpen, onClose, onProceedToCheckout }) => {
                       <div className="px-3 pb-3 flex items-center justify-between">
                         <span className="text-[11px] text-gray-400">{formatShortDate(item.checkIn)} → {formatShortDate(item.checkOut)}</span>
                         <div className="text-right">
-                          <span className="text-[14px] font-bold text-gray-900">{item.currency || 'EUR'} {totalPrice.toFixed(0)}</span>
+                          <span className="text-[14px] font-bold text-gray-900">{item.currency || 'AED'} {totalPrice.toFixed(0)}</span>
                           {fmtPKR(totalPrice, item.currency) && <span className="text-[11px] text-gray-400 block">≈ {fmtPKR(totalPrice, item.currency)}</span>}
-                          {!isActivity && !isTransfer && <span className="text-[10px] text-gray-400 block">{item.currency || 'EUR'} {item.price?.toFixed(0)}/night</span>}
+                          {!isActivity && !isTransfer && <span className="text-[10px] text-gray-400 block">{item.currency || 'AED'} {item.price?.toFixed(0)}/night</span>}
                         </div>
                       </div>
                     </div>
@@ -840,7 +840,7 @@ export const SlideOutCart = ({ isOpen, onClose, onProceedToCheckout }) => {
               <div className="flex items-center justify-between">
                 <span className="text-[13px] text-gray-500">Total</span>
                 <div className="text-right">
-                  <div className="text-xl font-bold text-gray-900">{items[0]?.currency || 'EUR'} {getTotalPrice().toFixed(2)}</div>
+                  <div className="text-xl font-bold text-gray-900">{items[0]?.currency || 'AED'} {getTotalPrice().toFixed(2)}</div>
                   {fmtPKR(getTotalPrice(), items[0]?.currency) && <div className="text-[11px] text-gray-400">≈ {fmtPKR(getTotalPrice(), items[0]?.currency)} (charged amount)</div>}
                 </div>
               </div>

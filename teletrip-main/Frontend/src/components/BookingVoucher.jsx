@@ -34,12 +34,19 @@ const BookingVoucher = ({ booking, onClose }) => {
     const retail = amount * (1 + comm / 100);
     const base = retail * rate;
     const fee = (base * feePct) / 100;
-    return Math.round(base + fee);
+    return {
+      retailAmount: Math.round(retail * 100) / 100,
+      totalPKR: Math.round(base + fee),
+      exchangeRate: rate,
+      commissionPercentage: comm,
+      serviceChargePercentage: feePct,
+      feePKR: Math.round(fee)
+    };
   };
 
   const formatPKR = (amount, currency = 'AED') => {
     const pkr = toPKR(amount, currency);
-    return pkr ? `PKR ${pkr.toLocaleString()}` : null;
+    return pkr ? `PKR ${pkr.totalPKR.toLocaleString()}` : null;
   };
 
   const fmtDate = (d) => {
@@ -228,7 +235,7 @@ const BookingVoucher = ({ booking, onClose }) => {
   const checkOut = hb.checkOut || booking.checkOutDate;
   const nights = hb.nights || 1;
 
-  const bookingCurrency = hbBooking?.currency || hb.currency || booking.pricing?.currency || 'EUR';
+  const bookingCurrency = hbBooking?.currency || hb.currency || booking.pricing?.currency || 'AED';
   const categoryName = hb.categoryName || hbHotel.categoryName || '';
   const categoryCode = hb.categoryCode || hbHotel.categoryCode || '';
   const destinationName = hb.destinationName || hbHotel.destinationName || '';
@@ -243,23 +250,59 @@ const BookingVoucher = ({ booking, onClose }) => {
   const addressParts = [hb.hotelAddress?.street, hb.hotelAddress?.fullAddress, zoneName, destinationName].filter(Boolean);
   const fullAddress = addressParts.length > 0 ? addressParts[0] : (hb.hotelAddress?.city || zoneName || destinationName || '');
 
-  // HBX Compliance: Supplier wholesale net price must NEVER be displayed to the customer.
-  // Display only customer retail pricing or no amounts.
+  // HBX Compliance & CMS Dynamic Pricing:
+  // Supplier wholesale net price must NEVER be displayed directly.
+  // Display dynamic customer retail pricing connected with CMS commission, exchange rate, and taxes/service charges.
+  const storedConversion = booking.currencyConversion || booking.payment?.currencyConversion || null;
   const rawTotal = parseFloat(booking.pricing?.totalAmount || booking.totalAmount || 0);
-  const rawCurrency = (booking.pricing?.currency || booking.currency || (rawTotal < 1500 ? 'EUR' : 'PKR')).toUpperCase();
+  const rawCurrency = (
+    storedConversion?.originalCurrency ||
+    storedConversion?.fromCurrency ||
+    booking.pricing?.currency ||
+    booking.currency ||
+    hbBooking?.currency ||
+    hb.currency ||
+    'AED'
+  ).toUpperCase();
+
+  let customerPKR = null;
+  let customerRetailCurrency = rawCurrency;
+  let customerRetailAmount = rawTotal;
+  let exchangeRate = pkrRate?.rates?.[rawCurrency] || (rawCurrency === 'AED' ? 75.39 : 75.39);
+  let serviceChargePct = pkrRate?.serviceChargePercentage ?? pkrRate?.transactionFeePercentage ?? 1;
+  let commissionPct = pkrRate?.commissionPercentage ?? 0;
+
+  if (storedConversion && storedConversion.totalPKR) {
+    customerPKR = Math.round(storedConversion.totalPKR);
+    customerRetailAmount = parseFloat(storedConversion.retailAmount || storedConversion.originalAmount || storedConversion.netAmount || rawTotal);
+    customerRetailCurrency = (storedConversion.originalCurrency || storedConversion.fromCurrency || rawCurrency).toUpperCase();
+    exchangeRate = storedConversion.exchangeRate || exchangeRate;
+    serviceChargePct = storedConversion.serviceChargePercentage ?? storedConversion.transactionFeePercentage ?? serviceChargePct;
+    commissionPct = storedConversion.commissionPercentage ?? commissionPct;
+  } else if (rawTotal > 0) {
+    if (rawCurrency === 'PKR') {
+      customerPKR = Math.round(rawTotal);
+    } else {
+      const conv = toPKR(rawTotal, rawCurrency);
+      if (conv) {
+        customerPKR = conv.totalPKR;
+        customerRetailAmount = conv.retailAmount;
+        exchangeRate = conv.exchangeRate;
+        serviceChargePct = conv.serviceChargePercentage;
+        commissionPct = conv.commissionPercentage;
+      }
+    }
+  }
 
   let displayCustomerTotal = 'Prepaid in Full';
-  if (rawTotal > 0) {
-    if (rawCurrency === 'PKR') {
-      displayCustomerTotal = `PKR ${Math.round(rawTotal).toLocaleString()}`;
-    } else if (rawCurrency === 'EUR') {
-      const pkrAmount = toPKR(rawTotal);
-      displayCustomerTotal = pkrAmount
-        ? `PKR ${pkrAmount.toLocaleString()} (EUR ${rawTotal.toFixed(2)})`
-        : `EUR ${rawTotal.toFixed(2)}`;
+  if (customerPKR) {
+    if (customerRetailCurrency === 'PKR') {
+      displayCustomerTotal = `PKR ${customerPKR.toLocaleString()}`;
     } else {
-      displayCustomerTotal = `${rawCurrency} ${Math.round(rawTotal).toLocaleString()}`;
+      displayCustomerTotal = `PKR ${customerPKR.toLocaleString()} (${customerRetailCurrency} ${customerRetailAmount.toFixed(2)})`;
     }
+  } else if (rawTotal > 0) {
+    displayCustomerTotal = `${customerRetailCurrency} ${rawTotal.toFixed(2)}`;
   }
 
   const paymentMethod = booking.payment?.method || booking.paymentMethod ||
@@ -579,9 +622,33 @@ const BookingVoucher = ({ booking, onClose }) => {
                   <span className="text-gray-500">Retail Booking Amount:</span>
                   <span className="font-semibold text-gray-900 ml-2">{displayCustomerTotal}</span>
                 </div>
-                <div className="flex justify-between items-center text-sm">
+                {customerRetailCurrency !== 'PKR' && customerPKR && (
+                  <div className="text-[11px] text-gray-500 bg-gray-50 border border-gray-100 rounded-lg p-2.5 space-y-1">
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Supplier / API Price:</span>
+                      <span className="font-medium text-gray-700">{customerRetailCurrency} {customerRetailAmount.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Conversion Rate:</span>
+                      <span className="font-medium text-gray-700">1 {customerRetailCurrency} ≈ {exchangeRate} PKR</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Service Charges & Taxes:</span>
+                      <span className="font-medium text-gray-700">Included ({serviceChargePct}%)</span>
+                    </div>
+                    {commissionPct > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Agency Commission:</span>
+                        <span className="font-medium text-gray-700">Included ({commissionPct}%)</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+                <div className="flex justify-between items-center text-sm pt-1">
                   <span className="text-gray-500">Payment Status</span>
-                  <span className="text-sm font-semibold text-green-700">Prepaid in Full</span>
+                  <span className="text-sm font-semibold text-green-700">
+                    {paymentMethod === 'pay_on_site' && isReserved ? 'Pending at Office' : 'Prepaid in Full'}
+                  </span>
                 </div>
                 <div className="flex justify-between items-center text-sm pt-2 border-t border-gray-100">
                   <span className="text-gray-500">Payment Method</span>
