@@ -119,7 +119,7 @@ router.post('/feedback', async (req, res) => {
 
         return res.status(201).json({
             success: true,
-            message: 'Feedback successfully recorded for Antigravity & the TeleTrip team!',
+            message: 'Feedback successfully recorded for the TeleTrip team!',
             feedbackId: newEntry.id
         });
     } catch (err) {

@@ -468,16 +468,21 @@ const ProfileForm = ({ profile, onSave, onCancel, loading }) => {
 // Booking Card Component
 const BookingCard = ({ booking, onCancel, onViewDetails, onPayNow, onVoucher, toPKR }) => {
   const bookingCurrency = (
-    booking.backup?.hotelbedsBookingData?.booking?.hotel?.currency ||
-    booking.backup?.hotelbedsBookingData?.booking?.currency ||
-    booking.hotelBooking?.currency ||
     booking.currencyConversion?.originalCurrency ||
     booking.currencyConversion?.fromCurrency ||
+    booking.hotelBooking?.currency ||
     booking.pricing?.currency ||
+    booking.backup?.hotelbedsBookingData?.booking?.hotel?.currency ||
+    booking.backup?.hotelbedsBookingData?.booking?.currency ||
     booking.currency ||
     'AED'
   ).toUpperCase();
-  const convertPKR = (amt, cur) => toPKR ? toPKR(amt, cur || bookingCurrency) : formatCurrency(amt);
+  const convertPKR = (amt, cur) => {
+    if (booking.currencyConversion?.totalPKR && (!amt || amt === (booking.pricing?.totalAmount || booking.totalAmount))) {
+      return formatCurrency(Math.round(booking.currencyConversion.totalPKR));
+    }
+    return toPKR ? toPKR(amt, cur || bookingCurrency) : formatCurrency(amt);
+  };
   const [activityName, setActivityName] = React.useState(null);
   const [showDetails, setShowDetails] = React.useState(false);
   

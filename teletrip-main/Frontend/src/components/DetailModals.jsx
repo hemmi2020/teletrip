@@ -241,11 +241,12 @@ export const BookingDetailsModal = ({ isOpen, onClose, booking }) => {
 
   const { formatPKR } = useCurrency();
   const bookingCurrency = (
+    booking.currencyConversion?.originalCurrency ||
+    booking.currencyConversion?.fromCurrency ||
+    booking.hotelBooking?.currency ||
+    booking.pricing?.currency ||
     booking.backup?.hotelbedsBookingData?.booking?.hotel?.currency ||
     booking.backup?.hotelbedsBookingData?.booking?.currency ||
-    booking.hotelBooking?.currency ||
-    booking.currencyConversion?.originalCurrency ||
-    booking.pricing?.currency ||
     booking.currency ||
     'AED'
   ).toUpperCase();
@@ -418,9 +419,11 @@ export const BookingDetailsModal = ({ isOpen, onClose, booking }) => {
             <div className="flex justify-between text-lg font-bold pt-2 border-t">
               <span>Total Amount:</span>
               <span className="text-blue-600">
-                {formatPKR ? formatPKR(bookingData.totalAmount, bookingCurrency, true) : `PKR ${bookingData.totalAmount?.toLocaleString()}`}
+                {booking.currencyConversion?.totalPKR
+                  ? `PKR ${Math.round(booking.currencyConversion.totalPKR).toLocaleString('en-PK')}`
+                  : (formatPKR ? formatPKR(bookingData.totalAmount, bookingCurrency, true) : `PKR ${bookingData.totalAmount?.toLocaleString()}`)}
                 {bookingCurrency !== 'PKR' && (
-                  <span className="text-sm text-gray-500 font-normal ml-2">({bookingCurrency} {Number(bookingData.totalAmount || 0).toFixed(2)})</span>
+                  <span className="text-sm text-gray-500 font-normal ml-2">({bookingCurrency} {Number(booking.currencyConversion?.originalAmount || bookingData.totalAmount || 0).toFixed(2)})</span>
                 )}
               </span>
             </div>

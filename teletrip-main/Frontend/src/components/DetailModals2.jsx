@@ -44,8 +44,9 @@ export const PaymentDetailsModal = ({ isOpen, onClose, payment }) => {
 
   const { formatPKR } = useCurrency();
   const paymentCurrency = (
-    payment.currency ||
     payment.currencyConversion?.originalCurrency ||
+    payment.currency ||
+    payment.bookingId?.currencyConversion?.originalCurrency ||
     payment.bookingId?.hotelBooking?.currency ||
     payment.bookingId?.backup?.hotelbedsBookingData?.booking?.hotel?.currency ||
     payment.bookingId?.backup?.hotelbedsBookingData?.booking?.currency ||
@@ -64,7 +65,9 @@ export const PaymentDetailsModal = ({ isOpen, onClose, payment }) => {
           <div className="flex items-start justify-between">
             <div>
               <h2 className="text-2xl font-bold text-gray-900">
-                {formatPKR ? formatPKR(numAmount, paymentCurrency, true) : `PKR ${numAmount.toLocaleString()}`}
+                {payment.amountPKR || payment.currencyConversion?.totalPKR
+                  ? `PKR ${Math.round(payment.amountPKR || payment.currencyConversion?.totalPKR).toLocaleString('en-PK')}`
+                  : (formatPKR ? formatPKR(numAmount, paymentCurrency, true) : `PKR ${numAmount.toLocaleString()}`)}
                 {paymentCurrency !== 'PKR' && (
                   <span className="text-sm text-gray-500 font-normal ml-2">({paymentCurrency} {numAmount.toFixed(2)})</span>
                 )}
@@ -152,7 +155,9 @@ export const PaymentDetailsModal = ({ isOpen, onClose, payment }) => {
             <div className="flex justify-between text-lg font-bold pt-2 border-t">
               <span>Total Paid:</span>
               <span className="text-green-600">
-                {formatPKR ? formatPKR(numAmount, paymentCurrency, true) : `PKR ${numAmount.toLocaleString()}`}
+                {payment.amountPKR || payment.currencyConversion?.totalPKR
+                  ? `PKR ${Math.round(payment.amountPKR || payment.currencyConversion?.totalPKR).toLocaleString('en-PK')}`
+                  : (formatPKR ? formatPKR(numAmount, paymentCurrency, true) : `PKR ${numAmount.toLocaleString()}`)}
                 {paymentCurrency !== 'PKR' && (
                   <span className="text-sm text-gray-500 font-normal ml-2">({paymentCurrency} {numAmount.toFixed(2)})</span>
                 )}

@@ -268,11 +268,12 @@ const BookingVoucher = ({ booking, onClose }) => {
   );
 
   const rawCurrency = (
-    hbSupplierCurrency ||
-    booking.pricing?.currency ||
-    booking.currency ||
     storedConversion?.originalCurrency ||
     storedConversion?.fromCurrency ||
+    booking.pricing?.currency ||
+    hbSupplierCurrency ||
+    booking.hotelBooking?.currency ||
+    booking.currency ||
     'AED'
   ).toUpperCase();
 
@@ -291,7 +292,7 @@ const BookingVoucher = ({ booking, onClose }) => {
   if (isStoredConversionValid) {
     customerPKR = Math.round(storedConversion.totalPKR);
     customerRetailAmount = parseFloat(storedConversion.retailAmount || storedConversion.originalAmount || storedConversion.netAmount || rawTotal);
-    customerRetailCurrency = rawCurrency;
+    customerRetailCurrency = (storedConversion.originalCurrency || rawCurrency).toUpperCase();
     exchangeRate = storedConversion.exchangeRate || exchangeRate;
     serviceChargePct = storedConversion.serviceChargePercentage ?? storedConversion.transactionFeePercentage ?? serviceChargePct;
     commissionPct = storedConversion.commissionPercentage ?? commissionPct;

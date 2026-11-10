@@ -213,7 +213,7 @@ export const FeedbackOverlay = ({ targetName = "HotelSearchExperience" }) => {
       console.warn('Clipboard write failed:', e);
     }
 
-    // 2. Persist to Backend server so Antigravity can read it automatically
+    // 2. Persist to Backend server so the development team can review it directly
     const backendBase = import.meta.env.VITE_BASE_URL || 'https://telitrip-backend.onrender.com';
     const payload = {
       clientName: clientName.trim() || 'Anonymous Client',
@@ -351,7 +351,7 @@ export const FeedbackOverlay = ({ targetName = "HotelSearchExperience" }) => {
                 <div>
                   <div className="font-bold text-xs">{submitSuccess.message}</div>
                   <div className="text-[10px] text-emerald-600 mt-0.5">
-                    Antigravity and your development team have received this submission directly.
+                    The TeleTrip development team has received your submission directly.
                   </div>
                 </div>
               </div>
@@ -559,7 +559,7 @@ export const FeedbackOverlay = ({ targetName = "HotelSearchExperience" }) => {
               ) : (
                 <>
                   <Send className="w-4 h-4" />
-                  <span>Submit Feedback to Antigravity & Team</span>
+                  <span>Submit Feedback to TeleTrip Team</span>
                 </>
               )}
             </button>

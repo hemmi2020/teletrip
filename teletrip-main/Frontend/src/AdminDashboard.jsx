@@ -1293,15 +1293,19 @@ const AdminDashboard = () => {
             const freeCancellation = isBeforeDeadline ? earliestPolicy : null;
 
             const itemCurrency = (
-              item.backup?.hotelbedsBookingData?.booking?.hotel?.currency ||
-              item.backup?.hotelbedsBookingData?.booking?.currency ||
+              item.currencyConversion?.originalCurrency ||
+              item.currencyConversion?.fromCurrency ||
               item.hotelBooking?.currency ||
               item.pricing?.currency ||
+              item.backup?.hotelbedsBookingData?.booking?.hotel?.currency ||
+              item.backup?.hotelbedsBookingData?.booking?.currency ||
               item.currency ||
               'AED'
             ).toUpperCase();
 
             const totalCustomerAmount = item.pricing?.totalAmount || item.totalAmount || 0;
+            const originalAmount = parseFloat(item.currencyConversion?.originalAmount || totalCustomerAmount);
+            const totalCustomerPKR = item.currencyConversion?.totalPKR ? Math.round(item.currencyConversion.totalPKR) : null;
             const supplierTotal = parseFloat(item.hotelBooking?.totalNet || item.backup?.hotelbedsBookingData?.booking?.totalNet || 0);
             const activePolicy = sortedPolicies.slice().reverse().find(p => now >= new Date(p.from)) || earliestPolicy;
             const penaltyAmount = !isBeforeDeadline && activePolicy ? parseFloat(activePolicy.amount || 0) : 0;
@@ -1320,8 +1324,12 @@ const AdminDashboard = () => {
             }
             
             const nights = item.nights || item.travelDates?.duration || 1;
-            const displayPrice = formatPKR ? formatPKR(totalCustomerAmount, itemCurrency, true) : `PKR ${totalCustomerAmount}`;
-            const displayRefund = formatPKR ? formatPKR(refundAmount, itemCurrency, true) : (convert ? `PKR ${Math.round(convert(refundAmount, itemCurrency, true)).toLocaleString()}` : `PKR ${refundAmount.toFixed(2)}`);
+            const displayPrice = totalCustomerPKR
+              ? `PKR ${totalCustomerPKR.toLocaleString('en-PK')}`
+              : (formatPKR ? formatPKR(totalCustomerAmount, itemCurrency, true) : `PKR ${totalCustomerAmount}`);
+            const displayRefund = totalCustomerPKR && !penaltyInBookingCurrency
+              ? `PKR ${totalCustomerPKR.toLocaleString('en-PK')}`
+              : (formatPKR ? formatPKR(refundAmount, itemCurrency, true) : (convert ? `PKR ${Math.round(convert(refundAmount, itemCurrency, true)).toLocaleString()}` : `PKR ${refundAmount.toFixed(2)}`));
             const displayFee = penaltyInBookingCurrency > 0 
               ? (formatPKR ? formatPKR(penaltyInBookingCurrency, itemCurrency, true) : `PKR ${Math.round(penaltyInBookingCurrency).toLocaleString()}`)
               : (cancellationPolicies.length > 0 && convert ? `PKR ${Math.round(convert(cancellationPolicies[0].amount, itemCurrency, false)).toLocaleString()}` : '');
@@ -1334,7 +1342,7 @@ const AdminDashboard = () => {
                 <p className="text-sm text-gray-500 truncate">
                   {item.hotelId?.location?.city || item.hotelBooking?.hotelAddress?.city || ''} • {nights} night{nights !== 1 ? 's' : ''} • <span className="font-semibold text-gray-900">{displayPrice}</span>
                   {itemCurrency !== 'PKR' && (
-                    <span className="text-xs text-gray-400 ml-1">({itemCurrency} {totalCustomerAmount.toFixed(2)})</span>
+                    <span className="text-xs text-gray-400 ml-1">({itemCurrency} {originalAmount.toFixed(2)})</span>
                   )}
                 </p>
                 <p className="text-xs text-gray-400 truncate">

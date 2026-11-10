@@ -256,7 +256,15 @@ const transformBookingData = (booking) => {
     // Map amount and currency
     totalAmount: booking.pricing?.totalAmount || 0,
     pricing: booking.pricing,
-    currency: booking.pricing?.currency || booking.currency || 'EUR',
+    currency: booking.currencyConversion?.originalCurrency || 
+              booking.backup?.hotelbedsBookingData?.booking?.hotel?.currency ||
+              booking.backup?.hotelbedsBookingData?.booking?.currency ||
+              booking.hotelBooking?.currency || 
+              booking.pricing?.currency || 
+              booking.currency || 
+              'AED',
+    currencyConversion: booking.currencyConversion || null,
+    payment: booking.payment || null,
     
     // Map other fields
     status: booking.status,
@@ -447,13 +455,16 @@ const transformPaymentData = (payment) => {
     _id: payment._id,
     paymentId: payment.paymentId,
     amount: payment.amount,
-    currency: payment.currency,
+    currency: payment.currency || payment.currencyConversion?.originalCurrency || 'AED',
+    currencyConversion: payment.currencyConversion || null,
+    amountPKR: payment.amountPKR || null,
     paymentMethod: payment.paymentMethod,
     status: payment.status,
     createdAt: payment.createdAt,
+    bookingId: payment.bookingId,
     
     // Map booking reference if available
-    bookingReference: payment.bookingId ? 'Loading...' : null, // Will be populated separately
+    bookingReference: payment.bookingId?.bookingReference || (payment.bookingId ? 'Loading...' : null),
     
     // Other relevant fields
     gateway: payment.gateway,
