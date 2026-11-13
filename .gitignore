@@ -8,3 +8,14 @@ node_modules/
 dist/
 build/
 coverage/
+
+# Scratch & diagnostic test scripts
+teletrip-main/Backend/check_*.js
+teletrip-main/Backend/scratch_*.js
+teletrip-main/Backend/deep_audit.js
+teletrip-main/Backend/find_hardcoded_test_urls.js
+teletrip-main/Backend/test_*.js
+teletrip-main/Backend/scripts/cancel_live_booking.js
+teletrip-main/Backend/scripts/find_coral.js
+teletrip-main/Backend/scripts/run_live_certification.js
+
