@@ -11,6 +11,7 @@ import {
   Waves as Pool,
   Dumbbell as Gym,
   Utensils as Restaurant,
+  Sparkles,
   Sparkles as Spa,
   User,
   ImageIcon,
