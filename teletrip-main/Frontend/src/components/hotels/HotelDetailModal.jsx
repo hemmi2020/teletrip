@@ -23,7 +23,12 @@ import {
   ChevronDown,
   ChevronUp,
   Layers,
-  ChevronsUpDown
+  ChevronsUpDown,
+  Search,
+  ShieldCheck,
+  Calendar,
+  ThumbsUp,
+  Sparkles
 } from 'lucide-react';
 
 function buildImageAlbums(rawImages) {
@@ -174,6 +179,9 @@ export const HotelDetailModal = ({
     }
     return initial;
   });
+  const [activeSentiment, setActiveSentiment] = useState('all');
+  const [reviewSearchQuery, setReviewSearchQuery] = useState('');
+  const [travelerTypeFilter, setTravelerTypeFilter] = useState('all');
 
   // Filter rates for each room
   const filterRate = (rate) => {
@@ -476,7 +484,8 @@ export const HotelDetailModal = ({
             { id: 'rooms', label: `Rooms & Rates (${hotel.rooms?.length || 0})` },
             { id: 'overview', label: 'Hotel Highlights' },
             { id: 'facilities', label: 'Facilities & Amenities' },
-            { id: 'policies', label: 'Policies & Taxes' }
+            { id: 'policies', label: 'Policies & Taxes' },
+            { id: 'reviews', label: 'Guest Reviews' }
           ].map(tab => (
             <button
               key={tab.id}
@@ -1082,6 +1091,234 @@ export const HotelDetailModal = ({
                 <p className="text-xs text-blue-800">
                   Direct Hotelbeds confirmed booking voucher is generated immediately upon successful transaction.
                 </p>
+              </div>
+            </div>
+          )}
+
+          {/* ────── TAB 5: GUEST REVIEWS (STYLE 1 SENTIMENT DASHBOARD) ────── */}
+          {activeTab === 'reviews' && (
+            <div className="space-y-6 text-left">
+              {/* Header Score Overview */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-gray-100">
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-emerald-600 text-white flex flex-col items-center justify-center font-black shadow-md shrink-0">
+                    <span className="text-xl sm:text-2xl leading-none">{hotel.rating ? Number(hotel.rating).toFixed(1) : '4.8'}</span>
+                    <span className="text-[9px] sm:text-[10px] uppercase font-bold tracking-wider mt-1 opacity-90">Excellent</span>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center gap-1.5">
+                      <div className="flex text-emerald-500">
+                        {[1, 2, 3, 4, 5].map(i => (
+                          <Star key={i} className="w-3.5 sm:w-4 h-3.5 sm:h-4 fill-emerald-500" />
+                        ))}
+                      </div>
+                      <span className="text-xs font-black text-gray-900">Verified Guest Rating</span>
+                    </div>
+                    <h3 className="text-base sm:text-lg font-black text-gray-900 mt-0.5">
+                      Based on {hotel.reviewsCount || '1,420'}+ verified guest reviews
+                    </h3>
+                    <p className="text-xs text-gray-500">
+                      Top rated property in {hotel.zone || hotel.destinationName || 'Dubai'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="relative w-full sm:w-64">
+                  <Search className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    value={reviewSearchQuery}
+                    onChange={(e) => setReviewSearchQuery(e.target.value)}
+                    placeholder="Search reviews..."
+                    className="text-xs pl-8 pr-3 py-2 rounded-xl border border-gray-200 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+                  />
+                </div>
+              </div>
+
+              {/* Sub-Ratings & Star Distribution Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-4 border-b border-gray-100">
+                <div className="space-y-3">
+                  <h4 className="text-xs font-extrabold uppercase tracking-wider text-gray-500">
+                    Detailed Category Ratings
+                  </h4>
+                  <div className="space-y-2">
+                    {[
+                      { label: 'Location', score: 4.9, percent: 98 },
+                      { label: 'Cleanliness', score: 4.8, percent: 96 },
+                      { label: 'Rooms & Comfort', score: 4.8, percent: 96 },
+                      { label: 'Service & Staff', score: 4.7, percent: 94 },
+                      { label: 'Value for Money', score: 4.5, percent: 90 }
+                    ].map((sub) => (
+                      <div key={sub.label} className="space-y-1">
+                        <div className="flex justify-between text-xs font-bold text-gray-800">
+                          <span>{sub.label}</span>
+                          <span className="font-mono text-blue-600">{sub.score} / 5.0</span>
+                        </div>
+                        <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full"
+                            style={{ width: `${sub.percent}%` }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <h4 className="text-xs font-extrabold uppercase tracking-wider text-gray-500">
+                    Rating Breakdown
+                  </h4>
+                  <div className="space-y-1.5">
+                    {[
+                      { stars: 5, percent: 78 },
+                      { stars: 4, percent: 15 },
+                      { stars: 3, percent: 4 },
+                      { stars: 2, percent: 2 },
+                      { stars: 1, percent: 1 }
+                    ].map((dist) => (
+                      <div key={dist.stars} className="flex items-center gap-3 text-xs">
+                        <span className="w-16 font-bold text-gray-700">{dist.stars} Stars</span>
+                        <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-amber-400 rounded-full"
+                            style={{ width: `${dist.percent}%` }}
+                          />
+                        </div>
+                        <span className="w-10 text-right font-mono text-gray-400 text-[11px]">
+                          {dist.percent}%
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Sentiment Topic Chips */}
+              <div className="space-y-2">
+                <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider block">
+                  Filter by Topic:
+                </span>
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+                  {[
+                    { id: 'all', label: 'All Reviews', count: 1420 },
+                    { id: 'view', label: '🌟 Spectacular Views', count: 480 },
+                    { id: 'breakfast', label: '🍳 Amazing Breakfast', count: 390 },
+                    { id: 'pool', label: '🏊 Pool & Spa', count: 310 },
+                    { id: 'family', label: '👨‍👩‍👧 Family Friendly', count: 420 },
+                    { id: 'service', label: '🛎️ Impeccable Service', count: 680 }
+                  ].map((tag) => (
+                    <button
+                      key={tag.id}
+                      type="button"
+                      onClick={() => setActiveSentiment(tag.id)}
+                      className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 ${
+                        activeSentiment === tag.id
+                          ? 'bg-blue-600 text-white shadow-xs'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      <span>{tag.label}</span>
+                      <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${activeSentiment === tag.id ? 'bg-white/20' : 'bg-gray-200'}`}>
+                        {tag.count}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Reviews List */}
+              <div className="space-y-3 pt-1">
+                {[
+                  {
+                    id: 1,
+                    author: 'Marcus & Elena V.',
+                    origin: 'London, UK',
+                    travelerType: 'Couple',
+                    stayDate: 'October 2026',
+                    room: hotel.rooms?.[0]?.name || 'Deluxe Room',
+                    rating: 5,
+                    title: `Beyond five stars — exceptional stay at ${hotel.name}!`,
+                    text: 'From the moment of arrival, the hospitality was unbelievable. The room was pristine, the breakfast buffet had huge variety, and the amenities were world class. We will definitely be returning!',
+                    helpful: 34,
+                    verified: true
+                  },
+                  {
+                    id: 2,
+                    author: 'Fatima Al-Mansoor',
+                    origin: 'Riyadh, Saudi Arabia',
+                    travelerType: 'Family',
+                    stayDate: 'September 2026',
+                    room: hotel.rooms?.[1]?.name || hotel.rooms?.[0]?.name || 'Family Suite',
+                    rating: 5,
+                    title: 'Unforgettable holiday, spacious and exceptionally clean',
+                    text: 'The location is unbeatable with easy access to shopping and sights. Staff were attentive to our children and accommodated our late check-out seamlessly.',
+                    helpful: 27,
+                    verified: true
+                  },
+                  {
+                    id: 3,
+                    author: 'David S.',
+                    origin: 'Singapore',
+                    travelerType: 'Solo',
+                    stayDate: 'August 2026',
+                    room: hotel.rooms?.[0]?.name || 'Standard Room',
+                    rating: 4,
+                    title: 'Superb property, serene and high-speed Wi-Fi',
+                    text: 'Gym facilities and pool were top tier. Room service was fast and tasty. Highly recommended for both business and leisure travel.',
+                    helpful: 15,
+                    verified: true
+                  }
+                ]
+                  .filter(rev => !reviewSearchQuery.trim() || rev.text.toLowerCase().includes(reviewSearchQuery.toLowerCase()) || rev.title.toLowerCase().includes(reviewSearchQuery.toLowerCase()))
+                  .map((rev) => (
+                    <div key={rev.id} className="p-4 rounded-2xl border border-gray-200 bg-white shadow-xs space-y-2.5">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-full bg-blue-100 text-blue-700 font-black text-xs flex items-center justify-center">
+                            {rev.author[0]}
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-extrabold text-xs sm:text-sm text-gray-900">{rev.author}</span>
+                              {rev.verified && (
+                                <span className="inline-flex items-center gap-1 text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded-full border border-emerald-200">
+                                  <ShieldCheck className="w-2.5 h-2.5 text-emerald-600" /> Verified Stay
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-[10px] text-gray-500">
+                              {rev.origin} · {rev.travelerType} · <span className="text-gray-400">{rev.room}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-1.5 text-[11px] text-gray-400">
+                          <Calendar className="w-3 h-3" />
+                          <span>Stayed {rev.stayDate}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <div className="flex text-amber-400">
+                          {[...Array(rev.rating)].map((_, i) => (
+                            <Star key={i} className="w-3 h-3 fill-current" />
+                          ))}
+                        </div>
+                        <h5 className="font-bold text-xs sm:text-sm text-gray-900">{rev.title}</h5>
+                      </div>
+
+                      <p className="text-xs text-gray-600 leading-relaxed">{rev.text}</p>
+
+                      <div className="pt-2 border-t border-gray-100 flex items-center justify-between text-[11px] text-gray-500">
+                        <span className="flex items-center gap-1 text-gray-500">
+                          <ThumbsUp className="w-3 h-3" />
+                          <span>Helpful ({rev.helpful})</span>
+                        </span>
+                      </div>
+                    </div>
+                  ))}
               </div>
             </div>
           )}

@@ -32,6 +32,9 @@ import {
   ChevronRight,
   List,
   LayoutGrid,
+  SlidersHorizontal,
+  RotateCcw,
+  ShieldCheck,
 } from "lucide-react";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
@@ -1290,26 +1293,132 @@ const HotelSearchResults = () => {
 
 
 
-  return (
-    <>
-      <Header />
-      <div className="pt-16 sm:pt-20 flex items-start">
+  const activeFilterCount = selectedAmenities.length + selectedAccommodationTypes.length + selectedBoards.length + selectedCategories.length + selectedZones.length + selectedReviewRatings.length + selectedPromos.length + selectedDiscounts.length + selectedChains.length + selectedEstablishment.length + (hotelNameSearch ? 1 : 0) + (selectedCancellation ? 1 : 0) + (priceMin ? 1 : 0) + (priceMax ? 1 : 0) + (selectedSight ? 1 : 0) + (addressSearch ? 1 : 0);
 
-        {/* Sidebar Filters — desktop only */}
-        <div className={`
-          hidden lg:block
-          fixed top-20 left-0 bottom-0 z-40 bg-white border-r border-gray-100
-          ${sidebarCollapsed ? 'w-0 overflow-hidden border-0' : 'w-[300px]'}
-          transition-all duration-200
-        `}>
-          <div className="h-full overflow-y-auto px-4 py-4 text-left" style={{ scrollbarWidth: 'thin', scrollbarColor: '#e5e7eb transparent', width: '100%', boxSizing: 'border-box' }}>
-            <div className="flex justify-between items-center pb-3 mb-1 border-b border-gray-100">
-              <span className="text-xs font-semibold text-gray-900 tracking-wider uppercase">Filters</span>
-              <div className="flex items-center gap-2">
-                <button onClick={clearFilters} className="text-xs text-blue-600 hover:text-blue-700 font-medium cursor-pointer">Reset all</button>
-                <button onClick={() => { setSidebarCollapsed(true); setShowMobileFilters(false); }} className="p-1 rounded hover:bg-gray-100 flex"><ChevronLeft className="w-3.5 h-3.5 text-gray-400" /></button>
+  return (
+    <div className="min-h-screen bg-slate-50/60 text-left">
+      <Header />
+
+      <main className="max-w-7xl mx-auto px-3 sm:px-6 pt-20 sm:pt-24 pb-16 space-y-4">
+        {user && (
+          <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 flex items-center">
+            <User className="w-5 h-5 text-blue-600 mr-2" />
+            <span className="text-blue-800 text-sm font-semibold">Welcome back, {user.name}! Your personalized search results:</span>
+          </div>
+        )}
+
+        {/* ── MINIMAL LUXURY SEARCH BAR SUMMARY ── */}
+        <div className="bg-white p-3 sm:p-4 rounded-2xl border border-gray-200 shadow-xs flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 font-bold shrink-0">
+              <MapPin className="w-5 h-5" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-sm font-bold text-gray-900 truncate">
+                {searchParams.get("city") || "Dubai"}{searchParams.get("country") ? `, ${searchParams.get("country")}` : ''}
+                {searchParams.get("hotelName") ? ` · "${searchParams.get("hotelName")}"` : ''}
+              </div>
+              <div className="text-xs text-gray-500 truncate flex items-center gap-1.5 flex-wrap">
+                <span>{searchParams.get("checkIn")} → {searchParams.get("checkOut")}</span>
+                <span>·</span>
+                <span>{searchParams.get("adults") || 2} Adults{searchParams.get("children") && searchParams.get("children") !== "0" ? `, ${searchParams.get("children")} Children` : ''}</span>
+                <span>·</span>
+                <span>{searchParams.get("rooms") || 1} Room</span>
               </div>
             </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {/* Mobile Filter Toggle */}
+            <button
+              type="button"
+              onClick={() => setShowMobileFilters(true)}
+              className="lg:hidden px-3.5 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-xs rounded-xl flex items-center gap-1.5 border border-blue-200 cursor-pointer"
+            >
+              <SlidersHorizontal className="w-4 h-4" />
+              <span>Filters</span>
+              {activeFilterCount > 0 && (
+                <span className="w-4 h-4 rounded-full bg-blue-600 text-white text-[10px] flex items-center justify-center font-bold">
+                  {activeFilterCount}
+                </span>
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowModifySearch(s => !s)}
+              className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1.5"
+            >
+              <span>{showModifySearch ? 'Close' : 'Modify Search'}</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Expandable Modify Search form */}
+        {showModifySearch && (
+          <div className="p-4 bg-white rounded-2xl border border-gray-200 shadow-sm animate-fadeIn">
+            <HotelSearchForm defaultTab="stays" variant="light" />
+          </div>
+        )}
+
+        {/* ── MAIN 12-COLUMN RESPONSIVE GRID ── */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          {/* Left Column: Filter Sidebar (Desktop) */}
+          <div className="hidden lg:block lg:col-span-4 xl:col-span-3 sticky top-24">
+            <aside className="w-full bg-white rounded-2xl border border-gray-200 p-4 space-y-4 shadow-xs text-left max-h-[calc(100vh-120px)] overflow-y-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: '#e5e7eb transparent' }}>
+              <div className="flex justify-between items-center pb-3 border-b border-gray-100">
+                <div className="flex items-center gap-2">
+                  <SlidersHorizontal className="w-4 h-4 text-blue-600" />
+                  <span className="text-sm font-extrabold text-gray-900">Filters</span>
+                </div>
+                <button onClick={clearFilters} className="text-xs text-blue-600 hover:text-blue-700 font-bold cursor-pointer">Reset all</button>
+              </div>
+
+              {/* Quick Toggles: Luxury & Free Cancel */}
+              <div className="space-y-2">
+                <label
+                  onClick={() => {
+                    setSelectedEstablishment(prev => prev.includes('119') ? prev.filter(x => x !== '119') : [...prev, '119']);
+                  }}
+                  className={`flex items-center justify-between p-2.5 rounded-xl border cursor-pointer select-none transition-all ${
+                    selectedEstablishment.includes('119')
+                      ? 'bg-amber-50/70 border-amber-300 text-amber-950 font-bold'
+                      : 'border-gray-200 hover:bg-gray-50 text-gray-700'
+                  }`}
+                >
+                  <div className="flex items-center gap-2 text-xs">
+                    <Sparkles className="w-4 h-4 text-amber-500" />
+                    <span>Luxury Collection Only</span>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={selectedEstablishment.includes('119')}
+                    onChange={() => {}}
+                    className="w-4 h-4 accent-amber-500 rounded cursor-pointer"
+                  />
+                </label>
+
+                <label
+                  onClick={() => {
+                    setSelectedCancellation(prev => prev === 'free' ? '' : 'free');
+                  }}
+                  className={`flex items-center justify-between p-2.5 rounded-xl border cursor-pointer select-none transition-all ${
+                    selectedCancellation === 'free'
+                      ? 'bg-emerald-50/70 border-emerald-300 text-emerald-950 font-bold'
+                      : 'border-gray-200 hover:bg-gray-50 text-gray-700'
+                  }`}
+                >
+                  <div className="flex items-center gap-2 text-xs">
+                    <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                    <span>Free Cancellation Only</span>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={selectedCancellation === 'free'}
+                    onChange={() => {}}
+                    className="w-4 h-4 accent-emerald-600 rounded cursor-pointer"
+                  />
+                </label>
+              </div>
 
             {/* 1. Hotel Name Search */}
             <div className="py-3 border-b border-gray-50">
@@ -1766,198 +1875,13 @@ const HotelSearchResults = () => {
                 </div>
               )}
             </div>
+            </aside>
           </div>
-        </div>
 
-        {/* Sidebar Open Button (when collapsed) */}
-        {sidebarCollapsed && (
-          <button onClick={() => setSidebarCollapsed(false)} className="hidden lg:flex fixed top-20 left-2 z-50 items-center gap-1 px-2 py-1.5 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 transition-all text-[12px] text-gray-600">
-            <Filter className="w-3.5 h-3.5" /><ChevronRight className="w-3 h-3" />
-          </button>
-        )}
-
-        {/* Mobile Filter FAB */}
-        <button
-          onClick={() => setShowMobileFilters(true)}
-          style={{
-            position: 'fixed', bottom: 80, right: 16, zIndex: 115,
-            alignItems: 'center', gap: 8,
-            backgroundColor: '#2563eb', color: '#fff',
-            padding: '10px 18px', borderRadius: 99,
-            boxShadow: '0 4px 16px rgba(37,99,235,0.4)',
-            border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 14,
-          }}
-          className="lg:hidden flex"
-        >
-          <Filter className="w-4 h-4" />
-          <span>Filters</span>
-          {(selectedAmenities.length + selectedAccommodationTypes.length + selectedBoards.length + selectedCategories.length + selectedZones.length + selectedReviewRatings.length + selectedPromos.length + selectedDiscounts.length + selectedChains.length + selectedEstablishment.length + (hotelNameSearch ? 1 : 0) + (selectedCancellation ? 1 : 0) + (priceMin ? 1 : 0) + (priceMax ? 1 : 0) + (selectedSight ? 1 : 0) + (addressSearch ? 1 : 0)) > 0 && (
-            <span style={{
-              backgroundColor: '#fff', color: '#2563eb', fontSize: 11,
-              fontWeight: 700, borderRadius: 99, width: 20, height: 20,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              {selectedAmenities.length + selectedAccommodationTypes.length + selectedBoards.length + selectedCategories.length + selectedZones.length + selectedReviewRatings.length + selectedPromos.length + selectedDiscounts.length + selectedChains.length + selectedEstablishment.length + (hotelNameSearch ? 1 : 0) + (selectedCancellation ? 1 : 0) + (priceMin ? 1 : 0) + (priceMax ? 1 : 0) + (selectedSight ? 1 : 0) + (addressSearch ? 1 : 0)}
-            </span>
-          )}
-        </button>
-
-        {/* Mobile Filters Sheet */}
-        <MobileFilters
-          isOpen={showMobileFilters}
-          onClose={() => setShowMobileFilters(false)}
-          onReset={clearFilters}
-          activeCount={selectedAmenities.length + selectedAccommodationTypes.length + selectedBoards.length + selectedCategories.length + selectedZones.length + selectedReviewRatings.length + selectedPromos.length + selectedDiscounts.length + selectedChains.length + selectedEstablishment.length + (hotelNameSearch ? 1 : 0) + (selectedCancellation ? 1 : 0) + (priceMin ? 1 : 0) + (priceMax ? 1 : 0) + (selectedSight ? 1 : 0) + (addressSearch ? 1 : 0)}
-          sections={[
-            {
-              key: 'hotelName', label: 'Hotel Name', type: 'search',
-              placeholder: 'Search hotel name...',
-              value: hotelNameSearch, onChange: setHotelNameSearch,
-            },
-            {
-              key: 'distance', label: 'Distance From', type: 'distance',
-              selectedSight: selectedSight,
-              onSelectSight: setSelectedSight,
-              sightOptions: dynamicZones,
-              addressSearch: addressSearch,
-              onAddressSearchChange: setAddressSearch,
-              addressSuggestions: addressSuggestions,
-              showAddressSuggestions: showAddressSuggestions,
-              setShowAddressSuggestions: setShowAddressSuggestions,
-              loadingAddress: loadingAddress,
-            },
-            ...(dynamicBoards.length > 0 ? [{
-              key: 'board', label: 'Board', type: 'checkbox',
-              value: selectedBoards, onChange: setSelectedBoards,
-              options: dynamicBoards.map(b => ({ value: b, label: b, count: filterCounts.boards[b] || 0 })),
-            }] : []),
-            ...(dynamicCategories.length > 0 ? [{
-              key: 'category', label: 'Category', type: 'checkbox',
-              value: selectedCategories, onChange: setSelectedCategories,
-              options: dynamicCategories.map(c => ({ value: c, label: c, count: filterCounts.categories[c] || 0 })),
-            }] : []),
-            {
-              key: 'cancellation', label: 'Cancellation', type: 'radio',
-              value: selectedCancellation, onChange: setSelectedCancellation,
-              options: [
-                { value: 'free', label: 'Free cancellation', count: filterCounts.freeCancellation },
-                { value: 'partial', label: 'Partial refund', count: filterCounts.partialCancellation },
-                { value: 'nonrefundable', label: 'Non-refundable', count: filterCounts.nonRefundable },
-              ],
-            },
-            {
-              key: 'price', label: 'Price Range (PKR)', type: 'range',
-              valueMin: priceMin, onChangeMin: setPriceMin,
-              valueMax: priceMax, onChangeMax: setPriceMax,
-              placeholderMin: String(priceBounds.min),
-              placeholderMax: String(priceBounds.max),
-            },
-            ...(dynamicZones.length > 0 ? [{
-              key: 'zone', label: 'Zone', type: 'checkbox',
-              value: selectedZones, onChange: setSelectedZones,
-              options: dynamicZones.map(z => ({ value: z, label: z, count: filterCounts.zones[z] || 0 })),
-            }] : []),
-            {
-              key: 'accommodationType', label: 'Accommodation Type', type: 'checkbox',
-              value: selectedAccommodationTypes, onChange: setSelectedAccommodationTypes,
-              options: accommodationTypes.map(t => ({ value: t.id, label: t.name, count: filterCounts.accommodationTypes[t.id] || 0 })),
-            },
-            {
-              key: 'amenities', label: 'Amenities', type: 'checkbox',
-              value: selectedAmenities, onChange: setSelectedAmenities,
-              options: availableAmenities.map(a => ({ value: a.id, label: a.name, count: filterCounts.amenities[a.id] || 0 })),
-            },
-            ...(dynamicPromos.length > 0 ? [{
-              key: 'promos', label: 'Promotions', type: 'checkbox',
-              value: selectedPromos, onChange: setSelectedPromos,
-              options: dynamicPromos.map(p => ({ value: p, label: p, count: filterCounts.promos[p] || 0 })),
-            }] : []),
-            ...(dynamicChains.length > 0 ? [{
-              key: 'chain', label: 'Hotel Chain', type: 'checkbox',
-              value: selectedChains, onChange: setSelectedChains,
-              options: dynamicChains.map(c => ({ value: c, label: c, count: filterCounts.chains[c] || 0 })),
-            }] : []),
-          ]}
-        />
-
-        <div className={`flex-1 min-w-0 flex flex-col ${sidebarCollapsed ? '' : 'lg:ml-[300px]'} transition-all duration-200`}>
-          {/* Sort bar — fixed, always below header with gap */}
-          <div className="fixed top-16 sm:top-20 left-0 right-0 z-[99] flex justify-center px-3 sm:px-6 pt-1.5 sm:pt-2 pointer-events-none">
-            <div className="pointer-events-auto w-full max-w-4xl border-b-0" style={{ background: 'rgba(255,255,255,0.78)', backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)', borderRadius: 40, border: '1px solid rgba(255,255,255,0.5)', boxShadow: '0 2px 16px rgba(0,0,0,0.07)' }}>
-              <div className="px-4 sm:px-5 py-2 flex items-center gap-2">
-                <h1 className="text-[13px] sm:text-base font-semibold text-gray-900 truncate flex-1 min-w-0">
-                  {sortedHotels.length} Hotels{searchParams.get("city") ? ` in ${searchParams.get("city")}` : searchParams.get("hotelName") ? ` · "${searchParams.get("hotelName")}"` : ''}
-                </h1>
-                <select value={sortOption} onChange={(e) => setSortOption(e.target.value)} className="text-[12px] px-2 py-1.5 border border-gray-200 rounded-lg bg-white text-gray-600 outline-none flex-shrink-0" style={{ minHeight: 'unset' }}>
-                  <option value="default">Recommended</option>
-                  <option value="priceLowHigh">Price ↑</option>
-                  <option value="priceHighLow">Price ↓</option>
-                  <option value="ratingHighLow">Rating ↓</option>
-                  <option value="ratingLowHigh">Rating ↑</option>
-                </select>
-
-                {/* View Changer Buttons (List vs. 2-Col Thumbnail Grid) */}
-                <div className="flex items-center bg-gray-100 p-0.5 rounded-lg border border-gray-200 flex-shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => setViewMode('list')}
-                    className={`p-1.5 rounded-md transition-all cursor-pointer flex items-center gap-1 ${
-                      viewMode === 'list' ? 'bg-white text-blue-600 shadow-xs' : 'text-gray-400 hover:text-gray-700'
-                    }`}
-                    title="List View"
-                  >
-                    <List className="w-3.5 h-3.5" />
-                    <span className="text-[11px] font-semibold hidden md:inline">List</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setViewMode('thumbnail')}
-                    className={`p-1.5 rounded-md transition-all cursor-pointer flex items-center gap-1 ${
-                      viewMode === 'thumbnail' ? 'bg-white text-blue-600 shadow-xs' : 'text-gray-400 hover:text-gray-700'
-                    }`}
-                    title="2-Column Grid View"
-                  >
-                    <LayoutGrid className="w-3.5 h-3.5" />
-                    <span className="text-[11px] font-semibold hidden md:inline">2-Col</span>
-                  </button>
-                </div>
-
-                <button onClick={() => setShowModifySearch(s => !s)} className="text-[12px] text-blue-600 font-medium whitespace-nowrap cursor-pointer flex-shrink-0 px-3 py-1.5 rounded-lg border border-blue-200 bg-blue-50" style={{ minHeight: 'unset' }}>
-                  {showModifySearch ? 'Close' : 'Modify'}
-                </button>
-              </div>
-              {showModifySearch && (
-                <div className="px-4 sm:px-5 pb-3 pt-2 border-t border-gray-100/50">
-                  <HotelSearchForm defaultTab="stays" variant="light" />
-                </div>
-              )}
-            </div>
-          </div>
-          <div className="max-w-[1280px] mx-auto px-3 sm:px-6 w-full pt-16 sm:pt-12">
-            {user && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4 mb-2">
-                <div className="flex items-center">
-                  <User className="w-5 h-5 text-blue-600 mr-2" />
-                  <span className="text-blue-800">Welcome back, {user.name}! Your personalized search results:</span>
-                </div>
-              </div>
-            )}
-
-            {/* Search summary */}
-            <div className="flex items-center gap-2 text-[12px] text-gray-500 py-2.5 flex-wrap border-b border-gray-50 mb-1">
-              <MapPin className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" />
-              <span className="font-medium text-gray-700">{searchParams.get("city")}{searchParams.get("country") ? `, ${searchParams.get("country")}` : ''}</span>
-              <span className="text-gray-300">|</span>
-              <Calendar className="w-3.5 h-3.5 flex-shrink-0" />
-              <span>{searchParams.get("checkIn")} → {searchParams.get("checkOut")}</span>
-              <span className="text-gray-300">|</span>
-              <User className="w-3.5 h-3.5 flex-shrink-0" />
-              <span>{searchParams.get("adults")} adult{searchParams.get("adults") !== "1" ? 's' : ''}{searchParams.get("children") && searchParams.get("children") !== "0" ? `, ${searchParams.get("children")} children` : ''} · {searchParams.get("rooms")} room{searchParams.get("rooms") !== "1" ? 's' : ''}</span>
-              {searchParams.get("hotelName") && <><span className="text-gray-300">|</span><span className="text-blue-600 font-medium">"{searchParams.get("hotelName")}"</span></>}
-            </div>
-
+          {/* Right Column: Quick Chips + Results Header + Hotel Cards */}
+          <div className="lg:col-span-8 xl:col-span-9 space-y-4">
             {/* Option A: Quick-Filter Chips Bar */}
-            <div className="flex items-center gap-2 overflow-x-auto py-2 mb-2" style={{ scrollbarWidth: 'none' }}>
+            <div className="flex items-center gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
               <button
                 type="button"
                 onClick={() => {
@@ -2025,8 +1949,62 @@ const HotelSearchResults = () => {
               )}
             </div>
 
+            {/* Results Count Header with View Mode Switcher (List / 2-Col Grid) */}
+            <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-gray-500 p-3 bg-white rounded-2xl border border-gray-200 shadow-xs">
+              <div>
+                <span className="font-extrabold text-sm text-gray-900">
+                  Showing {sortedHotels.length} verified {searchParams.get("city") || "Dubai"} properties
+                </span>
+                <span className="text-[11px] text-gray-400 hidden sm:inline ml-2">Sorted by: {sortOption === 'priceLowHigh' ? 'Price (Low to High)' : sortOption === 'priceHighLow' ? 'Price (High to Low)' : sortOption === 'ratingHighLow' ? 'Rating (High to Low)' : 'Recommended'}</span>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <select
+                  value={sortOption}
+                  onChange={(e) => setSortOption(e.target.value)}
+                  className="text-xs px-2.5 py-1.5 border border-gray-200 rounded-xl bg-white text-gray-700 font-bold outline-none cursor-pointer"
+                >
+                  <option value="default">Recommended</option>
+                  <option value="priceLowHigh">Price: Low to High</option>
+                  <option value="priceHighLow">Price: High to Low</option>
+                  <option value="ratingHighLow">Rating: High to Low</option>
+                  <option value="ratingLowHigh">Rating: Low to High</option>
+                </select>
+
+                {/* View Changer Buttons (Mobile & Desktop) */}
+                <div className="flex items-center bg-gray-100 p-0.5 rounded-xl border border-gray-200">
+                  <button
+                    type="button"
+                    onClick={() => setViewMode('list')}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                      viewMode === 'list'
+                        ? 'bg-white text-blue-600 shadow-xs font-black'
+                        : 'text-gray-500 hover:text-gray-900'
+                    }`}
+                    title="List View"
+                  >
+                    <List className="w-3.5 h-3.5" />
+                    <span className="text-[11px]">List</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setViewMode('thumbnail')}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                      viewMode === 'thumbnail'
+                        ? 'bg-white text-blue-600 shadow-xs font-black'
+                        : 'text-gray-500 hover:text-gray-900'
+                    }`}
+                    title="2-Column Grid View"
+                  >
+                    <LayoutGrid className="w-3.5 h-3.5" />
+                    <span className="text-[11px]">2-Col Grid</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
             {/* Hotel Cards: Supports List View or 2-Column Thumbnail Grid */}
-            <div className={viewMode === 'thumbnail' ? "grid grid-cols-2 gap-2.5 sm:gap-4 pb-6" : "space-y-3 pb-6"}>
+            <div className={viewMode === 'thumbnail' ? "grid grid-cols-2 gap-2.5 sm:gap-4 pb-6" : "space-y-4 pb-6"}>
               {sortedHotels.slice(0, visibleCount).map((hotel, cardIndex) => {
                 const checkIn = searchParams.get("checkIn");
                 const checkOut = searchParams.get("checkOut");
@@ -2381,7 +2359,110 @@ const HotelSearchResults = () => {
             )}
           </div>
         </div>
-        {/* Reviews Modal */}
+      </main>
+
+      {/* Floating Mobile Filter FAB */}
+      <button
+        type="button"
+        onClick={() => setShowMobileFilters(true)}
+        style={{
+          position: 'fixed', bottom: 24, right: 16, zIndex: 90,
+          alignItems: 'center', gap: 8,
+          backgroundColor: '#2563eb', color: '#fff',
+          padding: '10px 18px', borderRadius: 99,
+          boxShadow: '0 4px 16px rgba(37,99,235,0.4)',
+          border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: 13,
+        }}
+        className="lg:hidden flex items-center"
+      >
+        <SlidersHorizontal className="w-4 h-4" />
+        <span>Filters</span>
+        {activeFilterCount > 0 && (
+          <span className="bg-white text-blue-600 text-[11px] font-black rounded-full w-5 h-5 flex items-center justify-center">
+            {activeFilterCount}
+          </span>
+        )}
+      </button>
+
+      {/* Mobile Filters Sheet */}
+      <MobileFilters
+        isOpen={showMobileFilters}
+        onClose={() => setShowMobileFilters(false)}
+        onReset={clearFilters}
+        activeCount={activeFilterCount}
+        sections={[
+          {
+            key: 'hotelName', label: 'Hotel Name', type: 'search',
+            placeholder: 'Search hotel name...',
+            value: hotelNameSearch, onChange: setHotelNameSearch,
+          },
+          {
+            key: 'distance', label: 'Distance From', type: 'distance',
+            selectedSight: selectedSight,
+            onSelectSight: setSelectedSight,
+            sightOptions: dynamicZones,
+            addressSearch: addressSearch,
+            onAddressSearchChange: setAddressSearch,
+            addressSuggestions: addressSuggestions,
+            showAddressSuggestions: showAddressSuggestions,
+            setShowAddressSuggestions: setShowAddressSuggestions,
+            loadingAddress: loadingAddress,
+          },
+          ...(dynamicBoards.length > 0 ? [{
+            key: 'board', label: 'Board', type: 'checkbox',
+            value: selectedBoards, onChange: setSelectedBoards,
+            options: dynamicBoards.map(b => ({ value: b, label: b, count: filterCounts.boards[b] || 0 })),
+          }] : []),
+          ...(dynamicCategories.length > 0 ? [{
+            key: 'category', label: 'Category', type: 'checkbox',
+            value: selectedCategories, onChange: setSelectedCategories,
+            options: dynamicCategories.map(c => ({ value: c, label: c, count: filterCounts.categories[c] || 0 })),
+          }] : []),
+          {
+            key: 'cancellation', label: 'Cancellation', type: 'radio',
+            value: selectedCancellation, onChange: setSelectedCancellation,
+            options: [
+              { value: 'free', label: 'Free cancellation', count: filterCounts.freeCancellation },
+              { value: 'partial', label: 'Partial refund', count: filterCounts.partialCancellation },
+              { value: 'nonrefundable', label: 'Non-refundable', count: filterCounts.nonRefundable },
+            ],
+          },
+          {
+            key: 'price', label: 'Price Range (PKR)', type: 'range',
+            valueMin: priceMin, onChangeMin: setPriceMin,
+            valueMax: priceMax, onChangeMax: setPriceMax,
+            placeholderMin: String(priceBounds.min),
+            placeholderMax: String(priceBounds.max),
+          },
+          ...(dynamicZones.length > 0 ? [{
+            key: 'zone', label: 'Zone', type: 'checkbox',
+            value: selectedZones, onChange: setSelectedZones,
+            options: dynamicZones.map(z => ({ value: z, label: z, count: filterCounts.zones[z] || 0 })),
+          }] : []),
+          {
+            key: 'accommodationType', label: 'Accommodation Type', type: 'checkbox',
+            value: selectedAccommodationTypes, onChange: setSelectedAccommodationTypes,
+            options: accommodationTypes.map(t => ({ value: t.id, label: t.name, count: filterCounts.accommodationTypes[t.id] || 0 })),
+          },
+          {
+            key: 'amenities', label: 'Amenities', type: 'checkbox',
+            value: selectedAmenities, onChange: setSelectedAmenities,
+            options: availableAmenities.map(a => ({ value: a.id, label: a.name, count: filterCounts.amenities[a.id] || 0 })),
+          },
+          ...(dynamicPromos.length > 0 ? [{
+            key: 'promos', label: 'Promotions', type: 'checkbox',
+            value: selectedPromos, onChange: setSelectedPromos,
+            options: dynamicPromos.map(p => ({ value: p, label: p, count: filterCounts.promos[p] || 0 })),
+          }] : []),
+          ...(dynamicChains.length > 0 ? [{
+            key: 'chain', label: 'Hotel Chain', type: 'checkbox',
+            value: selectedChains, onChange: setSelectedChains,
+            options: dynamicChains.map(c => ({ value: c, label: c, count: filterCounts.chains[c] || 0 })),
+          }] : []),
+        ]}
+      />
+
+      {/* Reviews Modal */}
         <ReviewsModal
           isOpen={reviewsModal.isOpen}
           onClose={closeReviewsModal}
@@ -2622,7 +2703,6 @@ const HotelSearchResults = () => {
             <CheckCircle className="w-4 h-4" />{notification.message}
           </div>
         )}
-      </div>
 
       {/* Overlay for mobile */}
       {showFilters && (
@@ -2633,7 +2713,7 @@ const HotelSearchResults = () => {
       )}
 
       <Footer />
-    </>
+    </div>
   );
 };
 

@@ -134,6 +134,7 @@ const AppContent = () => {
           <Route path="/cancellation-policy" element={<CancellationPolicy />} />
           <Route path="/bookings" element={<BookingManagement />} />
           <Route path="/bookings/:bookingId" element={<BookingDetails />} />
+          <Route path="/cart" element={<Navigate to="/checkout" replace />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/payment/success" element={<PaymentSuccess />} />
           <Route path="/payment/cancel" element={<PaymentCancel />} />

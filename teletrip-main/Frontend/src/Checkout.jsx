@@ -847,41 +847,42 @@ const handlePaymentSubmit = () => {
 
   // Render forms
   const renderBillingForm = () => (
-    <div className="bg-white rounded-lg shadow-sm p-6">
-      <h2 className="text-xl font-semibold text-gray-900 mb-6">Billing Information</h2>
+    <div className="bg-white rounded-2xl border border-gray-200 p-5 space-y-4 shadow-xs text-left">
+      <h2 className="text-sm font-extrabold text-gray-900 flex items-center gap-2">
+        <User className="w-4 h-4 text-blue-600" />
+        <span>Primary Guest Information</span>
+      </h2>
       
-      <div className="space-y-4">
+      <div className="space-y-3.5">
         {/* Name Fields */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-600 mb-1">
               First Name *
             </label>
             <div className="relative">
-              <User className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
               <input
                 type="text"
                 value={billingInfo.firstName}
                 onChange={(e) => handleInputChange('firstName', e.target.value)}
-                className="w-full pl-10 pr-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Enter first name"
+                className="w-full px-3 py-2.5 text-xs sm:text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold text-gray-800"
+                placeholder="Ahmed"
                 required
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-600 mb-1">
               Last Name *
             </label>
             <div className="relative">
-              <User className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
               <input
                 type="text"
                 value={billingInfo.lastName}
                 onChange={(e) => handleInputChange('lastName', e.target.value)}
-                className="w-full pl-10 pr-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Enter last name"
+                className="w-full px-3 py-2.5 text-xs sm:text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold text-gray-800"
+                placeholder="Khan"
                 required
               />
             </div>
@@ -889,195 +890,155 @@ const handlePaymentSubmit = () => {
         </div>
 
         {/* Contact Fields */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Email Address *
+            <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-600 mb-1">
+              Email Address (for official voucher) *
             </label>
             <div className="relative">
-              <Mail className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
               <input
                 type="email"
                 value={billingInfo.email}
                 onChange={(e) => handleInputChange('email', e.target.value)}
-                className="w-full pl-10 pr-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Enter email address"
+                className="w-full px-3 py-2.5 text-xs sm:text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold text-gray-800"
+                placeholder="guest@example.com"
                 required
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Phone Number *
+            <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-600 mb-1">
+              Mobile Phone *
             </label>
             <div className="relative">
-              <Phone className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
               <input
                 type="tel"
                 value={billingInfo.phone}
                 onChange={(e) => handleInputChange('phone', e.target.value)}
-                className="w-full pl-10 pr-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="03001234567"
+                className="w-full px-3 py-2.5 text-xs sm:text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold text-gray-800"
+                placeholder="+971 50 123 4567"
                 required
               />
             </div>
           </div>
         </div>
 
-        {/* Address Field */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Address *
-          </label>
-          <div className="relative">
-            <MapPin className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+        {/* Address and City Fields (Prefilled & Compact) */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="sm:col-span-2">
+            <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-600 mb-1">
+              Billing Address *
+            </label>
             <input
               type="text"
               value={billingInfo.address}
               onChange={(e) => handleInputChange('address', e.target.value)}
-              className="w-full pl-10 pr-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Enter full address"
+              className="w-full px-3 py-2 text-xs border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-gray-800"
+              placeholder="Residential address"
               required
             />
           </div>
-        </div>
 
-        {/* City and State */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-600 mb-1">
               City *
             </label>
             <input
               type="text"
               value={billingInfo.city}
               onChange={(e) => handleInputChange('city', e.target.value)}
-              className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Enter city"
+              className="w-full px-3 py-2 text-xs border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-gray-800"
+              placeholder="City"
               required
             />
           </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              State *
-            </label>
-            <select
-              value={billingInfo.state}
-              onChange={(e) => handleInputChange('state', e.target.value)}
-              className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              required
-            >
-              <option value="">Select State</option>
-              <option value="IS">Islamabad</option>
-              <option value="BA">Balochistan</option>
-              <option value="KP">Khyber Pakhtunkhwa</option>
-              <option value="PB">Punjab</option>
-              <option value="SD">Sindh</option>
-            </select>
-          </div>
         </div>
 
-        {/* Special Requests - Hotelbeds Certification Recommended */}
-        <div className="mt-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Special Requests (optional)
+        {/* Special Requests */}
+        <div className="pt-1">
+          <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-600 mb-1">
+            Special Requests (Optional)
           </label>
           <textarea
             value={billingInfo.specialRequests}
             onChange={(e) => handleInputChange('specialRequests', e.target.value)}
-            placeholder="E.g. late check-in, extra pillows, high floor, etc."
-            className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-            rows={3}
+            placeholder="E.g. High floor, quiet room, late check-in..."
+            className="w-full px-3 py-2 text-xs border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-gray-800"
+            rows={2}
             maxLength={500}
           />
-          <p className="text-xs text-gray-400 mt-1">These requests will be sent to the hotel (not guaranteed).</p>
+          <p className="text-[10px] text-gray-400 mt-0.5">Relayed directly to hotel reservation desk upon voucher issuance.</p>
         </div>
       </div>
     </div>
   );
 
   const renderPaymentMethodSelector = () => (
-    <div className="mb-6 space-y-3">
+    <div className="space-y-2.5">
       {/* HBLPay Option */}
-      <div
+      <button
+        type="button"
         onClick={() => setPaymentMethod('hblpay')}
-        className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
+        className={`w-full p-3.5 rounded-xl border text-left transition-all cursor-pointer flex items-center justify-between ${
           paymentMethod === 'hblpay'
-            ? 'border-blue-600 bg-blue-50 shadow-md'
-            : 'border-gray-200 hover:border-blue-300'
+            ? 'border-blue-600 bg-blue-50/70 ring-2 ring-blue-100'
+            : 'border-gray-200 hover:bg-gray-50'
         }`}
       >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-              paymentMethod === 'hblpay' ? 'bg-blue-600' : 'bg-gray-200'
-            }`}>
-              <CreditCard className={`w-5 h-5 ${
-                paymentMethod === 'hblpay' ? 'text-white' : 'text-gray-500'
-              }`} />
-            </div>
-            <div>
-              <h3 className="font-semibold text-gray-900">Pay with HBLPay</h3>
-              <p className="text-xs text-gray-500">Secure online payment</p>
-            </div>
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
+            <CreditCard className="w-5 h-5" />
           </div>
-          <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-            paymentMethod === 'hblpay' ? 'border-blue-600' : 'border-gray-300'
-          }`}>
-            {paymentMethod === 'hblpay' && (
-              <div className="w-3 h-3 rounded-full bg-blue-600"></div>
-            )}
+          <div>
+            <span className="text-xs font-extrabold text-gray-900 block">Credit / Debit Card (HBLPay)</span>
+            <span className="text-[11px] text-gray-500">Visa, Mastercard & UnionPay</span>
           </div>
         </div>
-      </div>
+        <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
+          paymentMethod === 'hblpay' ? 'border-blue-600' : 'border-gray-300'
+        }`}>
+          {paymentMethod === 'hblpay' && <div className="w-2 h-2 rounded-full bg-blue-600" />}
+        </div>
+      </button>
 
       {/* Pay on Site Option */}
-      <div
+      <button
+        type="button"
         onClick={() => setPaymentMethod('pay_on_site')}
-        className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
+        className={`w-full p-3.5 rounded-xl border text-left transition-all cursor-pointer flex items-center justify-between ${
           paymentMethod === 'pay_on_site'
-            ? 'border-green-600 bg-green-50 shadow-md'
-            : 'border-gray-200 hover:border-green-300'
+            ? 'border-emerald-600 bg-emerald-50/70 ring-2 ring-emerald-100'
+            : 'border-gray-200 hover:bg-gray-50'
         }`}
       >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-              paymentMethod === 'pay_on_site' ? 'bg-green-600' : 'bg-gray-200'
-            }`}>
-              <Building2 className={`w-5 h-5 ${
-                paymentMethod === 'pay_on_site' ? 'text-white' : 'text-gray-500'
-              }`} />
-            </div>
-            <div>
-              <h3 className="font-semibold text-gray-900">Pay at Office</h3>
-              <p className="text-xs text-gray-500">Visit Telitrip office to pay</p>
-            </div>
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+            <Building2 className="w-5 h-5" />
           </div>
-          <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-            paymentMethod === 'pay_on_site' ? 'border-green-600' : 'border-gray-300'
-          }`}>
-            {paymentMethod === 'pay_on_site' && (
-              <div className="w-3 h-3 rounded-full bg-green-600"></div>
-            )}
+          <div>
+            <span className="text-xs font-extrabold text-gray-900 block">Pay at Office</span>
+            <span className="text-[11px] text-gray-500">Reserve now, pay in-person before check-in</span>
           </div>
         </div>
-      </div>
+        <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
+          paymentMethod === 'pay_on_site' ? 'border-emerald-600' : 'border-gray-300'
+        }`}>
+          {paymentMethod === 'pay_on_site' && <div className="w-2 h-2 rounded-full bg-emerald-600" />}
+        </div>
+      </button>
 
       {/* Pay at Office Instructions */}
       {paymentMethod === 'pay_on_site' && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+        <div className="bg-emerald-50/80 border border-emerald-200 rounded-xl p-3">
           <div className="flex items-start space-x-2">
-            <AlertCircle className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
-            <div className="text-xs text-green-800">
-              <p className="font-semibold mb-1">Pay at Office:</p>
-              <ul className="space-y-0.5 list-disc list-inside">
-                <li>Hotel room reserved instantly</li>
+            <AlertCircle className="w-4 h-4 text-emerald-600 mt-0.5 flex-shrink-0" />
+            <div className="text-xs text-emerald-900">
+              <p className="font-bold mb-1">Pay at Office Terms:</p>
+              <ul className="space-y-0.5 list-disc list-inside text-[11px] text-emerald-800">
+                <li>Hotel room reserved instantly at certified wholesale rates</li>
                 <li>Visit Telitrip office to complete payment before check-in</li>
-                <li>Cash or card accepted</li>
-                <li>Booking confirmed once payment received</li>
+                <li>Cash or local credit card accepted</li>
               </ul>
             </div>
           </div>
@@ -1087,15 +1048,17 @@ const handlePaymentSubmit = () => {
   );
 
   const renderPaymentBox = () => (
-    <div className="bg-white rounded-2xl border border-gray-200/90 shadow-sm p-5 space-y-4">
+    <div className="bg-white rounded-2xl border border-gray-200/90 shadow-xs p-5 space-y-4">
       <div className="flex items-center justify-between pb-3 border-b border-gray-100">
         <div>
-          <h2 className="text-base font-bold text-gray-900">Payment Options</h2>
-          <p className="text-xs text-gray-500">Choose your preferred payment method</p>
+          <h2 className="text-sm font-extrabold text-gray-900 flex items-center gap-2">
+            <Lock className="w-4 h-4 text-emerald-600" />
+            <span>Payment Options</span>
+          </h2>
+          <p className="text-[11px] text-gray-500">Choose your preferred payment method</p>
         </div>
-        <span className="flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
-          <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-          <span>Encrypted</span>
+        <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+          256-bit Encrypted
         </span>
       </div>
 
@@ -1106,7 +1069,7 @@ const handlePaymentSubmit = () => {
       <button
         onClick={handlePaymentSubmit}
         disabled={isProcessing || checkoutItems.length === 0}
-        className={`w-full min-h-[50px] py-3.5 px-4 rounded-xl font-bold flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transition-all cursor-pointer ${
+        className={`w-full min-h-[50px] py-3.5 px-4 rounded-xl font-extrabold text-xs sm:text-sm flex items-center justify-center space-x-2 shadow-md hover:shadow-lg transition-all cursor-pointer ${
           paymentMethod === 'hblpay'
             ? 'bg-blue-600 hover:bg-blue-700 text-white'
             : 'bg-emerald-600 hover:bg-emerald-700 text-white'
@@ -1115,14 +1078,14 @@ const handlePaymentSubmit = () => {
         {isProcessing ? (
           <>
             <Loader2 className="w-4 h-4 animate-spin" />
-            <span>Processing...</span>
+            <span>Processing Booking...</span>
           </>
         ) : (
           <>
             {paymentMethod === 'hblpay' ? (
               <>
                 <Lock className="w-4 h-4" />
-                <span>Pay with HBLPay · {checkoutItems[0]?.currency || 'AED'} {parseFloat(totalAmount).toFixed(2)}</span>
+                <span>Pay with HBLPay · {checkoutItems[0]?.currency || 'AED'} {parseFloat(totalAmount).toFixed(0)}</span>
               </>
             ) : (
               <>
@@ -1134,7 +1097,7 @@ const handlePaymentSubmit = () => {
         )}
       </button>
 
-      <div className="flex items-center justify-center space-x-1.5 text-xs text-gray-400 pt-1">
+      <div className="flex items-center justify-center space-x-1.5 text-[11px] text-gray-400 pt-1">
         <Lock className="w-3 h-3 text-gray-400" />
         <span>Bank-grade 256-bit SSL encrypted checkout</span>
       </div>
@@ -1142,109 +1105,72 @@ const handlePaymentSubmit = () => {
   );
 
   const renderOrderSummary = () => (
-    <div className="bg-white rounded-2xl border border-gray-200/90 shadow-sm p-6">
-      <div className="flex items-center justify-between mb-4 pb-2 border-b border-gray-100">
+    <div className="bg-white rounded-2xl border border-gray-200/90 shadow-xs p-5 space-y-4">
+      <div className="flex items-center justify-between pb-3 border-b border-gray-100">
         <div>
-          <h2 className="text-base font-bold text-gray-900">Fare Breakdown & Taxes</h2>
-          <p className="text-xs text-gray-500">Official Hotelbeds certified net rates</p>
+          <h2 className="text-sm font-extrabold text-gray-900">Fare Breakdown & Taxes</h2>
+          <p className="text-[11px] text-gray-500">Official wholesale certified net rates</p>
         </div>
-        <button
-          onClick={() => setShowOrderSummary(v => !v)}
-          className="lg:hidden text-xs text-blue-600 font-semibold px-2 py-1 rounded-md bg-blue-50"
-        >
-          {showOrderSummary ? 'Hide' : 'Show'}
-        </button>
-      </div>
-      
-      <div className={`space-y-4 mb-6 ${showOrderSummary ? '' : 'hidden lg:block'}`}>
-        {checkoutItems.map((item, index) => (
-          <div key={index} className="flex gap-4 border-b pb-4">
-            {item.image && (
-              <img
-                src={item.image}
-                alt={item.type === 'activity' ? item.name : item.hotelName}
-                className="w-20 h-20 object-cover rounded"
-                onError={(e) => e.target.src = 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'}
-              />
-            )}
-            <div className="flex-1">
-              <h3 className="font-medium text-gray-900">{item.type === 'activity' ? item.name : item.hotelName}</h3>
-              <p className="text-sm text-gray-600">{item.type === 'activity' ? item.modalityName : item.roomName}</p>
-              {item.type === 'activity' && item.selectedTime && (
-                <p className="text-xs text-blue-600 font-medium mt-0.5">Time: {item.selectedTime}{item.duration ? ` · ${item.duration}` : ''}</p>
-              )}
-              <div className="flex items-center text-xs text-gray-500 mt-1">
-                <Calendar className="w-3 h-3 mr-1" />
-                {item.type === 'activity' 
-                  ? `${item.checkIn || item.from} - ${item.checkOut || item.to}`
-                  : `${new Date(item.checkIn).toLocaleDateString()} - ${new Date(item.checkOut).toLocaleDateString()}`
-                }
-              </div>
-              {item.type !== 'activity' && (
-                <div className="flex items-center gap-2 text-xs text-gray-600 mt-1">
-                  <Users className="w-3 h-3" />
-                  <span>{item.adults || 2} Adult{(item.adults || 2) > 1 ? 's' : ''}</span>
-                  {item.children > 0 && <span>, {item.children} Child{item.children > 1 ? 'ren' : ''}</span>}
-                  <span>• {item.rooms || 1} Room{(item.rooms || 1) > 1 ? 's' : ''}</span>
-                </div>
-              )}
-            </div>
-            <div className="text-right">
-              <p className="font-semibold text-gray-900">
-                {(() => {
-                  const itemTotal = item.type === 'activity'
-                    ? parseFloat(item.price || 0)
-                    : parseFloat(item.totalPrice || item.net || item.price || 0);
-                  const eurStr = `${item.currency || 'EUR'} ${itemTotal.toFixed(2)}`;
-                  const pkrStr = formatPKR(itemTotal, item.currency);
-                  return pkrStr ? `${eurStr} (≈ ${pkrStr})` : eurStr;
-                })()}
-              </p>
-              {item.taxes?.taxes?.filter(t => !t.included).length > 0 && (
-                <div className="text-[10px] text-amber-600 mt-1">
-                  {item.taxes.taxes.filter(t => !t.included).map((tax, i) => (
-                    <span key={i}>{tax.subType || tax.type}: {tax.currency} {tax.amount} (payable on arrival){i < item.taxes.taxes.filter(t => !t.included).length - 1 ? ' · ' : ''}</span>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        ))}
+        <span className="text-[10px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">
+          All-Inclusive
+        </span>
       </div>
 
-      {/* Price Breakdown - Hidden from users */}
-      
-      {/* Total */}
-      <div className="border-t pt-4 mb-6">
-        <div className="flex justify-between items-center text-lg font-bold">
-          <span>Total Amount:</span>
-          <span className="text-blue-600 text-right">
-              <div className="text-xs text-gray-500 font-normal">Hotelbeds Booking Currency</div>
-              <div className="font-bold">{checkoutItems[0]?.currency || 'AED'} {parseFloat(totalAmount).toFixed(2)}</div>
-              {(formatPKR(totalAmount, checkoutItems[0]?.currency) || currencyConversion?.totalPKR) && (
-                <div className="text-sm text-green-600">≈ {formatPKR(totalAmount, checkoutItems[0]?.currency) || `PKR ${Math.round(currencyConversion.totalPKR).toLocaleString()}`} <span className="text-xs text-gray-500">(for local payment)</span></div>
-              )}
-            </span>
+      <div className="space-y-2.5 text-xs">
+        <div className="flex justify-between items-center text-gray-600">
+          <span>Base Room Rate</span>
+          <span className="font-semibold text-gray-800">
+            {checkoutItems[0]?.currency || 'AED'} {parseFloat(totalAmount).toFixed(0)}
+          </span>
         </div>
-        <p className="text-xs text-gray-500 mt-2">
-          Rates are provided by Hotelbeds in EUR. PKR amount is an estimate for local payment reference only. Actual booking is confirmed in EUR.
-        </p>
+
+        <div className="flex justify-between items-center text-gray-600">
+          <span className="flex items-center gap-1">
+            <span>Taxes & Service Fees</span>
+            <span className="text-[10px] text-emerald-600 font-semibold bg-emerald-50 px-1.5 py-0.2 rounded">Included</span>
+          </span>
+          <span className="font-semibold text-emerald-600">AED 0.00</span>
+        </div>
+
+        {excludedTaxes && excludedTaxes.length > 0 && (
+          <div className="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-[11px] text-amber-800 space-y-1">
+            <span className="font-bold block">Payable directly at property:</span>
+            {excludedTaxes.map((tax, i) => (
+              <div key={i} className="flex justify-between">
+                <span>{tax.subType || tax.type || 'City Tax'}:</span>
+                <span className="font-semibold">{tax.currency} {tax.amount}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="pt-3 border-t border-gray-100 flex justify-between items-end">
+          <div>
+            <span className="text-xs uppercase font-extrabold text-gray-500 block tracking-wider">
+              Grand Total
+            </span>
+            <span className="text-[10px] text-gray-400">All local taxes & fees included</span>
+          </div>
+          <div className="text-right">
+            <div className="text-xl sm:text-2xl font-black text-blue-600 leading-tight">
+              {checkoutItems[0]?.currency || 'AED'} {parseFloat(totalAmount).toFixed(0)}
+            </div>
+            {(formatPKR(totalAmount, checkoutItems[0]?.currency) || currencyConversion?.totalPKR) && (
+              <div className="text-xs font-bold text-amber-700">
+                ≈ {formatPKR(totalAmount, checkoutItems[0]?.currency) || `PKR ${Math.round(currencyConversion.totalPKR).toLocaleString()}`}
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Error/Success Messages */}
       {error && (
-        <div className="mb-4 p-4 bg-red-50 border-l-4 border-red-500 rounded-r-lg shadow-sm">
-          <div className="flex items-start">
-            <AlertCircle className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" />
-            <div className="ml-3 flex-1">
-              <h3 className="text-sm font-semibold text-red-800">Booking Failed</h3>
-              <p className="text-sm text-red-700 mt-1">{error}</p>
-              {error.includes('no longer available') && (
-                <button onClick={() => navigate('/hotel-search-results')} className="mt-2 text-xs text-red-600 underline hover:text-red-800">
-                  Search for available rooms →
-                </button>
-              )}
-            </div>
+        <div className="p-3 bg-red-50 border border-red-300 rounded-xl text-xs text-red-700 flex items-start gap-2">
+          <AlertCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
+          <div>
+            <span className="font-bold block">Booking Notice:</span>
+            <span>{error}</span>
           </div>
         </div>
       )}
@@ -1375,29 +1301,99 @@ const handlePaymentSubmit = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2 space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            {/* Left 7 Columns: Selected Room Card + Primary Guest Information + TeleTrip Guarantee */}
+            <div className="lg:col-span-7 space-y-5">
+              {/* Selected Room / Property Cards */}
+              {checkoutItems.map((item, idx) => {
+                const isActivity = item.type === 'activity';
+                const isTransfer = item.type === 'transfer';
+                const checkInDate = item.checkIn ? new Date(item.checkIn) : new Date();
+                const checkOutDate = item.checkOut ? new Date(item.checkOut) : new Date();
+                const nights = Math.max(1, Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24)));
+                const itemImg = item.thumbnail || item.image || (item.images && item.images[0]?.path ? `https://photos.hotelbeds.com/giata/original/${item.images[0].path.replace(/^\/+/, '')}` : "https://images.pexels.com/photos/261102/pexels-photo-261102.jpeg");
+
+                return (
+                  <div key={idx} className="p-4 sm:p-5 rounded-2xl border border-gray-200 bg-slate-50/70 space-y-3 shadow-xs text-left">
+                    <div className="flex items-start gap-3.5">
+                      <img
+                        src={itemImg}
+                        alt=""
+                        className="w-20 h-20 rounded-xl object-cover shrink-0 border border-gray-200"
+                        onError={(e) => { e.target.src = "https://images.pexels.com/photos/261102/pexels-photo-261102.jpeg"; }}
+                      />
+                      <div className="min-w-0 flex-1">
+                        <span className="text-[10px] font-black uppercase text-blue-600 bg-blue-50 px-2 py-0.5 rounded">
+                          {isActivity ? 'Selected Experience' : isTransfer ? 'Selected Transfer' : 'Selected Property'}
+                        </span>
+                        <h3 className="text-base font-extrabold text-gray-900 mt-1 truncate">
+                          {isActivity ? item.name : isTransfer ? (item.vehicle || item.name) : item.hotelName}
+                        </h3>
+                        {item.location && <p className="text-xs text-gray-500 truncate">{item.location}</p>}
+                        <div className="flex items-center gap-2 text-xs text-gray-700 font-semibold mt-1 flex-wrap">
+                          <span>
+                            {checkInDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – {checkOutDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} ({nights} {nights === 1 ? 'night' : 'nights'})
+                          </span>
+                          {!isActivity && !isTransfer && item.roomName && (
+                            <>
+                              <span>·</span>
+                              <span className="text-blue-600 truncate">{item.roomName}</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="pt-2 border-t border-gray-200/80 flex items-center justify-between text-xs text-gray-600 flex-wrap gap-2">
+                      <span className="flex items-center gap-1 text-emerald-700 font-semibold">
+                        <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+                        {item.rateClass === 'NRF' ? 'Non-refundable rate' : 'Free Cancellation Available'}
+                      </span>
+                      <span className="font-semibold text-gray-800">
+                        {item.adults || 2} Adults{item.children > 0 ? `, ${item.children} Children` : ''} · 1 Room
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+
               {!user && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 text-left">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="text-lg font-medium text-blue-900">Sign in for faster checkout</h3>
-                      <p className="text-sm text-blue-700 mt-1">Save your information and track your bookings</p>
+                      <h3 className="text-sm font-bold text-blue-900">Sign in for faster checkout</h3>
+                      <p className="text-xs text-blue-700 mt-0.5">Save your information and track your bookings</p>
                     </div>
                     <button
+                      type="button"
                       onClick={() => setShowAuthModal(true)}
-                      className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                      className="bg-blue-600 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-blue-700 transition-colors cursor-pointer"
                     >
                       Sign In
                     </button>
                   </div>
                 </div>
               )}
+
+              {/* Primary Guest Information */}
               {renderBillingForm()}
+
+              {/* Important Booking Guarantee Notice */}
+              <div className="p-4 rounded-2xl bg-blue-50/70 border border-blue-200/80 space-y-2 text-left">
+                <div className="flex items-center gap-2 text-xs font-bold text-blue-900">
+                  <ShieldCheck className="w-4 h-4 text-blue-600" />
+                  <span>TeleTrip Guarantee & Cancellation Terms</span>
+                </div>
+                <ul className="text-[11px] text-blue-800 space-y-1 list-disc list-inside">
+                  <li>Guaranteed room reservation with official Bedsonline wholesale booking voucher.</li>
+                  <li>100% full refund on eligible refundable rates when cancelled before deadline.</li>
+                  <li>No hidden booking surcharges — transparent currency exchange.</li>
+                </ul>
+              </div>
             </div>
 
-            {/* Desktop Right Column: Payment Options ON TOP of Fare Breakdown & Taxes */}
-            <div className="lg:col-span-1 space-y-6 sticky top-24">
+            {/* Right 5 Columns: Payment Options ON TOP of Fare Breakdown & Taxes */}
+            <div className="lg:col-span-5 space-y-4 sticky top-24">
               {renderPaymentBox()}
               {renderOrderSummary()}
             </div>
