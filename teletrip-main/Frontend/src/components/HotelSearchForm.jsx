@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { createPortal } from 'react-dom';
-import { MapPin, Calendar, Users, Search, ChevronDown, X, Plus, Minus, Loader2, Star, Clock, Tag, Plane, Building2, Hotel, Car, Compass, Trash2 } from 'lucide-react';
+import { MapPin, Calendar, Users, Search, ChevronDown, X, Plus, Minus, Loader2, Star, Clock, Tag, Plane, Building2, Hotel, Car, Compass, Trash2, ShieldCheck, CheckCircle, Sparkles } from 'lucide-react';
 import { addDays, format } from 'date-fns';
 import { searchTransfers } from '../services/transfersApi';
 import axios from 'axios';
@@ -861,6 +861,7 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
     { adults: 2, children: 0, childAges: [] }
   ]);
   const [activeTab, setActiveTab] = useState(initialTab);
+  const [luxuryOnly, setLuxuryOnly] = useState(false);
 
   // Room helper functions
   const addRoom = () => {
@@ -1039,6 +1040,10 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
 
     // Pass per-room config for proper Hotelbeds occupancy
     url += `&roomConfigs=${encodeURIComponent(JSON.stringify(roomConfigs))}`;
+
+    if (luxuryOnly) {
+      url += '&luxury=true';
+    }
 
     window.location.href = url;
   };
@@ -1387,12 +1392,33 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
                 </div>
               </div>
 
-              {/* Search Button */}
-              <div className="flex justify-end">
+              {/* Lower Action Row: Reassurances & Search Button (Eliminates Left Negative Space) */}
+              <div className="mt-3.5 pt-3 border-t border-gray-100 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+                <div className="flex flex-wrap items-center gap-2 text-xs">
+                  <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 font-bold border border-emerald-100 text-[11px]">
+                    <CheckCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                    <span>Instant Confirmation</span>
+                  </span>
+                  <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-800 font-bold border border-blue-100 text-[11px]">
+                    <ShieldCheck className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                    <span>Free Cancellation Available</span>
+                  </span>
+                  <label className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-900 font-bold border border-amber-200 text-[11px] cursor-pointer hover:bg-amber-100/70 transition-colors">
+                    <input
+                      type="checkbox"
+                      checked={luxuryOnly}
+                      onChange={(e) => setLuxuryOnly(e.target.checked)}
+                      className="rounded text-amber-600 focus:ring-amber-500 w-3.5 h-3.5 cursor-pointer"
+                    />
+                    <Sparkles className="w-3 h-3 text-amber-600 shrink-0" />
+                    <span>Luxury Collection 5★</span>
+                  </label>
+                </div>
+
                 <button
                   type="submit"
                   style={{ cursor: 'pointer' }}
-                  className="w-full md:w-auto px-6 sm:px-8 py-2.5 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center justify-center space-x-2 cursor-pointer text-sm sm:text-base"
+                  className="w-full md:w-auto px-6 sm:px-8 py-2.5 sm:py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-lg hover:shadow-xl transition-all font-bold flex items-center justify-center space-x-2 cursor-pointer text-sm sm:text-base shrink-0 active:scale-98"
                 >
                   <Search size={18} />
                   <span>Search Hotels</span>
@@ -1410,6 +1436,61 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
             </div>
           )}
         </div>
+
+        {/* ── RICH DESTINATION DISCOVERY STRIP (ELIMINATES HERO DEAD SPACE) ── */}
+        {activeTab === 'stays' && variant === 'dark' && (
+          <div className="pt-3 flex flex-col items-center gap-2.5">
+            <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
+              <span className="text-xs font-black text-amber-300 flex items-center gap-1 bg-amber-950/60 backdrop-blur-md px-2.5 py-1 rounded-full border border-amber-400/30">
+                <Sparkles className="w-3 h-3 text-amber-400" />
+                <span>Trending:</span>
+              </span>
+              {[
+                { name: 'Dubai Marina', city: 'Dubai', destinationCode: 'DXB' },
+                { name: 'Downtown Dubai', city: 'Dubai', destinationCode: 'DXB' },
+                { name: 'Palm Jumeirah', city: 'Dubai', destinationCode: 'DXB' },
+                { name: 'Abu Dhabi', city: 'Abu Dhabi', destinationCode: 'AUH' },
+                { name: 'Paris', city: 'Paris', destinationCode: 'PAR' },
+                { name: 'Bali', city: 'Bali', destinationCode: 'DPS' }
+              ].map((dest, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => {
+                    setSearchQuery(dest.name);
+                    setSelectedLocation({ name: dest.name, city: dest.city, destinationCode: dest.destinationCode });
+                    setSelectedHotelCode(null);
+                  }}
+                  className="text-xs font-bold text-white/90 bg-white/10 hover:bg-white/20 active:bg-blue-600 px-3 py-1 rounded-full border border-white/15 backdrop-blur-md transition-all cursor-pointer flex items-center gap-1"
+                >
+                  <span>{dest.name}</span>
+                </button>
+              ))}
+            </div>
+
+            <div className="hidden sm:flex items-center gap-4 text-[11px] font-semibold text-gray-300/80 bg-black/40 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/10">
+              <span className="flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                300,000+ Wholesale Hotels
+              </span>
+              <span>•</span>
+              <span className="flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
+                Direct B2B Net Bedsonline API
+              </span>
+              <span>•</span>
+              <span className="flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                Zero Hidden Fees
+              </span>
+              <span>•</span>
+              <span className="flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-purple-400" />
+                24/7 VIP Concierge
+              </span>
+            </div>
+          </div>
+        )}
       </div>
   );
 };

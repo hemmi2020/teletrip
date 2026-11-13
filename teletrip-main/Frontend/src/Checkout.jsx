@@ -19,7 +19,9 @@ import {
   Building2,
   Wallet,
   Loader2,
-  Users
+  Users,
+  ShieldCheck,
+  CheckCircle
 } from 'lucide-react';
 
 const Checkout = () => {
@@ -1067,13 +1069,71 @@ const handlePaymentSubmit = () => {
     </div>
   );
 
+  const renderPaymentBox = () => (
+    <div className="bg-white rounded-2xl border border-gray-200/90 shadow-sm p-5 space-y-4">
+      <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+        <div>
+          <h2 className="text-base font-bold text-gray-900">Payment Options</h2>
+          <p className="text-xs text-gray-500">Choose your preferred payment method</p>
+        </div>
+        <span className="flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
+          <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+          <span>Encrypted</span>
+        </span>
+      </div>
+
+      {/* Payment Method Selector */}
+      {renderPaymentMethodSelector()}
+
+      {/* Primary Payment CTA Button */}
+      <button
+        onClick={handlePaymentSubmit}
+        disabled={isProcessing || checkoutItems.length === 0}
+        className={`w-full min-h-[50px] py-3.5 px-4 rounded-xl font-bold flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl transition-all cursor-pointer ${
+          paymentMethod === 'hblpay'
+            ? 'bg-blue-600 hover:bg-blue-700 text-white'
+            : 'bg-emerald-600 hover:bg-emerald-700 text-white'
+        } disabled:opacity-50 disabled:cursor-not-allowed`}
+      >
+        {isProcessing ? (
+          <>
+            <Loader2 className="w-4 h-4 animate-spin" />
+            <span>Processing...</span>
+          </>
+        ) : (
+          <>
+            {paymentMethod === 'hblpay' ? (
+              <>
+                <Lock className="w-4 h-4" />
+                <span>Pay with HBLPay · {checkoutItems[0]?.currency || 'AED'} {parseFloat(totalAmount).toFixed(2)}</span>
+              </>
+            ) : (
+              <>
+                <Wallet className="w-4 h-4" />
+                <span>Reserve Booking · Pay at Office</span>
+              </>
+            )}
+          </>
+        )}
+      </button>
+
+      <div className="flex items-center justify-center space-x-1.5 text-xs text-gray-400 pt-1">
+        <Lock className="w-3 h-3 text-gray-400" />
+        <span>Bank-grade 256-bit SSL encrypted checkout</span>
+      </div>
+    </div>
+  );
+
   const renderOrderSummary = () => (
-    <div className="bg-white rounded-lg shadow-sm p-6 sticky top-24">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-semibold text-gray-900">Order Summary</h2>
+    <div className="bg-white rounded-2xl border border-gray-200/90 shadow-sm p-6">
+      <div className="flex items-center justify-between mb-4 pb-2 border-b border-gray-100">
+        <div>
+          <h2 className="text-base font-bold text-gray-900">Fare Breakdown & Taxes</h2>
+          <p className="text-xs text-gray-500">Official Hotelbeds certified net rates</p>
+        </div>
         <button
           onClick={() => setShowOrderSummary(v => !v)}
-          className="lg:hidden text-sm text-blue-600 font-medium"
+          className="lg:hidden text-xs text-blue-600 font-semibold px-2 py-1 rounded-md bg-blue-50"
         >
           {showOrderSummary ? 'Hide' : 'Show'}
         </button>
@@ -1231,44 +1291,12 @@ const handlePaymentSubmit = () => {
         </div>
       )}
 
-      {/* Payment Method Selector */}
-      {renderPaymentMethodSelector()}
-
-      {/* Payment Button */}
-      <button
-        onClick={handlePaymentSubmit}
-        disabled={isProcessing || checkoutItems.length === 0}
-        className={`w-full min-h-[52px] py-3 px-4 rounded-lg font-medium flex items-center justify-center space-x-2 transition-all ${
-          paymentMethod === 'hblpay'
-            ? 'bg-blue-600 hover:bg-blue-700 text-white'
-            : 'bg-green-600 hover:bg-green-700 text-white'
-        } disabled:opacity-50 disabled:cursor-not-allowed`}
-      >
-        {isProcessing ? (
-          <>
-            <Loader2 className="w-4 h-4 animate-spin" />
-            <span>Processing...</span>
-          </>
-        ) : (
-          <>
-            {paymentMethod === 'hblpay' ? (
-              <>
-                <Lock className="w-4 h-4" />
-                <span>Pay with HBLPay - {checkoutItems[0]?.currency || 'AED'} {parseFloat(totalAmount).toFixed(2)}</span>
-              </>
-            ) : (
-              <>
-                <Wallet className="w-4 h-4" />
-                <span>Reserve Booking - Pay at Office</span>
-              </>
-            )}
-          </>
-        )}
-      </button>
-
-      <div className="flex items-center justify-center space-x-2 mt-3 text-xs text-gray-500">
-        <Lock className="w-3 h-3" />
-        <span>Secure payment powered by HBL</span>
+      <div className="pt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
+        <span className="flex items-center gap-1.5 text-emerald-700 font-semibold">
+          <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+          <span>Guaranteed Net Rates</span>
+        </span>
+        <span className="text-[11px] text-gray-400">Zero Hidden Booking Fees</span>
       </div>
     </div>
   );
@@ -1326,7 +1354,9 @@ const handlePaymentSubmit = () => {
               {renderBillingForm()}
             </div>
 
-            <div className="lg:col-span-1">
+            {/* Desktop Right Column: Payment Options ON TOP of Fare Breakdown & Taxes */}
+            <div className="lg:col-span-1 space-y-6 sticky top-24">
+              {renderPaymentBox()}
               {renderOrderSummary()}
             </div>
           </div>

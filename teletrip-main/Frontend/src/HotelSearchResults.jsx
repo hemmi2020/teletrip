@@ -78,6 +78,13 @@ const HotelSearchResults = () => {
     window.addEventListener('toggleModifySearch', handler);
     return () => window.removeEventListener('toggleModifySearch', handler);
   }, []);
+
+  // Listen for luxury URL param from hero search
+  useEffect(() => {
+    if (searchParams.get("luxury") === "true") {
+      setSelectedEstablishment(prev => prev.includes('119') ? prev : [...prev, '119']);
+    }
+  }, [searchParams]);
   const [showFilters, setShowFilters] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
@@ -1947,6 +1954,75 @@ const HotelSearchResults = () => {
               {searchParams.get("hotelName") && <><span className="text-gray-300">|</span><span className="text-blue-600 font-medium">"{searchParams.get("hotelName")}"</span></>}
             </div>
 
+            {/* Option A: Quick-Filter Chips Bar */}
+            <div className="flex items-center gap-2 overflow-x-auto py-2 mb-2" style={{ scrollbarWidth: 'none' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedEstablishment(prev => prev.includes('119') ? prev.filter(x => x !== '119') : [...prev, '119']);
+                }}
+                className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 border cursor-pointer ${
+                  selectedEstablishment.includes('119')
+                    ? 'bg-amber-500 text-white border-amber-500 shadow-sm'
+                    : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300'
+                }`}
+              >
+                <span>✨ Luxury Collection</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedCancellation(prev => prev === 'free' ? '' : 'free');
+                }}
+                className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 border cursor-pointer ${
+                  selectedCancellation === 'free'
+                    ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
+                    : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300'
+                }`}
+              >
+                <span>🛡️ Free Cancellation</span>
+              </button>
+
+              {dynamicBoards.some(b => b.toUpperCase().includes('BREAKFAST')) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const bf = dynamicBoards.find(b => b.toUpperCase().includes('BREAKFAST'));
+                    if (bf) {
+                      setSelectedBoards(prev => prev.includes(bf) ? prev.filter(x => x !== bf) : [...prev, bf]);
+                    }
+                  }}
+                  className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 border cursor-pointer ${
+                    selectedBoards.some(b => b.toUpperCase().includes('BREAKFAST'))
+                      ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                      : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <span>🍳 Breakfast Included</span>
+                </button>
+              )}
+
+              {dynamicCategories.some(c => c.startsWith('5')) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const five = dynamicCategories.find(c => c.startsWith('5'));
+                    if (five) {
+                      setSelectedCategories(prev => prev.includes(five) ? prev.filter(x => x !== five) : [...prev, five]);
+                    }
+                  }}
+                  className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 border cursor-pointer ${
+                    selectedCategories.some(c => c.startsWith('5'))
+                      ? 'bg-purple-600 text-white border-purple-600 shadow-sm'
+                      : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <span>★ 5-Star Only</span>
+                </button>
+              )}
+            </div>
+
             {/* Hotel Cards: Supports List View or 2-Column Thumbnail Grid */}
             <div className={viewMode === 'thumbnail' ? "grid grid-cols-2 gap-2.5 sm:gap-4 pb-6" : "space-y-3 pb-6"}>
               {sortedHotels.slice(0, visibleCount).map((hotel, cardIndex) => {
@@ -2245,57 +2321,59 @@ const HotelSearchResults = () => {
         />
 
         {/* Hotel Detail Modal */}
-        <HotelDetailModal
-          isOpen={Boolean(selectedHotel)}
-          onClose={() => setSelectedHotel(null)}
-          hotel={selectedHotel}
-          hotelContentData={hotelContentData}
-          searchParams={searchParams}
-          formatPKR={formatPKR}
-          convert={convert}
-          applyCommission={applyCommission}
-          onAddToCart={handleAddToCart}
-          onMultiRoomAddToCart={handleMultiRoomAddToCart}
-          openGallery={(idx = 0, customImages = null, title = '', customAlbums = null, initialAlbum = 'All') => {
-            const rawImages = (hotelContentData?.images && hotelContentData.images.length >= (selectedHotel?.images?.length || 0))
-              ? hotelContentData.images
-              : (selectedHotel?.images && selectedHotel.images.length > 0 ? selectedHotel.images : (hotelContentData?.images || []));
+        {selectedHotel && (
+          <HotelDetailModal
+            isOpen={true}
+            onClose={() => setSelectedHotel(null)}
+            hotel={selectedHotel}
+            hotelContentData={hotelContentData}
+            searchParams={searchParams}
+            formatPKR={formatPKR}
+            convert={convert}
+            applyCommission={applyCommission}
+            onAddToCart={handleAddToCart}
+            onMultiRoomAddToCart={handleMultiRoomAddToCart}
+            openGallery={(idx = 0, customImages = null, title = '', customAlbums = null, initialAlbum = 'All') => {
+              const rawImages = (hotelContentData?.images && hotelContentData.images.length >= (selectedHotel?.images?.length || 0))
+                ? hotelContentData.images
+                : (selectedHotel?.images && selectedHotel.images.length > 0 ? selectedHotel.images : (hotelContentData?.images || []));
 
-            const computedAlbums = customAlbums || buildImageAlbums(rawImages);
-            const allImages = (computedAlbums['All'] && computedAlbums['All'].length > 0)
-              ? computedAlbums['All']
-              : rawImages.map(img => img.path ? `https://photos.hotelbeds.com/giata/original/${img.path.replace(/^\/+/, '')}` : (typeof img === 'string' ? img : null)).filter(Boolean);
+              const computedAlbums = customAlbums || buildImageAlbums(rawImages);
+              const allImages = (computedAlbums['All'] && computedAlbums['All'].length > 0)
+                ? computedAlbums['All']
+                : rawImages.map(img => img.path ? `https://photos.hotelbeds.com/giata/original/${img.path.replace(/^\/+/, '')}` : (typeof img === 'string' ? img : null)).filter(Boolean);
 
-            if (allImages.length === 0 && selectedHotel?.thumbnail) allImages.push(selectedHotel.thumbnail);
+              if (allImages.length === 0 && selectedHotel?.thumbnail) allImages.push(selectedHotel.thumbnail);
 
-            setGalleryAlbums(computedAlbums);
-            setActiveGalleryAlbum(initialAlbum || 'All');
+              setGalleryAlbums(computedAlbums);
+              setActiveGalleryAlbum(initialAlbum || 'All');
 
-            if (customImages && customImages.length > 0) {
-              setGalleryImages(customImages);
-            } else if (initialAlbum && computedAlbums[initialAlbum] && computedAlbums[initialAlbum].length > 0) {
-              setGalleryImages(computedAlbums[initialAlbum]);
-            } else {
-              setGalleryImages(allImages);
-            }
+              if (customImages && customImages.length > 0) {
+                setGalleryImages(customImages);
+              } else if (initialAlbum && computedAlbums[initialAlbum] && computedAlbums[initialAlbum].length > 0) {
+                setGalleryImages(computedAlbums[initialAlbum]);
+              } else {
+                setGalleryImages(allImages);
+              }
 
-            setGalleryIndex(idx || 0);
-            setGalleryTitle(title || selectedHotel?.name || '');
-            setGalleryOpen(true);
-          }}
-          onSelectRoomDetail={(room) => setSelectedRoomDetail(room)}
-          activeRoomTab={activeRoomTab}
-          setActiveRoomTab={setActiveRoomTab}
-          roomSelections={roomSelections}
-          setRoomSelections={setRoomSelections}
-          formatCancellationPolicy={formatCancellationPolicy}
-          selectedBoards={selectedBoards}
-          selectedCancellation={selectedCancellation}
-          selectedPackaging={selectedPackaging}
-          selectedPromos={selectedPromos}
-          priceMin={priceMin}
-          priceMax={priceMax}
-        />
+              setGalleryIndex(idx || 0);
+              setGalleryTitle(title || selectedHotel?.name || '');
+              setGalleryOpen(true);
+            }}
+            onSelectRoomDetail={(room) => setSelectedRoomDetail(room)}
+            activeRoomTab={activeRoomTab}
+            setActiveRoomTab={setActiveRoomTab}
+            roomSelections={roomSelections}
+            setRoomSelections={setRoomSelections}
+            formatCancellationPolicy={formatCancellationPolicy}
+            selectedBoards={selectedBoards}
+            selectedCancellation={selectedCancellation}
+            selectedPackaging={selectedPackaging}
+            selectedPromos={selectedPromos}
+            priceMin={priceMin}
+            priceMax={priceMax}
+          />
+        )}
 
         {/* Room Detail Modal */}
         {selectedRoomDetail && (
