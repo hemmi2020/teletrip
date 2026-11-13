@@ -152,7 +152,7 @@ export default function ComingSoonGate() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full py-3.5 px-6 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold text-sm shadow-lg shadow-blue-500/25 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                className="w-full py-3.5 px-6 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-semibold text-sm shadow-lg shadow-blue-500/25 transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
               >
                 {isSubmitting ? (
                   <>
@@ -170,6 +170,17 @@ export default function ComingSoonGate() {
                 )}
               </button>
             </form>
+
+            {/* Instant 1-Click Client & Stakeholder Preview Button */}
+            <div className="mt-3.5 text-center">
+              <button
+                type="button"
+                onClick={() => verifyPasscode('telitrip2026')}
+                className="text-xs font-bold text-blue-600 hover:text-blue-800 bg-blue-50/80 hover:bg-blue-100/80 border border-blue-200/60 rounded-xl px-4 py-2 transition-all inline-flex items-center gap-1.5 cursor-pointer shadow-2xs w-full justify-center"
+              >
+                <span>✨ Client & Stakeholder Instant Preview Access →</span>
+              </button>
+            </div>
 
             {/* Secure Footer Notice */}
             <div className="mt-5 pt-4 border-t border-gray-100 flex items-center justify-between text-[11px] text-gray-400">

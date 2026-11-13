@@ -21,7 +21,8 @@ import {
   Loader2,
   Users,
   ShieldCheck,
-  CheckCircle
+  CheckCircle,
+  Clock
 } from 'lucide-react';
 
 const Checkout = () => {
@@ -52,6 +53,22 @@ const Checkout = () => {
   const [priceChangeNotice, setPriceChangeNotice] = useState(null);
   const [isValidatingRates, setIsValidatingRates] = useState(false);
 
+
+  // Inventory hold countdown timer (Expedia / Bedsonline style)
+  const [timeLeft, setTimeLeft] = useState(899); // 14:59
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const formatTimer = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
 
   // Form data matching your backend validation
   const [billingInfo, setBillingInfo] = useState({
@@ -1328,9 +1345,34 @@ const handlePaymentSubmit = () => {
       <Header />
       <div className="pt-20 min-h-screen bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 py-8">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">Secure Checkout</h1>
-            <p className="text-gray-600 mt-2">Complete your booking</p>
+          <div className="mb-6">
+            <h1 className="text-2xl sm:text-3xl font-black text-gray-900">Secure Checkout</h1>
+            <p className="text-xs sm:text-sm text-gray-500 mt-1">Complete your booking with direct B2B net rates</p>
+          </div>
+
+          {/* Inventory Hold Timer Banner (Style 1 from Cart Design Lab) */}
+          <div className="mb-6 p-4 bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-amber-500/15 border border-amber-300 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3 shadow-2xs">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center font-black shadow-sm shrink-0">
+                <Clock className="w-5 h-5 animate-pulse" />
+              </div>
+              <div>
+                <div className="text-xs sm:text-sm font-extrabold text-amber-950 flex items-center gap-2">
+                  <span>Room & Guaranteed Net Rate Held</span>
+                  <span className="font-mono text-xs px-2 py-0.5 rounded-md bg-amber-200/80 text-amber-900 font-black">
+                    {formatTimer(timeLeft)}
+                  </span>
+                </div>
+                <p className="text-[11px] text-amber-800">
+                  This rate is reserved exclusively for you. Complete booking before timer expires to avoid repricing.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-1 text-[11px] text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200 font-bold shrink-0">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+              <span>Instant Confirmation</span>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

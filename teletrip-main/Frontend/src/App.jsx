@@ -93,7 +93,13 @@ class ErrorBoundary extends React.Component {
 const AppContent = () => {
   const { isUnlocked, isLoading } = useSiteAccess();
 
-  if (isLoading) {
+  // Design Lab routes must ALWAYS be publicly viewable without passcode gate so client review links work instantly
+  const isDesignLabRoute = typeof window !== 'undefined' && (
+    window.location.pathname.startsWith('/design-lab') || 
+    window.location.pathname.startsWith('/__design_lab')
+  );
+
+  if (isLoading && !isDesignLabRoute) {
     return (
       <div className="min-h-screen bg-[#070B14] flex items-center justify-center">
         <div className="w-8 h-8 rounded-full border-2 border-emerald-500/20 border-t-emerald-500 animate-spin" />
@@ -101,7 +107,7 @@ const AppContent = () => {
     );
   }
 
-  if (!isUnlocked) {
+  if (!isUnlocked && !isDesignLabRoute) {
     return <ComingSoonGate />;
   }
 

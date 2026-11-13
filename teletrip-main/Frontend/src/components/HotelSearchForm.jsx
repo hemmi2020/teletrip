@@ -1078,7 +1078,7 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
 
   return (
     <div className="w-full">
-      <div className="bg-white/30 backdrop-blur-2xl rounded-2xl border border-white/30 shadow-2xl p-3 sm:p-5 md:p-6 text-left" style={{ WebkitBackdropFilter: 'blur(40px)', backdropFilter: 'blur(40px)' }}>
+      <div className="bg-white rounded-3xl shadow-2xl p-4 sm:p-5 md:p-6 border border-gray-100 text-left">
         {/* ── Search Tabs ── */}
         <div className="flex items-center bg-white rounded-full p-1 mb-3 sm:mb-6" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
           {tabs.map((tab) => {
@@ -1106,164 +1106,165 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
 
           {activeTab === 'stays' && (
             <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
-              {/* Unified Destination or Hotel Search Field (Bedsonline style) */}
-              <div className="relative" ref={locationRef}>
-                <label className={`block text-xs sm:text-sm font-medium ${lbl} mb-1.5 sm:mb-2 text-left`}>
-                  Destination or Hotel Name <span className="text-red-500">*</span>
-                </label>
-                <div className={`flex items-center w-full border bg-white rounded-lg focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent px-3 py-2.5 sm:py-3 gap-2 ${
-                  selectedHotelCode
-                    ? 'border-emerald-400 bg-emerald-50/20'
-                    : selectedLocation
-                    ? 'border-blue-400 bg-blue-50/20'
-                    : 'border-gray-300'
-                }`}>
-                  {selectedHotelCode ? (
-                    <Building2 className="flex-shrink-0 text-emerald-600" size={18} />
-                  ) : (
-                    <MapPin className={`flex-shrink-0 ${selectedLocation ? 'text-blue-600' : 'text-gray-400'}`} size={18} />
+              {/* Option 1 Unified 3-Column Single-Row Grid on Desktop */}
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-2.5 sm:gap-3 relative items-end">
+                {/* Field 1: Unified Destination or Hotel Search Field (5 columns) */}
+                <div className="md:col-span-5 relative" ref={locationRef}>
+                  <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-gray-500 mb-1 text-left">
+                    Destination or Hotel Name <span className="text-red-500">*</span>
+                  </label>
+                  <div className={`flex items-center w-full border bg-white rounded-xl focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent px-3 py-2.5 sm:py-3 gap-2 ${
+                    selectedHotelCode
+                      ? 'border-emerald-400 bg-emerald-50/20'
+                      : selectedLocation
+                      ? 'border-blue-400 bg-blue-50/20'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}>
+                    {selectedHotelCode ? (
+                      <Building2 className="flex-shrink-0 text-emerald-600" size={18} />
+                    ) : (
+                      <MapPin className={`flex-shrink-0 ${selectedLocation ? 'text-blue-600' : 'text-gray-400'}`} size={18} />
+                    )}
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={handleSearchInputChange}
+                      onFocus={() => { if (filteredLocations.length > 0 || hotelSuggestions.length > 0) setShowLocationDropdown(true); }}
+                      placeholder="e.g. Dubai, Atlantis The Palm..."
+                      className="flex-1 min-w-0 outline-none bg-transparent text-gray-800 text-xs sm:text-sm font-bold placeholder-gray-400"
+                    />
+                    {searchQuery && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSearchQuery('');
+                          setSelectedLocation(null);
+                          setSelectedHotelCode(null);
+                          setFilteredLocations([]);
+                          setHotelSuggestions([]);
+                        }}
+                        className="text-gray-400 hover:text-gray-600 flex-shrink-0 cursor-pointer"
+                      >
+                        <X size={16} />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Selected Status Indicator */}
+                  {selectedHotelCode && (
+                    <p className="text-[10px] text-emerald-600 mt-0.5 px-1 flex items-center gap-1 font-semibold">
+                      <span>🏨</span> Hotel: {searchQuery}
+                    </p>
                   )}
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={handleSearchInputChange}
-                    onFocus={() => { if (filteredLocations.length > 0 || hotelSuggestions.length > 0) setShowLocationDropdown(true); }}
-                    placeholder="Search destination, city, or hotel name (e.g. Dubai, Atlantis...)"
-                    className="flex-1 min-w-0 outline-none bg-transparent text-gray-700 text-sm sm:text-base placeholder-gray-400"
-                  />
-                  {searchQuery && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSearchQuery('');
-                        setSelectedLocation(null);
-                        setSelectedHotelCode(null);
-                        setFilteredLocations([]);
-                        setHotelSuggestions([]);
-                      }}
-                      className="text-gray-400 hover:text-gray-600 flex-shrink-0 cursor-pointer"
-                    >
-                      <X size={16} />
-                    </button>
+                  {!selectedHotelCode && selectedLocation && (
+                    <p className="text-[10px] text-blue-600 mt-0.5 px-1 flex items-center gap-1 font-semibold">
+                      <span>📍</span> City: {selectedLocation.name || selectedLocation.city}
+                    </p>
+                  )}
+
+                  {/* Unified Dropdown with Grouped Results */}
+                  {showLocationDropdown && searchQuery.trim().length >= 2 && (
+                    <div className="absolute left-0 right-0 top-full mt-1 z-[220] bg-white border border-gray-200 rounded-2xl shadow-2xl max-h-[60vh] overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
+                      {isLoadingLocations ? (
+                        <div className="p-4 text-center text-gray-400 text-sm flex items-center justify-center gap-2">
+                          <span className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                          <span>Searching destinations and hotels...</span>
+                        </div>
+                      ) : (filteredLocations.length > 0 || hotelSuggestions.length > 0) ? (
+                        <div>
+                          {/* Section 1: Destinations */}
+                          {filteredLocations.filter(l => l.type !== 'hotel').length > 0 && (
+                            <div>
+                              <div className="px-3 pt-2.5 pb-1 text-[11px] font-bold text-gray-500 uppercase tracking-wider bg-gray-50/80 border-b border-gray-100 flex items-center gap-1.5">
+                                <MapPin size={13} className="text-blue-600" />
+                                <span>Destinations & Cities</span>
+                              </div>
+                              {filteredLocations.filter(l => l.type !== 'hotel').map((location, index) => (
+                                <div
+                                  key={`loc-${index}`}
+                                  onClick={() => handleLocationSelect(location)}
+                                  className="px-3.5 py-2.5 hover:bg-blue-50 cursor-pointer transition-colors flex items-center gap-2.5 border-b border-gray-50 last:border-0"
+                                >
+                                  <MapPin size={16} className="text-blue-500 flex-shrink-0" />
+                                  <div className="min-w-0 flex-1">
+                                    <div className="text-[13px] font-semibold text-gray-800 truncate">{location.city || location.name}</div>
+                                    <div className="text-[11px] text-gray-400 truncate">{location.type === 'country' ? 'Country' : `${location.country || ''}${location.destinationCode ? ` · ${location.destinationCode}` : ''}`}</div>
+                                  </div>
+                                  <span className="text-[10px] bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full font-medium">City</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Section 2: Hotels */}
+                          {(hotelSuggestions.length > 0 || filteredLocations.filter(l => l.type === 'hotel').length > 0) && (
+                            <div>
+                              <div className="px-3 pt-2.5 pb-1 text-[11px] font-bold text-gray-500 uppercase tracking-wider bg-gray-50/80 border-b border-gray-100 flex items-center gap-1.5">
+                                <Building2 size={13} className="text-emerald-600" />
+                                <span>Hotels & Properties</span>
+                              </div>
+                              {/* MongoDB/Cache Hotels */}
+                              {hotelSuggestions.map((hotel, idx) => (
+                                <div
+                                  key={`h-${idx}`}
+                                  onClick={() => handleHotelSelect(hotel)}
+                                  className="px-3.5 py-2.5 hover:bg-emerald-50 cursor-pointer transition-colors flex items-center gap-2.5 border-b border-gray-50 last:border-0"
+                                >
+                                  <Building2 size={16} className="text-emerald-600 flex-shrink-0" />
+                                  <div className="min-w-0 flex-1">
+                                    <div className="text-[13px] font-semibold text-gray-800 truncate">{hotel.name}</div>
+                                    <div className="text-[11px] text-gray-400 truncate">
+                                      {hotel.zoneName || hotel.destinationName || ''} {hotel.countryCode ? `· ${hotel.countryCode}` : ''}
+                                    </div>
+                                  </div>
+                                  <span className="text-[10px] bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full font-medium">Hotel</span>
+                                </div>
+                              ))}
+                              {/* Locations API Hotels */}
+                              {filteredLocations.filter(l => l.type === 'hotel').map((hotel, idx) => (
+                                <div
+                                  key={`lh-${idx}`}
+                                  onClick={() => handleHotelSelect(hotel)}
+                                  className="px-3.5 py-2.5 hover:bg-emerald-50 cursor-pointer transition-colors flex items-center gap-2.5 border-b border-gray-50 last:border-0"
+                                >
+                                  <Building2 size={16} className="text-emerald-600 flex-shrink-0" />
+                                  <div className="min-w-0 flex-1">
+                                    <div className="text-[13px] font-semibold text-gray-800 truncate">{hotel.name}</div>
+                                    <div className="text-[11px] text-gray-400 truncate">
+                                      {hotel.city || hotel.destinationCode || ''} {hotel.countryCode ? `· ${hotel.countryCode}` : ''}
+                                    </div>
+                                  </div>
+                                  <span className="text-[10px] bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full font-medium">Hotel</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="p-4 text-center text-gray-400 text-sm">
+                          No destinations or hotels found for "{searchQuery}"
+                        </div>
+                      )}
+                    </div>
                   )}
                 </div>
 
-                {/* Selected Status Indicator */}
-                {selectedHotelCode && (
-                  <p className="text-[11px] text-emerald-600 mt-1 px-1 flex items-center gap-1">
-                    <span>🏨</span> Direct hotel search: <span className="font-semibold">{searchQuery}</span>
-                  </p>
-                )}
-                {!selectedHotelCode && selectedLocation && (
-                  <p className="text-[11px] text-blue-600 mt-1 px-1 flex items-center gap-1">
-                    <span>📍</span> City / destination search: <span className="font-semibold">{selectedLocation.name || selectedLocation.city}</span>
-                  </p>
-                )}
-
-                {/* Unified Dropdown with Grouped Results */}
-                {showLocationDropdown && searchQuery.trim().length >= 2 && (
-                  <div className="absolute left-0 right-0 top-full mt-1 z-[220] bg-white border border-gray-200 rounded-xl shadow-2xl max-h-[60vh] overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
-                    {isLoadingLocations ? (
-                      <div className="p-4 text-center text-gray-400 text-sm flex items-center justify-center gap-2">
-                        <span className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
-                        <span>Searching destinations and hotels...</span>
-                      </div>
-                    ) : (filteredLocations.length > 0 || hotelSuggestions.length > 0) ? (
-                      <div>
-                        {/* Section 1: Destinations */}
-                        {filteredLocations.filter(l => l.type !== 'hotel').length > 0 && (
-                          <div>
-                            <div className="px-3 pt-2.5 pb-1 text-[11px] font-bold text-gray-500 uppercase tracking-wider bg-gray-50/80 border-b border-gray-100 flex items-center gap-1.5">
-                              <MapPin size={13} className="text-blue-600" />
-                              <span>Destinations & Cities</span>
-                            </div>
-                            {filteredLocations.filter(l => l.type !== 'hotel').map((location, index) => (
-                              <div
-                                key={`loc-${index}`}
-                                onClick={() => handleLocationSelect(location)}
-                                className="px-3.5 py-2.5 hover:bg-blue-50 cursor-pointer transition-colors flex items-center gap-2.5 border-b border-gray-50 last:border-0"
-                              >
-                                <MapPin size={16} className="text-blue-500 flex-shrink-0" />
-                                <div className="min-w-0 flex-1">
-                                  <div className="text-[13px] font-semibold text-gray-800 truncate">{location.city || location.name}</div>
-                                  <div className="text-[11px] text-gray-400 truncate">{location.type === 'country' ? 'Country' : `${location.country || ''}${location.destinationCode ? ` · ${location.destinationCode}` : ''}`}</div>
-                                </div>
-                                <span className="text-[10px] bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full font-medium">City</span>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-
-                        {/* Section 2: Hotels */}
-                        {(hotelSuggestions.length > 0 || filteredLocations.filter(l => l.type === 'hotel').length > 0) && (
-                          <div>
-                            <div className="px-3 pt-2.5 pb-1 text-[11px] font-bold text-gray-500 uppercase tracking-wider bg-gray-50/80 border-b border-gray-100 flex items-center gap-1.5">
-                              <Building2 size={13} className="text-emerald-600" />
-                              <span>Hotels & Properties</span>
-                            </div>
-                            {/* MongoDB/Cache Hotels */}
-                            {hotelSuggestions.map((hotel, idx) => (
-                              <div
-                                key={`h-${idx}`}
-                                onClick={() => handleHotelSelect(hotel)}
-                                className="px-3.5 py-2.5 hover:bg-emerald-50 cursor-pointer transition-colors flex items-center gap-2.5 border-b border-gray-50 last:border-0"
-                              >
-                                <Building2 size={16} className="text-emerald-600 flex-shrink-0" />
-                                <div className="min-w-0 flex-1">
-                                  <div className="text-[13px] font-semibold text-gray-800 truncate">{hotel.name}</div>
-                                  <div className="text-[11px] text-gray-400 truncate">
-                                    {hotel.zoneName || hotel.destinationName || ''} {hotel.countryCode ? `· ${hotel.countryCode}` : ''}
-                                  </div>
-                                </div>
-                                <span className="text-[10px] bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full font-medium">Hotel</span>
-                              </div>
-                            ))}
-                            {/* Locations API Hotels */}
-                            {filteredLocations.filter(l => l.type === 'hotel').map((hotel, idx) => (
-                              <div
-                                key={`lh-${idx}`}
-                                onClick={() => handleHotelSelect(hotel)}
-                                className="px-3.5 py-2.5 hover:bg-emerald-50 cursor-pointer transition-colors flex items-center gap-2.5 border-b border-gray-50 last:border-0"
-                              >
-                                <Building2 size={16} className="text-emerald-600 flex-shrink-0" />
-                                <div className="min-w-0 flex-1">
-                                  <div className="text-[13px] font-semibold text-gray-800 truncate">{hotel.name}</div>
-                                  <div className="text-[11px] text-gray-400 truncate">
-                                    {hotel.city || hotel.destinationCode || ''} {hotel.countryCode ? `· ${hotel.countryCode}` : ''}
-                                  </div>
-                                </div>
-                                <span className="text-[10px] bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full font-medium">Hotel</span>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="p-4 text-center text-gray-400 text-sm">
-                        No destinations or hotels found for "{searchQuery}"
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-                {/* Date Range Picker */}
-                <div className="relative" ref={calendarRef}>
-                  <label className={`block text-xs sm:text-sm font-medium ${lbl} mb-1.5 sm:mb-2 text-left`}>
+                {/* Field 2: Date Range Picker (4 columns) */}
+                <div className="md:col-span-4 relative" ref={calendarRef}>
+                  <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-gray-500 mb-1 text-left">
                     Dates <span className="text-red-500">*</span>
                   </label>
                   <div
                     onClick={() => setShowCalendar(!showCalendar)}
-                    className="flex items-center w-full px-3 py-2.5 sm:py-3 border border-gray-300 bg-white rounded-lg cursor-pointer hover:border-blue-500 transition-all"
+                    className="flex items-center w-full px-3 py-2.5 sm:py-3 border border-gray-200 hover:border-gray-300 bg-white rounded-xl cursor-pointer hover:border-blue-400 transition-all"
                   >
-                    <Calendar className="text-gray-400 mr-2 flex-shrink-0" size={18} />
-                    <span className="text-gray-700 flex-1 text-sm sm:text-base truncate">
+                    <Calendar className="text-blue-600 mr-2 flex-shrink-0" size={18} />
+                    <span className="text-gray-800 font-bold flex-1 text-xs sm:text-sm truncate">
                       <span className="hidden sm:inline">{format(dateRange[0].startDate, 'MMM dd, yyyy')} - {format(dateRange[0].endDate, 'MMM dd, yyyy')}</span>
                       <span className="sm:hidden">{format(dateRange[0].startDate, 'MMM dd')} - {format(dateRange[0].endDate, 'MMM dd')}</span>
                     </span>
-                    <span className="text-xs sm:text-sm text-gray-500 ml-2 flex-shrink-0">
-                      ({calculateNights()}n)
+                    <span className="text-[11px] font-bold text-blue-600 ml-1.5 flex-shrink-0 bg-blue-50 px-1.5 py-0.5 rounded-md">
+                      {calculateNights()}n
                     </span>
                   </div>
 
@@ -1293,7 +1294,7 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
                         <button
                           type="button"
                           onClick={() => setShowCalendar(false)}
-                          className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm"
+                          className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm cursor-pointer"
                         >
                           OK
                         </button>
@@ -1303,20 +1304,20 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
                   , document.body)}
                 </div>
 
-                {/* Travellers Dropdown */}
-                <div className="relative" ref={travellerRef}>
-                  <label className={`block text-xs sm:text-sm font-medium ${lbl} mb-1.5 sm:mb-2 text-left`}>
+                {/* Field 3: Travellers Dropdown (3 columns) */}
+                <div className="md:col-span-3 relative" ref={travellerRef}>
+                  <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-gray-500 mb-1 text-left">
                     Travellers & Rooms <span className="text-red-500">*</span>
                   </label>
                   <div
                     onClick={() => setShowTravellerDropdown(!showTravellerDropdown)}
-                    className="flex items-center w-full px-3 py-2.5 sm:py-3 border border-gray-300 bg-white rounded-lg cursor-pointer hover:border-blue-500 transition-all"
+                    className="flex items-center w-full px-3 py-2.5 sm:py-3 border border-gray-200 hover:border-gray-300 bg-white rounded-xl cursor-pointer hover:border-blue-400 transition-all"
                   >
-                    <Users className="text-gray-400 mr-2 flex-shrink-0" size={18} />
-                    <span className="text-gray-700 flex-1 text-sm sm:text-base truncate">
+                    <Users className="text-blue-600 mr-2 flex-shrink-0" size={18} />
+                    <span className="text-gray-800 font-bold flex-1 text-xs sm:text-sm truncate">
                       {getTravellerSummary()}
                     </span>
-                    <ChevronDown className="text-gray-400 flex-shrink-0" size={18} />
+                    <ChevronDown className="text-gray-400 flex-shrink-0" size={16} />
                   </div>
 
                   {showTravellerDropdown && createPortal(
