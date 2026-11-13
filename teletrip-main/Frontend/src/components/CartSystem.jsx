@@ -769,10 +769,20 @@ export const SlideOutCart = ({ isOpen, onClose, onProceedToCheckout }) => {
                 </div>
                 <p className="text-[14px] font-medium text-gray-800 mb-1">Your cart is empty</p>
                 <p className="text-[12px] text-gray-400 mb-5">Search and add hotels or experiences</p>
-                <button onClick={onClose} className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-[13px] font-medium transition-colors">Browse</button>
+                <button onClick={onClose} className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-[13px] font-medium transition-colors cursor-pointer">Browse</button>
               </div>
             ) : (
               <div className="p-4 space-y-3">
+                {/* 15-Minute Inventory Hold Timer Banner */}
+                <div className="p-2.5 bg-amber-50/90 border border-amber-200/80 rounded-xl flex items-center justify-between text-xs text-amber-900">
+                  <div className="flex items-center gap-1.5 font-bold">
+                    <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                    <span>Inventory held for checkout</span>
+                  </div>
+                  <span className="font-mono font-black text-amber-800 bg-amber-100/90 px-2 py-0.5 rounded-md text-[11px]">
+                    14:59
+                  </span>
+                </div>
                 {items.map((item, index) => {
                   console.log(`🛒 Cart item ${index}:`, { hotelName: item.hotelName, roomName: item.roomName, id: item.id });
                   const nights = calculateNights(item.checkIn, item.checkOut);

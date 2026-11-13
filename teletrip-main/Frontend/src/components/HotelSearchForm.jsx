@@ -199,23 +199,21 @@ const TransfersTab = ({ variant = 'dark' }) => {
   return (
     <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
       {error && (
-        <div className="bg-red-500/20 border border-red-400/30 text-red-200 p-3 rounded-lg text-sm">
+        <div className="bg-red-500/20 border border-red-400/30 text-red-600 p-3 rounded-xl text-xs font-semibold">
           {error}
         </div>
       )}
 
-      {/* Trip Type — pill toggle buttons, not radio inputs */}
-      <div className="flex gap-2">
+      {/* Trip Type — modern pill toggle buttons */}
+      <div className="flex items-center gap-2">
         <button
           type="button"
           onClick={() => setTripType('one_way')}
           style={{ minHeight: 'unset' }}
-          className={`no-min-h flex-1 py-2 rounded-lg text-sm font-semibold transition-all border ${
+          className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all border cursor-pointer ${
             tripType === 'one_way'
-              ? 'bg-blue-600 text-white border-blue-600'
-              : variant === 'light'
-                ? 'bg-white text-gray-600 border-gray-300 hover:border-blue-400'
-                : 'bg-white/10 text-white/80 border-white/20 hover:bg-white/20'
+              ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+              : 'bg-gray-100 text-gray-600 border-gray-200 hover:border-gray-300'
           }`}
         >
           One Way
@@ -224,24 +222,33 @@ const TransfersTab = ({ variant = 'dark' }) => {
           type="button"
           onClick={() => setTripType('round_trip')}
           style={{ minHeight: 'unset' }}
-          className={`no-min-h flex-1 py-2 rounded-lg text-sm font-semibold transition-all border ${
+          className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all border cursor-pointer ${
             tripType === 'round_trip'
-              ? 'bg-blue-600 text-white border-blue-600'
-              : variant === 'light'
-                ? 'bg-white text-gray-600 border-gray-300 hover:border-blue-400'
-                : 'bg-white/10 text-white/80 border-white/20 hover:bg-white/20'
+              ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+              : 'bg-gray-100 text-gray-600 border-gray-200 hover:border-gray-300'
           }`}
         >
           Round Trip
         </button>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-        <div className="relative" ref={pickupRef}>
-          <label className={`block text-xs sm:text-sm font-medium ${lbl} mb-1.5 sm:mb-2 text-left`}>
+
+      {/* Option 1 Unified Single-Row Grid on Desktop */}
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-2.5 sm:gap-3 relative items-end">
+        {/* Field 1: Pickup Location (4 columns) */}
+        <div className="md:col-span-4 relative" ref={pickupRef}>
+          <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-gray-500 mb-1 text-left">
             Pickup Location <span className="text-red-500">*</span>
           </label>
-          <div className="flex items-center w-full border border-gray-300 bg-white rounded-lg focus-within:ring-2 focus-within:ring-blue-500 px-3 py-2.5 sm:py-3 gap-2">
-            <MapPin className="text-gray-400 flex-shrink-0" size={18} />
+          <div className={`flex items-center w-full border bg-white rounded-xl focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent px-3 py-2.5 sm:py-3 gap-2 ${
+            selectedPickup ? 'border-blue-400 bg-blue-50/20' : 'border-gray-200 hover:border-gray-300'
+          }`}>
+            {selectedPickup?.type === 'IATA' ? (
+              <Plane className="flex-shrink-0 text-blue-600" size={18} />
+            ) : selectedPickup ? (
+              <Building2 className="flex-shrink-0 text-emerald-600" size={18} />
+            ) : (
+              <MapPin className="flex-shrink-0 text-gray-400" size={18} />
+            )}
             <input
               type="text"
               value={pickupQuery}
@@ -251,16 +258,22 @@ const TransfersTab = ({ variant = 'dark' }) => {
                 if (e.target.value.trim() === '') setSelectedPickup(null);
               }}
               onFocus={() => setShowPickupDropdown(true)}
-              placeholder="Airport, hotel or area, e.g. DXB, Hilton Dubai"
+              placeholder="Airport, hotel or area, e.g. DXB"
               required
-              className="flex-1 min-w-0 outline-none bg-transparent text-gray-700 text-sm sm:text-base placeholder-gray-400"
+              className="flex-1 min-w-0 outline-none bg-transparent text-gray-800 text-xs sm:text-sm font-bold placeholder-gray-400"
             />
             {pickupQuery && (
-              <button type="button" onClick={() => { setPickupQuery(''); setSelectedPickup(null); setFilteredPickupLocations([]); }} className="text-gray-400 hover:text-gray-600 flex-shrink-0"><X size={16} /></button>
+              <button
+                type="button"
+                onClick={() => { setPickupQuery(''); setSelectedPickup(null); setFilteredPickupLocations([]); }}
+                className="text-gray-400 hover:text-gray-600 flex-shrink-0 cursor-pointer"
+              >
+                <X size={16} />
+              </button>
             )}
           </div>
           {showPickupDropdown && pickupQuery.trim() !== '' && (
-            <div className="absolute left-0 right-0 top-full mt-1 z-[210] bg-white border border-gray-200 rounded-xl shadow-2xl max-h-[60vh] overflow-y-auto" style={{scrollbarWidth:'thin'}}>
+            <div className="absolute left-0 right-0 top-full mt-1 z-[210] bg-white border border-gray-200 rounded-2xl shadow-2xl max-h-[60vh] overflow-y-auto" style={{scrollbarWidth:'thin'}}>
               {isLoadingLocations ? (
                 <div className="p-3 text-center text-gray-500 text-sm">Searching locations...</div>
               ) : groupedPickup.length > 0 ? (
@@ -306,12 +319,21 @@ const TransfersTab = ({ variant = 'dark' }) => {
           )}
         </div>
 
-        <div className="relative" ref={dropoffRef}>
-          <label className={`block text-xs sm:text-sm font-medium ${lbl} mb-1.5 sm:mb-2 text-left`}>
+        {/* Field 2: Dropoff Location (4 columns) */}
+        <div className="md:col-span-4 relative" ref={dropoffRef}>
+          <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-gray-500 mb-1 text-left">
             Dropoff Location <span className="text-red-500">*</span>
           </label>
-          <div className="flex items-center w-full border border-gray-300 bg-white rounded-lg focus-within:ring-2 focus-within:ring-blue-500 px-3 py-2.5 sm:py-3 gap-2">
-            <MapPin className="text-gray-400 flex-shrink-0" size={18} />
+          <div className={`flex items-center w-full border bg-white rounded-xl focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent px-3 py-2.5 sm:py-3 gap-2 ${
+            selectedDropoff ? 'border-blue-400 bg-blue-50/20' : 'border-gray-200 hover:border-gray-300'
+          }`}>
+            {selectedDropoff?.type === 'IATA' ? (
+              <Plane className="flex-shrink-0 text-blue-600" size={18} />
+            ) : selectedDropoff ? (
+              <Building2 className="flex-shrink-0 text-emerald-600" size={18} />
+            ) : (
+              <MapPin className="flex-shrink-0 text-gray-400" size={18} />
+            )}
             <input
               type="text"
               value={dropoffQuery}
@@ -321,16 +343,22 @@ const TransfersTab = ({ variant = 'dark' }) => {
                 if (e.target.value.trim() === '') setSelectedDropoff(null);
               }}
               onFocus={() => setShowDropoffDropdown(true)}
-              placeholder="Airport, hotel or area, e.g. DXB, DAMAC Maison"
+              placeholder="Airport, hotel or area, e.g. Marina"
               required
-              className="flex-1 min-w-0 outline-none bg-transparent text-gray-700 text-sm sm:text-base placeholder-gray-400"
+              className="flex-1 min-w-0 outline-none bg-transparent text-gray-800 text-xs sm:text-sm font-bold placeholder-gray-400"
             />
             {dropoffQuery && (
-              <button type="button" onClick={() => { setDropoffQuery(''); setSelectedDropoff(null); setFilteredDropoffLocations([]); }} className="text-gray-400 hover:text-gray-600 flex-shrink-0"><X size={16} /></button>
+              <button
+                type="button"
+                onClick={() => { setDropoffQuery(''); setSelectedDropoff(null); setFilteredDropoffLocations([]); }}
+                className="text-gray-400 hover:text-gray-600 flex-shrink-0 cursor-pointer"
+              >
+                <X size={16} />
+              </button>
             )}
           </div>
           {showDropoffDropdown && dropoffQuery.trim() !== '' && (
-            <div className="absolute left-0 right-0 top-full mt-1 z-[210] bg-white border border-gray-200 rounded-xl shadow-2xl max-h-[60vh] overflow-y-auto" style={{scrollbarWidth:'thin'}}>
+            <div className="absolute left-0 right-0 top-full mt-1 z-[210] bg-white border border-gray-200 rounded-2xl shadow-2xl max-h-[60vh] overflow-y-auto" style={{scrollbarWidth:'thin'}}>
               {isLoadingLocations ? (
                 <div className="p-3 text-center text-gray-500 text-sm">Searching locations...</div>
               ) : groupedDropoff.length > 0 ? (
@@ -376,64 +404,63 @@ const TransfersTab = ({ variant = 'dark' }) => {
           )}
         </div>
 
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-        <div className="relative" ref={calendarRef}>
-          <label className={`block text-xs sm:text-sm font-medium ${lbl} mb-1.5 sm:mb-2 text-left`}>
-            {tripType === 'round_trip' ? 'Travel Dates' : 'Travel Date'} <span className="text-red-500">*</span>
+        {/* Field 3: Travel Dates (2 columns) */}
+        <div className="md:col-span-2 relative" ref={calendarRef}>
+          <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-gray-500 mb-1 text-left">
+            {tripType === 'round_trip' ? 'Dates' : 'Date'} <span className="text-red-500">*</span>
           </label>
-        <div
-          onClick={() => setShowCalendar(!showCalendar)}
-          className="flex items-center w-full px-3 py-2.5 sm:py-3 border border-gray-300 bg-white rounded-lg cursor-pointer hover:border-blue-500 transition-all"
-        >
-          <Calendar className="text-gray-400 mr-2 flex-shrink-0" size={18} />
-          <span className="text-gray-700 flex-1 text-sm sm:text-base truncate">
-            {tripType === 'round_trip'
-              ? `${format(transferDateRange[0].startDate, 'MMM dd, yyyy')} – ${format(transferDateRange[0].endDate, 'MMM dd, yyyy')}`
-              : format(transferDateRange[0].startDate, 'MMM dd, yyyy')}
-          </span>
-        </div>
-        {showCalendar && createPortal(
-          <div data-calendar-portal style={{position:"fixed",inset:0,zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.3)"}} onClick={(e) => { if (e.target === e.currentTarget) setShowCalendar(false); }}><div className="bg-white border border-gray-200 rounded-2xl shadow-2xl overflow-auto max-h-[80vh]" style={{maxWidth:"95vw",margin:"16px"}}>
-            <Suspense fallback={<div className="p-8 text-center text-gray-400">Loading calendar...</div>}>
-              <LazyDateRange
-                ranges={transferDateRange}
-                onChange={(item) => {
-                  setTransferDateRange([item.selection]);
-                  if (tripType === 'one_way') setShowCalendar(false);
-                }}
-                minDate={new Date()}
-                moveRangeOnFirstSelection={false}
-                preventSnapRefocus={true}
-                months={tripType === 'round_trip' ? (window.innerWidth < 640 ? 1 : 2) : 1}
-                direction="horizontal"
-                rangeColors={['#2563eb']}
-                showDateDisplay={false}
-                selectsRange={tripType === 'round_trip'}
-              />
-            </Suspense>
-            <div className="px-4 pb-3 flex justify-end">
-              <button type="button" onClick={() => setShowCalendar(false)} className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm">OK</button>
+          <div
+            onClick={() => setShowCalendar(!showCalendar)}
+            className="flex items-center w-full px-3 py-2.5 sm:py-3 border border-gray-200 hover:border-gray-300 bg-white rounded-xl cursor-pointer hover:border-blue-400 transition-all"
+          >
+            <Calendar className="text-blue-600 mr-2 flex-shrink-0" size={18} />
+            <span className="text-gray-800 font-bold flex-1 text-xs sm:text-sm truncate">
+              {tripType === 'round_trip'
+                ? `${format(transferDateRange[0].startDate, 'MMM dd')} – ${format(transferDateRange[0].endDate, 'MMM dd')}`
+                : format(transferDateRange[0].startDate, 'MMM dd, yyyy')}
+            </span>
+          </div>
+          {showCalendar && createPortal(
+            <div data-calendar-portal style={{position:"fixed",inset:0,zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.3)"}} onClick={(e) => { if (e.target === e.currentTarget) setShowCalendar(false); }}><div className="bg-white border border-gray-200 rounded-2xl shadow-2xl overflow-auto max-h-[80vh]" style={{maxWidth:"95vw",margin:"16px"}}>
+              <Suspense fallback={<div className="p-8 text-center text-gray-400">Loading calendar...</div>}>
+                <LazyDateRange
+                  ranges={transferDateRange}
+                  onChange={(item) => {
+                    setTransferDateRange([item.selection]);
+                    if (tripType === 'one_way') setShowCalendar(false);
+                  }}
+                  minDate={new Date()}
+                  moveRangeOnFirstSelection={false}
+                  preventSnapRefocus={true}
+                  months={tripType === 'round_trip' ? (window.innerWidth < 640 ? 1 : 2) : 1}
+                  direction="horizontal"
+                  rangeColors={['#2563eb']}
+                  showDateDisplay={false}
+                  selectsRange={tripType === 'round_trip'}
+                />
+              </Suspense>
+              <div className="px-4 pb-3 flex justify-end">
+                <button type="button" onClick={() => setShowCalendar(false)} className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm cursor-pointer">OK</button>
+              </div>
             </div>
-          </div>
-          </div>
-        , document.body)}
+            </div>
+          , document.body)}
         </div>
 
-        <div className="relative" ref={travellerRef}>
-          <label className={`block text-xs sm:text-sm font-medium ${lbl} mb-1.5 sm:mb-2 text-left`}>
-            Travellers <span className="text-red-500">*</span>
+        {/* Field 4: Travellers (2 columns) */}
+        <div className="md:col-span-2 relative" ref={travellerRef}>
+          <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-gray-500 mb-1 text-left">
+            Passengers <span className="text-red-500">*</span>
           </label>
           <div
             onClick={() => setShowTravellerDropdown(!showTravellerDropdown)}
-            className="flex items-center w-full px-3 py-2.5 sm:py-3 border border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 transition-all bg-white"
+            className="flex items-center w-full px-3 py-2.5 sm:py-3 border border-gray-200 hover:border-gray-300 bg-white rounded-xl cursor-pointer hover:border-blue-400 transition-all"
           >
-            <Users className="text-gray-400 mr-2 flex-shrink-0" size={18} />
-            <span className="text-gray-700 flex-1 text-sm sm:text-base truncate">
-              {adults} Adult{adults > 1 ? 's' : ''}{children > 0 ? `, ${children} Child${children > 1 ? 'ren' : ''}` : ''}{infants > 0 ? `, ${infants} Infant${infants > 1 ? 's' : ''}` : ''}
+            <Users className="text-blue-600 mr-2 flex-shrink-0" size={18} />
+            <span className="text-gray-800 font-bold flex-1 text-xs sm:text-sm truncate">
+              {adults + children + infants} Guest{(adults + children + infants) > 1 ? 's' : ''}
             </span>
-            <ChevronDown className="text-gray-400 flex-shrink-0" size={18} />
+            <ChevronDown className="text-gray-400 flex-shrink-0" size={16} />
           </div>
           {showTravellerDropdown && createPortal(
             <div data-traveller-portal style={{position:"fixed",inset:0,zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.3)"}} onClick={(e) => { if (e.target === e.currentTarget) setShowTravellerDropdown(false); }}>
@@ -462,18 +489,35 @@ const TransfersTab = ({ variant = 'dark' }) => {
                     <button type="button" onClick={() => setInfants(Math.min(5, infants + 1))} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Plus size={14} /></button>
                   </div>
                 </div>
-                <button type="button" onClick={() => setShowTravellerDropdown(false)} className="w-full mt-4 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm" style={{minHeight:'unset'}}>Done</button>
+                <button type="button" onClick={() => setShowTravellerDropdown(false)} className="w-full mt-4 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm cursor-pointer" style={{minHeight:'unset'}}>Done</button>
               </div>
             </div>
           , document.body)}
         </div>
       </div>
 
-      <div className="flex justify-end">
+      {/* Lower Action Row: Reassurances & Search Transfers CTA Button */}
+      <div className="mt-3.5 pt-3 border-t border-gray-100 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2 text-xs">
+          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 font-bold border border-emerald-100 text-[11px]">
+            <CheckCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+            <span>Flight Tracking Included</span>
+          </span>
+          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-800 font-bold border border-blue-100 text-[11px]">
+            <ShieldCheck className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+            <span>Free Cancellation 24h</span>
+          </span>
+          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-900 font-bold border border-amber-200 text-[11px]">
+            <Sparkles className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+            <span>Meet & Greet Available</span>
+          </span>
+        </div>
+
         <button
           type="submit"
           disabled={loading}
-          className="w-full md:w-auto px-6 sm:px-8 py-2.5 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 transition-colors font-medium flex items-center justify-center space-x-2 text-sm sm:text-base"
+          style={{ cursor: 'pointer' }}
+          className="w-full md:w-auto px-6 sm:px-8 py-2.5 sm:py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-xl shadow-lg hover:shadow-xl transition-all font-bold flex items-center justify-center space-x-2 cursor-pointer text-sm sm:text-base shrink-0 active:scale-98"
         >
           <Search size={18} />
           <span>{loading ? 'Searching...' : 'Search Transfers'}</span>
@@ -595,77 +639,95 @@ const ExperiencesTab = ({ variant = 'dark' }) => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
-      <div className="relative" ref={locationRef}>
-        <label className={`block text-xs sm:text-sm font-medium ${lbl} mb-1.5 sm:mb-2 text-left`}>
-          Destination <span className="text-red-500">*</span>
-        </label>
-        <div className="flex items-center w-full border border-gray-300 bg-white rounded-lg focus-within:ring-2 focus-within:ring-blue-500 px-3 py-2.5 sm:py-3 gap-2">
-          <MapPin className="text-gray-400 flex-shrink-0" size={18} />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => {
-              setSearchQuery(e.target.value);
-              setShowLocationDropdown(true);
-              if (e.target.value.trim() === '') setSelectedLocation(null);
-            }}
-            onFocus={() => setShowLocationDropdown(true)}
-            placeholder="Where are you going? e.g: Dubai"
-            className="flex-1 min-w-0 outline-none bg-transparent text-gray-700 text-sm sm:text-base placeholder-gray-400"
-            required
-          />
-          {searchQuery && (
-            <button type="button" onClick={() => { setSearchQuery(''); setSelectedLocation(null); setFilteredLocations([]); }} className="text-gray-400 hover:text-gray-600 flex-shrink-0"><X size={16} /></button>
+      {/* Option 1 Unified Single-Row Grid on Desktop */}
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-2.5 sm:gap-3 relative items-end">
+        {/* Field 1: Destination or Activity Search (5 columns) */}
+        <div className="md:col-span-5 relative" ref={locationRef}>
+          <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-gray-500 mb-1 text-left">
+            Destination or Activity <span className="text-red-500">*</span>
+          </label>
+          <div className={`flex items-center w-full border bg-white rounded-xl focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent px-3 py-2.5 sm:py-3 gap-2 ${
+            selectedLocation ? 'border-blue-400 bg-blue-50/20' : 'border-gray-200 hover:border-gray-300'
+          }`}>
+            <Compass className={`flex-shrink-0 ${selectedLocation ? 'text-blue-600' : 'text-gray-400'}`} size={18} />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setShowLocationDropdown(true);
+                if (e.target.value.trim() === '') setSelectedLocation(null);
+              }}
+              onFocus={() => setShowLocationDropdown(true)}
+              placeholder="Where are you going? e.g: Dubai, Paris"
+              className="flex-1 min-w-0 outline-none bg-transparent text-gray-800 text-xs sm:text-sm font-bold placeholder-gray-400"
+              required
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => { setSearchQuery(''); setSelectedLocation(null); setFilteredLocations([]); }}
+                className="text-gray-400 hover:text-gray-600 flex-shrink-0 cursor-pointer"
+              >
+                <X size={16} />
+              </button>
+            )}
+          </div>
+
+          {showLocationDropdown && (searchQuery.trim() !== '' || isLoadingLocations) && (
+            <div className="absolute left-0 right-0 top-full mt-1 z-[210] bg-white border border-gray-200 rounded-2xl shadow-2xl max-h-[60vh] overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
+              {isLoadingLocations ? (
+                <div className="p-4 text-center text-gray-400 text-sm flex items-center justify-center gap-2">
+                  <span className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                  <span>Loading locations...</span>
+                </div>
+              ) : filteredLocations.length > 0 ? (
+                <div>
+                  <div className="px-3 pt-2.5 pb-1 text-[11px] font-bold text-gray-500 uppercase tracking-wider bg-gray-50/80 border-b border-gray-100 flex items-center gap-1.5">
+                    <MapPin size={13} className="text-blue-600" />
+                    <span>Popular Destinations</span>
+                  </div>
+                  <ul>
+                    {filteredLocations.map((location, index) => (
+                      <li
+                        key={index} 
+                        onClick={() => handleLocationSelect(location)}
+                        className="px-3.5 py-2.5 hover:bg-blue-50 cursor-pointer border-b border-gray-50 last:border-b-0 transition-colors flex items-center gap-2.5"
+                      >
+                        <MapPin size={16} className="text-blue-600 flex-shrink-0" />
+                        <div className="min-w-0 flex-1">
+                          <div className="font-semibold text-gray-800 text-xs sm:text-sm truncate">{location.city}</div>
+                          <div className="text-[11px] text-gray-400 truncate">City in {location.country}</div>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : (
+                <div className="p-4 text-center text-gray-400 text-sm">
+                  No locations found. Try a different search term.
+                </div>
+              )}
+            </div>
           )}
         </div>
 
-        {showLocationDropdown && (searchQuery.trim() !== '' || isLoadingLocations) && (
-          <div className="absolute left-0 right-0 top-full mt-1 z-[210] bg-white border border-gray-200 rounded-xl shadow-2xl max-h-[60vh] overflow-y-auto">
-            {isLoadingLocations ? (
-              <div className="p-3 sm:p-4 text-center text-gray-500 text-sm sm:text-base">Loading locations...</div>
-            ) : filteredLocations.length > 0 ? (
-              <ul>
-                {filteredLocations.map((location, index) => (
-                  <li
-                    key={index} 
-                    onClick={() => handleLocationSelect(location)}
-                    className="px-3 sm:px-4 py-2.5 sm:py-3 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0 transition-colors"
-                  >
-                    <div className="flex items-center space-x-2 sm:space-x-3">
-                      <MapPin size={16} className="text-blue-600 flex-shrink-0" />
-                      <div className="min-w-0 flex-1">
-                        <div className="font-medium text-gray-800 text-sm sm:text-base truncate">{location.city}</div>
-                        <div className="text-xs sm:text-sm text-gray-500 truncate">City in {location.country}</div>
-                      </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <div className="p-3 sm:p-4 text-center text-gray-500 text-sm sm:text-base">
-                No locations found. Try a different search term.
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-        <div className="relative" ref={calendarRef}>
-          <label className={`block text-xs sm:text-sm font-medium ${lbl} mb-1.5 sm:mb-2 text-left`}>
-            Dates <span className="text-red-500">*</span>
+        {/* Field 2: Dates (4 columns) */}
+        <div className="md:col-span-4 relative" ref={calendarRef}>
+          <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-gray-500 mb-1 text-left">
+            Travel Dates <span className="text-red-500">*</span>
           </label>
           <div
             onClick={() => setShowCalendar(!showCalendar)}
-            className="flex items-center w-full px-3 py-2.5 sm:py-3 border border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 bg-white"
+            className="flex items-center w-full px-3 py-2.5 sm:py-3 border border-gray-200 hover:border-gray-300 bg-white rounded-xl cursor-pointer hover:border-blue-400 transition-all"
           >
-            <Calendar className="text-gray-400 mr-2 flex-shrink-0" size={18} />
-            <span className="text-gray-700 flex-1 text-sm sm:text-base truncate">
+            <Calendar className="text-blue-600 mr-2 flex-shrink-0" size={18} />
+            <span className="text-gray-800 font-bold flex-1 text-xs sm:text-sm truncate">
               <span className="hidden sm:inline">{format(dateRange[0].startDate, 'MMM dd, yyyy')} - {format(dateRange[0].endDate, 'MMM dd, yyyy')}</span>
               <span className="sm:hidden">{format(dateRange[0].startDate, 'MMM dd')} - {format(dateRange[0].endDate, 'MMM dd')}</span>
             </span>
-            <span className="text-xs sm:text-sm text-gray-500 ml-2 flex-shrink-0">
-              ({calculateNights()}d)
+            <span className="text-[11px] font-bold text-blue-600 ml-1.5 flex-shrink-0 bg-blue-50 px-1.5 py-0.5 rounded-md">
+              {calculateNights()}d
             </span>
           </div>
           {showCalendar && createPortal(
@@ -704,19 +766,20 @@ const ExperiencesTab = ({ variant = 'dark' }) => {
           , document.body)}
         </div>
 
-        <div className="relative" ref={travellerRef}>
-          <label className={`block text-xs sm:text-sm font-medium ${lbl} mb-1.5 sm:mb-2 text-left`}>
+        {/* Field 3: Travellers (3 columns) */}
+        <div className="md:col-span-3 relative" ref={travellerRef}>
+          <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-gray-500 mb-1 text-left">
             Travellers <span className="text-red-500">*</span>
           </label>
           <div
             onClick={() => setShowTravellerDropdown(!showTravellerDropdown)}
-            className="flex items-center w-full px-3 py-2.5 sm:py-3 border border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 transition-all bg-white"
+            className="flex items-center w-full px-3 py-2.5 sm:py-3 border border-gray-200 hover:border-gray-300 bg-white rounded-xl cursor-pointer hover:border-blue-400 transition-all"
           >
-            <Users className="text-gray-400 mr-2 flex-shrink-0" size={18} />
-            <span className="text-gray-700 flex-1 text-sm sm:text-base truncate">
+            <Users className="text-blue-600 mr-2 flex-shrink-0" size={18} />
+            <span className="text-gray-800 font-bold flex-1 text-xs sm:text-sm truncate">
               {adults} Adult{adults > 1 ? 's' : ''}{children > 0 ? `, ${children} Child${children > 1 ? 'ren' : ''}` : ''}{infants > 0 ? `, ${infants} Infant${infants > 1 ? 's' : ''}` : ''}
             </span>
-            <ChevronDown className="text-gray-400 flex-shrink-0" size={18} />
+            <ChevronDown className="text-gray-400 flex-shrink-0" size={16} />
           </div>
           {showTravellerDropdown && createPortal(
             <div data-traveller-portal style={{position:"fixed",inset:0,zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.3)"}} onClick={(e) => { if (e.target === e.currentTarget) setShowTravellerDropdown(false); }}>
@@ -745,17 +808,34 @@ const ExperiencesTab = ({ variant = 'dark' }) => {
                     <button type="button" onClick={() => setInfants(Math.min(5, infants + 1))} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Plus size={14} /></button>
                   </div>
                 </div>
-                <button type="button" onClick={() => setShowTravellerDropdown(false)} className="w-full mt-4 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm" style={{minHeight:'unset'}}>Done</button>
+                <button type="button" onClick={() => setShowTravellerDropdown(false)} className="w-full mt-4 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm cursor-pointer" style={{minHeight:'unset'}}>Done</button>
               </div>
             </div>
           , document.body)}
         </div>
       </div>
 
-      <div className="flex justify-end">
+      {/* Lower Action Row: Reassurances & Search Experiences CTA Button */}
+      <div className="mt-3.5 pt-3 border-t border-gray-100 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2 text-xs">
+          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 font-bold border border-emerald-100 text-[11px]">
+            <CheckCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+            <span>Instant Mobile Voucher</span>
+          </span>
+          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-800 font-bold border border-blue-100 text-[11px]">
+            <ShieldCheck className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+            <span>Skip-the-Line Entry</span>
+          </span>
+          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-900 font-bold border border-amber-200 text-[11px]">
+            <Sparkles className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+            <span>Best Rate Guarantee</span>
+          </span>
+        </div>
+
         <button
           type="submit"
-          className="w-full md:w-auto px-6 sm:px-8 py-2.5 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center justify-center space-x-2 text-sm sm:text-base"
+          style={{ cursor: 'pointer' }}
+          className="w-full md:w-auto px-6 sm:px-8 py-2.5 sm:py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-lg hover:shadow-xl transition-all font-bold flex items-center justify-center space-x-2 cursor-pointer text-sm sm:text-base shrink-0 active:scale-98"
         >
           <Search size={18} />
           <span>Search Experiences</span>
@@ -1488,6 +1568,92 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
               <span className="flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-purple-400" />
                 24/7 VIP Concierge
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* ── RICH TRANSFERS DISCOVERY STRIP ── */}
+        {activeTab === 'transfers' && variant === 'dark' && (
+          <div className="pt-3 flex flex-col items-center gap-2.5">
+            <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
+              <span className="text-xs font-black text-amber-300 flex items-center gap-1 bg-amber-950/60 backdrop-blur-md px-2.5 py-1 rounded-full border border-amber-400/30">
+                <Sparkles className="w-3 h-3 text-amber-400" />
+                <span>Popular Routes:</span>
+              </span>
+              {[
+                { name: 'DXB Airport → Downtown Dubai' },
+                { name: 'DXB → Palm Jumeirah' },
+                { name: 'Abu Dhabi (AUH) → Dubai' },
+                { name: 'DXB → Dubai Marina' },
+                { name: 'Dubai → Al Ain' }
+              ].map((route, idx) => (
+                <span
+                  key={idx}
+                  className="text-xs font-bold text-white/90 bg-white/10 px-3 py-1 rounded-full border border-white/15 backdrop-blur-md"
+                >
+                  {route.name}
+                </span>
+              ))}
+            </div>
+
+            <div className="hidden sm:flex items-center gap-4 text-[11px] font-semibold text-gray-300/80 bg-black/40 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/10">
+              <span className="flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                Flight Delay Monitoring Included
+              </span>
+              <span>•</span>
+              <span className="flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
+                Licensed Professional Drivers
+              </span>
+              <span>•</span>
+              <span className="flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                Fixed All-Inclusive Pricing
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* ── RICH EXPERIENCES DISCOVERY STRIP ── */}
+        {activeTab === 'experiences' && variant === 'dark' && (
+          <div className="pt-3 flex flex-col items-center gap-2.5">
+            <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
+              <span className="text-xs font-black text-amber-300 flex items-center gap-1 bg-amber-950/60 backdrop-blur-md px-2.5 py-1 rounded-full border border-amber-400/30">
+                <Sparkles className="w-3 h-3 text-amber-400" />
+                <span>Top Experiences:</span>
+              </span>
+              {[
+                { name: 'Desert Safari Dubai with BBQ' },
+                { name: 'Burj Khalifa At The Top' },
+                { name: 'Museum of the Future' },
+                { name: 'Louvre Abu Dhabi' },
+                { name: 'Dubai Marina Luxury Yacht' }
+              ].map((act, idx) => (
+                <span
+                  key={idx}
+                  className="text-xs font-bold text-white/90 bg-white/10 px-3 py-1 rounded-full border border-white/15 backdrop-blur-md"
+                >
+                  {act.name}
+                </span>
+              ))}
+            </div>
+
+            <div className="hidden sm:flex items-center gap-4 text-[11px] font-semibold text-gray-300/80 bg-black/40 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/10">
+              <span className="flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                Skip-the-Line Priority Vouchers
+              </span>
+              <span>•</span>
+              <span className="flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
+                Instant Barcode Confirmation
+              </span>
+              <span>•</span>
+              <span className="flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                Best Price Guarantee
               </span>
             </div>
           </div>
