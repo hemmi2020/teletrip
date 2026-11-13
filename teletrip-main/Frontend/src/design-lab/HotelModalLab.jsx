@@ -267,11 +267,14 @@ export default function HotelModalLab() {
               <button
                 type="button"
                 onClick={() => setSelectedStyle('category_shortcuts')}
-                className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
                   selectedStyle === 'category_shortcuts' ? 'bg-white text-blue-600 shadow-xs font-bold' : 'text-gray-600'
                 }`}
               >
-                Option 1: Category Chips & Accordion (Approved)
+                <span>Option 1: Existing Production Modal (Category Chips & Accordion)</span>
+                <span className="px-1.5 py-0.2 rounded-full text-[9px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300">
+                  Client Approved
+                </span>
               </button>
               <button
                 type="button"

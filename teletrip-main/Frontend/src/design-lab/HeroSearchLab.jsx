@@ -95,11 +95,14 @@ export default function HeroSearchLab() {
               <button
                 type="button"
                 onClick={() => setSelectedStyle('bedsonline_unified')}
-                className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
                   selectedStyle === 'bedsonline_unified' ? 'bg-white text-blue-600 shadow-xs font-bold' : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
-                Style 1: Bedsonline Unified Single Field
+                <span>Style 1: Bedsonline Unified Single Field</span>
+                <span className="px-1.5 py-0.2 rounded-full text-[9px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300">
+                  Client Selected
+                </span>
               </button>
               <button
                 type="button"
@@ -202,7 +205,8 @@ export default function HeroSearchLab() {
                 STYLE 1: BEDSONLINE UNIFIED SINGLE FIELD
                ════════════════════════════════════════════════════════════════════ */}
             {selectedStyle === 'bedsonline_unified' && (
-              <div className="bg-white rounded-3xl shadow-2xl p-3.5 sm:p-4 border border-white/20 text-left">
+              <div className="w-full space-y-4">
+                <div className="bg-white rounded-3xl shadow-2xl p-3.5 sm:p-4 border border-white/20 text-left">
                 {/* Product Tabs */}
                 <div className="flex items-center gap-2 border-b border-gray-100 pb-3 mb-3">
                   <button
@@ -397,17 +401,114 @@ export default function HeroSearchLab() {
                   </div>
                 </div>
 
-                <div className="mt-3 flex justify-end">
+                {/* Lower Action Row: Reassurances & Search Button (Eliminates Left Negative Space) */}
+                <div className="mt-3.5 pt-3 border-t border-gray-100 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+                  <div className="flex flex-wrap items-center gap-2 text-xs">
+                    <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 font-bold border border-emerald-100 text-[11px]">
+                      <CheckCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                      <span>Instant Confirmation</span>
+                    </span>
+                    <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-800 font-bold border border-blue-100 text-[11px]">
+                      <ShieldCheck className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                      <span>Free Cancellation Available</span>
+                    </span>
+                    <label className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-900 font-bold border border-amber-200 text-[11px] cursor-pointer hover:bg-amber-100/70 transition-colors">
+                      <input
+                        type="checkbox"
+                        checked={luxuryOnly}
+                        onChange={(e) => setLuxuryOnly(e.target.checked)}
+                        className="rounded text-amber-600 focus:ring-amber-500 w-3.5 h-3.5"
+                      />
+                      <Sparkles className="w-3 h-3 text-amber-600 shrink-0" />
+                      <span>Luxury Collection 5★</span>
+                    </label>
+                  </div>
+
                   <Link
                     to="/hotel-search-results?city=Dubai&checkIn=2026-11-15&checkOut=2026-11-18&adults=2&rooms=1"
-                    className="w-full md:w-auto px-8 py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black text-sm flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transition-all cursor-pointer active:scale-98"
+                    className="w-full md:w-auto px-8 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black text-sm flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transition-all cursor-pointer active:scale-98 shrink-0"
                   >
                     <Search className="w-4 h-4" />
                     <span>Search Best Rates</span>
                   </Link>
                 </div>
               </div>
-            )}
+
+              {/* ── RICH DESTINATION DISCOVERY STRIP (ELIMINATES HERO DEAD SPACE) ── */}
+              <div className="pt-2 flex flex-col items-center gap-3">
+                <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
+                  <span className="text-xs font-black text-amber-300 flex items-center gap-1 bg-amber-950/60 backdrop-blur-md px-2.5 py-1 rounded-full border border-amber-400/30">
+                    <Sparkles className="w-3 h-3 text-amber-400" />
+                    <span>Trending:</span>
+                  </span>
+                  {[
+                    { name: 'Dubai Marina', subtitle: 'Dubai' },
+                    { name: 'Downtown Dubai', subtitle: 'Burj Khalifa' },
+                    { name: 'Palm Jumeirah', subtitle: 'Resorts' },
+                    { name: 'Abu Dhabi', subtitle: 'Corniche' },
+                    { name: 'Paris', subtitle: 'France' },
+                    { name: 'Bali', subtitle: 'Indonesia' }
+                  ].map((dest, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => {
+                        setQuery(dest.name);
+                        setIsSuggestOpen(false);
+                      }}
+                      className="px-3 py-1 rounded-full text-xs font-bold bg-white/15 hover:bg-white/25 text-white border border-white/25 backdrop-blur-md transition-all hover:scale-105 cursor-pointer flex items-center gap-1 active:scale-95"
+                    >
+                      <MapPin className="w-3 h-3 text-cyan-300" />
+                      <span>{dest.name}</span>
+                    </button>
+                  ))}
+                </div>
+
+                {/* 4-Item Trust Metrics Bar */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 w-full pt-2 text-left">
+                  <div className="flex items-center gap-2.5 bg-slate-900/60 backdrop-blur-md p-2.5 sm:p-3 rounded-2xl border border-white/10">
+                    <div className="w-8 h-8 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center font-black shrink-0">
+                      <Building2 className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-xs font-black text-white">300,000+</div>
+                      <div className="text-[10px] text-gray-400 truncate">Wholesale Hotels</div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2.5 bg-slate-900/60 backdrop-blur-md p-2.5 sm:p-3 rounded-2xl border border-white/10">
+                    <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-black shrink-0">
+                      <ShieldCheck className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-xs font-black text-white">Direct B2B Net</div>
+                      <div className="text-[10px] text-gray-400 truncate">Bedsonline API</div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2.5 bg-slate-900/60 backdrop-blur-md p-2.5 sm:p-3 rounded-2xl border border-white/10">
+                    <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-black shrink-0">
+                      <CheckCircle className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-xs font-black text-white">Zero Hidden Fee</div>
+                      <div className="text-[10px] text-gray-400 truncate">Transparent Rates</div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2.5 bg-slate-900/60 backdrop-blur-md p-2.5 sm:p-3 rounded-2xl border border-white/10">
+                    <div className="w-8 h-8 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center font-black shrink-0">
+                      <Users className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-xs font-black text-white">24/7 Support</div>
+                      <div className="text-[10px] text-gray-400 truncate">VIP Concierge</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
             {/* ════════════════════════════════════════════════════════════════════
                 STYLE 2: FLOATING PILL BAR (FULLY RESPONSIVE ON MOBILE & DESKTOP)

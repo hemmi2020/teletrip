@@ -135,11 +135,14 @@ export default function ReviewsLab() {
               <button
                 type="button"
                 onClick={() => setSelectedStyle('sentiment_dashboard')}
-                className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
                   selectedStyle === 'sentiment_dashboard' ? 'bg-white text-blue-600 shadow-xs font-bold' : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
-                Style 1: Sentiment Dashboard
+                <span>Style 1: Sentiment Dashboard</span>
+                <span className="px-1.5 py-0.2 rounded-full text-[9px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300">
+                  Client Selected
+                </span>
               </button>
               <button
                 type="button"

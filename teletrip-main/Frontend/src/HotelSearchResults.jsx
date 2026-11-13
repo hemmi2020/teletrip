@@ -28,6 +28,8 @@ import {
   XCircle,
   ChevronLeft,
   ChevronRight,
+  List,
+  LayoutGrid,
 } from "lucide-react";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
@@ -68,6 +70,7 @@ const HotelSearchResults = () => {
   const [sortOption, setSortOption] = useState("default");
   const [showModifySearch, setShowModifySearch] = useState(false);
   const [visibleCount, setVisibleCount] = useState(20);
+  const [viewMode, setViewMode] = useState('list'); // 'list' | 'thumbnail'
 
   // Listen for Search tab press from BottomNavBar
   useEffect(() => {
@@ -1883,6 +1886,33 @@ const HotelSearchResults = () => {
                   <option value="ratingHighLow">Rating ↓</option>
                   <option value="ratingLowHigh">Rating ↑</option>
                 </select>
+
+                {/* View Changer Buttons (List vs. 2-Col Thumbnail Grid) */}
+                <div className="flex items-center bg-gray-100 p-0.5 rounded-lg border border-gray-200 flex-shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setViewMode('list')}
+                    className={`p-1.5 rounded-md transition-all cursor-pointer flex items-center gap-1 ${
+                      viewMode === 'list' ? 'bg-white text-blue-600 shadow-xs' : 'text-gray-400 hover:text-gray-700'
+                    }`}
+                    title="List View"
+                  >
+                    <List className="w-3.5 h-3.5" />
+                    <span className="text-[11px] font-semibold hidden md:inline">List</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setViewMode('thumbnail')}
+                    className={`p-1.5 rounded-md transition-all cursor-pointer flex items-center gap-1 ${
+                      viewMode === 'thumbnail' ? 'bg-white text-blue-600 shadow-xs' : 'text-gray-400 hover:text-gray-700'
+                    }`}
+                    title="2-Column Grid View"
+                  >
+                    <LayoutGrid className="w-3.5 h-3.5" />
+                    <span className="text-[11px] font-semibold hidden md:inline">2-Col</span>
+                  </button>
+                </div>
+
                 <button onClick={() => setShowModifySearch(s => !s)} className="text-[12px] text-blue-600 font-medium whitespace-nowrap cursor-pointer flex-shrink-0 px-3 py-1.5 rounded-lg border border-blue-200 bg-blue-50" style={{ minHeight: 'unset' }}>
                   {showModifySearch ? 'Close' : 'Modify'}
                 </button>
@@ -1917,8 +1947,8 @@ const HotelSearchResults = () => {
               {searchParams.get("hotelName") && <><span className="text-gray-300">|</span><span className="text-blue-600 font-medium">"{searchParams.get("hotelName")}"</span></>}
             </div>
 
-            {/* Hotel Cards */}
-            <div className="space-y-3 pb-6">
+            {/* Hotel Cards: Supports List View or 2-Column Thumbnail Grid */}
+            <div className={viewMode === 'thumbnail' ? "grid grid-cols-2 gap-2.5 sm:gap-4 pb-6" : "space-y-3 pb-6"}>
               {sortedHotels.slice(0, visibleCount).map((hotel, cardIndex) => {
                 const checkIn = searchParams.get("checkIn");
                 const checkOut = searchParams.get("checkOut");
@@ -1928,6 +1958,135 @@ const HotelSearchResults = () => {
                 const pricePerNight = nights > 0 ? (totalPrice / nights) : totalPrice;
                 const roomTypes = [...new Set((hotel.rooms || []).map(r => r.name))];
 
+                const hotelImage = hotel.thumbnail || (hotel.images && hotel.images[0]?.path ? `https://photos.hotelbeds.com/giata/original/${hotel.images[0].path.replace(/^\/+/, '')}` : "https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg");
+
+                {/* ── 2-COLUMN THUMBNAIL VIEW ── */}
+                if (viewMode === 'thumbnail') {
+                  return (
+                    <div
+                      key={hotel.id}
+                      className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-xl hover:border-blue-300 transition-all duration-300 flex flex-col justify-between group"
+                    >
+                      <div>
+                        {/* Image with Aspect Ratio & Badges */}
+                        <div className="relative aspect-[4/3] sm:aspect-[16/10] overflow-hidden bg-gray-100">
+                          <img
+                            loading="lazy"
+                            src={hotelImage}
+                            alt={hotel.name}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                            onError={(e) => {
+                              const src = e.target.src || '';
+                              if (src.includes('/giata/bigger/')) {
+                                e.target.src = src.replace('/giata/bigger/', '/giata/original/');
+                              } else if (src.includes('/giata/original/')) {
+                                e.target.src = src.replace('/giata/original/', '/giata/medium/');
+                              } else {
+                                e.target.src = "https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg";
+                              }
+                            }}
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+
+                          {/* Top Badges */}
+                          <div className="absolute top-1.5 sm:top-2 left-1.5 sm:left-2 flex flex-col gap-1 items-start">
+                            {(hotel.isLuxuryCollection || hotel.stars >= 5 || hotel.establishmentProfiles?.includes('119')) && (
+                              <span className="px-1.5 sm:px-2 py-0.5 rounded-full text-[8px] sm:text-[10px] font-black bg-black/80 backdrop-blur-md text-amber-300 border border-amber-400/50 shadow-xs flex items-center gap-0.5">
+                                <span>✨</span>
+                                <span className="hidden sm:inline">Luxury</span>
+                              </span>
+                            )}
+                            {hotel.hasFreeCancellation && (
+                              <span className="px-1.5 sm:px-2 py-0.5 rounded-full text-[8px] sm:text-[9px] font-bold bg-emerald-600/95 text-white shadow-xs">
+                                Free Cancel
+                              </span>
+                            )}
+                          </div>
+
+                          {(hotel.promos?.length > 0 || hotel.discounts?.length > 0) && (
+                            <div className="absolute top-1.5 sm:top-2 right-1.5 sm:right-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white px-1.5 sm:px-2 py-0.5 rounded text-[8px] sm:text-[9px] font-black shadow-xs flex items-center gap-1">
+                              <Tag className="w-2.5 h-2.5" />
+                              <span className="truncate max-w-[80px]">{hotel.promos?.[0] || 'Promo'}</span>
+                            </div>
+                          )}
+
+                          {/* Bottom Stars Overlay */}
+                          <div className="absolute bottom-1.5 sm:bottom-2 left-2 right-2 flex items-center justify-between text-white">
+                            <div className="flex text-amber-300">
+                              {[...Array(hotel.stars || 4)].map((_, i) => (
+                                <Star key={i} className="w-2.5 sm:w-3 h-2.5 sm:h-3 fill-current" />
+                              ))}
+                            </div>
+                            {hotelReviews[hotel.id] && hotelReviews[hotel.id].rating && (
+                              <span className="px-1.5 py-0.2 rounded bg-black/70 backdrop-blur-xs text-[10px] font-bold">
+                                ★ {Number(hotelReviews[hotel.id].rating).toFixed(1)}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Card Body */}
+                        <div className="p-2.5 sm:p-3.5 space-y-1">
+                          <h2 className="text-[12px] sm:text-[14px] font-extrabold text-gray-900 line-clamp-2 leading-snug group-hover:text-blue-600 transition-colors">
+                            {hotel.name}
+                          </h2>
+
+                          <div className="flex items-center text-gray-400 text-[10px] sm:text-[11px] truncate">
+                            <MapPin className="w-3 h-3 mr-0.5 shrink-0 text-gray-400" />
+                            <span className="truncate">{hotel.address}</span>
+                          </div>
+
+                          {/* Board / Room tags */}
+                          {hotel.boards && hotel.boards.length > 0 && (
+                            <div className="pt-0.5 flex items-center gap-1 text-[10px] sm:text-[11px] font-semibold text-emerald-700 truncate">
+                              <CheckCircle className="w-3 h-3 shrink-0 text-emerald-600" />
+                              <span className="truncate">{hotel.boards[0]}</span>
+                            </div>
+                          )}
+
+                          {roomTypes.length > 0 && (
+                            <div className="pt-0.5 text-[9px] sm:text-[10px] text-blue-600 truncate font-medium">
+                              {roomTypes[0]} {roomTypes.length > 1 ? `(+${roomTypes.length - 1} more)` : ''}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Card Footer: Price & CTA */}
+                      <div className="p-2.5 sm:p-3.5 pt-2 border-t border-gray-100 bg-slate-50/70 space-y-2">
+                        <div>
+                          <div className="text-sm sm:text-base md:text-lg font-black text-blue-600 leading-tight">
+                            {hotel.currency || 'AED'} {totalPrice.toFixed(0)}
+                          </div>
+                          {formatPKR(totalPrice, hotel.currency || 'AED', true) && (
+                            <div className="text-[10px] sm:text-[11px] text-gray-500 font-medium">
+                              ≈ {formatPKR(totalPrice, hotel.currency || 'AED', true)}
+                            </div>
+                          )}
+                          <div className="text-[9px] sm:text-[10px] text-gray-400">
+                            {hotel.currency || 'AED'} {pricePerNight.toFixed(0)}/n · {nights}n
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setRoomSelections({});
+                            setActiveRoomTab(0);
+                            setSelectedHotel(hotel);
+                          }}
+                          className="w-full py-1.5 sm:py-2 px-2 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded-xl text-[11px] sm:text-xs font-bold inline-flex items-center justify-center gap-1 shadow-xs transition-all cursor-pointer"
+                        >
+                          <Bed className="w-3.5 h-3.5" />
+                          <span>View Rooms</span>
+                        </button>
+                      </div>
+                    </div>
+                  );
+                }
+
+                {/* ── STANDARD HORIZONTAL LIST VIEW ── */}
                 return (
                   <div
                     key={hotel.id}
@@ -1937,7 +2096,7 @@ const HotelSearchResults = () => {
                     <div className="sm:w-56 lg:w-64 relative overflow-hidden flex-shrink-0">
                       <img
                         loading="lazy"
-                        src={hotel.thumbnail || (hotel.images && hotel.images[0]?.path ? `https://photos.hotelbeds.com/giata/original/${hotel.images[0].path.replace(/^\/+/, '')}` : "https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg")}
+                        src={hotelImage}
                         alt={hotel.name}
                         className="w-full aspect-video sm:aspect-auto sm:h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         onError={(e) => {

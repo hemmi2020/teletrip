@@ -109,11 +109,14 @@ export default function CartCheckoutLab() {
               <button
                 type="button"
                 onClick={() => setSelectedStyle('split_timer')}
-                className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
                   selectedStyle === 'split_timer' ? 'bg-white text-blue-600 shadow-xs font-bold' : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
-                Style 1: Split-Screen & Hold Timer
+                <span>Style 1: Split-Screen & Hold Timer</span>
+                <span className="px-1.5 py-0.2 rounded-full text-[9px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300">
+                  Client Selected
+                </span>
               </button>
               <button
                 type="button"
@@ -270,165 +273,210 @@ export default function CartCheckoutLab() {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div>
-                        <label className="text-[11px] font-bold text-gray-700 block mb-1">Email Address *</label>
-                        <input
-                          type="email"
-                          defaultValue="ahmed.khan@example.com"
-                          className="w-full text-xs p-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-[11px] font-bold text-gray-700 block mb-1">Mobile Phone (WhatsApp) *</label>
-                        <input
-                          type="tel"
-                          defaultValue="+971 50 123 4567"
-                          className="w-full text-xs p-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                      </div>
+                    <div className="pt-1">
+                      <label className="text-[11px] font-bold text-gray-700 block mb-1">Special Requests (Optional)</label>
+                      <textarea
+                        rows={2}
+                        placeholder="E.g. High floor, quiet room, late check-in..."
+                        className="w-full text-xs p-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                      />
                     </div>
                   </div>
 
-                  {/* Payment Options */}
-                  <div className="p-5 rounded-2xl border border-gray-200 bg-white space-y-3">
-                    <h4 className="text-sm font-extrabold text-gray-900 flex items-center gap-2">
-                      <Lock className="w-4 h-4 text-emerald-600" />
-                      Payment Options
-                    </h4>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                      <button
-                        type="button"
-                        onClick={() => setPaymentMethod('card')}
-                        className={`p-3 rounded-xl border text-center transition-all cursor-pointer ${
-                          paymentMethod === 'card'
-                            ? 'border-blue-600 bg-blue-50/60 ring-2 ring-blue-100'
-                            : 'border-gray-200 hover:bg-gray-50'
-                        }`}
-                      >
-                        <CreditCard className="w-5 h-5 mx-auto text-blue-600 mb-1" />
-                        <span className="text-xs font-bold block text-gray-900">Credit / Debit</span>
-                        <span className="text-[10px] text-gray-500">Visa / Mastercard</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => setPaymentMethod('bank')}
-                        className={`p-3 rounded-xl border text-center transition-all cursor-pointer ${
-                          paymentMethod === 'bank'
-                            ? 'border-blue-600 bg-blue-50/60 ring-2 ring-blue-100'
-                            : 'border-gray-200 hover:bg-gray-50'
-                        }`}
-                      >
-                        <Building2 className="w-5 h-5 mx-auto text-emerald-600 mb-1" />
-                        <span className="text-xs font-bold block text-gray-900">HBL Pay / Bank</span>
-                        <span className="text-[10px] text-gray-500">Direct Transfer</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => setPaymentMethod('hotel')}
-                        className={`p-3 rounded-xl border text-center transition-all cursor-pointer ${
-                          paymentMethod === 'hotel'
-                            ? 'border-blue-600 bg-blue-50/60 ring-2 ring-blue-100'
-                            : 'border-gray-200 hover:bg-gray-50'
-                        }`}
-                      >
-                        <Sparkles className="w-5 h-5 mx-auto text-purple-600 mb-1" />
-                        <span className="text-xs font-bold block text-gray-900">Pay at Hotel</span>
-                        <span className="text-[10px] text-gray-500">Upon Arrival</span>
-                      </button>
+                  {/* Important Booking Guarantee Notice */}
+                  <div className="p-4 rounded-2xl bg-blue-50/70 border border-blue-200/80 space-y-2">
+                    <div className="flex items-center gap-2 text-xs font-bold text-blue-900">
+                      <ShieldCheck className="w-4 h-4 text-blue-600" />
+                      <span>TeleTrip Guarantee & Cancellation Terms</span>
                     </div>
+                    <ul className="text-[11px] text-blue-800 space-y-1 list-disc list-inside">
+                      <li>Guaranteed room reservation with official Bedsonline wholesale booking voucher.</li>
+                      <li>100% full refund if cancelled before Nov 12, 2026 23:59 GST.</li>
+                      <li>No hidden booking surcharges — transparent currency exchange.</li>
+                    </ul>
                   </div>
                 </div>
 
-                {/* Right Sticky Card */}
+                {/* Right Sticky Column: Payment Options ON TOP OF Fare Breakdown & Taxes (Desktop Mode) */}
                 <div className="lg:col-span-5 space-y-4">
-                  <div className="p-5 rounded-2xl border border-gray-200 bg-slate-50/80 sticky top-20 space-y-4 shadow-sm">
-                    <h4 className="text-sm font-extrabold text-gray-900 pb-2 border-b border-gray-200">
-                      Fare Breakdown & Taxes
-                    </h4>
-
-                    <div className="space-y-2 text-xs">
-                      <div className="flex items-center justify-between text-gray-600">
-                        <span>Room Rate (3 nights)</span>
-                        <span className="font-semibold text-gray-900">AED {basePrice.toLocaleString()}</span>
+                  <div className="space-y-4 sticky top-20">
+                    {/* 1. PAYMENT OPTIONS (ON TOP OF FARE BREAKDOWN) */}
+                    <div className="p-4 sm:p-5 rounded-2xl border border-gray-200 bg-white shadow-xs space-y-3">
+                      <div className="flex items-center justify-between pb-2 border-b border-gray-100">
+                        <h4 className="text-sm font-extrabold text-gray-900 flex items-center gap-2">
+                          <Lock className="w-4 h-4 text-emerald-600" />
+                          <span>Payment Options</span>
+                        </h4>
+                        <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                          256-bit Encrypted
+                        </span>
                       </div>
 
-                      {discountApplied && (
-                        <div className="flex items-center justify-between text-emerald-700 font-bold">
-                          <span className="flex items-center gap-1">
-                            <Tag className="w-3.5 h-3.5" /> Promo Discount (10%)
-                          </span>
-                          <span>- AED {discountAmount.toLocaleString()}</span>
-                        </div>
-                      )}
-
-                      <div className="flex items-center justify-between text-gray-600">
-                        <span>VAT & Municipal Taxes (5%)</span>
-                        <span>AED {vat.toFixed(2)}</span>
-                      </div>
-
-                      <div className="flex items-center justify-between text-gray-600">
-                        <span>Service Charges (5%)</span>
-                        <span>AED {serviceCharge.toFixed(2)}</span>
-                      </div>
-
-                      <div className="pt-2 border-t border-gray-200 flex items-baseline justify-between">
-                        <div>
-                          <span className="text-sm font-extrabold text-gray-900 block">Total Due Online</span>
-                          <span className="text-[10px] text-gray-500 font-medium">All taxes & fees included</span>
-                        </div>
-                        <div className="text-right">
-                          <span className="text-xl font-black text-blue-600 block">
-                            AED {grandTotal.toFixed(2)}
-                          </span>
-                          <span className="text-xs font-bold text-gray-600">
-                            ≈ PKR {(grandTotal * 76).toLocaleString()}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Excluded Local City Tax Alert */}
-                    <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl space-y-1">
-                      <div className="flex items-center gap-1.5 text-xs font-bold text-amber-900">
-                        <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
-                        <span>Payable Locally at Hotel: AED {localCityTax}</span>
-                      </div>
-                      <p className="text-[10px] text-amber-800 leading-tight">
-                        Dubai Tourism Dirham fee (AED 20/room/night) is payable directly to hotel reception at check-out.
-                      </p>
-                    </div>
-
-                    {/* Promo Code Input */}
-                    <div className="pt-2">
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          value={promoCode}
-                          onChange={(e) => setPromoCode(e.target.value)}
-                          placeholder="Promo Code (try: TELETRIP10)"
-                          className="text-xs p-2.5 rounded-xl border border-gray-300 flex-1 uppercase font-bold focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
+                      <div className="space-y-2.5">
                         <button
                           type="button"
-                          onClick={handleApplyPromo}
-                          className="px-4 py-2.5 rounded-xl bg-gray-900 text-white font-bold text-xs hover:bg-black transition-colors"
+                          onClick={() => setPaymentMethod('card')}
+                          className={`w-full p-3 rounded-xl border text-left transition-all cursor-pointer flex items-center justify-between ${
+                            paymentMethod === 'card'
+                              ? 'border-blue-600 bg-blue-50/70 ring-2 ring-blue-100'
+                              : 'border-gray-200 hover:bg-gray-50'
+                          }`}
                         >
-                          Apply
+                          <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
+                              <CreditCard className="w-5 h-5" />
+                            </div>
+                            <div>
+                              <span className="text-xs font-extrabold text-gray-900 block">Credit / Debit Card</span>
+                              <span className="text-[11px] text-gray-500">Visa, Mastercard & UnionPay</span>
+                            </div>
+                          </div>
+                          <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                            paymentMethod === 'card' ? 'border-blue-600' : 'border-gray-300'
+                          }`}>
+                            {paymentMethod === 'card' && <div className="w-2 h-2 rounded-full bg-blue-600" />}
+                          </div>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setPaymentMethod('bank')}
+                          className={`w-full p-3 rounded-xl border text-left transition-all cursor-pointer flex items-center justify-between ${
+                            paymentMethod === 'bank'
+                              ? 'border-blue-600 bg-blue-50/70 ring-2 ring-blue-100'
+                              : 'border-gray-200 hover:bg-gray-50'
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+                              <Building2 className="w-5 h-5" />
+                            </div>
+                            <div>
+                              <span className="text-xs font-extrabold text-gray-900 block">HBL Pay / Bank Transfer</span>
+                              <span className="text-[11px] text-gray-500">Direct Online Banking & 1Bill</span>
+                            </div>
+                          </div>
+                          <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                            paymentMethod === 'bank' ? 'border-blue-600' : 'border-gray-300'
+                          }`}>
+                            {paymentMethod === 'bank' && <div className="w-2 h-2 rounded-full bg-blue-600" />}
+                          </div>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setPaymentMethod('hotel')}
+                          className={`w-full p-3 rounded-xl border text-left transition-all cursor-pointer flex items-center justify-between ${
+                            paymentMethod === 'hotel'
+                              ? 'border-blue-600 bg-blue-50/70 ring-2 ring-blue-100'
+                              : 'border-gray-200 hover:bg-gray-50'
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center shrink-0">
+                              <Sparkles className="w-5 h-5" />
+                            </div>
+                            <div>
+                              <span className="text-xs font-extrabold text-gray-900 block">Pay at Hotel / Office</span>
+                              <span className="text-[11px] text-gray-500">Reserve now, pay upon arrival</span>
+                            </div>
+                          </div>
+                          <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                            paymentMethod === 'hotel' ? 'border-blue-600' : 'border-gray-300'
+                          }`}>
+                            {paymentMethod === 'hotel' && <div className="w-2 h-2 rounded-full bg-blue-600" />}
+                          </div>
                         </button>
                       </div>
                     </div>
 
-                    <button
-                      type="button"
-                      className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-extrabold text-sm shadow-md transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-98"
-                    >
-                      <Lock className="w-4 h-4" />
-                      <span>Confirm & Complete Reservation</span>
-                    </button>
+                    {/* 2. FARE BREAKDOWN & TAXES (BELOW PAYMENT OPTIONS) */}
+                    <div className="p-4 sm:p-5 rounded-2xl border border-gray-200 bg-slate-50/90 space-y-4 shadow-sm">
+                      <h4 className="text-sm font-extrabold text-gray-900 pb-2 border-b border-gray-200">
+                        Fare Breakdown & Taxes
+                      </h4>
+
+                      <div className="space-y-2 text-xs">
+                        <div className="flex items-center justify-between text-gray-600">
+                          <span>Room Rate (3 nights)</span>
+                          <span className="font-semibold text-gray-900">AED {basePrice.toLocaleString()}</span>
+                        </div>
+
+                        {discountApplied && (
+                          <div className="flex items-center justify-between text-emerald-700 font-bold">
+                            <span className="flex items-center gap-1">
+                              <Tag className="w-3.5 h-3.5" /> Promo Discount (10%)
+                            </span>
+                            <span>- AED {discountAmount.toLocaleString()}</span>
+                          </div>
+                        )}
+
+                        <div className="flex items-center justify-between text-gray-600">
+                          <span>VAT & Municipal Taxes (5%)</span>
+                          <span>AED {vat.toFixed(2)}</span>
+                        </div>
+
+                        <div className="flex items-center justify-between text-gray-600">
+                          <span>Service Charges (5%)</span>
+                          <span>AED {serviceCharge.toFixed(2)}</span>
+                        </div>
+
+                        <div className="pt-2 border-t border-gray-200 flex items-baseline justify-between">
+                          <div>
+                            <span className="text-sm font-extrabold text-gray-900 block">Total Due Online</span>
+                            <span className="text-[10px] text-gray-500 font-medium">All taxes & fees included</span>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-xl font-black text-blue-600 block">
+                              AED {grandTotal.toFixed(2)}
+                            </span>
+                            <span className="text-xs font-bold text-gray-600">
+                              ≈ PKR {(grandTotal * 76).toLocaleString()}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Excluded Local City Tax Alert */}
+                      <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl space-y-1">
+                        <div className="flex items-center gap-1.5 text-xs font-bold text-amber-900">
+                          <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+                          <span>Payable Locally at Hotel: AED {localCityTax}</span>
+                        </div>
+                        <p className="text-[10px] text-amber-800 leading-tight">
+                          Dubai Tourism Dirham fee (AED 20/room/night) is payable directly to hotel reception at check-out.
+                        </p>
+                      </div>
+
+                      {/* Promo Code Input */}
+                      <div className="pt-1">
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={promoCode}
+                            onChange={(e) => setPromoCode(e.target.value)}
+                            placeholder="Promo Code (try: TELETRIP10)"
+                            className="text-xs p-2.5 rounded-xl border border-gray-300 flex-1 uppercase font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                          />
+                          <button
+                            type="button"
+                            onClick={handleApplyPromo}
+                            className="px-4 py-2.5 rounded-xl bg-gray-900 hover:bg-black text-white font-bold text-xs transition-colors cursor-pointer"
+                          >
+                            Apply
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Confirm CTA Button */}
+                      <button
+                        type="button"
+                        className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-extrabold text-sm shadow-md hover:shadow-lg transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-98"
+                      >
+                        <Lock className="w-4 h-4" />
+                        <span>Confirm & Complete Reservation</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>

@@ -10,12 +10,12 @@ import { Sparkles, Monitor, Tablet, Smartphone, Layers, Eye, CheckCircle, ArrowL
 import { Link } from 'react-router-dom';
 
 export default function DesignLabPage() {
-  const [selectedVariant, setSelectedVariant] = useState('ALL'); // 'ALL' | 'A' | 'B' | 'C' | 'D' | 'E'
+  const [selectedVariant, setSelectedVariant] = useState('A'); // 'A' (Client Selected) | 'ALL' | 'B' | 'C' | 'D' | 'E'
   const [viewportWidth, setViewportWidth] = useState('100%'); // '100%' | '768px' | '375px'
   const [activeModalHotel, setActiveModalHotel] = useState(null);
 
   const variantsMeta = [
-    { id: 'A', name: 'Variant A: Information Hierarchy & Luxury Clarity', tag: 'Recommended', color: 'blue' },
+    { id: 'A', name: 'Variant A: Information Hierarchy & Luxury Clarity', tag: 'Client Selected', color: 'blue' },
     { id: 'B', name: 'Variant B: Split-Pane Interactive Map & Card View', tag: 'Spatial', color: 'emerald' },
     { id: 'C', name: 'Variant C: High-Density Power-User Table Matrix', tag: 'Power User', color: 'slate' },
     { id: 'D', name: 'Variant D: Guided Smart Filter & Quick Drawer', tag: 'Contextual', color: 'purple' },
