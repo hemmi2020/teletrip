@@ -1302,14 +1302,14 @@ const HotelSearchResults = () => {
 
       <main className="max-w-7xl mx-auto px-3 sm:px-6 pt-20 sm:pt-24 pb-16 space-y-4">
         {user && (
-          <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 flex items-center">
+          <div className="bg-blue-50/90 rounded-2xl p-4 flex items-center border-0 shadow-xs">
             <User className="w-5 h-5 text-blue-600 mr-2" />
             <span className="text-blue-800 text-sm font-semibold">Welcome back, {user.name}! Your personalized search results:</span>
           </div>
         )}
 
         {/* ── MINIMAL LUXURY SEARCH BAR SUMMARY ── */}
-        <div className="bg-white p-3 sm:p-4 rounded-2xl border border-gray-200 shadow-xs flex flex-wrap items-center justify-between gap-3">
+        <div className="bg-white p-3 sm:p-4 rounded-2xl shadow-sm border-0 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
             <div className="w-10 h-10 rounded-xl bg-blue-50 border-0 flex items-center justify-center text-blue-600 font-bold shrink-0">
               <MapPin className="w-5 h-5" />
@@ -1334,7 +1334,7 @@ const HotelSearchResults = () => {
             <button
               type="button"
               onClick={() => setShowMobileFilters(true)}
-              className="lg:hidden px-3.5 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-xs rounded-xl flex items-center gap-1.5 border border-blue-200 cursor-pointer"
+              className="lg:hidden px-3.5 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-xs rounded-xl flex items-center gap-1.5 border-0 shadow-xs cursor-pointer"
             >
               <SlidersHorizontal className="w-4 h-4" />
               <span>Filters</span>
@@ -1356,7 +1356,7 @@ const HotelSearchResults = () => {
 
         {/* Expandable Modify Search form */}
         {showModifySearch && (
-          <div className="p-4 bg-white rounded-2xl border border-gray-200 shadow-sm animate-fadeIn">
+          <div className="p-4 sm:p-5 bg-white rounded-2xl shadow-md border-0 animate-fadeIn">
             <HotelSearchForm defaultTab="stays" variant="light" />
           </div>
         )}
@@ -1365,7 +1365,7 @@ const HotelSearchResults = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           {/* Left Column: Filter Sidebar (Desktop) */}
           <div className="hidden lg:block lg:col-span-4 xl:col-span-3 sticky top-24">
-            <aside className="w-full bg-white rounded-2xl border border-gray-200 p-4 space-y-4 shadow-xs text-left max-h-[calc(100vh-120px)] overflow-y-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: '#e5e7eb transparent' }}>
+            <aside className="w-full bg-white rounded-2xl border-0 p-4 sm:p-5 space-y-4 shadow-sm text-left max-h-[calc(100vh-120px)] overflow-y-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: '#e5e7eb transparent' }}>
               <div className="flex justify-between items-center pb-3 border-b border-gray-100">
                 <div className="flex items-center gap-2">
                   <SlidersHorizontal className="w-4 h-4 text-blue-600" />
@@ -1380,10 +1380,10 @@ const HotelSearchResults = () => {
                   onClick={() => {
                     setSelectedEstablishment(prev => prev.includes('119') ? prev.filter(x => x !== '119') : [...prev, '119']);
                   }}
-                  className={`flex items-center justify-between p-2.5 rounded-xl border cursor-pointer select-none transition-all ${
+                  className={`flex items-center justify-between p-2.5 rounded-xl border-0 cursor-pointer select-none transition-all ${
                     selectedEstablishment.includes('119')
-                      ? 'bg-amber-50/70 border-amber-300 text-amber-950 font-bold'
-                      : 'border-gray-200 hover:bg-gray-50 text-gray-700'
+                      ? 'bg-amber-100/80 text-amber-950 font-bold shadow-xs'
+                      : 'bg-gray-50/80 hover:bg-gray-100 text-gray-700'
                   }`}
                 >
                   <div className="flex items-center gap-2 text-xs">
@@ -1402,10 +1402,10 @@ const HotelSearchResults = () => {
                   onClick={() => {
                     setSelectedCancellation(prev => prev === 'free' ? '' : 'free');
                   }}
-                  className={`flex items-center justify-between p-2.5 rounded-xl border cursor-pointer select-none transition-all ${
+                  className={`flex items-center justify-between p-2.5 rounded-xl border-0 cursor-pointer select-none transition-all ${
                     selectedCancellation === 'free'
-                      ? 'bg-emerald-50/70 border-emerald-300 text-emerald-950 font-bold'
-                      : 'border-gray-200 hover:bg-gray-50 text-gray-700'
+                      ? 'bg-emerald-100/80 text-emerald-950 font-bold shadow-xs'
+                      : 'bg-gray-50/80 hover:bg-gray-100 text-gray-700'
                   }`}
                 >
                   <div className="flex items-center gap-2 text-xs">
@@ -1955,7 +1955,7 @@ const HotelSearchResults = () => {
             </div>
 
             {/* Results Count Header with View Mode Switcher (List / 2-Col Grid) */}
-            <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-gray-500 p-3 bg-white rounded-2xl border border-gray-200 shadow-xs">
+            <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-gray-500 p-3 sm:p-4 bg-white rounded-2xl border-0 shadow-sm">
               <div>
                 <span className="font-extrabold text-sm text-gray-900">
                   Showing {sortedHotels.length} verified {searchParams.get("city") || "Dubai"} properties
@@ -1967,7 +1967,7 @@ const HotelSearchResults = () => {
                 <select
                   value={sortOption}
                   onChange={(e) => setSortOption(e.target.value)}
-                  className="text-xs px-2.5 py-1.5 border border-gray-200 rounded-xl bg-white text-gray-700 font-bold outline-none cursor-pointer"
+                  className="text-xs px-2.5 py-1.5 border-0 rounded-xl bg-gray-50/80 text-gray-700 font-bold outline-none cursor-pointer shadow-xs"
                 >
                   <option value="default">Recommended</option>
                   <option value="priceLowHigh">Price: Low to High</option>
@@ -1977,7 +1977,7 @@ const HotelSearchResults = () => {
                 </select>
 
                 {/* View Changer Buttons (Mobile & Desktop) */}
-                <div className="flex items-center bg-gray-100 p-0.5 rounded-xl border border-gray-200">
+                <div className="flex items-center bg-gray-100 p-1 rounded-xl border-0">
                   <button
                     type="button"
                     onClick={() => setViewMode('list')}
@@ -2026,7 +2026,7 @@ const HotelSearchResults = () => {
                   return (
                     <div
                       key={hotel.id}
-                      className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-xl hover:border-blue-300 transition-all duration-300 flex flex-col justify-between group"
+                      className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group border-0"
                     >
                       <div>
                         {/* Image with Aspect Ratio & Badges */}
@@ -2151,7 +2151,7 @@ const HotelSearchResults = () => {
                 return (
                   <div
                     key={hotel.id}
-                    className="bg-white rounded-2xl border border-gray-200/90 overflow-hidden shadow-xs hover:shadow-xl hover:border-blue-300 transition-all duration-300 flex flex-col md:flex-row group"
+                    className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col md:flex-row group border-0"
                   >
                     {/* Left: High-Res Image with Luxury Badge */}
                     <div className="md:w-72 relative h-48 md:h-auto overflow-hidden shrink-0">
@@ -2176,7 +2176,7 @@ const HotelSearchResults = () => {
                       {/* Badges on Image */}
                       <div className="absolute top-2.5 left-2.5 flex flex-col gap-1.5 items-start">
                         {(hotel.isLuxuryCollection || hotel.stars >= 5 || hotel.establishmentProfiles?.includes('119')) && (
-                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-black/75 backdrop-blur-md text-amber-300 border border-amber-400/50 shadow-md flex items-center gap-1">
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-black/75 backdrop-blur-md text-amber-300 border-0 shadow-md flex items-center gap-1">
                             <AnimatedIcon name="crown" animation="pulse" size={12} className="text-amber-400" />
                             <span>Luxury Collection</span>
                           </span>
@@ -2347,7 +2347,7 @@ const HotelSearchResults = () => {
               <div className="text-center py-6 mb-12">
                 <button
                   onClick={() => setVisibleCount(prev => prev + 20)}
-                  className="px-6 py-2.5 bg-white border border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white font-medium rounded-xl shadow-sm transition-all text-sm inline-flex items-center gap-2 cursor-pointer"
+                  className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-md transition-all text-sm inline-flex items-center gap-2 cursor-pointer border-0 active:scale-95"
                 >
                   Load More Hotels ({sortedHotels.length - visibleCount} remaining)
                 </button>
@@ -2361,7 +2361,7 @@ const HotelSearchResults = () => {
                 </div>
                 <p className="text-gray-800 text-lg font-medium mb-1">No hotels match your filters</p>
                 <p className="text-gray-400 text-sm mb-4">Try adjusting your filters or search criteria</p>
-                <button onClick={clearFilters} className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium transition-colors">Clear All Filters</button>
+                <button onClick={clearFilters} className="px-5 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 text-sm font-bold transition-all shadow-md border-0 cursor-pointer active:scale-95">Clear All Filters</button>
               </div>
             )}
           </div>

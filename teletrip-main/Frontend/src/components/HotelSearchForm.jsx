@@ -1162,6 +1162,7 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark', i
     isSelectingRef.current = true;
     setSelectedLocation(location);
     setSelectedHotelCode(null);
+    setHotelNameQuery('');
     const label = location.displayName || (location.country ? `${location.name || location.city}, ${location.country}` : (location.name || location.city));
     setSearchQuery(label);
     setShowLocationDropdown(false);
@@ -1172,6 +1173,7 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark', i
   const handleHotelSelect = (hotel) => {
     isSelectingRef.current = true;
     setSelectedHotelCode(hotel.code);
+    setHotelNameQuery(hotel.name);
     setSelectedLocation({
       type: 'hotel',
       code: hotel.code,
@@ -1191,9 +1193,12 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark', i
     const val = e.target.value;
     isSelectingRef.current = false;
     setSearchQuery(val);
+    // User is changing the search text! Clear old selection context so previous query doesn't persist
+    setSelectedLocation(null);
+    setSelectedHotelCode(null);
+    setHotelNameQuery('');
+
     if (val.trim() === '') {
-      setSelectedLocation(null);
-      setSelectedHotelCode(null);
       setFilteredLocations([]);
       setHotelSuggestions([]);
       setShowLocationDropdown(false);
@@ -1208,7 +1213,8 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark', i
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    if (!selectedLocation && !selectedHotelCode && !searchQuery.trim()) {
+    const trimmedQuery = searchQuery.trim();
+    if (!selectedLocation && !selectedHotelCode && !trimmedQuery) {
       alert('Please enter a destination or hotel name');
       return;
     }
@@ -1216,38 +1222,88 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark', i
     const checkIn = format(dateRange[0].startDate, 'yyyy-MM-dd');
     const checkOut = format(dateRange[0].endDate, 'yyyy-MM-dd');
 
-    const isHotel = selectedLocation?.type === 'hotel' || Boolean(selectedHotelCode);
-    const hotelCode = selectedHotelCode || (selectedLocation?.type === 'hotel' ? selectedLocation.code : null);
-    const hotelName = selectedLocation?.type === 'hotel' ? selectedLocation.name : (hotelNameQuery || '');
-    const city = selectedLocation?.city || selectedLocation?.name || (!hotelCode ? searchQuery.trim() : '');
-    const country = selectedLocation?.country || selectedLocation?.countryCode || '';
-    const destinationCode = selectedLocation?.destinationCode || '';
+    // Resolve location and hotel if user typed text but didn't click dropdown
+    let loc = selectedLocation;
+    let hCode = selectedHotelCode;
+    let hName = '';
+
+    if (loc?.type === 'hotel') {
+      hCode = loc.code || hCode;
+      hName = loc.name;
+    } else if (hCode) {
+      hName = loc?.name || hotelNameQuery || trimmedQuery;
+    } else if (!loc && trimmedQuery) {
+      const instant = getInstantSuggestions(trimmedQuery);
+      const exactHotel = instant.hotels?.find(h => h.name.toLowerCase() === trimmedQuery.toLowerCase());
+      if (exactHotel) {
+        hCode = exactHotel.code;
+        hName = exactHotel.name;
+        loc = {
+          type: 'hotel',
+          code: exactHotel.code,
+          name: exactHotel.name,
+          city: exactHotel.destinationName || exactHotel.zoneName || '',
+          destinationCode: exactHotel.destinationCode || '',
+          country: exactHotel.countryCode || ''
+        };
+      } else {
+        const exactLoc = instant.locations?.find(l => 
+          (l.city || l.name).toLowerCase() === trimmedQuery.toLowerCase() ||
+          l.displayName?.toLowerCase() === trimmedQuery.toLowerCase()
+        ) || (instant.locations && instant.locations.length > 0 ? instant.locations[0] : null);
+
+        if (exactLoc) {
+          loc = exactLoc;
+        } else {
+          const parts = trimmedQuery.split(',').map(s => s.trim());
+          loc = {
+            name: parts[0],
+            city: parts[0],
+            country: parts[1] || '',
+            destinationCode: '',
+            type: 'destination'
+          };
+        }
+      }
+    }
+
+    const city = loc?.type === 'hotel' ? (loc.city || '') : (loc?.city || loc?.name || (!hCode ? trimmedQuery : ''));
+    const country = loc?.country || loc?.countryCode || '';
+    const destinationCode = loc?.destinationCode || '';
 
     const totalAdults = getTotalAdults();
     const totalChildren = getTotalChildren();
     const allChildAges = getAllChildAges();
-    let url = `/hotel-search-results?checkIn=${checkIn}&checkOut=${checkOut}&rooms=${roomConfigs.length}&adults=${totalAdults}&children=${totalChildren}`;
-    if (country) url += `&country=${encodeURIComponent(country)}`;
-    if (city) url += `&city=${encodeURIComponent(city)}`;
-    if (destinationCode) url += `&destinationCode=${encodeURIComponent(destinationCode)}`;
-    if (hotelCode) url += `&hotelCode=${hotelCode}`;
-    if (hotelName) url += `&hotelName=${encodeURIComponent(hotelName)}`;
-    if (selectedLocation?.lat || selectedLocation?.latitude) {
-      url += `&latitude=${selectedLocation.lat || selectedLocation.latitude}&longitude=${selectedLocation.lon || selectedLocation.longitude}`;
+
+    const params = new URLSearchParams();
+    params.set('checkIn', checkIn);
+    params.set('checkOut', checkOut);
+    params.set('rooms', String(roomConfigs.length));
+    params.set('adults', String(totalAdults));
+    params.set('children', String(totalChildren));
+
+    if (city) params.set('city', city);
+    if (country) params.set('country', country);
+    if (destinationCode) params.set('destinationCode', destinationCode);
+    if (hCode) params.set('hotelCode', String(hCode));
+    if (hName) params.set('hotelName', hName);
+
+    if (loc?.lat || loc?.latitude) {
+      params.set('latitude', String(loc.lat || loc.latitude));
+      params.set('longitude', String(loc.lon || loc.longitude));
     }
 
-    // Add child ages if present
     if (totalChildren > 0 && allChildAges.length > 0) {
-      url += `&childAges=${allChildAges.join(',')}`;
+      params.set('childAges', allChildAges.join(','));
     }
 
-    // Pass per-room config for proper Hotelbeds occupancy
-    url += `&roomConfigs=${encodeURIComponent(JSON.stringify(roomConfigs))}`;
+    params.set('roomConfigs', JSON.stringify(roomConfigs));
 
     if (luxuryOnly) {
-      url += '&luxury=true';
+      params.set('luxury', 'true');
     }
 
+    const url = `/hotel-search-results?${params.toString()}`;
     window.location.href = url;
   };
 
@@ -1655,151 +1711,6 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark', i
             </div>
           )}
         </div>
-
-        {/* ── RICH DESTINATION DISCOVERY STRIP (ELIMINATES HERO DEAD SPACE) ── */}
-        {activeTab === 'stays' && variant === 'dark' && (
-          <div className="pt-3 flex flex-col items-center gap-2.5">
-            <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
-              <span className="text-xs font-black text-amber-300 flex items-center gap-1 bg-amber-950/60 backdrop-blur-md px-2.5 py-1 rounded-full border border-amber-400/30">
-                <AnimatedIcon name="crown" animation="pulse" size={13} className="text-amber-400" />
-                <span>Trending:</span>
-              </span>
-              {[
-                { name: 'Dubai Marina', city: 'Dubai', destinationCode: 'DXB' },
-                { name: 'Downtown Dubai', city: 'Dubai', destinationCode: 'DXB' },
-                { name: 'Palm Jumeirah', city: 'Dubai', destinationCode: 'DXB' },
-                { name: 'Abu Dhabi', city: 'Abu Dhabi', destinationCode: 'AUH' },
-                { name: 'Paris', city: 'Paris', destinationCode: 'PAR' },
-                { name: 'Bali', city: 'Bali', destinationCode: 'DPS' }
-              ].map((dest, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => {
-                    isSelectingRef.current = true;
-                    setSearchQuery(dest.name);
-                    setSelectedLocation({ name: dest.name, city: dest.city, destinationCode: dest.destinationCode });
-                    setSelectedHotelCode(null);
-                    setShowLocationDropdown(false);
-                    setFilteredLocations([]);
-                    setHotelSuggestions([]);
-                  }}
-                  className="text-xs font-bold text-white/90 bg-white/10 hover:bg-white/20 active:bg-blue-600 px-3 py-1 rounded-full border border-white/15 backdrop-blur-md transition-all cursor-pointer flex items-center gap-1"
-                >
-                  <span>{dest.name}</span>
-                </button>
-              ))}
-            </div>
-
-            <div className="hidden sm:flex items-center gap-4 text-[11px] font-semibold text-gray-300/80 bg-black/40 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/10">
-              <span className="flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                300,000+ Wholesale Hotels
-              </span>
-              <span>•</span>
-              <span className="flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
-                Direct B2B Net Bedsonline API
-              </span>
-              <span>•</span>
-              <span className="flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-                Zero Hidden Fees
-              </span>
-              <span>•</span>
-              <span className="flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-purple-400" />
-                24/7 VIP Concierge
-              </span>
-            </div>
-          </div>
-        )}
-
-        {/* ── RICH TRANSFERS DISCOVERY STRIP ── */}
-        {activeTab === 'transfers' && variant === 'dark' && (
-          <div className="pt-3 flex flex-col items-center gap-2.5">
-            <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
-              <span className="text-xs font-black text-amber-300 flex items-center gap-1 bg-amber-950/60 backdrop-blur-md px-2.5 py-1 rounded-full border border-amber-400/30">
-                <AnimatedIcon name="car" animation="glide" size={13} className="text-amber-400" />
-                <span>Popular Routes:</span>
-              </span>
-              {[
-                { name: 'DXB Airport → Downtown Dubai' },
-                { name: 'DXB → Palm Jumeirah' },
-                { name: 'Abu Dhabi (AUH) → Dubai' },
-                { name: 'DXB → Dubai Marina' },
-                { name: 'Dubai → Al Ain' }
-              ].map((route, idx) => (
-                <span
-                  key={idx}
-                  className="text-xs font-bold text-white/90 bg-white/10 px-3 py-1 rounded-full border border-white/15 backdrop-blur-md"
-                >
-                  {route.name}
-                </span>
-              ))}
-            </div>
-
-            <div className="hidden sm:flex items-center gap-4 text-[11px] font-semibold text-gray-300/80 bg-black/40 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/10">
-              <span className="flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                Flight Delay Monitoring Included
-              </span>
-              <span>•</span>
-              <span className="flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
-                Licensed Professional Drivers
-              </span>
-              <span>•</span>
-              <span className="flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-                Fixed All-Inclusive Pricing
-              </span>
-            </div>
-          </div>
-        )}
-
-        {/* ── RICH EXPERIENCES DISCOVERY STRIP ── */}
-        {activeTab === 'experiences' && variant === 'dark' && (
-          <div className="pt-3 flex flex-col items-center gap-2.5">
-            <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
-              <span className="text-xs font-black text-amber-300 flex items-center gap-1 bg-amber-950/60 backdrop-blur-md px-2.5 py-1 rounded-full border border-amber-400/30">
-                <AnimatedIcon name="compass" animation="spin" size={13} className="text-amber-400" />
-                <span>Top Experiences:</span>
-              </span>
-              {[
-                { name: 'Desert Safari Dubai with BBQ' },
-                { name: 'Burj Khalifa At The Top' },
-                { name: 'Museum of the Future' },
-                { name: 'Louvre Abu Dhabi' },
-                { name: 'Dubai Marina Luxury Yacht' }
-              ].map((act, idx) => (
-                <span
-                  key={idx}
-                  className="text-xs font-bold text-white/90 bg-white/10 px-3 py-1 rounded-full border border-white/15 backdrop-blur-md"
-                >
-                  {act.name}
-                </span>
-              ))}
-            </div>
-
-            <div className="hidden sm:flex items-center gap-4 text-[11px] font-semibold text-gray-300/80 bg-black/40 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/10">
-              <span className="flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                Skip-the-Line Priority Vouchers
-              </span>
-              <span>•</span>
-              <span className="flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
-                Instant Barcode Confirmation
-              </span>
-              <span>•</span>
-              <span className="flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-                Best Price Guarantee
-              </span>
-            </div>
-          </div>
-        )}
       </div>
   );
 };

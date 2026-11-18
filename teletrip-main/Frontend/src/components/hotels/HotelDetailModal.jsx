@@ -402,7 +402,7 @@ export const HotelDetailModal = ({
           <div className="relative z-10 flex items-center justify-between gap-2">
             <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap min-w-0">
               {hotel.category && (
-                <span className="px-2 py-0.5 bg-white/20 backdrop-blur-md text-white rounded-full text-[10px] sm:text-[11px] font-bold uppercase tracking-wider border border-white/25">
+                <span className="px-2 py-0.5 bg-white/20 backdrop-blur-md text-white rounded-full text-[10px] sm:text-[11px] font-bold uppercase tracking-wider border-0 shadow-sm">
                   {hotel.category}
                 </span>
               )}
@@ -412,7 +412,7 @@ export const HotelDetailModal = ({
                 ))}
               </div>
               {(hotel.stars >= 5 || hotel.isLuxuryCollection || hotel.establishmentProfiles?.includes('119')) && (
-                <span className="inline-flex items-center gap-1.5 px-2 sm:px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-bold bg-gradient-to-r from-amber-500/30 via-yellow-400/40 to-amber-500/30 text-amber-200 border border-amber-300/60 shadow-md backdrop-blur-sm">
+                <span className="inline-flex items-center gap-1.5 px-2 sm:px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-bold bg-gradient-to-r from-amber-500/30 via-yellow-400/40 to-amber-500/30 text-amber-200 border-0 shadow-md backdrop-blur-sm">
                   <AnimatedIcon name="crown" animation="pulse" size={12} className="text-amber-300" /> Luxury Collection
                 </span>
               )}
@@ -431,7 +431,7 @@ export const HotelDetailModal = ({
                   e.stopPropagation();
                   if (openGallery) openGallery(0, allImages, hotel.name, imageAlbums, 'All');
                 }}
-                className="px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-md border border-white/30 text-white text-[11px] sm:text-xs font-semibold flex items-center gap-1.5 transition-all shadow-md cursor-pointer active:scale-95"
+                className="px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-md border-0 text-white text-[11px] sm:text-xs font-semibold flex items-center gap-1.5 transition-all shadow-md cursor-pointer active:scale-95"
                 title="View all photos in gallery"
               >
                 <ImageIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-blue-300" />
@@ -442,7 +442,7 @@ export const HotelDetailModal = ({
               <button
                 type="button"
                 onClick={onClose}
-                className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-md border border-white/25 flex items-center justify-center text-white transition-all cursor-pointer"
+                className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-md border-0 flex items-center justify-center text-white transition-all cursor-pointer shadow-sm"
                 aria-label="Close modal"
               >
                 <X className="w-4 h-4" />
@@ -510,7 +510,7 @@ export const HotelDetailModal = ({
             <div className="space-y-3.5">
               {/* Multi-Room Stepper Banner */}
               {isMultiRoom && (
-                <div className="p-3 bg-blue-50/80 border border-blue-200 rounded-xl flex items-center justify-between gap-3 flex-wrap">
+                <div className="p-3.5 bg-blue-50/90 rounded-2xl border-0 shadow-xs flex items-center justify-between gap-3 flex-wrap">
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-bold text-blue-900">Configuring:</span>
                     <div className="flex gap-1.5 overflow-x-auto">
@@ -518,10 +518,10 @@ export const HotelDetailModal = ({
                         <button
                           key={idx}
                           onClick={() => setActiveRoomTab(idx)}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                             activeRoomTab === idx
                               ? 'bg-blue-600 text-white shadow-sm'
-                              : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
+                              : 'bg-white text-gray-700 hover:bg-gray-100 border-0 shadow-xs'
                           }`}
                         >
                           Room {idx + 1}
@@ -541,7 +541,7 @@ export const HotelDetailModal = ({
 
               {/* ── ROOM TYPE SHORTCUT PILLS (Addresses Long Scroll) ── */}
               {roomCategories.length > 1 && (
-                <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200/80 space-y-1.5">
+                <div className="bg-slate-50 p-3 rounded-2xl border-0 shadow-xs space-y-1.5">
                   <div className="flex items-center justify-between text-[11px] text-gray-500 font-medium px-0.5">
                     <span className="flex items-center gap-1 font-semibold text-gray-700">
                       <Layers className="w-3.5 h-3.5 text-blue-600" />
@@ -564,7 +564,7 @@ export const HotelDetailModal = ({
                       className={`px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 ${
                         selectedCategory === 'all'
                           ? 'bg-blue-600 text-white shadow-xs font-semibold'
-                          : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
+                          : 'bg-white text-gray-700 hover:bg-gray-100 border-0 shadow-xs'
                       }`}
                     >
                       <span>All Types</span>
@@ -581,7 +581,7 @@ export const HotelDetailModal = ({
                         className={`px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 ${
                           selectedCategory === cat.name
                             ? 'bg-blue-600 text-white shadow-xs font-semibold'
-                            : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
+                            : 'bg-white text-gray-700 hover:bg-gray-100 border-0 shadow-xs'
                         }`}
                       >
                         <span>{cat.name}</span>
@@ -679,20 +679,20 @@ export const HotelDetailModal = ({
                       <div
                         key={room.code}
                         id={`room-${room.code}`}
-                        className={`border rounded-xl overflow-hidden bg-white transition-all shadow-xs ${
-                          isExpanded ? 'border-blue-200 ring-1 ring-blue-100' : 'border-gray-200 hover:border-gray-300'
+                        className={`rounded-2xl overflow-hidden bg-white transition-all shadow-sm ${
+                          isExpanded ? 'shadow-md ring-2 ring-blue-500/20' : 'hover:shadow-md'
                         }`}
                       >
                         {/* ── ROOM META BANNER / ACCORDION HEADER (CLICKABLE) ── */}
                         <div
                           onClick={() => toggleRoom(room.code)}
-                          className="p-3 sm:p-3.5 bg-gray-50/90 hover:bg-gray-100/70 border-b border-gray-200/80 flex items-center justify-between gap-2.5 cursor-pointer select-none transition-colors"
+                          className="p-3 sm:p-3.5 bg-gray-50/90 hover:bg-gray-100/70 border-b border-gray-100 flex items-center justify-between gap-2.5 cursor-pointer select-none transition-colors"
                         >
                           <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
                             {/* Room Thumbnail Photo */}
                             {roomImg && (
                               <div
-                                className="w-13 h-13 sm:w-16 sm:h-16 rounded-lg overflow-hidden flex-shrink-0 cursor-pointer border border-gray-200 relative group"
+                                className="w-13 h-13 sm:w-16 sm:h-16 rounded-xl overflow-hidden flex-shrink-0 cursor-pointer border-0 shadow-2xs relative group"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   if (openGallery) {
@@ -725,7 +725,7 @@ export const HotelDetailModal = ({
                                 <h3 className="text-xs sm:text-sm font-bold text-gray-900 leading-tight">
                                   {room.name}
                                 </h3>
-                                <span className="text-[10px] text-blue-700 bg-blue-50 border border-blue-100 px-1.5 py-0.2 rounded font-medium">
+                                <span className="text-[10px] text-blue-700 bg-blue-50 border-0 px-2 py-0.5 rounded-md font-medium shadow-2xs">
                                   {roomCat}
                                 </span>
                               </div>
@@ -770,7 +770,7 @@ export const HotelDetailModal = ({
                             )}
 
                             {/* Chevron Toggle Button */}
-                            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-white border border-gray-200 flex items-center justify-center text-gray-500 hover:text-blue-600 shadow-2xs">
+                            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-white border-0 flex items-center justify-center text-gray-500 hover:text-blue-600 shadow-xs">
                               {isExpanded ? (
                                 <ChevronUp className="w-4 h-4 text-blue-600" />
                               ) : (
@@ -808,23 +808,23 @@ export const HotelDetailModal = ({
                                       </span>
 
                                       {hasFreeCancellation ? (
-                                        <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full flex items-center gap-1 border border-emerald-200">
+                                        <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full flex items-center gap-1 border-0 shadow-2xs">
                                           <CheckCircle className="w-3 h-3" /> Free Cancellation
                                         </span>
                                       ) : rate.rateClass === 'NRF' ? (
-                                        <span className="text-[11px] font-medium text-rose-700 bg-rose-50 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                        <span className="text-[11px] font-medium text-rose-700 bg-rose-50 px-2.5 py-0.5 rounded-full flex items-center gap-1 border-0 shadow-2xs">
                                           <XCircle className="w-3 h-3" /> Non-Refundable
                                         </span>
                                       ) : null}
 
                                       {rate.packaging && (
-                                        <span className="text-[11px] font-medium text-purple-700 bg-purple-50 px-2 py-0.5 rounded-full border border-purple-200">
+                                        <span className="text-[11px] font-medium text-purple-700 bg-purple-50 px-2.5 py-0.5 rounded-full border-0 shadow-2xs">
                                           Package Deal
                                         </span>
                                       )}
 
                                       {isSelectedForTab && (
-                                        <span className="text-[11px] font-bold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+                                        <span className="text-[11px] font-bold text-blue-700 bg-blue-100 px-2.5 py-0.5 rounded-full inline-flex items-center gap-1 border-0 shadow-2xs">
                                           <AnimatedIcon name="check" animation="bounce" size={11} /> Selected for Room {activeRoomTab + 1}
                                         </span>
                                       )}
@@ -841,13 +841,13 @@ export const HotelDetailModal = ({
                                     {((rate.promotions && rate.promotions.length > 0) || (rate.offers && rate.offers.length > 0)) && (
                                       <div className="flex gap-1.5 flex-wrap pt-0.5">
                                         {(rate.promotions || []).map((promo, pi) => (
-                                          <span key={`p-${pi}`} className="text-[10px] px-2 py-0.5 bg-gradient-to-r from-emerald-50 to-teal-50 text-emerald-800 rounded-full flex items-center gap-1 font-bold border border-emerald-200">
+                                          <span key={`p-${pi}`} className="text-[10px] px-2.5 py-0.5 bg-gradient-to-r from-emerald-50 to-teal-50 text-emerald-800 rounded-full flex items-center gap-1 font-bold border-0 shadow-2xs">
                                             <Tag className="w-2.5 h-2.5 text-emerald-600" />
                                             {promo.name || promo.code || 'Special Offer'}
                                           </span>
                                         ))}
                                         {(rate.offers || []).map((offer, oi) => (
-                                          <span key={`o-${oi}`} className="text-[10px] px-2 py-0.5 bg-amber-50 text-amber-800 rounded-full flex items-center gap-1 font-semibold border border-amber-200">
+                                          <span key={`o-${oi}`} className="text-[10px] px-2.5 py-0.5 bg-amber-50 text-amber-800 rounded-full flex items-center gap-1 font-semibold border-0 shadow-2xs">
                                             <Tag className="w-2.5 h-2.5 text-amber-600" />
                                             {offer.name}
                                           </span>
@@ -869,7 +869,7 @@ export const HotelDetailModal = ({
 
                                     {/* Mandatory Hotelbeds Excluded Local Taxes Alert */}
                                     {rate.taxes && rate.taxes.taxes && rate.taxes.taxes.length > 0 && !rate.taxes.allIncluded && (
-                                      <div className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                                      <div className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] text-amber-800 bg-amber-50 px-2.5 py-1 rounded-md border-0 shadow-xs">
                                         <AlertCircle className="w-3 h-3 text-amber-600 flex-shrink-0" />
                                         <span>
                                           Excluded: {rate.taxes.taxes[0]?.subType || rate.taxes.taxes[0]?.type || 'City Tax'}{' '}
@@ -933,7 +933,7 @@ export const HotelDetailModal = ({
                 )}
 
                 {totalMatchingRooms === 0 && hotel.rooms && hotel.rooms.length > 0 && (
-                  <div className="text-center py-8 bg-gray-50 rounded-xl border border-dashed border-gray-300">
+                  <div className="text-center py-8 bg-gray-50 rounded-2xl border-0 shadow-xs">
                     <p className="text-xs text-gray-500">No rooms match the selected shortcut "{selectedCategory}".</p>
                     <button
                       type="button"
@@ -953,7 +953,7 @@ export const HotelDetailModal = ({
             <div className="space-y-6">
               {/* Hotel Description */}
               {hotelContentData?.description && (
-                <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 space-y-1.5">
+                <div className="bg-slate-50 p-4 rounded-2xl border-0 shadow-xs space-y-1.5">
                   <h4 className="text-xs font-bold uppercase text-gray-700">About the Property</h4>
                   <p className="text-xs text-gray-600 leading-relaxed">{hotelContentData.description}</p>
                 </div>
@@ -1009,7 +1009,7 @@ export const HotelDetailModal = ({
             <div className="space-y-5">
               {/* Hotelbeds Mandatory: Paid Facilities with indFee === true */}
               {hotelContentData?.facilities && hotelContentData.facilities.filter(f => f.indFee === true).length > 0 && (
-                <div className="p-4 bg-amber-50/90 border border-amber-200 rounded-xl space-y-2">
+                <div className="p-4 bg-amber-50/90 border-0 shadow-xs rounded-2xl space-y-2">
                   <h4 className="text-xs font-bold text-amber-900 uppercase tracking-wide flex items-center gap-1.5">
                     <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0" />
                     Facilities with Additional Charges (Payable at Property)
@@ -1029,7 +1029,7 @@ export const HotelDetailModal = ({
                           return true;
                         })
                         .map((f, i) => (
-                          <span key={`paid-${i}`} className="text-[11px] px-2.5 py-1 bg-white text-amber-900 rounded-lg border border-amber-200 font-medium shadow-2xs">
+                          <span key={`paid-${i}`} className="text-[11px] px-2.5 py-1 bg-white text-amber-900 rounded-lg border-0 shadow-xs font-medium">
                             {f.description || `Facility ${f.code}`} (Extra Fee)
                           </span>
                         ));
@@ -1058,7 +1058,7 @@ export const HotelDetailModal = ({
                         })
                         .slice(0, 20)
                         .map((f, i) => (
-                          <div key={`free-${i}`} className="p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-xs text-gray-700 flex items-center gap-2">
+                          <div key={`free-${i}`} className="p-2.5 bg-slate-50 border-0 shadow-xs rounded-xl text-xs text-gray-700 flex items-center gap-2">
                             <CheckCircle className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
                             <span>{f.description || `Facility ${f.code}`}</span>
                           </div>
@@ -1074,13 +1074,13 @@ export const HotelDetailModal = ({
           {activeTab === 'policies' && (
             <div className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="p-4 bg-gray-50 border border-gray-200 rounded-xl space-y-1">
+                <div className="p-4 bg-slate-50 border-0 shadow-xs rounded-2xl space-y-1">
                   <h5 className="text-xs font-bold text-gray-900 uppercase">Check-in & Check-out</h5>
                   <p className="text-xs text-gray-600">Check-in: 15:00 · Check-out: 12:00 PM</p>
                   <p className="text-[11px] text-gray-400">Front desk operates 24 hours.</p>
                 </div>
 
-                <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl space-y-1">
+                <div className="p-4 bg-amber-50/90 border-0 shadow-xs rounded-2xl space-y-1">
                   <h5 className="text-xs font-bold text-amber-900 uppercase">Local Tourist Taxes</h5>
                   <p className="text-xs text-amber-800">
                     City or municipal tourist taxes are excluded from the initial online payment and must be settled upon arrival at the property.
@@ -1088,7 +1088,7 @@ export const HotelDetailModal = ({
                 </div>
               </div>
 
-              <div className="p-4 bg-blue-50 border border-blue-200 rounded-xl space-y-1">
+              <div className="p-4 bg-blue-50/90 border-0 shadow-xs rounded-2xl space-y-1">
                 <h5 className="text-xs font-bold text-blue-900 uppercase">Instant Booking Guarantee</h5>
                 <p className="text-xs text-blue-800">
                   Direct Hotelbeds confirmed booking voucher is generated immediately upon successful transaction.
@@ -1276,7 +1276,7 @@ export const HotelDetailModal = ({
                 ]
                   .filter(rev => !reviewSearchQuery.trim() || rev.text.toLowerCase().includes(reviewSearchQuery.toLowerCase()) || rev.title.toLowerCase().includes(reviewSearchQuery.toLowerCase()))
                   .map((rev) => (
-                    <div key={rev.id} className="p-4 rounded-2xl border border-gray-200 bg-white shadow-xs space-y-2.5">
+                    <div key={rev.id} className="p-4 rounded-2xl border-0 bg-white shadow-sm space-y-2.5">
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
                         <div className="flex items-center gap-3">
                           <div className="w-9 h-9 rounded-full bg-blue-100 text-blue-700 font-black text-xs flex items-center justify-center">
@@ -1286,7 +1286,7 @@ export const HotelDetailModal = ({
                             <div className="flex items-center gap-2">
                               <span className="font-extrabold text-xs sm:text-sm text-gray-900">{rev.author}</span>
                               {rev.verified && (
-                                <span className="inline-flex items-center gap-1 text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded-full border border-emerald-200">
+                                <span className="inline-flex items-center gap-1 text-[9px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border-0 shadow-2xs">
                                   <ShieldCheck className="w-2.5 h-2.5 text-emerald-600" /> Verified Stay
                                 </span>
                               )}
@@ -1354,7 +1354,7 @@ export const HotelDetailModal = ({
             <button
               type="button"
               onClick={() => setActiveTab('rooms')}
-              className="px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl border border-gray-200 text-xs font-bold text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer flex-1 sm:flex-initial"
+              className="px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl border-0 bg-gray-100 text-xs font-bold text-gray-700 hover:bg-gray-200 transition-colors cursor-pointer flex-1 sm:flex-initial shadow-xs"
             >
               Browse Rooms
             </button>
