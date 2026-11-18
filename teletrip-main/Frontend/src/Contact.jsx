@@ -20,8 +20,7 @@ const Contact = () => {
       <Header />
 
       {/* Hero */}
-      <section className="pt-28 sm:pt-32 pb-16 px-4 sm:px-6 lg:px-8 bg-gray-50 relative overflow-hidden">
-        <div className="absolute -top-20 -right-20 w-80 h-80 rounded-full opacity-15" style={{ background: 'radial-gradient(circle, #3b82f6, #8b5cf6)', filter: 'blur(80px)' }} />
+      <section className="pt-28 sm:pt-32 pb-16 px-4 sm:px-6 lg:px-8 bg-gray-50/50 relative overflow-hidden">
         <div className="max-w-4xl mx-auto text-center relative">
           <div className="flex items-center justify-center gap-2 mb-4">
             <div className="w-8 h-px bg-blue-500" />
@@ -47,8 +46,8 @@ const Contact = () => {
               { Icon: Phone, title: 'Call Us', detail: '+92 300 1234567', sub: 'Mon–Fri, 9am–6pm PKT', color: '#059669' },
               { Icon: MapPin, title: 'Visit Us', detail: 'Islamabad, Pakistan', sub: 'By appointment only', color: '#7c3aed' },
             ].map(({ Icon, title, detail, sub, color }, i) => (
-              <div key={i} className="p-6 rounded-2xl bg-white border border-gray-100 hover:shadow-lg hover:border-gray-200 transition-all duration-300 text-center">
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-4" style={{ background: `${color}12` }}>
+              <div key={i} className="bento-card p-6 rounded-3xl bg-white hover:shadow-xl transition-all duration-300 text-center">
+                <div className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4" style={{ background: `${color}12` }}>
                   <Icon style={{ width: 22, height: 22, color, strokeWidth: 1.8 }} />
                 </div>
                 <h3 className="text-gray-900 font-semibold text-base mb-1">{title}</h3>
@@ -59,14 +58,14 @@ const Contact = () => {
           </div>
 
           {/* Form */}
-          <div className="max-w-2xl mx-auto">
+          <div className="max-w-2xl mx-auto bento-card p-6 sm:p-8 rounded-3xl bg-white shadow-sm">
             <div className="flex items-center gap-3 mb-6">
               <MessageSquare className="w-5 h-5 text-blue-500" />
               <h2 className="text-2xl font-bold text-gray-900" style={{ letterSpacing: '-0.02em' }}>Send us a message</h2>
             </div>
 
             {sent && (
-              <div className="mb-6 p-4 rounded-xl bg-green-50 border border-green-200 text-green-700 text-sm font-medium flex items-center gap-2">
+              <div className="mb-6 p-4 rounded-xl bg-green-50 text-green-700 text-sm font-medium flex items-center gap-2">
                 <Send className="w-4 h-4" /> Message sent! We'll get back to you soon.
               </div>
             )}
@@ -76,26 +75,26 @@ const Contact = () => {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">Your Name</label>
                   <input type="text" required value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                    className="w-full px-4 py-3 bg-gray-100/70 rounded-xl text-sm outline-none border-0 ring-0 transition-all"
                     placeholder="John Doe" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">Email Address</label>
                   <input type="email" required value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                    className="w-full px-4 py-3 bg-gray-100/70 rounded-xl text-sm outline-none border-0 ring-0 transition-all"
                     placeholder="john@example.com" />
                 </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Subject</label>
                 <input type="text" required value={form.subject} onChange={e => setForm(f => ({ ...f, subject: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                  className="w-full px-4 py-3 bg-gray-100/70 rounded-xl text-sm outline-none border-0 ring-0 transition-all"
                   placeholder="How can we help?" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Message</label>
                 <textarea required rows={5} value={form.message} onChange={e => setForm(f => ({ ...f, message: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all resize-none"
+                  className="w-full px-4 py-3 bg-gray-100/70 rounded-xl text-sm outline-none border-0 ring-0 transition-all resize-none"
                   placeholder="Tell us more about your inquiry..." />
               </div>
               <button type="submit"

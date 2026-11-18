@@ -24,6 +24,7 @@ import {
   CheckCircle,
   Clock
 } from 'lucide-react';
+import { AnimatedIcon } from './components/common/AnimatedIcon';
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -360,7 +361,7 @@ const Checkout = () => {
           currencyConversion: currencyConversion || null,
           boardType: firstItem?.boardName || 'Room Only',
           rateClass: firstItem?.rateClass || 'NOR',
-          rateKey: firstItem?.rateKey, // ⚠️ CRITICAL: Pass rateKey for Hotelbeds booking
+          rateKey: firstItem?.rateKey, // CRITICAL: Pass rateKey for Hotelbeds booking
           specialRequests: billingInfo?.specialRequests || ''
         };
         
@@ -1277,10 +1278,10 @@ const handlePaymentSubmit = () => {
           </div>
 
           {/* Inventory Hold Timer Banner (Style 1 from Cart Design Lab) */}
-          <div className="mb-6 p-4 bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-amber-500/15 border border-amber-300 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3 shadow-2xs">
+          <div className="mb-6 p-4 bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-amber-500/15 bento-card border-0 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3 shadow-2xs">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center font-black shadow-sm shrink-0">
-                <Clock className="w-5 h-5 animate-pulse" />
+                <AnimatedIcon name="time" animation="pulse" size="sm" className="text-white" />
               </div>
               <div>
                 <div className="text-xs sm:text-sm font-extrabold text-amber-950 flex items-center gap-2">
@@ -1295,8 +1296,8 @@ const handlePaymentSubmit = () => {
               </div>
             </div>
 
-            <div className="flex items-center gap-1 text-[11px] text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200 font-bold shrink-0">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+            <div className="flex items-center gap-1.5 text-[11px] text-emerald-800 bg-emerald-100/80 px-2.5 py-1 rounded-full font-bold shrink-0 border-0">
+              <AnimatedIcon name="shield" animation="pulse" size="xs" className="text-emerald-700" />
               <span>Instant Confirmation</span>
             </div>
           </div>
@@ -1314,12 +1315,12 @@ const handlePaymentSubmit = () => {
                 const itemImg = item.thumbnail || item.image || (item.images && item.images[0]?.path ? `https://photos.hotelbeds.com/giata/original/${item.images[0].path.replace(/^\/+/, '')}` : "https://images.pexels.com/photos/261102/pexels-photo-261102.jpeg");
 
                 return (
-                  <div key={idx} className="p-4 sm:p-5 rounded-2xl border border-gray-200 bg-slate-50/70 space-y-3 shadow-xs text-left">
+                  <div key={idx} className="p-4 sm:p-5 rounded-2xl bento-card border-0 bg-slate-50/70 space-y-3 shadow-xs text-left">
                     <div className="flex items-start gap-3.5">
                       <img
                         src={itemImg}
                         alt=""
-                        className="w-20 h-20 rounded-xl object-cover shrink-0 border border-gray-200"
+                        className="w-20 h-20 rounded-xl object-cover shrink-0 border-0"
                         onError={(e) => { e.target.src = "https://images.pexels.com/photos/261102/pexels-photo-261102.jpeg"; }}
                       />
                       <div className="min-w-0 flex-1">

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Lock, Mail, Eye, EyeOff, Shield, AlertCircle, Loader2 } from 'lucide-react';
+import { Lock, Mail, Eye, EyeOff, Shield, AlertCircle, Loader2, AlertTriangle } from 'lucide-react';
 import axios from 'axios';
 
 const AdminLogin = () => {
@@ -203,9 +203,10 @@ const AdminLogin = () => {
           </div>
         </div>
 
-        <div className="mt-6 bg-blue-900/30 backdrop-blur-lg border border-white/20 rounded-lg p-4">
-          <p className="text-sm text-white/90 text-center">
-            ⚠️ This is a restricted area. Only authorized administrators can access this dashboard.
+        <div className="mt-6 bento-card bg-blue-900/40 backdrop-blur-lg rounded-2xl p-4 shadow-lg">
+          <p className="text-sm text-white/90 text-center flex items-center justify-center gap-1.5">
+            <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 gg-anim-pulse" />
+            <span>This is a restricted area. Only authorized administrators can access this dashboard.</span>
           </p>
         </div>
       </div>

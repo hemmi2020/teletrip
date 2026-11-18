@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useSiteAccess } from '../../context/SiteAccessContext';
-import { Lock, ChevronUp, X } from 'lucide-react';
+import { Lock, ChevronUp, X, ShieldCheck } from 'lucide-react';
 
 export default function StaffPreviewBadge() {
   const { isUnlocked, isGateEnabled, lockSite } = useSiteAccess();
@@ -14,10 +14,10 @@ export default function StaffPreviewBadge() {
   return (
     <div className="fixed bottom-4 left-4 z-50 font-sans">
       {isOpen ? (
-        <div className="bg-white/95 border border-gray-200/90 rounded-2xl p-4 shadow-2xl backdrop-blur-xl text-gray-800 text-xs w-72 animate-fade-in">
+        <div className="bento-card bg-white/95 rounded-2xl p-4 shadow-2xl backdrop-blur-xl text-gray-800 text-xs w-72 animate-fade-in">
           <div className="flex items-center justify-between pb-2.5 mb-2.5 border-b border-gray-100">
             <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
+              <ShieldCheck className="w-4 h-4 text-blue-600 gg-anim-pulse" />
               <span className="font-bold text-gray-900">Staff Preview Active</span>
             </div>
             <button
@@ -48,10 +48,10 @@ export default function StaffPreviewBadge() {
       ) : (
         <button
           onClick={() => setIsOpen(true)}
-          className="group flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/95 hover:bg-white border border-gray-200/90 text-gray-700 hover:text-blue-600 shadow-lg shadow-black/5 backdrop-blur-md transition-all text-xs font-semibold"
+          className="group flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/95 hover:bg-white text-gray-700 hover:text-blue-600 shadow-lg shadow-black/5 backdrop-blur-md transition-all text-xs font-semibold"
           title="TeleTrip Private Preview Mode"
         >
-          <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
+          <ShieldCheck className="w-3.5 h-3.5 text-blue-600 gg-anim-pulse" />
           <span className="text-[11px] tracking-wide">Staff Preview</span>
           <ChevronUp className="w-3.5 h-3.5 text-gray-400 group-hover:text-blue-600" />
         </button>

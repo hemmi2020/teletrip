@@ -108,8 +108,8 @@ export const VariantC = ({ onSelectHotel }) => {
                         <div className="flex items-center gap-1.5 flex-wrap">
                           <span className="font-extrabold text-sm text-gray-900 truncate">{hotel.name}</span>
                           {hotel.isLuxuryCollection && (
-                            <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-100 text-amber-900 border border-amber-300">
-                              ✨ Luxury
+                            <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-100 text-amber-900 border-0">
+                              Luxury Collection
                             </span>
                           )}
                         </div>
@@ -131,7 +131,7 @@ export const VariantC = ({ onSelectHotel }) => {
                         ))}
                       </div>
                       <span className="text-[11px] font-bold text-gray-700 block mt-0.5">
-                        ★ {hotel.rating} ({hotel.reviewsCount})
+                        {hotel.rating} ({hotel.reviewsCount})
                       </span>
                     </div>
 

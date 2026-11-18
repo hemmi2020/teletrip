@@ -8,6 +8,7 @@ import { useCurrency } from './context/CurrencyContext';
 import HotelSearchForm from './components/HotelSearchForm';
 import MobileFilters from './components/MobileFilters';
 import SearchLoadingScreen from './components/SearchLoadingScreen';
+import AnimatedIcon from './components/common/AnimatedIcon';
 import logo from './images/Telitrip-Logo.png';
 const ActivitySearchResults = () => {
   const [searchParams] = useSearchParams();
@@ -695,7 +696,9 @@ const ActivitySearchResults = () => {
 
             {sortedActivities.length === 0 ? (
               <div className="text-center py-16">
-                <div className="text-4xl mb-3">🎭</div>
+                <div className="flex justify-center mb-3">
+                  <AnimatedIcon name="theatre" animation="bounce" size={48} className="text-blue-600" />
+                </div>
                 <p className="text-gray-800 text-lg font-medium mb-1">No activities match your filters</p>
                 <p className="text-gray-400 text-sm mb-4">Try adjusting your filters</p>
                 <button onClick={clearFilters} className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium">Clear All Filters</button>
@@ -703,7 +706,7 @@ const ActivitySearchResults = () => {
             ) : (
               <div className="space-y-3">
                 {sortedActivities.map((activity, idx) => (
-                  <div key={activity.code} className="bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-lg hover:border-gray-200 transition-all duration-200 flex flex-col sm:flex-row group">
+                  <div key={activity.code} className="bento-card bg-white rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col sm:flex-row group">
                     {/* Image */}
                     <div className="sm:w-56 lg:w-64 relative overflow-hidden flex-shrink-0">
                       <img src={activity.images?.[0] || 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} alt={activity.name} className="w-full h-40 sm:h-full object-cover group-hover:scale-105 transition-transform duration-500" onError={(e) => e.target.src = 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'} />
@@ -1016,10 +1019,10 @@ const ActivitySearchResults = () => {
                     <div key={gi} className="mb-3">
                       <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1">{group.title}</div>
                       {group.included.length > 0 && (
-                        <ul className="space-y-0.5 mb-1">{group.included.map((item, ii) => <li key={ii} className="text-[12px] text-green-700 flex items-start gap-1"><span className="text-green-500 mt-0.5">✓</span>{item}</li>)}</ul>
+                        <ul className="space-y-0.5 mb-1">{group.included.map((item, ii) => <li key={ii} className="text-[12px] text-green-700 flex items-start gap-1.5"><AnimatedIcon name="check" size={12} className="text-green-500 mt-0.5 shrink-0" />{item}</li>)}</ul>
                       )}
                       {group.excluded.length > 0 && (
-                        <ul className="space-y-0.5">{group.excluded.map((item, ei) => <li key={ei} className="text-[12px] text-red-600 flex items-start gap-1"><span className="text-red-400 mt-0.5">✗</span>{item}</li>)}</ul>
+                        <ul className="space-y-0.5">{group.excluded.map((item, ei) => <li key={ei} className="text-[12px] text-red-600 flex items-start gap-1.5"><AnimatedIcon name="close" size={12} className="text-red-400 mt-0.5 shrink-0" />{item}</li>)}</ul>
                       )}
                     </div>
                   ))}

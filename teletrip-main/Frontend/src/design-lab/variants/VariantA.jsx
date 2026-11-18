@@ -213,7 +213,7 @@ export const VariantA = ({ onSelectHotel }) => {
                     </div>
 
                     <span className="absolute bottom-2.5 right-2.5 bg-black/70 backdrop-blur-md text-white text-[10px] px-2 py-0.5 rounded-md font-semibold md:hidden">
-                      ★ {hotel.rating} ({hotel.reviewsCount})
+                      {hotel.rating} ({hotel.reviewsCount})
                     </span>
                   </div>
 
@@ -252,7 +252,7 @@ export const VariantA = ({ onSelectHotel }) => {
                       <div className="flex gap-1.5 flex-wrap pt-1">
                         {hotel.amenities.slice(0, 4).map((a, i) => (
                           <span key={i} className="text-[10px] font-medium px-2 py-0.5 rounded-md bg-gray-100 text-gray-700">
-                            ✓ {a}
+                            {a}
                           </span>
                         ))}
                       </div>
@@ -343,7 +343,7 @@ export const VariantA = ({ onSelectHotel }) => {
                           <span className="px-1.5 sm:px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black bg-black/80 backdrop-blur-md text-amber-300 border border-amber-400/60 shadow-sm flex items-center gap-0.5">
                             <Sparkles className="w-2.5 h-2.5 text-amber-400 shrink-0" />
                             <span className="hidden sm:inline">Luxury Collection</span>
-                            <span className="sm:hidden">5★ Luxe</span>
+                            <span className="sm:hidden">5-Star Luxe</span>
                           </span>
                         )}
                         {hotel.hasFreeCancellation && (
@@ -410,7 +410,7 @@ export const VariantA = ({ onSelectHotel }) => {
                             key={i}
                             className="text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 font-medium truncate max-w-[120px]"
                           >
-                            ✓ {a}
+                            {a}
                           </span>
                         ))}
                       </div>

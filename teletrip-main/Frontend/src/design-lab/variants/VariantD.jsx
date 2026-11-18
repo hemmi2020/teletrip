@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Star, MapPin, X, CheckCircle, ShieldCheck, Bed, ShoppingCart, Sparkles, SlidersHorizontal, Heart } from 'lucide-react';
 import { mockHotels } from '../fixtures';
 import { FilterSidebar } from '../components/FilterSidebar';
+import { AnimatedIcon } from '../../components/common/AnimatedIcon';
 
 export const VariantD = ({ onSelectHotel }) => {
   const [activeScenario, setActiveScenario] = useState('romance');
@@ -16,11 +17,11 @@ export const VariantD = ({ onSelectHotel }) => {
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
 
   const scenarios = [
-    { id: 'all', label: 'All Trips', icon: '🌍' },
-    { id: 'romance', label: '🥂 Luxury Romance', icon: '🥂', highlight: 'SLS & Kempinski' },
-    { id: 'family', label: '👨‍👩‍👧 Family Friendly', icon: '👨‍👩‍👧', highlight: 'Tulip Studios' },
-    { id: 'business', label: '💼 Business & Metro', icon: '💼', highlight: 'Towers Rotana' },
-    { id: 'budget', label: '🏷️ Best Value Deals', icon: '🏷️', highlight: 'Under AED 1,000' }
+    { id: 'all', label: 'All Trips', icon: 'globe', animation: 'spin' },
+    { id: 'romance', label: 'Luxury Romance', icon: 'heart', animation: 'pulse', highlight: 'SLS & Kempinski' },
+    { id: 'family', label: 'Family Friendly', icon: 'smile', animation: 'bounce', highlight: 'Tulip Studios' },
+    { id: 'business', label: 'Business & Metro', icon: 'briefcase', animation: 'glide', highlight: 'Towers Rotana' },
+    { id: 'budget', label: 'Best Value Deals', icon: 'tag', animation: 'ring', highlight: 'Under AED 1,000' }
   ];
 
   const filteredHotels = mockHotels.filter(h => {
@@ -37,7 +38,7 @@ export const VariantD = ({ onSelectHotel }) => {
   return (
     <div className="space-y-4 text-left relative">
       {/* ── RATIONALE BANNER ── */}
-      <div className="p-3.5 bg-purple-50/80 border border-purple-200/80 rounded-xl text-xs text-purple-900 flex items-center justify-between gap-3">
+      <div className="p-3.5 bg-purple-50/80 bento-card border-0 rounded-xl text-xs text-purple-900 flex items-center justify-between gap-3">
         <div>
           <span className="font-extrabold uppercase tracking-wide mr-2 text-purple-700">Design Thesis:</span>
           <strong>Guided Smart Curation & Quick-Peek Drawer with Left Filter Sidebar.</strong> Combines intuitive travel scenarios, deep filters, and an instantaneous side drawer so users never lose search context.
@@ -46,7 +47,7 @@ export const VariantD = ({ onSelectHotel }) => {
           <button
             type="button"
             onClick={() => setIsMobileFiltersOpen(true)}
-            className="lg:hidden px-3 py-1 bg-white border border-purple-300 text-purple-800 font-bold text-xs rounded-lg flex items-center gap-1"
+            className="lg:hidden px-3 py-1 bg-white border-0 shadow-xs text-purple-800 font-bold text-xs rounded-lg flex items-center gap-1"
           >
             <SlidersHorizontal className="w-3.5 h-3.5" />
             <span>Filters</span>
@@ -82,7 +83,7 @@ export const VariantD = ({ onSelectHotel }) => {
         {/* Right: Scenarios + Cards */}
         <div className="lg:col-span-8 xl:col-span-9 space-y-4">
           {/* Scenario Curation Tabs */}
-          <div className="bg-white p-3.5 rounded-2xl border border-gray-200 shadow-xs space-y-2">
+          <div className="bento-card bg-white p-3.5 rounded-2xl border-0 shadow-xs space-y-2">
             <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider block">
               What type of stay are you planning?
             </span>
@@ -93,13 +94,13 @@ export const VariantD = ({ onSelectHotel }) => {
                   <button
                     key={sc.id}
                     onClick={() => setActiveScenario(sc.id)}
-                    className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-2 border cursor-pointer ${
+                    className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-2 border-0 cursor-pointer ${
                       isActive
-                        ? 'bg-purple-600 text-white border-purple-600 shadow-sm'
-                        : 'bg-gray-50 text-gray-700 border-gray-200 hover:border-gray-300'
+                        ? 'bg-purple-600 text-white shadow-sm'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                     }`}
                   >
-                    <span>{sc.icon}</span>
+                    <AnimatedIcon name={sc.icon} animation={sc.animation} size="xs" />
                     <span>{sc.label}</span>
                   </button>
                 );
@@ -112,16 +113,16 @@ export const VariantD = ({ onSelectHotel }) => {
             {filteredHotels.map((hotel) => (
               <div
                 key={hotel.id}
-                className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-xs hover:shadow-lg transition-all flex flex-col justify-between group"
+                className="bento-card bg-white rounded-2xl border-0 overflow-hidden shadow-xs hover:shadow-lg transition-all flex flex-col justify-between group"
               >
                 <div className="relative h-44 overflow-hidden">
                   <img src={hotel.thumbnail} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                  <span className="absolute top-2.5 left-2.5 bg-black/70 backdrop-blur-md text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
-                    ★ {hotel.rating} ({hotel.reviewsCount})
+                  <span className="absolute top-2.5 left-2.5 bg-black/70 backdrop-blur-md text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                    <AnimatedIcon name="star" animation="shimmer" size="xs" className="text-amber-400" /> {hotel.rating} ({hotel.reviewsCount})
                   </span>
                   {hotel.isLuxuryCollection && (
-                    <span className="absolute top-2.5 right-2.5 bg-amber-400 text-amber-950 text-[10px] font-black px-2 py-0.5 rounded-full shadow-xs">
-                      ✨ Luxury
+                    <span className="absolute top-2.5 right-2.5 bg-amber-400 text-amber-950 text-[10px] font-black px-2 py-0.5 rounded-full shadow-xs flex items-center gap-1">
+                      <AnimatedIcon name="crown" animation="pulse" size="xs" /> Luxury
                     </span>
                   )}
                 </div>
@@ -185,7 +186,7 @@ export const VariantD = ({ onSelectHotel }) => {
               <div className="space-y-2">
                 <span className="text-xs font-bold text-gray-700 block">Available Room Options:</span>
                 {drawerHotel.roomsAvailable.map((rm, i) => (
-                  <div key={i} className="p-3 rounded-xl border border-gray-200 flex justify-between items-center text-xs">
+                  <div key={i} className="p-3 rounded-xl bento-card border-0 bg-slate-50 flex justify-between items-center text-xs">
                     <div>
                       <div className="font-extrabold text-gray-900">{rm.name}</div>
                       <div className="text-[10px] text-gray-400">{rm.ratesCount} rate plans</div>

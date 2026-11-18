@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { useCart, SlideOutCart } from './components/CartSystem';
-import { Loader2, MapPin, Clock, Users, ArrowLeft, Calendar, Star, Check, ShoppingCart } from 'lucide-react';
+import { Loader2, MapPin, Clock, Users, ArrowLeft, Calendar, Star, Check, ShoppingCart, AlertCircle, X } from 'lucide-react';
 import Header from './components/Header';
 import Footer from './components/Footer';
 
@@ -68,8 +68,10 @@ const ActivityDetails = () => {
       <>
         <Header />
         <div className="pt-20 container mx-auto px-4 py-12">
-          <div className="max-w-2xl mx-auto text-center bg-white rounded-lg shadow-lg p-8">
-            <div className="text-6xl mb-4">😕</div>
+          <div className="bento-card max-w-2xl mx-auto text-center bg-white rounded-3xl shadow-xl p-8">
+            <div className="flex justify-center mb-4">
+              <AlertCircle className="w-16 h-16 text-amber-500 gg-anim-bounce" />
+            </div>
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Activity Not Available</h2>
             <p className="text-gray-600 mb-6">
               {error || 'This activity is not available for the selected dates or has been removed.'}
@@ -188,7 +190,7 @@ const ActivityDetails = () => {
                     <ul className="space-y-2 mt-2">
                       {group.excluded.map((f, i) => (
                         <li key={i} className="flex items-start text-red-600">
-                          <span className="mr-2">✗</span>
+                          <X className="w-4 h-4 text-red-500 mr-2 shrink-0 mt-0.5" />
                           <span>{f}</span>
                         </li>
                       ))}

@@ -1,10 +1,100 @@
 @import "tailwindcss";
+@import "./styles/cssgg.css";
 
-/* ─── Apfel Grotesk Typography System ─────────────────────────────────────── */
+/* ─── Apfel Grotesk Typography System & Approved Functional Palette ─────────── */
 
-/* Override Tailwind's default font-sans */
+/* Override Tailwind's default font-sans & apply approved functional tokens */
 @theme {
   --font-sans: "Apfel Grotezk", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --color-emerald-500: #1F6A5B;
+  --color-emerald-600: #1F6A5B;
+  --color-emerald-700: #185347;
+  --color-green-500: #1F6A5B;
+  --color-green-600: #1F6A5B;
+  --color-green-700: #185347;
+  --color-amber-500: #9C621E;
+  --color-amber-600: #9C621E;
+  --color-amber-700: #7c4e17;
+  --color-yellow-500: #9C621E;
+  --color-yellow-600: #9C621E;
+  --color-red-500: #B3453D;
+  --color-red-600: #B3453D;
+  --color-red-700: #8f3730;
+  --color-purple-500: #2563eb;
+  --color-purple-600: #2563eb;
+}
+
+/* ─── Bento Card & Borderless Philosophy ───────────────────────────────────── */
+
+/* Bento Card surface utility */
+.bento-card,
+.card-bento,
+[data-bento="card"] {
+  background: #ffffff;
+  border: 0 !important;
+  outline: none !important;
+  border-radius: 1.25rem !important; /* rounded-2xl */
+  box-shadow: 0 4px 24px -2px rgba(15, 23, 42, 0.05), 0 2px 8px -2px rgba(15, 23, 42, 0.02) !important;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.bento-card:hover,
+.card-bento:hover {
+  box-shadow: 0 12px 32px -4px rgba(15, 23, 42, 0.08), 0 4px 12px -2px rgba(15, 23, 42, 0.03) !important;
+}
+
+.bento-card-subtle {
+  background: #f8fafc;
+  border: 0 !important;
+  outline: none !important;
+  border-radius: 1rem !important;
+}
+
+/* Zero Outlines & Zero Borders in all Cards, Text Fields & Inputs */
+input,
+select,
+textarea,
+button,
+[role="button"] {
+  outline: none !important;
+}
+
+input:not([type="checkbox"]):not([type="radio"]),
+select,
+textarea,
+.search-form-input {
+  outline: none !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+input:focus,
+select:focus,
+textarea:focus,
+.search-form-input:focus,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+button:focus,
+button:focus-visible {
+  outline: none !important;
+  border: 0 !important;
+  ring: none !important;
+  box-shadow: none !important;
+  --tw-ring-shadow: 0 0 #0000 !important;
+  --tw-ring-offset-shadow: 0 0 #0000 !important;
+  --tw-ring-color: transparent !important;
+}
+
+/* Globally neutralize harsh card outlines and borders */
+.border-gray-200,
+.border-gray-100,
+.border-gray-300,
+.border-slate-200,
+.border-slate-100,
+.border-neutral-200,
+.border-neutral-100 {
+  border-color: transparent !important;
 }
 
 /* Global */

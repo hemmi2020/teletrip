@@ -46,11 +46,11 @@ export default function ReviewsLab() {
 
   const sentimentTags = [
     { id: 'all', label: 'All Reviews', count: 1840 },
-    { id: 'view', label: '🌟 Spectacular Views', count: 620 },
-    { id: 'breakfast', label: '🍳 Amazing Breakfast', count: 480 },
-    { id: 'pool', label: '🏊 Cloud 22 Infinity Pool', count: 390 },
-    { id: 'family', label: '👨‍👩‍👧 Family Friendly', count: 510 },
-    { id: 'service', label: '🛎️ Impeccable Service', count: 820 }
+    { id: 'view', label: 'Spectacular Views', count: 620 },
+    { id: 'breakfast', label: 'Amazing Breakfast', count: 480 },
+    { id: 'pool', label: 'Cloud 22 Infinity Pool', count: 390 },
+    { id: 'family', label: 'Family Friendly', count: 510 },
+    { id: 'service', label: 'Impeccable Service', count: 820 }
   ];
 
   const reviewsList = [

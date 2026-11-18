@@ -74,7 +74,7 @@ const formatCancellationPolicy = (policies) => {
     day: 'numeric'
   });
   if (isFuture) {
-    return `✓ Free cancellation until ${dateStr}. Fee of €${policy.amount} applies thereafter.`;
+    return `Free cancellation until ${dateStr}. Fee of €${policy.amount} applies thereafter.`;
   }
   return `Non-refundable. Cancellation fee: €${policy.amount}`;
 };

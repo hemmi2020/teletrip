@@ -19,15 +19,8 @@ const Footer = () => {
 
   return (
     <footer className="bg-gray-50 relative overflow-hidden">
-      {/* Gradient blobs */}
-      <div className="absolute -top-20 -right-20 w-80 h-80 rounded-full opacity-[0.06]" style={{ background: 'radial-gradient(circle, #3b82f6, #8b5cf6)', filter: 'blur(80px)' }} />
-      <div className="absolute -bottom-20 -left-20 w-64 h-64 rounded-full opacity-[0.05]" style={{ background: 'radial-gradient(circle, #059669, #06b6d4)', filter: 'blur(60px)' }} />
-
       {/* ── Mobile Footer — dark, minimal, centered ── */}
       <div className="md:hidden relative overflow-hidden" style={{ background: '#0f172a' }}>
-        {/* Subtle glow */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-32 rounded-full opacity-[0.08]" style={{ background: 'radial-gradient(circle, #3b82f6, transparent)', filter: 'blur(40px)' }} />
-
         <div className="relative px-6 pt-10 pb-24 text-center">
           {/* Logo */}
           <Link to="/home" className="inline-block mb-3">

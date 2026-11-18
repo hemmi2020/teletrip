@@ -368,11 +368,11 @@ export default function HotelModalLab() {
                 <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-white/20 backdrop-blur-md border border-white/30 uppercase">
                   5 Stars
                 </span>
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-gradient-to-r from-amber-500/30 to-yellow-400/40 text-amber-200 border border-amber-300/60 shadow-xs">
-                  <span>✨</span> Luxury Collection
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-gradient-to-r from-amber-500/30 to-yellow-400/40 text-amber-200 border border-amber-300/60 shadow-xs">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-300 gg-anim-sparkle" /> Luxury Collection
                 </span>
-                <span className="text-[10px] font-bold bg-emerald-600/90 text-white px-2 py-0.5 rounded-full">
-                  ★ 4.9 TripAdvisor (1,840 reviews)
+                <span className="text-[10px] font-bold bg-emerald-600/90 text-white px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+                  <Star className="w-3 h-3 text-white fill-white" /> 4.9 TripAdvisor (1,840 reviews)
                 </span>
               </div>
 
@@ -471,8 +471,8 @@ export default function HotelModalLab() {
                   <span className="text-[11px] text-gray-400 font-medium shrink-0">Filter rates:</span>
                   {[
                     { id: 'all', label: 'All Rates' },
-                    { id: 'breakfast', label: '🍳 Breakfast Included' },
-                    { id: 'free_cancel', label: '🛡️ Free Cancellation' }
+                    { id: 'breakfast', label: 'Breakfast Included' },
+                    { id: 'free_cancel', label: 'Free Cancellation' }
                   ].map(f => (
                     <button
                       key={f.id}
@@ -528,9 +528,9 @@ export default function HotelModalLab() {
                             </h3>
 
                             <div className="flex items-center gap-2 text-xs text-gray-500 mt-1 flex-wrap">
-                              <span>📐 {room.size}</span>
+                              <span className="inline-flex items-center gap-1"><Maximize2 className="w-3 h-3 text-gray-400" /> {room.size}</span>
                               <span>·</span>
-                              <span>🛏️ {room.bed}</span>
+                              <span className="inline-flex items-center gap-1"><Bed className="w-3 h-3 text-gray-400" /> {room.bed}</span>
                               <span>·</span>
                               <span className="text-blue-600 font-semibold">{room.view}</span>
                             </div>
@@ -733,7 +733,7 @@ export default function HotelModalLab() {
                                 </span>
                                 {ri === 1 && (
                                   <span className="text-[10px] font-black uppercase tracking-wider bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-2 py-0.5 rounded-full shadow-2xs">
-                                    ★ Most Popular Choice
+                                    Most Popular Choice
                                   </span>
                                 )}
                               </div>

@@ -267,7 +267,7 @@ export default function HeroSearchLab() {
                         <div className="p-2.5 bg-gray-50 text-[10px] font-black uppercase text-gray-400 flex justify-between">
                           <span>Suggestions</span>
                           <button onClick={() => setIsSuggestOpen(false)} className="text-gray-500 hover:text-gray-800">
-                            ✕ Close
+                            Close
                           </button>
                         </div>
                         {suggestions.map((s, idx) => (
@@ -419,8 +419,8 @@ export default function HeroSearchLab() {
                         onChange={(e) => setLuxuryOnly(e.target.checked)}
                         className="rounded text-amber-600 focus:ring-amber-500 w-3.5 h-3.5"
                       />
-                      <Sparkles className="w-3 h-3 text-amber-600 shrink-0" />
-                      <span>Luxury Collection 5★</span>
+                      <Sparkles className="w-3 h-3 text-amber-600 shrink-0 gg-anim-sparkle" />
+                      <span>Luxury Collection 5-Star</span>
                     </label>
                   </div>
 
@@ -615,7 +615,8 @@ export default function HeroSearchLab() {
                 <div className="flex items-center justify-between border-b border-gray-100 pb-3">
                   <div>
                     <h3 className="text-base font-extrabold text-gray-900 flex items-center gap-2">
-                      <span>🏨 Find Deals for Any Season</span>
+                      <Building2 className="w-4 h-4 text-blue-600 gg-anim-pulse" />
+                      <span>Find Deals for Any Season</span>
                       <span className="text-[10px] bg-amber-100 text-amber-900 font-bold px-2 py-0.5 rounded-full border border-amber-200">
                         Price Match Guarantee
                       </span>
@@ -679,7 +680,7 @@ export default function HeroSearchLab() {
                         onChange={(e) => setLuxuryOnly(e.target.checked)}
                         className="w-4 h-4 accent-amber-500 rounded"
                       />
-                      <span>⭐ 5-Star Luxury Collection only</span>
+                      <span className="flex items-center gap-1"><Sparkles className="w-3.5 h-3.5 text-amber-500 gg-anim-sparkle" /> 5-Star Luxury Collection only</span>
                     </label>
 
                     <label className="flex items-center gap-2 cursor-pointer select-none">

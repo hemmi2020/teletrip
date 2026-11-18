@@ -15,6 +15,7 @@ import {
   Loader2,
   CheckCircle2
 } from 'lucide-react';
+import { AnimatedIcon } from '../components/common/AnimatedIcon';
 
 export const FeedbackOverlay = ({ targetName = "HotelSearchExperience" }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -171,20 +172,20 @@ export const FeedbackOverlay = ({ targetName = "HotelSearchExperience" }) => {
       grouped[c.variant].push(c);
     });
 
-    let md = `## 🎨 Design Lab Client Feedback\n\n`;
+    let md = `## Design Lab Client Feedback\n\n`;
     md += `**Client/Reviewer:** ${clientName || 'Client'}${clientEmail ? ` (${clientEmail})` : ''}\n`;
     md += `**Preferred Variant:** ${preferredVariant}\n`;
-    md += `**Overall Rating:** ${'★'.repeat(rating)}${'☆'.repeat(5 - rating)} (${rating}/5)\n`;
+    md += `**Overall Rating:** ${rating}/5\n`;
     md += `**Target Experience:** ${targetName}\n`;
     md += `**Element Notes:** ${comments.length}\n\n`;
 
     if (overallDirection.trim()) {
-      md += `### 💡 Overall Direction & Synthesis\n`;
+      md += `### Overall Direction & Synthesis\n`;
       md += `${overallDirection.trim()}\n\n`;
     }
 
     if (comments.length > 0) {
-      md += `### 🔍 Specific Element Feedback\n`;
+      md += `### Specific Element Feedback\n`;
       Object.keys(grouped).forEach(vKey => {
         md += `#### Variant ${vKey}\n`;
         grouped[vKey].forEach((c, i) => {
@@ -327,7 +328,7 @@ export const FeedbackOverlay = ({ targetName = "HotelSearchExperience" }) => {
           {/* Header */}
           <div className="p-3.5 sm:p-4 border-b border-gray-100 bg-gradient-to-r from-slate-900 to-blue-950 text-white flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
+              <AnimatedIcon name="check-o" animation="pulse" size="xs" className="text-emerald-400" />
               <div>
                 <h3 className="text-sm font-extrabold text-white">Client Design Review</h3>
                 <p className="text-[10px] text-blue-200">Select preferred design & send feedback directly</p>

@@ -3,6 +3,7 @@ import React, { createContext, useContext, useReducer, useEffect, useState, useR
 import { X, ShoppingCart, MapPin, Calendar, Trash2, User, Eye, EyeOff, Lock, Mail, Save, Bed, Info, XCircle, CreditCard  } from "lucide-react";
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { AnimatedIcon } from './common/AnimatedIcon';
 
 // User Data Context
 export const UserDataContext = createContext();
@@ -460,8 +461,6 @@ export const AuthModal = ({ isOpen, onClose, defaultTab = 'login', returnUrl }) 
 
         {/* ── Header with gradient accent ── */}
         <div className="relative overflow-hidden">
-          {/* Gradient blob */}
-          <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full opacity-20" style={{ background: 'radial-gradient(circle, #3b82f6, #8b5cf6)', filter: 'blur(40px)' }} />
           <div className="relative px-6 pt-6 pb-4">
             <div className="flex items-center justify-between mb-1">
               <h2 className="text-xl sm:text-2xl font-bold text-gray-900" style={{ letterSpacing: '-0.03em' }}>
@@ -774,9 +773,9 @@ export const SlideOutCart = ({ isOpen, onClose, onProceedToCheckout }) => {
             ) : (
               <div className="p-4 space-y-3">
                 {/* 15-Minute Inventory Hold Timer Banner */}
-                <div className="p-2.5 bg-amber-50/90 border border-amber-200/80 rounded-xl flex items-center justify-between text-xs text-amber-900">
+                <div className="p-2.5 bg-amber-50/90 bento-card border-0 rounded-xl flex items-center justify-between text-xs text-amber-900">
                   <div className="flex items-center gap-1.5 font-bold">
-                    <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                    <AnimatedIcon name="time" animation="pulse" size="xs" className="text-amber-600" />
                     <span>Inventory held for checkout</span>
                   </div>
                   <span className="font-mono font-black text-amber-800 bg-amber-100/90 px-2 py-0.5 rounded-md text-[11px]">

@@ -43,9 +43,7 @@ const CancellationPolicy = () => {
       <Header />
 
       {/* Hero */}
-      <section className="pt-28 sm:pt-32 pb-16 px-4 sm:px-6 lg:px-8 bg-gray-50 relative overflow-hidden">
-        <div className="absolute -top-20 -right-20 w-80 h-80 rounded-full opacity-15" style={{ background: 'radial-gradient(circle, #3b82f6, #8b5cf6)', filter: 'blur(80px)' }} />
-        <div className="absolute -bottom-16 -left-16 w-60 h-60 rounded-full opacity-10" style={{ background: 'radial-gradient(circle, #059669, #3b82f6)', filter: 'blur(60px)' }} />
+      <section className="pt-28 sm:pt-32 pb-16 px-4 sm:px-6 lg:px-8 bg-gray-50/50 relative overflow-hidden">
         <div className="max-w-4xl mx-auto text-center relative">
           <div className="flex items-center justify-center gap-2 mb-4">
             <div className="w-8 h-px bg-blue-500" />
@@ -63,12 +61,11 @@ const CancellationPolicy = () => {
 
       {/* Policy Sections */}
       <section className="py-16 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-        <div className="absolute top-20 right-0 w-64 h-64 rounded-full opacity-10" style={{ background: 'radial-gradient(circle, #7c3aed, #3b82f6)', filter: 'blur(70px)' }} />
         <div className="max-w-4xl mx-auto relative space-y-12">
           {policyCards.map(({ Icon, title, color, rules }, i) => (
-            <div key={i} className="rounded-2xl border border-gray-100 bg-white overflow-hidden hover:shadow-lg transition-shadow duration-300">
+            <div key={i} className="bento-card rounded-3xl bg-white overflow-hidden hover:shadow-xl transition-shadow duration-300">
               <div className="flex items-center gap-3 px-6 py-5 border-b border-gray-100" style={{ background: `${color}08` }}>
-                <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ background: `${color}14` }}>
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: `${color}14` }}>
                   <Icon style={{ width: 20, height: 20, color, strokeWidth: 1.8 }} />
                 </div>
                 <h2 className="text-lg font-bold text-gray-900" style={{ letterSpacing: '-0.01em' }}>{title}</h2>
@@ -87,8 +84,7 @@ const CancellationPolicy = () => {
       </section>
 
       {/* Refund Process */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gray-50 relative overflow-hidden">
-        <div className="absolute -bottom-16 -left-16 w-60 h-60 rounded-full opacity-10" style={{ background: 'radial-gradient(circle, #3b82f6, #059669)', filter: 'blur(60px)' }} />
+      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gray-50/60 relative overflow-hidden">
         <div className="max-w-3xl mx-auto relative">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">

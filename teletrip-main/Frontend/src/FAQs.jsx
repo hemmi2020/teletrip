@@ -48,9 +48,7 @@ const FAQs = () => {
       <Header />
 
       {/* Hero */}
-      <section className="pt-28 sm:pt-32 pb-16 px-4 sm:px-6 lg:px-8 bg-gray-50 relative overflow-hidden">
-        <div className="absolute -top-20 -right-20 w-80 h-80 rounded-full opacity-15" style={{ background: 'radial-gradient(circle, #3b82f6, #8b5cf6)', filter: 'blur(80px)' }} />
-        <div className="absolute -bottom-16 -left-16 w-60 h-60 rounded-full opacity-10" style={{ background: 'radial-gradient(circle, #059669, #3b82f6)', filter: 'blur(60px)' }} />
+      <section className="pt-28 sm:pt-32 pb-16 px-4 sm:px-6 lg:px-8 bg-gray-50/50 relative overflow-hidden">
         <div className="max-w-4xl mx-auto text-center relative">
           <div className="flex items-center justify-center gap-2 mb-4">
             <div className="w-8 h-px bg-blue-500" />
@@ -68,7 +66,6 @@ const FAQs = () => {
 
       {/* FAQ Accordion */}
       <section className="py-16 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-        <div className="absolute top-20 right-0 w-64 h-64 rounded-full opacity-10" style={{ background: 'radial-gradient(circle, #7c3aed, #3b82f6)', filter: 'blur(70px)' }} />
         <div className="max-w-3xl mx-auto relative">
           {faqs.map((section) => (
             <div key={section.category} className="mb-10">
@@ -81,7 +78,7 @@ const FAQs = () => {
                   const idx = globalIdx++;
                   const isOpen = openIndex === idx;
                   return (
-                    <div key={idx} className={`rounded-2xl border transition-all duration-300 ${isOpen ? 'border-blue-200 bg-blue-50/30 shadow-sm' : 'border-gray-100 bg-white hover:border-gray-200'}`}>
+                    <div key={idx} className={`bento-card rounded-2xl transition-all duration-300 ${isOpen ? 'bg-blue-50/40 shadow-md' : 'bg-white hover:shadow-md'}`}>
                       <button
                         onClick={() => toggle(idx)}
                         className="w-full flex items-center justify-between px-5 py-4 text-left"

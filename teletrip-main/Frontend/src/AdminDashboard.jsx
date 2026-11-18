@@ -1350,8 +1350,8 @@ const AdminDashboard = () => {
                   Payment: {item.hotelBooking?.rooms?.[0]?.paymentType === 'AT_WEB' ? 'Card' : 'Pay at Office'}
                 </p>
                 {freeCancellation && (
-                  <p className="text-xs text-green-600 mt-1">
-                    ✓ Free cancellation until {new Date(freeCancellation.from).toLocaleDateString()} • Full refund available
+                  <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+                    <ShieldCheck className="w-3.5 h-3.5" /> Free cancellation until {new Date(freeCancellation.from).toLocaleDateString()} • Full refund available
                   </p>
                 )}
                 {!freeCancellation && cancellationPolicies.length > 0 && (

@@ -1,0 +1,1650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TeleTrip UI & Design System Audit | Interactive Reviewer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --primary-light: #eff6ff;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border-color: #e2e8f0;
+      --bg-page: #f8fafc;
+      --bg-card: #ffffff;
+      --status-approved: #10b981;
+      --status-polish: #f59e0b;
+      --status-redesign: #ef4444;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-xl: 24px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg-page);
+      color: var(--text-main);
+      line-height: 1.5;
+      padding-bottom: 120px;
+    }
+
+    /* Top Navigation & Brand Header */
+    header.audit-header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-color);
+      box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05);
+    }
+    .header-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .brand-wrap {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .brand-logo-badge {
+      background: #1e3a8a;
+      color: #ffffff;
+      font-weight: 800;
+      font-size: 15px;
+      padding: 6px 14px;
+      border-radius: var(--radius-sm);
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .brand-title h1 {
+      font-size: 17px;
+      font-weight: 800;
+      color: var(--text-main);
+      letter-spacing: -0.02em;
+    }
+    .brand-title p {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    /* Progress & Tracker Bar */
+    .tracker-card {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: #f1f5f9;
+      padding: 6px 16px;
+      border-radius: 9999px;
+      border: 1px solid #cbd5e1;
+    }
+    .tracker-stat {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .stat-val {
+      font-weight: 800;
+      color: var(--text-main);
+    }
+    .stat-pill {
+      padding: 2px 8px;
+      border-radius: 9999px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .pill-approved { background: #dcfce7; color: #166534; }
+    .pill-polish { background: #fef3c7; color: #92400e; }
+    .pill-redesign { background: #fee2e2; color: #991b1b; }
+
+    /* Quick jump pill nav */
+    nav.jump-nav {
+      max-width: 1400px;
+      margin: 10px auto;
+      padding: 0 24px;
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      scrollbar-width: thin;
+      padding-bottom: 6px;
+    }
+    .jump-btn {
+      white-space: nowrap;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-decoration: none;
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      padding: 6px 14px;
+      border-radius: 9999px;
+      transition: all 0.15s ease;
+    }
+    .jump-btn:hover {
+      background: var(--primary-light);
+      color: var(--primary);
+      border-color: #bfdbfe;
+    }
+
+    /* Main Container */
+    main.audit-content {
+      max-width: 1400px;
+      margin: 20px auto;
+      padding: 0 24px;
+    }
+
+    /* Section Styling */
+    section.audit-section {
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-xl);
+      padding: 28px;
+      margin-bottom: 32px;
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+    }
+    .section-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border-color);
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .section-title-wrap h2 {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      letter-spacing: -0.02em;
+    }
+    .section-title-wrap p {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+    .badge-count {
+      background: #e2e8f0;
+      color: #334155;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 9999px;
+    }
+
+    /* Component Grid */
+    .components-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+      gap: 24px;
+    }
+    .components-grid.single-col {
+      grid-template-columns: 1fr;
+    }
+
+    /* Component Card */
+    .audit-card {
+      background: #ffffff;
+      border: 2px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+    .audit-card:hover {
+      box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08);
+    }
+    .audit-card.status-approved {
+      border-color: #10b981;
+      background: #f0fdf4;
+    }
+    .audit-card.status-polish {
+      border-color: #f59e0b;
+      background: #fffbeb;
+    }
+    .audit-card.status-redesign {
+      border-color: #ef4444;
+      background: #fef2f2;
+    }
+
+    .card-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .card-id-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      font-weight: 600;
+      color: #64748b;
+      background: #f1f5f9;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    .card-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-top: 4px;
+    }
+    .card-subtitle {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* Live Preview Box */
+    .live-preview-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: var(--radius-md);
+      padding: 20px;
+      margin: 14px 0;
+      overflow: hidden;
+      min-height: 120px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    .live-preview-box.align-start {
+      align-items: flex-start;
+      justify-content: flex-start;
+    }
+    .live-preview-box.dark-bg {
+      background: #0f172a;
+      color: #ffffff;
+    }
+
+    /* Specs & Code Tags */
+    .card-specs {
+      font-size: 11px;
+      color: #475569;
+      background: rgba(241, 245, 249, 0.7);
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
+      margin-bottom: 14px;
+      line-height: 1.5;
+    }
+    .card-specs code {
+      font-family: 'JetBrains Mono', monospace;
+      background: #e2e8f0;
+      padding: 1px 4px;
+      border-radius: 3px;
+      font-size: 10px;
+      color: #0f172a;
+    }
+
+    /* Inline Reviewer Controls */
+    .review-toolbar {
+      border-top: 1px solid rgba(226, 232, 240, 0.8);
+      padding-top: 14px;
+      margin-top: auto;
+    }
+    .review-action-btns {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+    .review-btn {
+      cursor: pointer;
+      border: 1px solid var(--border-color);
+      background: #ffffff;
+      padding: 7px 4px;
+      border-radius: var(--radius-sm);
+      font-size: 11px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      color: #475569;
+      transition: all 0.15s ease;
+    }
+    .review-btn:hover { background: #f8fafc; }
+    .review-btn.btn-approve.active {
+      background: #10b981;
+      border-color: #059669;
+      color: #ffffff;
+    }
+    .review-btn.btn-polish.active {
+      background: #f59e0b;
+      border-color: #d97706;
+      color: #ffffff;
+    }
+    .review-btn.btn-redesign.active {
+      background: #ef4444;
+      border-color: #dc2626;
+      color: #ffffff;
+    }
+
+    .review-note-input {
+      width: 100%;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      padding: 8px 10px;
+      font-family: inherit;
+      font-size: 12px;
+      color: var(--text-main);
+      background: #ffffff;
+      outline: none;
+      resize: vertical;
+      min-height: 48px;
+      transition: border 0.15s ease;
+    }
+    .review-note-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+    }
+    .review-note-input::placeholder {
+      color: #94a3b8;
+    }
+
+    /* Color Swatch Component */
+    .color-swatches-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      gap: 12px;
+      width: 100%;
+    }
+    .color-chip {
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    .chip-preview {
+      height: 52px;
+      width: 100%;
+    }
+    .chip-info {
+      padding: 8px;
+    }
+    .chip-name {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+    .chip-hex {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    /* Media Assets Grid */
+    .media-card {
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .media-thumb-wrap {
+      height: 140px;
+      background: #f1f5f9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px;
+      overflow: hidden;
+    }
+    .media-thumb-wrap img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+    .media-meta {
+      padding: 12px;
+      border-top: 1px solid var(--border-color);
+    }
+    .media-name {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-main);
+      word-break: break-all;
+    }
+    .media-details {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 2px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    /* Fixed Bottom Action Dock */
+    .bottom-dock {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 100;
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 9999px;
+      padding: 8px 18px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      max-width: 95vw;
+    }
+    .dock-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .dock-btn {
+      cursor: pointer;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+    .dock-btn-primary {
+      background: #2563eb;
+      color: #ffffff;
+    }
+    .dock-btn-primary:hover {
+      background: #1d4ed8;
+      box-shadow: 0 0 15px rgba(37, 99, 235, 0.5);
+    }
+    .dock-btn-secondary {
+      background: rgba(255, 255, 255, 0.15);
+      color: #ffffff;
+    }
+    .dock-btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
+    .dock-filter-select {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #ffffff;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 6px 10px;
+      border-radius: 9999px;
+      outline: none;
+    }
+    .dock-filter-select option {
+      background: #0f172a;
+      color: #ffffff;
+    }
+
+    /* Modal for Export Output */
+    .export-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .export-modal-backdrop.show { display: flex; }
+    .export-modal {
+      background: #ffffff;
+      width: 100%;
+      max-width: 720px;
+      border-radius: var(--radius-xl);
+      padding: 24px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .modal-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .modal-head h3 { font-size: 18px; font-weight: 800; color: var(--text-main); }
+    .modal-close-btn {
+      background: none; border: none; font-size: 20px; cursor: pointer; color: #64748b;
+    }
+    .export-code-box {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      background: #0f172a;
+      color: #f8fafc;
+      padding: 16px;
+      border-radius: var(--radius-md);
+      overflow-y: auto;
+      flex: 1;
+      white-space: pre-wrap;
+      line-height: 1.5;
+    }
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      top: 24px;
+      right: 24px;
+      background: #10b981;
+      color: #ffffff;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 10px 18px;
+      border-radius: var(--radius-md);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+      z-index: 300;
+      display: none;
+      align-items: center;
+      gap: 8px;
+    }
+    .toast.show { display: flex; }
+
+    /* Custom UI Components inside Previews */
+    .btn-sample {
+      padding: 10px 20px;
+      font-size: 14px;
+      font-weight: 700;
+      border-radius: 12px;
+      cursor: pointer;
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+    .btn-sample-primary { background: #2563eb; color: #ffffff; }
+    .btn-sample-primary:hover { background: #1d4ed8; }
+    .btn-sample-outline { background: #ffffff; color: #2563eb; border: 1.5px solid #2563eb; }
+    .btn-sample-dark { background: #0f172a; color: #ffffff; }
+    .btn-sample-danger { background: #fee2e2; color: #dc2626; border: 1px solid #fecaca; }
+
+    .tag-sample {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .tag-sample-green { background: #dcfce7; color: #15803d; }
+    .tag-sample-blue { background: #eff6ff; color: #1d4ed8; border: 1px solid #dbeafe; }
+    .tag-sample-amber { background: #fef3c7; color: #b45309; }
+    .tag-sample-red { background: #fee2e2; color: #b91c1c; }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .header-container { flex-direction: column; align-items: flex-start; }
+      .components-grid { grid-template-columns: 1fr; }
+      .bottom-dock { width: 92%; justify-content: space-between; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Toast -->
+  <div id="toastNotification" class="toast">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+    <span id="toastMessage">Feedback Copied to Clipboard!</span>
+  </div>
+
+  <!-- Header -->
+  <header class="audit-header">
+    <div class="header-container">
+      <div class="brand-wrap">
+        <div class="brand-logo-badge">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17.8 19.2L16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>
+          TeleTrip
+        </div>
+        <div class="brand-title">
+          <h1>UI & Design System Master Audit</h1>
+          <p>Living asset catalog, component review, and client feedback engine</p>
+        </div>
+      </div>
+
+      <!-- Live Review Tracker -->
+      <div class="tracker-card">
+        <div class="tracker-stat">
+          Reviewed: <span class="stat-val" id="reviewedCount">0</span>/<span id="totalItemsCount">24</span>
+        </div>
+        <div class="stat-pill pill-approved"><span id="approvedCount">0</span> Approved</div>
+        <div class="stat-pill pill-polish"><span id="polishCount">0</span> Polish</div>
+        <div class="stat-pill pill-redesign"><span id="redesignCount">0</span> Redesign</div>
+      </div>
+    </div>
+
+    <!-- Quick Jump Sub-Navigation -->
+    <nav class="jump-nav">
+      <a href="#tokens" class="jump-btn">🎨 Design Tokens</a>
+      <a href="#media" class="jump-btn">🖼️ Static Media Assets</a>
+      <a href="#atoms" class="jump-btn">🧩 UI Atoms & Form Controls</a>
+      <a href="#search-engine" class="jump-btn">🔍 Hero Search Grid</a>
+      <a href="#hotel-card" class="jump-btn">🏨 Hotel Search Card (Option A)</a>
+      <a href="#hotel-modal" class="jump-btn">📋 Hotel Detail Modal</a>
+      <a href="#reviews-mod" class="jump-btn">⭐ Reviews Module (Style 1)</a>
+      <a href="#cart-system" class="jump-btn">🛒 Cart & Hold Timer</a>
+      <a href="#voucher-mod" class="jump-btn">🎟️ Customer Dashboard & Voucher</a>
+    </nav>
+  </header>
+
+  <!-- Main Content -->
+  <main class="audit-content">
+
+    <!-- ========================================== -->
+    <!-- SECTION 1: DESIGN TOKENS                  -->
+    <!-- ========================================== -->
+    <section class="audit-section" id="tokens">
+      <div class="section-header">
+        <div class="section-title-wrap">
+          <h2>🎨 1. Design Tokens & Styling Foundations <span class="badge-count">Tokens & Typography</span></h2>
+          <p>Core brand colors, typography hierarchy, elevation, and border radiuses across TeleTrip web.</p>
+        </div>
+      </div>
+
+      <div class="components-grid">
+
+        <!-- Card 1: Primary Brand Blues -->
+        <div class="audit-card" data-item-id="tok_primary_palette">
+          <div class="card-top">
+            <div>
+              <span class="card-id-tag">TOK-01</span>
+              <h3 class="card-title">Primary Brand Blues</h3>
+              <p class="card-subtitle">Dominant brand spectrum for buttons, active tabs, and primary actions</p>
+            </div>
+          </div>
+          <div class="live-preview-box">
+            <div class="color-swatches-grid">
+              <div class="color-chip">
+                <div class="chip-preview" style="background: #1e3a8a;"></div>
+                <div class="chip-info"><p class="chip-name">Navy Dark</p><p class="chip-hex">#1e3a8a</p></div>
+              </div>
+              <div class="color-chip">
+                <div class="chip-preview" style="background: #1d4ed8;"></div>
+                <div class="chip-info"><p class="chip-name">Blue 700</p><p class="chip-hex">#1d4ed8</p></div>
+              </div>
+              <div class="color-chip">
+                <div class="chip-preview" style="background: #2563eb;"></div>
+                <div class="chip-info"><p class="chip-name">Blue 600 (Main)</p><p class="chip-hex">#2563eb</p></div>
+              </div>
+              <div class="color-chip">
+                <div class="chip-preview" style="background: #eff6ff; border: 1px dashed #bfdbfe;"></div>
+                <div class="chip-info"><p class="chip-name">Blue 50 (Tint)</p><p class="chip-hex">#eff6ff</p></div>
+              </div>
+            </div>
+          </div>
+          <div class="card-specs">
+            Used in: <code>tailwind.config.js</code>, <code>App.css</code>, Buttons, Navigation, Focus states
+          </div>
+          <div class="review-toolbar">
+            <div class="review-action-btns">
+              <button class="review-btn btn-approve" onclick="setAuditStatus('tok_primary_palette', 'approved')">✓ Approve</button>
+              <button class="review-btn btn-polish" onclick="setAuditStatus('tok_primary_palette', 'polish')">▲ Polish</button>
+              <button class="review-btn btn-redesign" onclick="setAuditStatus('tok_primary_palette', 'redesign')">✕ Redesign</button>
+            </div>
+            <textarea class="review-note-input" placeholder="Add specific feedback for this element..." onchange="saveAuditNote('tok_primary_palette', this.value)"></textarea>
+          </div>
+        </div>
+
+        <!-- Card 2: Neutral & Dark Slate -->
+        <div class="audit-card" data-item-id="tok_neutral_palette">
+          <div class="card-top">
+            <div>
+              <span class="card-id-tag">TOK-02</span>
+              <h3 class="card-title">Neutral & Surface Grayscale</h3>
+              <p class="card-subtitle">High contrast typography, container backgrounds, and subtle dividers</p>
+            </div>
+          </div>
+          <div class="live-preview-box">
+            <div class="color-swatches-grid">
+              <div class="color-chip">
+                <div class="chip-preview" style="background: #0f172a;"></div>
+                <div class="chip-info"><p class="chip-name">Slate 900</p><p class="chip-hex">#0f172a</p></div>
+              </div>
+              <div class="color-chip">
+                <div class="chip-preview" style="background: #475569;"></div>
+                <div class="chip-info"><p class="chip-name">Slate 600</p><p class="chip-hex">#475569</p></div>
+              </div>
+              <div class="color-chip">
+                <div class="chip-preview" style="background: #e2e8f0;"></div>
+                <div class="chip-info"><p class="chip-name">Border 200</p><p class="chip-hex">#e2e8f0</p></div>
+              </div>
+              <div class="color-chip">
+                <div class="chip-preview" style="background: #f8fafc; border: 1px dashed #cbd5e1;"></div>
+                <div class="chip-info"><p class="chip-name">Background</p><p class="chip-hex">#f8fafc</p></div>
+              </div>
+            </div>
+          </div>
+          <div class="card-specs">
+            Used in: Body text, secondary icons, card containers, subtle border separators
+          </div>
+          <div class="review-toolbar">
+            <div class="review-action-btns">
+              <button class="review-btn btn-approve" onclick="setAuditStatus('tok_neutral_palette', 'approved')">✓ Approve</button>
+              <button class="review-btn btn-polish" onclick="setAuditStatus('tok_neutral_palette', 'polish')">▲ Polish</button>
+              <button class="review-btn btn-redesign" onclick="setAuditStatus('tok_neutral_palette', 'redesign')">✕ Redesign</button>
+            </div>
+            <textarea class="review-note-input" placeholder="Add specific feedback for this element..." onchange="saveAuditNote('tok_neutral_palette', this.value)"></textarea>
+          </div>
+        </div>
+
+        <!-- Card 3: Functional & Semantic Colors -->
+        <div class="audit-card" data-item-id="tok_functional_palette">
+          <div class="card-top">
+            <div>
+              <span class="card-id-tag">TOK-03</span>
+              <h3 class="card-title">Functional Accents & Statuses</h3>
+              <p class="card-subtitle">Success confirmations, booking cautions, error alerts, and discount highlights</p>
+            </div>
+          </div>
+          <div class="live-preview-box">
+            <div class="color-swatches-grid">
+              <div class="color-chip">
+                <div class="chip-preview" style="background: #10b981;"></div>
+                <div class="chip-info"><p class="chip-name">Emerald (Success)</p><p class="chip-hex">#10b981</p></div>
+              </div>
+              <div class="color-chip">
+                <div class="chip-preview" style="background: #f59e0b;"></div>
+                <div class="chip-info"><p class="chip-name">Amber (Caution)</p><p class="chip-hex">#f59e0b</p></div>
+              </div>
+              <div class="color-chip">
+                <div class="chip-preview" style="background: #ef4444;"></div>
+                <div class="chip-info"><p class="chip-name">Red (Danger/Deal)</p><p class="chip-hex">#ef4444</p></div>
+              </div>
+              <div class="color-chip">
+                <div class="chip-preview" style="background: #8b5cf6;"></div>
+                <div class="chip-info"><p class="chip-name">Purple (Voucher)</p><p class="chip-hex">#8b5cf6</p></div>
+              </div>
+            </div>
+          </div>
+          <div class="card-specs">
+            Used in: Booking confirmations, refund notices, free cancellation tags, deal badges
+          </div>
+          <div class="review-toolbar">
+            <div class="review-action-btns">
+              <button class="review-btn btn-approve" onclick="setAuditStatus('tok_functional_palette', 'approved')">✓ Approve</button>
+              <button class="review-btn btn-polish" onclick="setAuditStatus('tok_functional_palette', 'polish')">▲ Polish</button>
+              <button class="review-btn btn-redesign" onclick="setAuditStatus('tok_functional_palette', 'redesign')">✕ Redesign</button>
+            </div>
+            <textarea class="review-note-input" placeholder="Add specific feedback for this element..." onchange="saveAuditNote('tok_functional_palette', this.value)"></textarea>
+          </div>
+        </div>
+
+        <!-- Card 4: Typography Hierarchy -->
+        <div class="audit-card" data-item-id="tok_typography">
+          <div class="card-top">
+            <div>
+              <span class="card-id-tag">TOK-04</span>
+              <h3 class="card-title">Typography Hierarchy</h3>
+              <p class="card-subtitle">Modern Grotesk & Inter pairing across headers, cards, and micro labels</p>
+            </div>
+          </div>
+          <div class="live-preview-box align-start" style="flex-direction: column; gap: 8px;">
+            <div style="font-size: 26px; font-weight: 800; letter-spacing: -0.03em;">Display H1 Header (26px Bold)</div>
+            <div style="font-size: 18px; font-weight: 700; letter-spacing: -0.02em;">Card Title H2 (18px Semi-Bold)</div>
+            <div style="font-size: 14px; font-weight: 400; color: #475569;">Standard body copy with clean 1.65 line height for optimal readability.</div>
+            <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #64748b;">MICRO LABEL TAG (11px TRACKED)</div>
+          </div>
+          <div class="card-specs">
+            Primary font family: <code>"Apfel Grotezk", "Inter", -apple-system, sans-serif</code>
+          </div>
+          <div class="review-toolbar">
+            <div class="review-action-btns">
+              <button class="review-btn btn-approve" onclick="setAuditStatus('tok_typography', 'approved')">✓ Approve</button>
+              <button class="review-btn btn-polish" onclick="setAuditStatus('tok_typography', 'polish')">▲ Polish</button>
+              <button class="review-btn btn-redesign" onclick="setAuditStatus('tok_typography', 'redesign')">✕ Redesign</button>
+            </div>
+            <textarea class="review-note-input" placeholder="Add specific feedback for this element..." onchange="saveAuditNote('tok_typography', this.value)"></textarea>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- SECTION 2: STATIC MEDIA & BRAND ASSETS    -->
+    <!-- ========================================== -->
+    <section class="audit-section" id="media">
+      <div class="section-header">
+        <div class="section-title-wrap">
+          <h2>🖼️ 2. Static Media & Brand Assets Inventory <span class="badge-count">Logos & Banners</span></h2>
+          <p>Visual assets stored in <code>Frontend/src/images</code> and <code>Frontend/public/images</code>.</p>
+        </div>
+      </div>
+
+      <div class="components-grid">
+
+        <!-- Card: Primary Brand Logos -->
+        <div class="audit-card" data-item-id="media_primary_logo">
+          <div class="card-top">
+            <div>
+              <span class="card-id-tag">MED-01</span>
+              <h3 class="card-title">TeleTrip Brand Logos</h3>
+              <p class="card-subtitle">Main logo, inverted variant, and browser favicon</p>
+            </div>
+          </div>
+          <div class="live-preview-box" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; width: 100%;">
+            <div class="media-card">
+              <div class="media-thumb-wrap">
+                <img src="/images/logo.png" onerror="this.src='src/images/Telitrip-Logo.png'; this.onerror=null;" alt="TeleTrip Main Logo">
+              </div>
+              <div class="media-meta">
+                <p class="media-name">Telitrip-Logo.png</p>
+                <p class="media-details"><span>Header / Nav</span><span>5.6 KB</span></p>
+              </div>
+            </div>
+            <div class="media-card">
+              <div class="media-thumb-wrap" style="background: #0f172a;">
+                <img src="/images/logo.png" onerror="this.src='src/images/Telitrip-Logo-1.png'; this.onerror=null;" style="filter: brightness(0) invert(1);" alt="Inverted Logo">
+              </div>
+              <div class="media-meta">
+                <p class="media-name">Telitrip-Logo-1.png</p>
+                <p class="media-details"><span>Footer / Dark</span><span>6.2 KB</span></p>
+              </div>
+            </div>
+            <div class="media-card">
+              <div class="media-thumb-wrap">
+                <img src="/images/Favicon.png" onerror="this.src='public/images/Favicon.png'; this.onerror=null;" style="width: 42px; height: 42px;" alt="Favicon">
+              </div>
+              <div class="media-meta">
+                <p class="media-name">Favicon.png</p>
+                <p class="media-details"><span>Tab Icon</span><span>32x32</span></p>
+              </div>
+            </div>
+          </div>
+          <div class="card-specs">
+            Paths: <code>Frontend/src/images/Telitrip-Logo.png</code> & <code>Frontend/public/images/Favicon.png</code>
+          </div>
+          <div class="review-toolbar">
+            <div class="review-action-btns">
+              <button class="review-btn btn-approve" onclick="setAuditStatus('media_primary_logo', 'approved')">✓ Approve</button>
+              <button class="review-btn btn-polish" onclick="setAuditStatus('media_primary_logo', 'polish')">▲ Polish</button>
+              <button class="review-btn btn-redesign" onclick="setAuditStatus('media_primary_logo', 'redesign')">✕ Redesign</button>
+            </div>
+            <textarea class="review-note-input" placeholder="Feedback on logo resolution, padding, or SVG replacement..." onchange="saveAuditNote('media_primary_logo', this.value)"></textarea>
+          </div>
+        </div>
+
+        <!-- Card: Destination Showcase Photos -->
+        <div class="audit-card" data-item-id="media_dest_photos">
+          <div class="card-top">
+            <div>
+              <span class="card-id-tag">MED-02</span>
+              <h3 class="card-title">Destination & Hero Photography</h3>
+              <p class="card-subtitle">Curated hero images (Dubai, Istanbul, Paris, Maldives)</p>
+            </div>
+          </div>
+          <div class="live-preview-box" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; width: 100%;">
+            <div style="height: 90px; border-radius: 8px; overflow: hidden; background: #cbd5e1;">
+              <img src="/images/1.jpg" onerror="this.src='src/images/1.jpg'; this.onerror=null;" style="width:100%; height:100%; object-fit: cover;" alt="Dubai">
+            </div>
+            <div style="height: 90px; border-radius: 8px; overflow: hidden; background: #cbd5e1;">
+              <img src="/images/2.jpg" onerror="this.src='src/images/2.jpg'; this.onerror=null;" style="width:100%; height:100%; object-fit: cover;" alt="Maldives">
+            </div>
+            <div style="height: 90px; border-radius: 8px; overflow: hidden; background: #cbd5e1;">
+              <img src="/images/3.jpg" onerror="this.src='src/images/3.jpg'; this.onerror=null;" style="width:100%; height:100%; object-fit: cover;" alt="Paris">
+            </div>
+            <div style="height: 90px; border-radius: 8px; overflow: hidden; background: #cbd5e1;">
+              <img src="/images/4.jpg" onerror="this.src='public/images/4.jpg'; this.onerror=null;" style="width:100%; height:100%; object-fit: cover;" alt="Istanbul">
+            </div>
+          </div>
+          <div class="card-specs">
+            Format: High-res JPEG / WebP ready • Recommended: WebP conversion for 65% faster load speed
+          </div>
+          <div class="review-toolbar">
+            <div class="review-action-btns">
+              <button class="review-btn btn-approve" onclick="setAuditStatus('media_dest_photos', 'approved')">✓ Approve</button>
+              <button class="review-btn btn-polish" onclick="setAuditStatus('media_dest_photos', 'polish')">▲ Polish</button>
+              <button class="review-btn btn-redesign" onclick="setAuditStatus('media_dest_photos', 'redesign')">✕ Redesign</button>
+            </div>
+            <textarea class="review-note-input" placeholder="Feedback on image selection, compression, or aspect ratios..." onchange="saveAuditNote('media_dest_photos', this.value)"></textarea>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- SECTION 3: CORE UI ATOMS & FORM CONTROLS   -->
+    <!-- ========================================== -->
+    <section class="audit-section" id="atoms">
+      <div class="section-header">
+        <div class="section-title-wrap">
+          <h2>🧩 3. Core UI Atoms & Form Controls <span class="badge-count">Interactive Elements</span></h2>
+          <p>Buttons, inputs, status badges, counters, and toggle switches.</p>
+        </div>
+      </div>
+
+      <div class="components-grid">
+
+        <!-- Card: Buttons System -->
+        <div class="audit-card" data-item-id="atom_buttons">
+          <div class="card-top">
+            <div>
+              <span class="card-id-tag">ATM-01</span>
+              <h3 class="card-title">Button System & Action States</h3>
+              <p class="card-subtitle">Primary, secondary outline, dark slate, cancel/danger, and icon buttons</p>
+            </div>
+          </div>
+          <div class="live-preview-box" style="flex-wrap: wrap; gap: 10px;">
+            <button class="btn-sample btn-sample-primary">
+              <span>Search Hotels</span>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </button>
+            <button class="btn-sample btn-sample-outline">Select Room</button>
+            <button class="btn-sample btn-sample-dark">Checkout</button>
+            <button class="btn-sample btn-sample-danger">Cancel Booking</button>
+          </div>
+          <div class="card-specs">
+            Paddings: <code>px-5 py-3</code>, border radiuses: <code>rounded-xl</code> (12px), active states with hover elevation
+          </div>
+          <div class="review-toolbar">
+            <div class="review-action-btns">
+              <button class="review-btn btn-approve" onclick="setAuditStatus('atom_buttons', 'approved')">✓ Approve</button>
+              <button class="review-btn btn-polish" onclick="setAuditStatus('atom_buttons', 'polish')">▲ Polish</button>
+              <button class="review-btn btn-redesign" onclick="setAuditStatus('atom_buttons', 'redesign')">✕ Redesign</button>
+            </div>
+            <textarea class="review-note-input" placeholder="Feedback on button styles, hover effects, or tap target size..." onchange="saveAuditNote('atom_buttons', this.value)"></textarea>
+          </div>
+        </div>
+
+        <!-- Card: Status Badges -->
+        <div class="audit-card" data-item-id="atom_badges">
+          <div class="card-top">
+            <div>
+              <span class="card-id-tag">ATM-02</span>
+              <h3 class="card-title">Status Pills & Feature Badges</h3>
+              <p class="card-subtitle">Visual feedback indicators for booking status and amenities</p>
+            </div>
+          </div>
+          <div class="live-preview-box" style="flex-wrap: wrap; gap: 10px;">
+            <span class="tag-sample tag-sample-green">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              Confirmed & Paid
+            </span>
+            <span class="tag-sample tag-sample-amber">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+              Pending at Office
+            </span>
+            <span class="tag-sample tag-sample-red">Cancelled</span>
+            <span class="tag-sample tag-sample-blue">Free Cancellation</span>
+            <span class="tag-sample tag-sample-green">Breakfast Included</span>
+          </div>
+          <div class="card-specs">
+            Pill typography: <code>text-xs font-bold</code>, rounded-full, high contrast WCAG compliant
+          </div>
+          <div class="review-toolbar">
+            <div class="review-action-btns">
+              <button class="review-btn btn-approve" onclick="setAuditStatus('atom_badges', 'approved')">✓ Approve</button>
+              <button class="review-btn btn-polish" onclick="setAuditStatus('atom_badges', 'polish')">▲ Polish</button>
+              <button class="review-btn btn-redesign" onclick="setAuditStatus('atom_badges', 'redesign')">✕ Redesign</button>
+            </div>
+            <textarea class="review-note-input" placeholder="Feedback on badge colors, icons, or readability..." onchange="saveAuditNote('atom_badges', this.value)"></textarea>
+          </div>
+        </div>
+
+        <!-- Card: Steppers & Form Inputs -->
+        <div class="audit-card" data-item-id="atom_inputs">
+          <div class="card-top">
+            <div>
+              <span class="card-id-tag">ATM-03</span>
+              <h3 class="card-title">Search Inputs & Quantity Steppers</h3>
+              <p class="card-subtitle">Location search box, date selectors, and guest/room counter buttons</p>
+            </div>
+          </div>
+          <div class="live-preview-box align-start" style="flex-direction: column; gap: 12px; width: 100%;">
+            <!-- Mock input -->
+            <div style="display: flex; align-items: center; gap: 10px; width: 100%; background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 12px; padding: 10px 14px;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+              <div style="flex: 1;">
+                <p style="font-size: 10px; font-weight: 700; text-transform: uppercase; color: #64748b;">Destination</p>
+                <p style="font-size: 13px; font-weight: 600; color: #0f172a;">Dubai, United Arab Emirates</p>
+              </div>
+            </div>
+            <!-- Mock stepper -->
+            <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 8px 12px;">
+              <div>
+                <p style="font-size: 13px; font-weight: 600; color: #0f172a;">Adults</p>
+                <p style="font-size: 11px; color: #64748b;">Ages 18 or above</p>
+              </div>
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <button style="width: 28px; height: 28px; border-radius: 6px; border: 1px solid #cbd5e1; background: #f8fafc; font-weight: 700; cursor: pointer;">-</button>
+                <span style="font-size: 14px; font-weight: 700;">2</span>
+                <button style="width: 28px; height: 28px; border-radius: 6px; border: 1px solid #cbd5e1; background: #f8fafc; font-weight: 700; cursor: pointer;">+</button>
+              </div>
+            </div>
+          </div>
+          <div class="card-specs">
+            Used across Hero search bar, guest selection popup, room filters
+          </div>
+          <div class="review-toolbar">
+            <div class="review-action-btns">
+              <button class="review-btn btn-approve" onclick="setAuditStatus('atom_inputs', 'approved')">✓ Approve</button>
+              <button class="review-btn btn-polish" onclick="setAuditStatus('atom_inputs', 'polish')">▲ Polish</button>
+              <button class="review-btn btn-redesign" onclick="setAuditStatus('atom_inputs', 'redesign')">✕ Redesign</button>
+            </div>
+            <textarea class="review-note-input" placeholder="Feedback on input tap sizes, labels, or steppers..." onchange="saveAuditNote('atom_inputs', this.value)"></textarea>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- SECTION 4: COMPLEX INTERACTIVE MODULES     -->
+    <!-- ========================================== -->
+
+    <!-- Module 4.1: Hero Search Engine Grid -->
+    <section class="audit-section" id="search-engine">
+      <div class="section-header">
+        <div class="section-title-wrap">
+          <h2>🔍 4.1 Hero Search Engine Grid <span class="badge-count">Live Module</span></h2>
+          <p>Option 1 modern unified 3-column layout implemented in commit <code>dead080</code> & <code>88b653e</code>.</p>
+        </div>
+      </div>
+
+      <div class="components-grid single-col">
+        <div class="audit-card" data-item-id="mod_hero_search">
+          <div class="card-top">
+            <div>
+              <span class="card-id-tag">MOD-01</span>
+              <h3 class="card-title">Unified 3-Column Hero Search Bar</h3>
+              <p class="card-subtitle">Active across Hotels, Transfers, and Experiences on homepage</p>
+            </div>
+          </div>
+
+          <!-- Live Interactive Component Preview -->
+          <div class="live-preview-box" style="padding: 24px; background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);">
+            <div style="width: 100%; max-width: 900px; background: #ffffff; border-radius: 20px; padding: 18px; box-shadow: 0 20px 40px -10px rgba(0,0,0,0.3);">
+              <!-- Tabs -->
+              <div style="display: flex; gap: 8px; margin-bottom: 14px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">
+                <span style="font-size: 13px; font-weight: 700; color: #2563eb; background: #eff6ff; padding: 6px 14px; border-radius: 9999px;">🏨 Hotels</span>
+                <span style="font-size: 13px; font-weight: 600; color: #64748b; padding: 6px 14px; cursor: pointer;">🚗 Airport Transfers</span>
+                <span style="font-size: 13px; font-weight: 600; color: #64748b; padding: 6px 14px; cursor: pointer;">🎟️ Experiences</span>
+              </div>
+              <!-- 3-Column Search Grid -->
+              <div style="display: grid; grid-template-columns: 1.5fr 1.2fr 1.2fr auto; gap: 10px; align-items: center;">
+                <div style="border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 8px 12px; background: #f8fafc;">
+                  <span style="font-size: 10px; font-weight: 700; text-transform: uppercase; color: #64748b;">Destination</span>
+                  <div style="font-size: 13px; font-weight: 700; color: #0f172a;">Dubai (DXB)</div>
+                </div>
+                <div style="border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 8px 12px; background: #f8fafc;">
+                  <span style="font-size: 10px; font-weight: 700; text-transform: uppercase; color: #64748b;">Dates</span>
+                  <div style="font-size: 13px; font-weight: 700; color: #0f172a;">Jul 10 - Jul 14</div>
+                </div>
+                <div style="border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 8px 12px; background: #f8fafc;">
+                  <span style="font-size: 10px; font-weight: 700; text-transform: uppercase; color: #64748b;">Travelers</span>
+                  <div style="font-size: 13px; font-weight: 700; color: #0f172a;">2 Adults • 1 Room</div>
+                </div>
+                <button style="background: #2563eb; color: #ffffff; font-weight: 700; font-size: 14px; padding: 14px 24px; border-radius: 12px; border: none; cursor: pointer; white-space: nowrap;">
+                  Search Hotels
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="card-specs">
+            Features: Responsive wrapping for mobile screen (320px-390px), quick category switches, zero lag
+          </div>
+          <div class="review-toolbar">
+            <div class="review-action-btns">
+              <button class="review-btn btn-approve" onclick="setAuditStatus('mod_hero_search', 'approved')">✓ Approve</button>
+              <button class="review-btn btn-polish" onclick="setAuditStatus('mod_hero_search', 'polish')">▲ Polish</button>
+              <button class="review-btn btn-redesign" onclick="setAuditStatus('mod_hero_search', 'redesign')">✕ Redesign</button>
+            </div>
+            <textarea class="review-note-input" placeholder="Feedback on search bar spacing, shadows, tab transitions..." onchange="saveAuditNote('mod_hero_search', this.value)"></textarea>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Module 4.2: Hotel Search Results Card (Option A) -->
+    <section class="audit-section" id="hotel-card">
+      <div class="section-header">
+        <div class="section-title-wrap">
+          <h2>🏨 4.2 Hotel Search Result Card (Winning Option A) <span class="badge-count">Live Module</span></h2>
+          <p>Modern luxury horizontal list card with interactive photo gallery and live CMS currency pricing.</p>
+        </div>
+      </div>
+
+      <div class="components-grid single-col">
+        <div class="audit-card" data-item-id="mod_hotel_card">
+          <div class="card-top">
+            <div>
+              <span class="card-id-tag">MOD-02</span>
+              <h3 class="card-title">Option A Hotel Search Result Card</h3>
+              <p class="card-subtitle">Active on <code>/hotels</code> search results page</p>
+            </div>
+          </div>
+
+          <div class="live-preview-box" style="background: #f1f5f9; padding: 20px;">
+            <div style="width: 100%; max-width: 900px; background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 20px; overflow: hidden; display: flex; flex-direction: row; box-shadow: 0 4px 15px rgba(0,0,0,0.05); flex-wrap: wrap;">
+              <!-- Image Section -->
+              <div style="width: 280px; min-width: 260px; height: 210px; position: relative; background: #cbd5e1;">
+                <img src="/images/1.jpg" onerror="this.src='src/images/1.jpg'; this.onerror=null;" style="width: 100%; height: 100%; object-fit: cover;" alt="Hotel Image">
+                <span style="position: absolute; top: 12px; left: 12px; background: rgba(15, 23, 42, 0.85); color: #fff; font-size: 10px; font-weight: 700; padding: 4px 8px; border-radius: 6px; backdrop-filter: blur(4px);">
+                  ★ 5-Star Luxury
+                </span>
+              </div>
+              <!-- Details Section -->
+              <div style="flex: 1; padding: 18px 24px; display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                  <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div>
+                      <h4 style="font-size: 18px; font-weight: 800; color: #0f172a; margin-bottom: 4px;">Hyatt Place Dubai/Jumeirah</h4>
+                      <p style="font-size: 12px; color: #64748b;">📍 Al Mina Road, Jumeirah, Dubai • 2.5 km from downtown</p>
+                    </div>
+                    <div style="background: #eff6ff; color: #1d4ed8; font-weight: 800; font-size: 13px; padding: 4px 10px; border-radius: 8px;">
+                      9.2/10
+                    </div>
+                  </div>
+                  <div style="display: flex; gap: 6px; margin-top: 10px;">
+                    <span class="tag-sample tag-sample-green">✓ Free Cancellation</span>
+                    <span class="tag-sample tag-sample-blue">Breakfast Included</span>
+                  </div>
+                </div>
+                <!-- Price & CTA -->
+                <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 16px; border-top: 1px solid #f1f5f9; padding-top: 12px;">
+                  <div>
+                    <span style="font-size: 11px; color: #64748b;">Total for 2 nights (incl. taxes):</span>
+                    <div style="font-size: 20px; font-weight: 800; color: #0f172a;">
+                      PKR 28,568 <span style="font-size: 12px; font-weight: 600; color: #64748b;">(AED 375.38)</span>
+                    </div>
+                  </div>
+                  <button class="btn-sample btn-sample-primary" style="padding: 10px 22px;">Select Room</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card-specs">
+            Dynamic pricing: Converted at 75.35 PKR/AED + 1% tax • Accurate to Bedsonline / Hotelbeds live stock API
+          </div>
+          <div class="review-toolbar">
+            <div class="review-action-btns">
+              <button class="review-btn btn-approve" onclick="setAuditStatus('mod_hotel_card', 'approved')">✓ Approve</button>
+              <button class="review-btn btn-polish" onclick="setAuditStatus('mod_hotel_card', 'polish')">▲ Polish</button>
+              <button class="review-btn btn-redesign" onclick="setAuditStatus('mod_hotel_card', 'redesign')">✕ Redesign</button>
+            </div>
+            <textarea class="review-note-input" placeholder="Feedback on card layout, badges, mobile collapse..." onchange="saveAuditNote('mod_hotel_card', this.value)"></textarea>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Module 4.3: Cart System & Hold Timer (Style 1) -->
+    <section class="audit-section" id="cart-system">
+      <div class="section-header">
+        <div class="section-title-wrap">
+          <h2>🛒 4.3 Slide-Over Cart & Live Hold Timer (Style 1) <span class="badge-count">Live Module</span></h2>
+          <p>15-minute real-time reservation hold countdown with room itemization and checkout actions.</p>
+        </div>
+      </div>
+
+      <div class="components-grid single-col">
+        <div class="audit-card" data-item-id="mod_cart_system">
+          <div class="card-top">
+            <div>
+              <span class="card-id-tag">MOD-03</span>
+              <h3 class="card-title">Style 1 Slide-Over Cart with Hold Timer</h3>
+              <p class="card-subtitle">Active across navigation and booking checkout funnel</p>
+            </div>
+          </div>
+
+          <div class="live-preview-box" style="background: #0f172a; padding: 24px;">
+            <div style="width: 100%; max-width: 440px; background: #ffffff; border-radius: 20px; padding: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.4);">
+              <!-- Hold Timer Header -->
+              <div style="background: #fffbeb; border: 1.5px solid #fde68a; border-radius: 12px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="font-size: 16px;">⏱️</span>
+                  <div>
+                    <p style="font-size: 11px; font-weight: 700; color: #92400e; text-transform: uppercase;">Holding Room Price</p>
+                    <p style="font-size: 11px; color: #b45309;">Live Bedsonline rate guaranteed for:</p>
+                  </div>
+                </div>
+                <div style="font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 800; color: #b45309;">
+                  14:52
+                </div>
+              </div>
+              <!-- Cart Item Summary -->
+              <div style="border-bottom: 1px solid #e2e8f0; padding-bottom: 14px; margin-bottom: 14px;">
+                <h5 style="font-size: 14px; font-weight: 800; color: #0f172a;">Hyatt Place Dubai/Jumeirah</h5>
+                <p style="font-size: 12px; color: #64748b;">Double Standard Room • Bed & Breakfast</p>
+                <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 13px;">
+                  <span>Supplier Net (AED):</span>
+                  <span style="font-weight: 700;">AED 375.38</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-top: 4px; font-size: 13px;">
+                  <span>Service Charges & Taxes (1%):</span>
+                  <span style="font-weight: 700;">PKR 283</span>
+                </div>
+              </div>
+              <!-- Total & Checkout CTA -->
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <span style="font-size: 14px; font-weight: 600;">Total Retail Amount:</span>
+                <span style="font-size: 20px; font-weight: 800; color: #2563eb;">PKR 28,568</span>
+              </div>
+              <button class="btn-sample btn-sample-primary" style="width: 100%; justify-content: center; padding: 12px;">
+                Proceed to Checkout
+              </button>
+            </div>
+          </div>
+
+          <div class="card-specs">
+            Integrated hold timer prevents inventory stockouts and guarantees client prices during checkout
+          </div>
+          <div class="review-toolbar">
+            <div class="review-action-btns">
+              <button class="review-btn btn-approve" onclick="setAuditStatus('mod_cart_system', 'approved')">✓ Approve</button>
+              <button class="review-btn btn-polish" onclick="setAuditStatus('mod_cart_system', 'polish')">▲ Polish</button>
+              <button class="review-btn btn-redesign" onclick="setAuditStatus('mod_cart_system', 'redesign')">✕ Redesign</button>
+            </div>
+            <textarea class="review-note-input" placeholder="Feedback on timer banner, fee transparency, or checkout CTA..." onchange="saveAuditNote('mod_cart_system', this.value)"></textarea>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Module 4.4: Customer Dashboard Booking Card & Booking Voucher -->
+    <section class="audit-section" id="voucher-mod">
+      <div class="section-header">
+        <div class="section-title-wrap">
+          <h2>🎟️ 4.4 Customer Dashboard & Printable Voucher <span class="badge-count">Audit & Fix Verification</span></h2>
+          <p>Verified dynamic pricing: Converted AED 375.38 into PKR 28,568 with Bedsonline DMCC legal transparency.</p>
+        </div>
+      </div>
+
+      <div class="components-grid">
+
+        <!-- Card: Customer Dashboard Booking Card -->
+        <div class="audit-card" data-item-id="mod_dash_booking">
+          <div class="card-top">
+            <div>
+              <span class="card-id-tag">MOD-04</span>
+              <h3 class="card-title">Customer Dashboard Booking Card</h3>
+              <p class="card-subtitle">Verified: Hyatt Place Dubai displayed with dynamic Rs 28,568</p>
+            </div>
+          </div>
+          <div class="live-preview-box align-start" style="background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 16px; padding: 18px; flex-direction: column; width: 100%;">
+            <div style="display: flex; justify-content: space-between; width: 100%; align-items: flex-start; margin-bottom: 12px;">
+              <div>
+                <span class="tag-sample tag-sample-green">✓ Confirmed</span>
+                <h4 style="font-size: 16px; font-weight: 800; color: #0f172a; margin-top: 6px;">Hyatt Place Dubai/Jumeirah</h4>
+                <p style="font-size: 12px; color: #64748b;">Ref: H154103830XUL • Jul 10 - Jul 12, 2027</p>
+              </div>
+              <div style="text-align: right;">
+                <div style="font-size: 18px; font-weight: 800; color: #0f172a;">Rs 28,568</div>
+                <div style="font-size: 11px; color: #64748b;">Paid at Office</div>
+              </div>
+            </div>
+            <div style="display: flex; gap: 8px; width: 100%; justify-content: flex-end; border-top: 1px solid #f1f5f9; padding-top: 12px;">
+              <button class="btn-sample btn-sample-outline" style="padding: 6px 14px; font-size: 12px;">View Details</button>
+              <button class="btn-sample" style="padding: 6px 14px; font-size: 12px; background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe;">Download Voucher</button>
+              <button class="btn-sample btn-sample-danger" style="padding: 6px 14px; font-size: 12px;">Cancel (Refund: Rs 28,568)</button>
+            </div>
+          </div>
+          <div class="card-specs">
+            Fixed: Eliminated former Rs 117,539 EUR mismatch; now uses authoritative 75.35 PKR/AED rate
+          </div>
+          <div class="review-toolbar">
+            <div class="review-action-btns">
+              <button class="review-btn btn-approve" onclick="setAuditStatus('mod_dash_booking', 'approved')">✓ Approve</button>
+              <button class="review-btn btn-polish" onclick="setAuditStatus('mod_dash_booking', 'polish')">▲ Polish</button>
+              <button class="review-btn btn-redesign" onclick="setAuditStatus('mod_dash_booking', 'redesign')">✕ Redesign</button>
+            </div>
+            <textarea class="review-note-input" placeholder="Feedback on card layout, cancellation button text..." onchange="saveAuditNote('mod_dash_booking', this.value)"></textarea>
+          </div>
+        </div>
+
+        <!-- Card: Printable Luxury Booking Voucher -->
+        <div class="audit-card" data-item-id="mod_voucher_modal">
+          <div class="card-top">
+            <div>
+              <span class="card-id-tag">MOD-05</span>
+              <h3 class="card-title">Printable Hotel Voucher</h3>
+              <p class="card-subtitle">Hotelbeds DMCC compliance, emergency lines, and transparent conversions</p>
+            </div>
+          </div>
+          <div class="live-preview-box align-start" style="background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 16px; padding: 18px; flex-direction: column; width: 100%;">
+            <div style="display: flex; justify-content: space-between; width: 100%; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 10px;">
+              <span style="font-weight: 800; font-size: 16px; color: #1e3a8a;">TeleTrip Voucher</span>
+              <span style="font-family: monospace; font-size: 12px; font-weight: 700;">CONF: 154-103830</span>
+            </div>
+            <!-- Pricing box -->
+            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 10px 14px; width: 100%; margin-bottom: 10px;">
+              <div style="display: flex; justify-content: space-between; font-size: 12px;">
+                <span style="color: #166534; font-weight: 600;">Retail Booking Amount:</span>
+                <span style="font-weight: 800; color: #0f172a;">PKR 28,568 (AED 375.38)</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; font-size: 11px; color: #64748b; margin-top: 4px;">
+                <span>Supplier / API Rate:</span>
+                <span>AED 375.38 @ 75.35 PKR/AED</span>
+              </div>
+            </div>
+            <!-- DMCC Legal compliance text -->
+            <div style="font-size: 10px; color: #64748b; line-height: 1.4;">
+              Bookable and payable through <strong>HOTELBEDS DMCC</strong>, acting as agent for the service operating company. VAT: 100035906500003. 24/7 Assistance: +34 971 000 555
+            </div>
+          </div>
+          <div class="card-specs">
+            100% compliant with Bedsonline Certification requirements and CMS dynamic markups
+          </div>
+          <div class="review-toolbar">
+            <div class="review-action-btns">
+              <button class="review-btn btn-approve" onclick="setAuditStatus('mod_voucher_modal', 'approved')">✓ Approve</button>
+              <button class="review-btn btn-polish" onclick="setAuditStatus('mod_voucher_modal', 'polish')">▲ Polish</button>
+              <button class="review-btn btn-redesign" onclick="setAuditStatus('mod_voucher_modal', 'redesign')">✕ Redesign</button>
+            </div>
+            <textarea class="review-note-input" placeholder="Feedback on voucher layout, print margins, or disclaimers..." onchange="saveAuditNote('mod_voucher_modal', this.value)"></textarea>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ========================================== -->
+  <!-- FIXED ACTION DOCK (BOTTOM)                 -->
+  <!-- ========================================== -->
+  <div class="bottom-dock">
+    <div class="dock-title">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+      Review Dock:
+    </div>
+
+    <!-- Filter by Status -->
+    <select class="dock-filter-select" id="filterStatus" onchange="filterCards(this.value)">
+      <option value="all">Filter: Show All</option>
+      <option value="unreviewed">Unreviewed Only</option>
+      <option value="approved">Approved</option>
+      <option value="polish">Needs Polish</option>
+      <option value="redesign">Needs Redesign</option>
+    </select>
+
+    <!-- 1-Click Copy Feedback to Clipboard -->
+    <button class="dock-btn dock-btn-primary" onclick="copyFeedbackReport()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+      Copy Feedback (Markdown)
+    </button>
+
+    <!-- Download JSON -->
+    <button class="dock-btn dock-btn-secondary" onclick="exportJsonFile()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+      Export JSON
+    </button>
+
+    <!-- Clear Notes -->
+    <button class="dock-btn dock-btn-secondary" onclick="resetAllNotes()" title="Clear all local notes">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
+    </button>
+  </div>
+
+  <!-- Export Preview Modal -->
+  <div class="export-modal-backdrop" id="exportModal">
+    <div class="export-modal">
+      <div class="modal-head">
+        <h3>📋 Reviewer Feedback Report</h3>
+        <button class="modal-close-btn" onclick="closeExportModal()">✕</button>
+      </div>
+      <p style="font-size: 13px; color: #64748b; margin-bottom: 12px;">
+        This summary has been formatted and copied to your clipboard. You can paste it directly into our chat!
+      </p>
+      <div class="export-code-box" id="exportCodeBox"></div>
+      <div class="modal-footer">
+        <button class="btn-sample btn-sample-primary" onclick="copyModalContent()">Copy Again</button>
+        <button class="btn-sample btn-sample-outline" onclick="closeExportModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reviewer Engine Script -->
+  <script>
+    const STORAGE_KEY = 'telitrip_ui_audit_review_v1';
+    let reviewData = {};
+
+    // Initialize from LocalStorage
+    function initReviewer() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) reviewData = JSON.parse(saved);
+      } catch (e) {
+        reviewData = {};
+      }
+      applyReviewState();
+      updateStats();
+    }
+
+    // Save Status
+    function setAuditStatus(itemId, status) {
+      if (!reviewData[itemId]) reviewData[itemId] = {};
+      // Toggle off if already active
+      if (reviewData[itemId].status === status) {
+        delete reviewData[itemId].status;
+      } else {
+        reviewData[itemId].status = status;
+      }
+      persist();
+      applyReviewState();
+      updateStats();
+    }
+
+    // Save Note
+    function saveAuditNote(itemId, noteText) {
+      if (!reviewData[itemId]) reviewData[itemId] = {};
+      reviewData[itemId].note = noteText.trim();
+      persist();
+      updateStats();
+    }
+
+    function persist() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(reviewData));
+      } catch(e) {}
+    }
+
+    // Reflect State in DOM
+    function applyReviewState() {
+      document.querySelectorAll('.audit-card').forEach(card => {
+        const id = card.getAttribute('data-item-id');
+        const itemState = reviewData[id] || {};
+        
+        // Remove existing status classes
+        card.classList.remove('status-approved', 'status-polish', 'status-redesign');
+        if (itemState.status) {
+          card.classList.add(`status-${itemState.status}`);
+        }
+
+        // Update action buttons
+        card.querySelectorAll('.review-btn').forEach(btn => btn.classList.remove('active'));
+        if (itemState.status === 'approved') card.querySelector('.btn-approve')?.classList.add('active');
+        if (itemState.status === 'polish') card.querySelector('.btn-polish')?.classList.add('active');
+        if (itemState.status === 'redesign') card.querySelector('.btn-redesign')?.classList.add('active');
+
+        // Update note input if not focused
+        const noteInput = card.querySelector('.review-note-input');
+        if (noteInput && document.activeElement !== noteInput) {
+          noteInput.value = itemState.note || '';
+        }
+      });
+    }
+
+    // Update Header Counts
+    function updateStats() {
+      const allCards = document.querySelectorAll('.audit-card');
+      const total = allCards.length;
+      let approved = 0, polish = 0, redesign = 0, reviewed = 0;
+
+      allCards.forEach(c => {
+        const id = c.getAttribute('data-item-id');
+        const st = reviewData[id]?.status;
+        const note = reviewData[id]?.note;
+        if (st || note) reviewed++;
+        if (st === 'approved') approved++;
+        if (st === 'polish') polish++;
+        if (st === 'redesign') redesign++;
+      });
+
+      document.getElementById('totalItemsCount').textContent = total;
+      document.getElementById('reviewedCount').textContent = reviewed;
+      document.getElementById('approvedCount').textContent = approved;
+      document.getElementById('polishCount').textContent = polish;
+      document.getElementById('redesignCount').textContent = redesign;
+    }
+
+    // Filter Cards
+    function filterCards(filterVal) {
+      document.querySelectorAll('.audit-card').forEach(card => {
+        const id = card.getAttribute('data-item-id');
+        const st = reviewData[id]?.status;
+        
+        if (filterVal === 'all') {
+          card.style.display = 'flex';
+        } else if (filterVal === 'unreviewed') {
+          card.style.display = (!st && !reviewData[id]?.note) ? 'flex' : 'none';
+        } else {
+          card.style.display = (st === filterVal) ? 'flex' : 'none';
+        }
+      });
+    }
+
+    // Generate Markdown Report
+    function generateMarkdownReport() {
+      const dateStr = new Date().toISOString().split('T')[0];
+      let md = `# 🎨 TeleTrip UI & Design System Review (${dateStr})\n\n`;
+      
+      const cards = Array.from(document.querySelectorAll('.audit-card'));
+      const approved = [];
+      const polish = [];
+      const redesign = [];
+      const notesOnly = [];
+
+      cards.forEach(c => {
+        const id = c.getAttribute('data-item-id');
+        const title = c.querySelector('.card-title')?.textContent || id;
+        const tag = c.querySelector('.card-id-tag')?.textContent || '';
+        const st = reviewData[id]?.status;
+        const note = reviewData[id]?.note || '';
+
+        const entry = `• **[${tag}] ${title}**: ${note || '_No specific notes added._'}`;
+        if (st === 'approved') approved.push(entry);
+        else if (st === 'polish') polish.push(entry);
+        else if (st === 'redesign') redesign.push(entry);
+        else if (note) notesOnly.push(entry);
+      });
+
+      if (redesign.length > 0) {
+        md += `### ❌ Needs Redesign (${redesign.length})\n${redesign.join('\n')}\n\n`;
+      }
+      if (polish.length > 0) {
+        md += `### ⚠️ Needs Polish & Minor Tweaks (${polish.length})\n${polish.join('\n')}\n\n`;
+      }
+      if (approved.length > 0) {
+        md += `### ✅ Approved Elements (${approved.length})\n${approved.join('\n')}\n\n`;
+      }
+      if (notesOnly.length > 0) {
+        md += `### 📝 Additional Review Notes (${notesOnly.length})\n${notesOnly.join('\n')}\n\n`;
+      }
+
+      md += `---\n*Exported from TeleTrip UI Master Audit tool.*`;
+      return md;
+    }
+
+    // Copy Feedback Report to Clipboard
+    async function copyFeedbackReport() {
+      const md = generateMarkdownReport();
+      try {
+        await navigator.clipboard.writeText(md);
+        showToast('Feedback Copied to Clipboard!');
+      } catch (err) {
+        console.warn('Clipboard write failed, showing modal instead', err);
+      }
+      // Show modal preview
+      document.getElementById('exportCodeBox').textContent = md;
+      document.getElementById('exportModal').classList.add('show');
+    }
+
+    function copyModalContent() {
+      const text = document.getElementById('exportCodeBox').textContent;
+      navigator.clipboard.writeText(text);
+      showToast('Copied to Clipboard!');
+    }
+
+    function closeExportModal() {
+      document.getElementById('exportModal').classList.remove('show');
+    }
+
+    function exportJsonFile() {
+      const blob = new Blob([JSON.stringify(reviewData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `telitrip-ui-audit-feedback-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('JSON Export Downloaded!');
+    }
+
+    function resetAllNotes() {
+      if (confirm('Are you sure you want to clear all your audit notes and statuses?')) {
+        reviewData = {};
+        localStorage.removeItem(STORAGE_KEY);
+        applyReviewState();
+        updateStats();
+        showToast('All notes have been reset.');
+      }
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toastNotification');
+      document.getElementById('toastMessage').textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', initReviewer);
+  </script>
+</body>
+</html>
+

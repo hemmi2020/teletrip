@@ -22,20 +22,7 @@ const NotFound = () => {
     <>
       <Helmet><title>404 — Page Not Found | Telitrip</title></Helmet>
       <div className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden" style={{ background: '#0f172a' }}>
-        {/* Animated gradient blobs that follow mouse */}
-        <div
-          className="absolute w-[500px] h-[500px] rounded-full opacity-20 transition-all duration-[2000ms] ease-out"
-          style={{ background: 'radial-gradient(circle, #3b82f6, transparent)', filter: 'blur(100px)', left: `${mousePos.x - 15}%`, top: `${mousePos.y - 20}%` }}
-        />
-        <div
-          className="absolute w-[400px] h-[400px] rounded-full opacity-15 transition-all duration-[2500ms] ease-out"
-          style={{ background: 'radial-gradient(circle, #8b5cf6, transparent)', filter: 'blur(80px)', left: `${mousePos.x + 10}%`, top: `${mousePos.y + 10}%` }}
-        />
-
-        {/* Grid pattern overlay */}
-        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
-
-        <div className="relative z-10 text-center px-6 max-w-lg">
+        <div className="relative z-10 text-center px-6 max-w-lg bento-card bg-slate-900/90 p-8 sm:p-10 rounded-3xl shadow-2xl">
           {/* Large 404 */}
           <div className="relative mb-6">
             <h1 className="text-[120px] sm:text-[160px] font-black text-transparent leading-none select-none" style={{ WebkitTextStroke: '2px rgba(255,255,255,0.08)', letterSpacing: '-0.05em' }}>

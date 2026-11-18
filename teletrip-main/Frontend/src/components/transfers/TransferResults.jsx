@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Users, Clock, Filter, Eye } from 'lucide-react';
+import { Users, Clock, Filter, Eye, Car } from 'lucide-react';
 import TransferDetailsModal from './TransferDetailsModal';
 
 const TransferResults = ({ results, onSelect, loading }) => {
@@ -26,7 +26,9 @@ const TransferResults = ({ results, onSelect, loading }) => {
   if (!results || results.length === 0) {
     return (
       <div className="text-center py-12">
-        <div className="text-6xl mb-4">🚐</div>
+        <div className="flex justify-center mb-4">
+          <Car className="w-16 h-16 text-blue-500 gg-anim-glide" />
+        </div>
         <h3 className="text-xl font-semibold text-gray-700 mb-2">No transfers found</h3>
         <p className="text-gray-500">Try adjusting your search criteria</p>
       </div>
@@ -74,12 +76,12 @@ const TransferResults = ({ results, onSelect, loading }) => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {paginatedResults.map((transfer, idx) => (
-          <div key={idx} className="bg-white rounded-lg shadow hover:shadow-lg transition border">
-            <div className="h-48 bg-gradient-to-br from-blue-100 to-blue-200 rounded-t-lg flex items-center justify-center">
+          <div key={idx} className="bento-card bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden">
+            <div className="h-48 bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center">
               {transfer.images?.[0] ? (
-                <img src={transfer.images[0]} alt={transfer.vehicle} className="w-full h-full object-cover rounded-t-lg" />
+                <img src={transfer.images[0]} alt={transfer.vehicle} className="w-full h-full object-cover" />
               ) : (
-                <span className="text-6xl">🚐</span>
+                <Car className="w-16 h-16 text-blue-500 gg-anim-glide" />
               )}
             </div>
             <div className="p-4">

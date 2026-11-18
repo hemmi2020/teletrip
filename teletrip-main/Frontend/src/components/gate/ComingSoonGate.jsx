@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSiteAccess } from '../../context/SiteAccessContext';
 import logo from '../../images/Telitrip-Logo.png';
 import Footer from '../Footer';
-import { Lock, ArrowRight, ShieldCheck, Hotel, Car, Globe, CheckCircle2 } from 'lucide-react';
+import { Lock, ArrowRight, ShieldCheck, Hotel, Car, Globe, CheckCircle2, Sparkles } from 'lucide-react';
 
 export default function ComingSoonGate() {
   const { verifyPasscode, error: contextError } = useSiteAccess();
@@ -51,8 +51,7 @@ export default function ComingSoonGate() {
         >
           <div className="flex items-center gap-3">
             <img src={logo} alt="Telitrip" className="h-8 sm:h-9 w-auto object-contain" />
-            <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold tracking-wide bg-blue-50 text-blue-700 border border-blue-100">
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse" />
+            <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold tracking-wide bg-blue-50 text-blue-700">
               Private Preview
             </span>
           </div>
@@ -93,8 +92,7 @@ export default function ComingSoonGate() {
         {/* Hero Card Container */}
         <div className="relative z-10 w-full max-w-lg mx-auto text-center">
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white text-xs font-semibold uppercase tracking-wider mb-6 shadow-sm">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md text-white text-xs font-semibold uppercase tracking-wider mb-6 shadow-sm">
             Official Launch Arriving Soon
           </div>
 
@@ -176,9 +174,10 @@ export default function ComingSoonGate() {
               <button
                 type="button"
                 onClick={() => verifyPasscode('telitrip2026')}
-                className="text-xs font-bold text-blue-600 hover:text-blue-800 bg-blue-50/80 hover:bg-blue-100/80 border border-blue-200/60 rounded-xl px-4 py-2 transition-all inline-flex items-center gap-1.5 cursor-pointer shadow-2xs w-full justify-center"
+                className="text-xs font-bold text-blue-600 hover:text-blue-800 bg-blue-50/80 hover:bg-blue-100/80 rounded-xl px-4 py-2 transition-all inline-flex items-center gap-1.5 cursor-pointer shadow-2xs w-full justify-center"
               >
-                <span>✨ Client & Stakeholder Instant Preview Access →</span>
+                <Sparkles className="w-3.5 h-3.5 text-blue-600 gg-anim-sparkle" />
+                <span>Client & Stakeholder Instant Preview Access →</span>
               </button>
             </div>
 

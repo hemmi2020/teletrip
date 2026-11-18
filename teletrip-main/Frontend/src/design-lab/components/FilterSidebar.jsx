@@ -13,7 +13,8 @@ import {
   UtensilsCrossed,
   RotateCcw,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  ShieldCheck
 } from 'lucide-react';
 
 export const FilterSidebar = ({
@@ -124,7 +125,7 @@ export const FilterSidebar = ({
           }`}
         >
           <div className="flex items-center gap-2 text-xs">
-            <span className="text-emerald-600 font-bold">🛡️</span>
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 gg-anim-pulse" />
             <span>Free Cancellation Only</span>
           </div>
           <input
@@ -239,9 +240,9 @@ export const FilterSidebar = ({
           <div className="space-y-1.5">
             {[
               { id: 'Room Only', label: 'Room Only', count: 48 },
-              { id: 'Breakfast Included', label: 'Breakfast Included 🍳', count: 35 },
-              { id: 'Half Board', label: 'Half Board (Dinner) 🍽️', count: 12 },
-              { id: 'All Inclusive', label: 'All Inclusive 🍹', count: 6 }
+              { id: 'Breakfast Included', label: 'Breakfast Included', count: 35 },
+              { id: 'Half Board', label: 'Half Board (Dinner)', count: 12 },
+              { id: 'All Inclusive', label: 'All Inclusive', count: 6 }
             ].map((board) => {
               const isChecked = selectedBoards.includes(board.id);
               return (

@@ -700,7 +700,7 @@ const BookingCard = ({ booking, onCancel, onViewDetails, onPayNow, onVoucher, to
               <AlertCircle className="w-3 h-3 mr-1" />
               {freeCancellation ? (
                 <span>
-                  ✓ Free cancellation until {new Date(freeCancellation.from).toLocaleString(undefined, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZoneName: 'short' })}
+                  Free cancellation until {new Date(freeCancellation.from).toLocaleString(undefined, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZoneName: 'short' })}
                   {refundAmount > 0 && ` • Full refund: ${convertPKR(refundAmount)}`}
                 </span>
               ) : activePolicy ? (

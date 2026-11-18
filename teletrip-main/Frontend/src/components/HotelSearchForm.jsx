@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { createPortal } from 'react-dom';
 import { MapPin, Calendar, Users, Search, ChevronDown, X, Plus, Minus, Loader2, Star, Clock, Tag, Plane, Building2, Hotel, Car, Compass, Trash2, ShieldCheck, CheckCircle, Sparkles } from 'lucide-react';
 import { addDays, format } from 'date-fns';
+import AnimatedIcon from './common/AnimatedIcon';
 import { searchTransfers } from '../services/transfersApi';
 import axios from 'axios';
 import 'react-date-range/dist/styles.css';
@@ -867,8 +868,8 @@ const OldExperiencesResults = ({ experiences }) => {
                     onError={(e) => e.target.src = 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'}
                   />
                 ) : (
-                  <div className="w-full h-48 bg-gray-200 flex items-center justify-center">
-                    <span className="text-4xl">🎭</span>
+                  <div className="w-full h-48 bg-gray-100 flex items-center justify-center">
+                    <AnimatedIcon name="ticket" animation="bounce" size={36} className="text-blue-600" />
                   </div>
                 )}
                 <div className="p-4">
@@ -1158,7 +1159,7 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
 
   return (
     <div className="w-full">
-      <div className="bg-white rounded-3xl shadow-2xl p-4 sm:p-5 md:p-6 border border-gray-100 text-left">
+      <div className="bento-card bg-white rounded-3xl shadow-2xl p-4 sm:p-5 md:p-6 text-left">
         {/* ── Search Tabs ── */}
         <div className="flex items-center bg-white rounded-full p-1 mb-3 sm:mb-6" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
           {tabs.map((tab) => {
@@ -1233,12 +1234,12 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
                   {/* Selected Status Indicator */}
                   {selectedHotelCode && (
                     <p className="text-[10px] text-emerald-600 mt-0.5 px-1 flex items-center gap-1 font-semibold">
-                      <span>🏨</span> Hotel: {searchQuery}
+                      <AnimatedIcon name="hotel" animation="pulse" size={13} className="text-emerald-600 inline mr-0.5" /> Hotel: {searchQuery}
                     </p>
                   )}
                   {!selectedHotelCode && selectedLocation && (
                     <p className="text-[10px] text-blue-600 mt-0.5 px-1 flex items-center gap-1 font-semibold">
-                      <span>📍</span> City: {selectedLocation.name || selectedLocation.city}
+                      <AnimatedIcon name="pin" animation="bounce" size={13} className="text-blue-600 inline mr-0.5" /> City: {selectedLocation.name || selectedLocation.city}
                     </p>
                   )}
 
@@ -1491,8 +1492,8 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
                       onChange={(e) => setLuxuryOnly(e.target.checked)}
                       className="rounded text-amber-600 focus:ring-amber-500 w-3.5 h-3.5 cursor-pointer"
                     />
-                    <Sparkles className="w-3 h-3 text-amber-600 shrink-0" />
-                    <span>Luxury Collection 5★</span>
+                    <Sparkles className="w-3 h-3 text-amber-600 shrink-0 gg-anim-sparkle" />
+                    <span className="inline-flex items-center gap-1">Luxury Collection 5<AnimatedIcon name="star" animation="pulse" size={11} className="text-amber-500" /></span>
                   </label>
                 </div>
 

@@ -16,6 +16,7 @@ import {
   ExternalLink
 } from 'lucide-react';
 import { FeedbackOverlay } from './FeedbackOverlay';
+import { AnimatedIcon } from '../components/common/AnimatedIcon';
 
 export default function DesignLabHub() {
   const labSections = [
@@ -99,7 +100,7 @@ export default function DesignLabHub() {
           <div className="flex items-center gap-2 text-xs">
             <span className="hidden sm:inline text-gray-400">Reviewing for:</span>
             <span className="font-bold text-emerald-400 bg-emerald-500/10 px-2 sm:px-2.5 py-1 rounded-full border border-emerald-500/20 flex items-center gap-1.5 text-[11px] sm:text-xs">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <AnimatedIcon name="check-o" animation="pulse" size="xs" className="text-emerald-400" />
               Live Preview
             </span>
           </div>

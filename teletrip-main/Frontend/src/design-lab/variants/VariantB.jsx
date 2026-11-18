@@ -118,7 +118,7 @@ export const VariantB = ({ onSelectHotel }) => {
                   <div className="sm:w-44 h-36 relative overflow-hidden shrink-0">
                     <img src={hotel.thumbnail} alt={hotel.name} className="w-full h-full object-cover" loading="lazy" />
                     <span className="absolute top-2 left-2 bg-black/70 backdrop-blur-md text-white text-[9px] font-bold px-2 py-0.5 rounded-full">
-                      ★ {hotel.rating}
+                      {hotel.rating}
                     </span>
                   </div>
 
@@ -167,18 +167,18 @@ export const VariantB = ({ onSelectHotel }) => {
 
           {/* Map Top Header Badge */}
           <div className="absolute top-3 left-3 right-3 z-10 flex items-center justify-between gap-2 pointer-events-none">
-            <span className="px-3 py-1 rounded-full bg-white/95 backdrop-blur-md text-gray-900 text-[11px] font-black shadow-md border border-gray-200 pointer-events-auto">
-              📍 Live Interactive Map: {activeHotel.name}
+            <span className="px-3 py-1 rounded-full bg-white/95 backdrop-blur-md text-gray-900 text-[11px] font-black shadow-md border-0 pointer-events-auto">
+              Live Interactive Map: {activeHotel.name}
             </span>
           </div>
 
           {/* Active Hotel Floating Bottom Card */}
-          <div className="absolute bottom-4 left-2 right-2 sm:left-3 sm:right-3 z-10 bg-white/95 backdrop-blur-md rounded-2xl p-2.5 sm:p-3 shadow-xl border border-gray-200 flex items-center justify-between gap-2 sm:gap-3">
+          <div className="absolute bottom-4 left-2 right-2 sm:left-3 sm:right-3 z-10 bg-white/95 backdrop-blur-md rounded-2xl p-2.5 sm:p-3 shadow-xl border-0 flex items-center justify-between gap-2 sm:gap-3">
             <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
-              <img src={activeHotel.thumbnail} alt="" className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl object-cover shrink-0 border border-gray-200" />
+              <img src={activeHotel.thumbnail} alt="" className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl object-cover shrink-0 border-0" />
               <div className="min-w-0">
                 <h4 className="font-extrabold text-xs text-gray-900 truncate">{activeHotel.name}</h4>
-                <div className="text-[10px] text-gray-500">{activeHotel.zone} · ★ {activeHotel.rating}</div>
+                <div className="text-[10px] text-gray-500">{activeHotel.zone} · Rating: {activeHotel.rating}</div>
                 <div className="text-xs font-black text-blue-600">AED {activeHotel.priceAED.toLocaleString()} total</div>
               </div>
             </div>

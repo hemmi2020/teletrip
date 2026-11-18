@@ -1,28 +1,18 @@
 import React from 'react';
 import { Helmet } from 'react-helmet-async';
 import { RefreshCw, Home, AlertTriangle } from 'lucide-react';
+import { AnimatedIcon } from '../components/common/AnimatedIcon';
 
 const ErrorPage = ({ error, resetError }) => {
   return (
     <>
       <Helmet><title>Something went wrong | Telitrip</title></Helmet>
       <div className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden" style={{ background: '#0f172a' }}>
-        {/* Ambient glow */}
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] rounded-full opacity-15" style={{ background: 'radial-gradient(circle, #ef4444, transparent)', filter: 'blur(120px)' }} />
-        <div className="absolute bottom-1/4 left-1/3 w-[300px] h-[300px] rounded-full opacity-10" style={{ background: 'radial-gradient(circle, #f59e0b, transparent)', filter: 'blur(80px)' }} />
-
-        {/* Grid pattern */}
-        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
-
-        <div className="relative z-10 text-center px-6 max-w-lg">
+        <div className="relative z-10 text-center px-6 max-w-lg bento-card bg-slate-900/90 p-8 sm:p-10 rounded-3xl shadow-2xl">
           {/* Icon */}
           <div className="mb-6 flex justify-center">
-            <div className="relative">
-              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full flex items-center justify-center" style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.2)' }}>
-                <AlertTriangle className="w-9 h-9 sm:w-11 sm:h-11 text-red-400" style={{ strokeWidth: 1.5 }} />
-              </div>
-              {/* Pulse ring */}
-              <div className="absolute inset-0 rounded-full animate-ping opacity-20" style={{ background: 'rgba(239,68,68,0.2)' }} />
+            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full flex items-center justify-center bg-red-500/10">
+              <AnimatedIcon name="danger" animation="pulse" size="xl" className="text-red-400" />
             </div>
           </div>
 
@@ -39,7 +29,7 @@ const ErrorPage = ({ error, resetError }) => {
               <summary className="text-white/25 text-[12px] cursor-pointer hover:text-white/40 transition-colors text-center">
                 Technical details
               </summary>
-              <pre className="mt-2 p-3 rounded-xl text-[11px] text-red-300/60 overflow-x-auto" style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.1)' }}>
+              <pre className="mt-2 p-3 rounded-xl text-[11px] text-red-300/60 overflow-x-auto bg-red-950/20">
                 {error?.message || error?.toString() || 'Unknown error'}
               </pre>
             </details>

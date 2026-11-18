@@ -43,6 +43,7 @@ import HotelSearchForm from "./components/HotelSearchForm";
 import { useCart } from "./components/CartSystem";
 import { useCurrency } from "./context/CurrencyContext";
 import MobileFilters from "./components/MobileFilters";
+import AnimatedIcon from "./components/common/AnimatedIcon";
 import HotelDetailModal from "./components/hotels/HotelDetailModal";
 import { AlertCircle } from "lucide-react";
 import SearchLoadingScreen from './components/SearchLoadingScreen';
@@ -564,7 +565,7 @@ const HotelSearchResults = () => {
     if (amount === 0 || isFuture) {
       const pkrAmount = convert ? convert(amount) : null;
       const displayAmount = pkrAmount ? `PKR ${Math.round(pkrAmount).toLocaleString()}` : `EUR ${amount.toFixed(2)}`;
-      return `✓ Free cancellation until ${fromDate}${amount > 0 ? ` (fee: ${displayAmount} thereafter)` : ''}`;
+      return `Free cancellation until ${fromDate}${amount > 0 ? ` (fee: ${displayAmount} thereafter)` : ''}`;
     } else {
       const pkrAmount = convert ? convert(amount) : null;
       const displayAmount = pkrAmount ? `PKR ${Math.round(pkrAmount).toLocaleString()}` : `EUR ${amount.toFixed(2)}`;
@@ -1887,13 +1888,14 @@ const HotelSearchResults = () => {
                 onClick={() => {
                   setSelectedEstablishment(prev => prev.includes('119') ? prev.filter(x => x !== '119') : [...prev, '119']);
                 }}
-                className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 border cursor-pointer ${
+                className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 border-0 cursor-pointer ${
                   selectedEstablishment.includes('119')
-                    ? 'bg-amber-500 text-white border-amber-500 shadow-sm'
-                    : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300'
+                    ? 'bg-amber-500 text-white shadow-sm'
+                    : 'bg-white text-gray-700 shadow-2xs hover:bg-gray-50'
                 }`}
               >
-                <span>✨ Luxury Collection</span>
+                <AnimatedIcon name="sparkle" animation="sparkle" size={13} className="text-amber-400" />
+                <span>Luxury Collection</span>
               </button>
 
               <button
@@ -1901,13 +1903,14 @@ const HotelSearchResults = () => {
                 onClick={() => {
                   setSelectedCancellation(prev => prev === 'free' ? '' : 'free');
                 }}
-                className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 border cursor-pointer ${
+                className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 border-0 cursor-pointer ${
                   selectedCancellation === 'free'
-                    ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
-                    : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300'
+                    ? 'bg-emerald-600 text-white shadow-sm'
+                    : 'bg-white text-gray-700 shadow-2xs hover:bg-gray-50'
                 }`}
               >
-                <span>🛡️ Free Cancellation</span>
+                <AnimatedIcon name="shield" animation="pulse" size={13} className="text-emerald-500" />
+                <span>Free Cancellation</span>
               </button>
 
               {dynamicBoards.some(b => b.toUpperCase().includes('BREAKFAST')) && (
@@ -1919,13 +1922,14 @@ const HotelSearchResults = () => {
                       setSelectedBoards(prev => prev.includes(bf) ? prev.filter(x => x !== bf) : [...prev, bf]);
                     }
                   }}
-                  className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 border cursor-pointer ${
+                  className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 border-0 cursor-pointer ${
                     selectedBoards.some(b => b.toUpperCase().includes('BREAKFAST'))
-                      ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
-                      : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300'
+                      ? 'bg-blue-600 text-white shadow-sm'
+                      : 'bg-white text-gray-700 shadow-2xs hover:bg-gray-50'
                   }`}
                 >
-                  <span>🍳 Breakfast Included</span>
+                  <AnimatedIcon name="breakfast" animation="bounce" size={13} className="text-amber-600" />
+                  <span>Breakfast Included</span>
                 </button>
               )}
 
@@ -1938,13 +1942,14 @@ const HotelSearchResults = () => {
                       setSelectedCategories(prev => prev.includes(five) ? prev.filter(x => x !== five) : [...prev, five]);
                     }
                   }}
-                  className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 border cursor-pointer ${
+                  className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 border-0 cursor-pointer ${
                     selectedCategories.some(c => c.startsWith('5'))
-                      ? 'bg-purple-600 text-white border-purple-600 shadow-sm'
-                      : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300'
+                      ? 'bg-blue-600 text-white shadow-sm'
+                      : 'bg-white text-gray-700 shadow-2xs hover:bg-gray-50'
                   }`}
                 >
-                  <span>★ 5-Star Only</span>
+                  <AnimatedIcon name="star" animation="pulse" size={13} className="text-amber-400" />
+                  <span>5-Star Only</span>
                 </button>
               )}
             </div>
@@ -2047,8 +2052,8 @@ const HotelSearchResults = () => {
                           {/* Top Badges */}
                           <div className="absolute top-1.5 sm:top-2 left-1.5 sm:left-2 flex flex-col gap-1 items-start">
                             {(hotel.isLuxuryCollection || hotel.stars >= 5 || hotel.establishmentProfiles?.includes('119')) && (
-                              <span className="px-1.5 sm:px-2 py-0.5 rounded-full text-[8px] sm:text-[10px] font-black bg-black/80 backdrop-blur-md text-amber-300 border border-amber-400/50 shadow-xs flex items-center gap-0.5">
-                                <span>✨</span>
+                              <span className="px-1.5 sm:px-2 py-0.5 rounded-full text-[8px] sm:text-[10px] font-black bg-black/80 backdrop-blur-md text-amber-300 shadow-xs flex items-center gap-1">
+                                <AnimatedIcon name="sparkle" animation="sparkle" size={10} className="text-amber-300" />
                                 <span className="hidden sm:inline">Luxury</span>
                               </span>
                             )}
@@ -2074,8 +2079,8 @@ const HotelSearchResults = () => {
                               ))}
                             </div>
                             {hotelReviews[hotel.id] && hotelReviews[hotel.id].rating && (
-                              <span className="px-1.5 py-0.2 rounded bg-black/70 backdrop-blur-xs text-[10px] font-bold">
-                                ★ {Number(hotelReviews[hotel.id].rating).toFixed(1)}
+                              <span className="px-1.5 py-0.2 rounded bg-black/70 backdrop-blur-xs text-[10px] font-bold inline-flex items-center gap-1">
+                                <AnimatedIcon name="star" animation="pulse" size={10} className="text-amber-400" /> {Number(hotelReviews[hotel.id].rating).toFixed(1)}
                               </span>
                             )}
                           </div>
@@ -2190,8 +2195,8 @@ const HotelSearchResults = () => {
                       </div>
 
                       {hotelReviews[hotel.id] && hotelReviews[hotel.id].rating && (
-                        <span className="absolute bottom-2.5 right-2.5 bg-black/70 backdrop-blur-md text-white text-[10px] px-2 py-0.5 rounded-md font-semibold md:hidden">
-                          ★ {Number(hotelReviews[hotel.id].rating).toFixed(1)} ({hotelReviews[hotel.id].numReviews || 0})
+                        <span className="absolute bottom-2.5 right-2.5 bg-black/70 backdrop-blur-md text-white text-[10px] px-2 py-0.5 rounded-md font-semibold md:hidden inline-flex items-center gap-1">
+                          <AnimatedIcon name="star" animation="pulse" size={10} className="text-amber-400" /> {Number(hotelReviews[hotel.id].rating).toFixed(1)} ({hotelReviews[hotel.id].numReviews || 0})
                         </span>
                       )}
                     </div>
@@ -2351,7 +2356,9 @@ const HotelSearchResults = () => {
 
             {sortedHotels.length === 0 && (
               <div className="text-center py-16">
-                <div className="text-4xl mb-3">🏨</div>
+                <div className="flex justify-center mb-3">
+                  <AnimatedIcon name="hotel" animation="pulse" size={48} className="text-blue-600" />
+                </div>
                 <p className="text-gray-800 text-lg font-medium mb-1">No hotels match your filters</p>
                 <p className="text-gray-400 text-sm mb-4">Try adjusting your filters or search criteria</p>
                 <button onClick={clearFilters} className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium transition-colors">Clear All Filters</button>

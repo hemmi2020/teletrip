@@ -46,7 +46,10 @@ const HotelPerformanceMetrics = ({ hotelId, showToast }) => {
         </div>
         <div className="bg-yellow-50 dark:bg-yellow-900 rounded p-3">
           <div className="text-sm text-gray-600 dark:text-gray-300">Avg Rating</div>
-          <div className="text-2xl font-bold">{metrics.avgRating} ⭐</div>
+          <div className="text-2xl font-bold flex items-center gap-1">
+            <span>{metrics.avgRating}</span>
+            <Star className="w-5 h-5 text-amber-500 fill-amber-500 gg-anim-pulse" />
+          </div>
         </div>
       </div>
 

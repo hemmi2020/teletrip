@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import AnimatedIcon from '../common/AnimatedIcon';
 import {
   Star,
   MapPin,
@@ -411,13 +412,13 @@ export const HotelDetailModal = ({
                 ))}
               </div>
               {(hotel.stars >= 5 || hotel.isLuxuryCollection || hotel.establishmentProfiles?.includes('119')) && (
-                <span className="inline-flex items-center gap-1 px-2 sm:px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-bold bg-gradient-to-r from-amber-500/30 via-yellow-400/40 to-amber-500/30 text-amber-200 border border-amber-300/60 shadow-md backdrop-blur-sm">
-                  <span>✨</span> Luxury Collection
+                <span className="inline-flex items-center gap-1.5 px-2 sm:px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-bold bg-gradient-to-r from-amber-500/30 via-yellow-400/40 to-amber-500/30 text-amber-200 border border-amber-300/60 shadow-md backdrop-blur-sm">
+                  <AnimatedIcon name="sparkle" animation="sparkle" size={12} className="text-amber-300" /> Luxury Collection
                 </span>
               )}
               {hotel.rating && (
-                <span className="text-[10px] sm:text-[11px] font-bold bg-amber-500/90 text-white px-1.5 sm:px-2 py-0.5 rounded-full shadow-sm">
-                  ★ {hotel.rating}
+                <span className="text-[10px] sm:text-[11px] font-bold bg-amber-500/90 text-white px-1.5 sm:px-2 py-0.5 rounded-full shadow-sm inline-flex items-center gap-1">
+                  <AnimatedIcon name="star" animation="pulse" size={10} className="text-white fill-white" /> {hotel.rating}
                 </span>
               )}
             </div>
@@ -598,21 +599,22 @@ export const HotelDetailModal = ({
                 <div className="flex items-center gap-1.5 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
                   <span className="text-[11px] text-gray-400 font-medium flex-shrink-0">Filter rates:</span>
                   {[
-                    { id: 'all', label: 'All Rates' },
-                    { id: 'breakfast', label: '🍳 Breakfast' },
-                    { id: 'free_cancel', label: '🛡️ Free Cancellation' },
-                    { id: 'packages', label: '✨ Package Deals' }
+                    { id: 'all', label: 'All Rates', icon: null },
+                    { id: 'breakfast', label: 'Breakfast', icon: 'breakfast' },
+                    { id: 'free_cancel', label: 'Free Cancellation', icon: 'shield' },
+                    { id: 'packages', label: 'Package Deals', icon: 'sparkle' }
                   ].map(f => (
                     <button
                       key={f.id}
                       onClick={() => setRateFilter(f.id)}
-                      className={`text-xs px-2.5 py-1 rounded-full font-medium transition-all flex-shrink-0 cursor-pointer ${
+                      className={`text-xs px-2.5 py-1 rounded-full font-medium transition-all flex-shrink-0 cursor-pointer inline-flex items-center gap-1.5 ${
                         rateFilter === f.id
                           ? 'bg-blue-600 text-white shadow-xs'
                           : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                       }`}
                     >
-                      {f.label}
+                      {f.icon && <AnimatedIcon name={f.icon} size={12} className={rateFilter === f.id ? 'text-white' : 'text-gray-500'} />}
+                      <span>{f.label}</span>
                     </button>
                   ))}
                 </div>
@@ -705,8 +707,8 @@ export const HotelDetailModal = ({
                                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                                 />
                                 {hasRoomPhotos ? (
-                                  <span className="absolute bottom-0 inset-x-0 bg-black/65 text-white text-[9px] font-semibold text-center py-0.5 backdrop-blur-[1px]">
-                                    {roomImages.length} 📷
+                                  <span className="absolute bottom-0 inset-x-0 bg-black/65 text-white text-[9px] font-semibold text-center py-0.5 backdrop-blur-[1px] inline-flex items-center justify-center gap-1">
+                                    {roomImages.length} <AnimatedIcon name="camera" animation="pulse" size={10} />
                                   </span>
                                 ) : roomAlbumImages.length > 0 ? (
                                   <span className="absolute bottom-0 inset-x-0 bg-black/55 text-white/90 text-[8px] font-semibold text-center py-0.5 backdrop-blur-[1px]">
@@ -822,8 +824,8 @@ export const HotelDetailModal = ({
                                       )}
 
                                       {isSelectedForTab && (
-                                        <span className="text-[11px] font-bold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full">
-                                          ✓ Selected for Room {activeRoomTab + 1}
+                                        <span className="text-[11px] font-bold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+                                          <AnimatedIcon name="check" animation="bounce" size={11} /> Selected for Room {activeRoomTab + 1}
                                         </span>
                                       )}
                                     </div>
@@ -992,8 +994,8 @@ export const HotelDetailModal = ({
                   <h4 className="text-xs font-bold uppercase text-gray-700">Popular Amenities</h4>
                   <div className="flex flex-wrap gap-2">
                     {uniqueAmenities.map((amenity, i) => (
-                      <span key={i} className="text-xs px-3 py-1 bg-gray-100 text-gray-700 rounded-full font-medium">
-                        ✓ {amenity}
+                      <span key={i} className="text-xs px-3 py-1 bg-gray-100 text-gray-700 rounded-full font-medium inline-flex items-center gap-1.5">
+                        <AnimatedIcon name="check" size={11} className="text-emerald-600" /> {amenity}
                       </span>
                     ))}
                   </div>
@@ -1202,12 +1204,12 @@ export const HotelDetailModal = ({
                 </span>
                 <div className="flex items-center gap-1.5 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
                   {[
-                    { id: 'all', label: 'All Reviews', count: 1420 },
-                    { id: 'view', label: '🌟 Spectacular Views', count: 480 },
-                    { id: 'breakfast', label: '🍳 Amazing Breakfast', count: 390 },
-                    { id: 'pool', label: '🏊 Pool & Spa', count: 310 },
-                    { id: 'family', label: '👨‍👩‍👧 Family Friendly', count: 420 },
-                    { id: 'service', label: '🛎️ Impeccable Service', count: 680 }
+                    { id: 'all', label: 'All Reviews', icon: null, count: 1420 },
+                    { id: 'view', label: 'Spectacular Views', icon: 'views', count: 480 },
+                    { id: 'breakfast', label: 'Amazing Breakfast', icon: 'breakfast', count: 390 },
+                    { id: 'pool', label: 'Pool & Spa', icon: 'pool', count: 310 },
+                    { id: 'family', label: 'Family Friendly', icon: 'family', count: 420 },
+                    { id: 'service', label: 'Impeccable Service', icon: 'bell', count: 680 }
                   ].map((tag) => (
                     <button
                       key={tag.id}
@@ -1219,6 +1221,7 @@ export const HotelDetailModal = ({
                           : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                       }`}
                     >
+                      {tag.icon && <AnimatedIcon name={tag.icon} size={12} className={activeSentiment === tag.id ? 'text-white' : 'text-gray-500'} />}
                       <span>{tag.label}</span>
                       <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${activeSentiment === tag.id ? 'bg-white/20' : 'bg-gray-200'}`}>
                         {tag.count}

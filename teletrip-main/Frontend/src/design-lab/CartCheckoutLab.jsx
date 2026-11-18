@@ -524,7 +524,7 @@ export default function CartCheckoutLab() {
                     <div>
                       <h4 className="font-extrabold text-sm text-gray-900">Atlantis The Royal · Seascape Deluxe King</h4>
                       <p className="text-xs text-gray-500">Check-in: Nov 15, 2026 · Check-out: Nov 18, 2026 (3 nights)</p>
-                      <span className="text-emerald-700 text-xs font-bold mt-1 inline-block">✓ Free Cancellation Included</span>
+                      <span className="text-emerald-700 text-xs font-bold mt-1 inline-block">Free Cancellation Included</span>
                     </div>
                     <div className="text-right">
                       <div className="text-base font-black text-blue-600">AED 4,350</div>

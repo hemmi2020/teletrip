@@ -81,9 +81,7 @@ const Terms = () => {
       <Header />
 
       {/* Hero */}
-      <section className="pt-28 sm:pt-32 pb-16 px-4 sm:px-6 lg:px-8 bg-gray-50 relative overflow-hidden">
-        <div className="absolute -top-20 -right-20 w-80 h-80 rounded-full opacity-15" style={{ background: 'radial-gradient(circle, #3b82f6, #8b5cf6)', filter: 'blur(80px)' }} />
-        <div className="absolute -bottom-16 -left-16 w-60 h-60 rounded-full opacity-10" style={{ background: 'radial-gradient(circle, #059669, #3b82f6)', filter: 'blur(60px)' }} />
+      <section className="pt-28 sm:pt-32 pb-16 px-4 sm:px-6 lg:px-8 bg-gray-50/50 relative overflow-hidden">
         <div className="max-w-4xl mx-auto text-center relative">
           <div className="flex items-center justify-center gap-2 mb-4">
             <div className="w-8 h-px bg-blue-500" />
@@ -101,8 +99,6 @@ const Terms = () => {
 
       {/* Content */}
       <section className="py-16 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-        <div className="absolute top-40 right-0 w-64 h-64 rounded-full opacity-10" style={{ background: 'radial-gradient(circle, #7c3aed, #3b82f6)', filter: 'blur(70px)' }} />
-        <div className="absolute bottom-20 -left-10 w-48 h-48 rounded-full opacity-8" style={{ background: 'radial-gradient(circle, #059669, #3b82f6)', filter: 'blur(50px)' }} />
         <div className="max-w-3xl mx-auto relative">
           <div className="space-y-10">
             {sections.map((section, i) => (

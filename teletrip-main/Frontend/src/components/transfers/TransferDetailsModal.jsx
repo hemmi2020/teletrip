@@ -1,4 +1,4 @@
-import { X, Users, Luggage, Wifi, Clock, MapPin, AlertCircle } from 'lucide-react';
+import { X, Users, Luggage, Wifi, Clock, MapPin, AlertCircle, Check, Car } from 'lucide-react';
 import { createPortal } from 'react-dom';
 
 const TransferDetailsModal = ({ transfer, onClose, onBook }) => {
@@ -18,10 +18,10 @@ const TransferDetailsModal = ({ transfer, onClose, onBook }) => {
           {/* Image Gallery */}
           <div className="mb-6">
             {transfer.images?.[0] ? (
-              <img src={transfer.images[0]} alt={transfer.vehicle} className="w-full h-64 object-cover rounded-lg" />
+              <img src={transfer.images[0]} alt={transfer.vehicle} className="w-full h-64 object-cover rounded-2xl" />
             ) : (
-              <div className="w-full h-64 bg-gradient-to-br from-blue-100 to-blue-200 rounded-lg flex items-center justify-center">
-                <span className="text-8xl">🚐</span>
+              <div className="w-full h-64 bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl flex items-center justify-center">
+                <Car className="w-20 h-20 text-blue-500 gg-anim-glide" />
               </div>
             )}
           </div>
@@ -69,25 +69,25 @@ const TransferDetailsModal = ({ transfer, onClose, onBook }) => {
             <div className="grid grid-cols-2 gap-3">
               <div className="flex items-center gap-2">
                 <div className="w-5 h-5 bg-green-100 rounded-full flex items-center justify-center">
-                  <span className="text-green-600 text-xs">✓</span>
+                  <Check className="w-3 h-3 text-green-600" />
                 </div>
                 <span className="text-sm">Meet & Greet</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-5 h-5 bg-green-100 rounded-full flex items-center justify-center">
-                  <span className="text-green-600 text-xs">✓</span>
+                  <Check className="w-3 h-3 text-green-600" />
                 </div>
                 <span className="text-sm">Flight Monitoring</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-5 h-5 bg-green-100 rounded-full flex items-center justify-center">
-                  <span className="text-green-600 text-xs">✓</span>
+                  <Check className="w-3 h-3 text-green-600" />
                 </div>
                 <span className="text-sm">Free Cancellation</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-5 h-5 bg-green-100 rounded-full flex items-center justify-center">
-                  <span className="text-green-600 text-xs">✓</span>
+                  <Check className="w-3 h-3 text-green-600" />
                 </div>
                 <span className="text-sm">Professional Driver</span>
               </div>
