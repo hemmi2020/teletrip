@@ -4,7 +4,6 @@ import {
   X,
   Check,
   Copy,
-  Sparkles,
   Send,
   Trash2,
   Crosshair,
@@ -304,10 +303,10 @@ export const FeedbackOverlay = ({ targetName = "HotelSearchExperience" }) => {
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}
-          className="p-2 sm:p-2.5 rounded-full bg-gray-900/90 text-white hover:bg-black shadow-lg cursor-pointer"
+          className="p-2 sm:p-2.5 rounded-full bg-gray-900/90 text-white hover:bg-black shadow-lg cursor-pointer flex items-center justify-center"
           title="Toggle Feedback Drawer"
         >
-          <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-300" />
+          <AnimatedIcon name="comment" animation="pulse" size={16} className="text-amber-300" />
         </button>
       </div>
 

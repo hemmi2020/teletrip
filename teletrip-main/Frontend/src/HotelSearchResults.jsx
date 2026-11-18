@@ -1387,7 +1387,7 @@ const HotelSearchResults = () => {
                   }`}
                 >
                   <div className="flex items-center gap-2 text-xs">
-                    <Sparkles className="w-4 h-4 text-amber-500" />
+                    <AnimatedIcon name="crown" animation="pulse" size={16} className="text-amber-500" />
                     <span>Luxury Collection Only</span>
                   </div>
                   <input
@@ -1894,7 +1894,7 @@ const HotelSearchResults = () => {
                     : 'bg-white text-gray-700 shadow-2xs hover:bg-gray-50'
                 }`}
               >
-                <AnimatedIcon name="sparkle" animation="sparkle" size={13} className="text-amber-400" />
+                <AnimatedIcon name="crown" animation="pulse" size={13} className="text-amber-400" />
                 <span>Luxury Collection</span>
               </button>
 
@@ -2053,7 +2053,7 @@ const HotelSearchResults = () => {
                           <div className="absolute top-1.5 sm:top-2 left-1.5 sm:left-2 flex flex-col gap-1 items-start">
                             {(hotel.isLuxuryCollection || hotel.stars >= 5 || hotel.establishmentProfiles?.includes('119')) && (
                               <span className="px-1.5 sm:px-2 py-0.5 rounded-full text-[8px] sm:text-[10px] font-black bg-black/80 backdrop-blur-md text-amber-300 shadow-xs flex items-center gap-1">
-                                <AnimatedIcon name="sparkle" animation="sparkle" size={10} className="text-amber-300" />
+                                <AnimatedIcon name="crown" animation="pulse" size={11} className="text-amber-300" />
                                 <span className="hidden sm:inline">Luxury</span>
                               </span>
                             )}
@@ -2177,7 +2177,7 @@ const HotelSearchResults = () => {
                       <div className="absolute top-2.5 left-2.5 flex flex-col gap-1.5 items-start">
                         {(hotel.isLuxuryCollection || hotel.stars >= 5 || hotel.establishmentProfiles?.includes('119')) && (
                           <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-black/75 backdrop-blur-md text-amber-300 border border-amber-400/50 shadow-md flex items-center gap-1">
-                            <Sparkles className="w-3 h-3 text-amber-400" />
+                            <AnimatedIcon name="crown" animation="pulse" size={12} className="text-amber-400" />
                             <span>Luxury Collection</span>
                           </span>
                         )}

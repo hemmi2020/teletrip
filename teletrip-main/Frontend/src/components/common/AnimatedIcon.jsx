@@ -25,7 +25,13 @@ import {
   Wine,
   Briefcase,
   Tag,
-  Globe
+  Globe,
+  Crown,
+  Gem,
+  SlidersHorizontal,
+  Smile,
+  Layers,
+  MessageSquare
 } from 'lucide-react';
 
 /**
@@ -81,8 +87,27 @@ export default function AnimatedIcon({
       return <Star size={size} className={`${combinedClass} fill-current`} style={style} title={title} />;
 
     case 'sparkle':
-    case 'luxury':
       return <Sparkles size={size} className={combinedClass} style={style} title={title} />;
+
+    case 'crown':
+    case 'luxury':
+    case 'diamond':
+    case 'gem':
+      return <Crown size={size} className={combinedClass} style={style} title={title} />;
+
+    case 'smile':
+      return <Smile size={size} className={combinedClass} style={style} title={title} />;
+
+    case 'filter':
+    case 'options':
+      return <SlidersHorizontal size={size} className={combinedClass} style={style} title={title} />;
+
+    case 'layers':
+      return <Layers size={size} className={combinedClass} style={style} title={title} />;
+
+    case 'comment':
+    case 'message':
+      return <MessageSquare size={size} className={combinedClass} style={style} title={title} />;
 
     case 'shield':
     case 'security':

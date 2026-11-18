@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Star, MapPin, X, CheckCircle, ShieldCheck, Bed, ShoppingCart, Sparkles, SlidersHorizontal, Heart } from 'lucide-react';
+import { Star, MapPin, X, CheckCircle, ShieldCheck, Bed, ShoppingCart, SlidersHorizontal, Heart } from 'lucide-react';
 import { mockHotels } from '../fixtures';
 import { FilterSidebar } from '../components/FilterSidebar';
 import { AnimatedIcon } from '../../components/common/AnimatedIcon';

@@ -10,7 +10,6 @@ import {
   MessageSquare,
   CheckCircle,
   Filter,
-  Sparkles,
   Calendar,
   User,
   ShieldCheck,

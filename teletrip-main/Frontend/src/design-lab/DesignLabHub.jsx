@@ -1,7 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import {
-  Sparkles,
   Search,
   Bed,
   ShoppingCart,
@@ -111,7 +110,7 @@ export default function DesignLabHub() {
       <section className="py-8 sm:py-12 px-4 sm:px-6 border-b border-white/10 relative overflow-hidden bg-gradient-to-b from-slate-900 via-slate-950 to-slate-950">
         <div className="max-w-5xl mx-auto text-center space-y-3 sm:space-y-4 relative z-10">
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] sm:text-xs font-bold bg-white/10 text-white border border-white/20 backdrop-blur-md">
-            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+            <AnimatedIcon name="crown" animation="pulse" size={14} className="text-amber-400" />
             Complete End-to-End Hotel Booking Experience
           </span>
           <h1 className="text-2xl sm:text-4xl md:text-5xl font-black text-white tracking-tight leading-tight">

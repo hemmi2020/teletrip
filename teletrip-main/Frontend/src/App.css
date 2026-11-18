@@ -50,51 +50,27 @@
   border-radius: 1rem !important;
 }
 
-/* Zero Outlines & Zero Borders in all Cards, Text Fields & Inputs */
-input,
-select,
-textarea,
-button,
-[role="button"] {
-  outline: none !important;
-}
-
-input:not([type="checkbox"]):not([type="radio"]),
+/* ─── Text Fields & Form Inputs: Crisp, Complete Outlines & Focus Rings ──────── */
+input:not([type="checkbox"]):not([type="radio"]):not([type="button"]):not([type="submit"]):not([type="range"]),
 select,
 textarea,
 .search-form-input {
+  border: 1px solid #d1d5db !important; /* Refined outline for complete, professional input fields */
   outline: none !important;
-  border: 0 !important;
-  box-shadow: none !important;
+  border-radius: 0.75rem;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease !important;
 }
 
-input:focus,
+input:not([type="checkbox"]):not([type="radio"]):not([type="button"]):not([type="submit"]):not([type="range"]):focus,
 select:focus,
 textarea:focus,
 .search-form-input:focus,
 input:focus-visible,
 select:focus-visible,
-textarea:focus-visible,
-button:focus,
-button:focus-visible {
+textarea:focus-visible {
+  border-color: #2563eb !important;
   outline: none !important;
-  border: 0 !important;
-  ring: none !important;
-  box-shadow: none !important;
-  --tw-ring-shadow: 0 0 #0000 !important;
-  --tw-ring-offset-shadow: 0 0 #0000 !important;
-  --tw-ring-color: transparent !important;
-}
-
-/* Globally neutralize harsh card outlines and borders */
-.border-gray-200,
-.border-gray-100,
-.border-gray-300,
-.border-slate-200,
-.border-slate-100,
-.border-neutral-200,
-.border-neutral-100 {
-  border-color: transparent !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
 }
 
 /* Global */

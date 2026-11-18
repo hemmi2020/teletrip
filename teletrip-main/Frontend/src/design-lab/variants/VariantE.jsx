@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Star, MapPin, Sparkles, ChevronLeft, ChevronRight, ShieldCheck, Quote, Camera, SlidersHorizontal, X } from 'lucide-react';
+import { Star, MapPin, ChevronLeft, ChevronRight, ShieldCheck, Quote, Camera, SlidersHorizontal, X } from 'lucide-react';
 import { mockHotels } from '../fixtures';
 import { FilterSidebar } from '../components/FilterSidebar';
+import { AnimatedIcon } from '../../components/common/AnimatedIcon';
 
 export const VariantE = ({ onSelectHotel }) => {
   const [photoIndexes, setPhotoIndexes] = useState({});
@@ -131,7 +132,7 @@ export const VariantE = ({ onSelectHotel }) => {
 
                   {hotel.isLuxuryCollection && (
                     <span className="absolute top-3 left-3 bg-gradient-to-r from-amber-500 to-yellow-500 text-amber-950 text-[10px] font-black px-2.5 py-1 rounded-full shadow-md flex items-center gap-1">
-                      <Sparkles className="w-3 h-3" /> Luxury Collection
+                      <AnimatedIcon name="crown" animation="pulse" size={12} /> Luxury Collection
                     </span>
                   )}
                 </div>

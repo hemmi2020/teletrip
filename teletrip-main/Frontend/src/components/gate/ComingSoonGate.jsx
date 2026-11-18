@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSiteAccess } from '../../context/SiteAccessContext';
 import logo from '../../images/Telitrip-Logo.png';
 import Footer from '../Footer';
-import { Lock, ArrowRight, ShieldCheck, Hotel, Car, Globe, CheckCircle2, Sparkles } from 'lucide-react';
+import { Lock, ArrowRight, ShieldCheck, Hotel, Car, Globe, CheckCircle2 } from 'lucide-react';
 
 export default function ComingSoonGate() {
   const { verifyPasscode, error: contextError } = useSiteAccess();
@@ -176,7 +176,7 @@ export default function ComingSoonGate() {
                 onClick={() => verifyPasscode('telitrip2026')}
                 className="text-xs font-bold text-blue-600 hover:text-blue-800 bg-blue-50/80 hover:bg-blue-100/80 rounded-xl px-4 py-2 transition-all inline-flex items-center gap-1.5 cursor-pointer shadow-2xs w-full justify-center"
               >
-                <Sparkles className="w-3.5 h-3.5 text-blue-600 gg-anim-sparkle" />
+                <ShieldCheck className="w-3.5 h-3.5 text-blue-600" />
                 <span>Client & Stakeholder Instant Preview Access →</span>
               </button>
             </div>

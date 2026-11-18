@@ -413,7 +413,7 @@ export const HotelDetailModal = ({
               </div>
               {(hotel.stars >= 5 || hotel.isLuxuryCollection || hotel.establishmentProfiles?.includes('119')) && (
                 <span className="inline-flex items-center gap-1.5 px-2 sm:px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-bold bg-gradient-to-r from-amber-500/30 via-yellow-400/40 to-amber-500/30 text-amber-200 border border-amber-300/60 shadow-md backdrop-blur-sm">
-                  <AnimatedIcon name="sparkle" animation="sparkle" size={12} className="text-amber-300" /> Luxury Collection
+                  <AnimatedIcon name="crown" animation="pulse" size={12} className="text-amber-300" /> Luxury Collection
                 </span>
               )}
               {hotel.rating && (

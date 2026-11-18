@@ -20,7 +20,6 @@ import {
   ChevronUp,
   ChevronsUpDown,
   Utensils,
-  Sparkles,
   Wifi,
   Eye,
   SlidersHorizontal,
@@ -32,6 +31,7 @@ import {
   Maximize2
 } from 'lucide-react';
 import { FeedbackOverlay } from './FeedbackOverlay';
+import { AnimatedIcon } from '../components/common/AnimatedIcon';
 import { DUBAI_HOTEL_FIXTURES, mockHotels } from './fixtures';
 
 export default function HotelModalLab() {
@@ -369,7 +369,7 @@ export default function HotelModalLab() {
                   5 Stars
                 </span>
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-gradient-to-r from-amber-500/30 to-yellow-400/40 text-amber-200 border border-amber-300/60 shadow-xs">
-                  <Sparkles className="w-3.5 h-3.5 text-amber-300 gg-anim-sparkle" /> Luxury Collection
+                  <AnimatedIcon name="crown" animation="pulse" size={14} className="text-amber-300" /> Luxury Collection
                 </span>
                 <span className="text-[10px] font-bold bg-emerald-600/90 text-white px-2 py-0.5 rounded-full inline-flex items-center gap-1">
                   <Star className="w-3 h-3 text-white fill-white" /> 4.9 TripAdvisor (1,840 reviews)

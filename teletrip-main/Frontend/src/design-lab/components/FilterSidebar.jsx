@@ -3,7 +3,6 @@ import {
   SlidersHorizontal,
   Star,
   Check,
-  Sparkles,
   MapPin,
   Coffee,
   Waves,
@@ -16,6 +15,7 @@ import {
   ChevronUp,
   ShieldCheck
 } from 'lucide-react';
+import { AnimatedIcon } from '../../components/common/AnimatedIcon';
 
 export const FilterSidebar = ({
   selectedStars = [],
@@ -105,7 +105,7 @@ export const FilterSidebar = ({
           }`}
         >
           <div className="flex items-center gap-2 text-xs">
-            <Sparkles className="w-4 h-4 text-amber-500" />
+            <AnimatedIcon name="crown" animation="pulse" size={16} className="text-amber-500" />
             <span>Luxury Collection Only</span>
           </div>
           <input
@@ -335,7 +335,7 @@ export const FilterSidebar = ({
               { id: 'POOL', label: 'Swimming Pool', icon: Waves },
               { id: 'GYM', label: 'Fitness Center / Gym', icon: Dumbbell },
               { id: 'WIFI', label: 'Free High-Speed WiFi', icon: Wifi },
-              { id: 'SPA', label: 'Luxury Spa', icon: Sparkles },
+              { id: 'SPA', label: 'Luxury Spa', icon: Waves },
               { id: 'PARKING', label: 'Free Parking / Valet', icon: Car }
             ].map((amenity) => {
               const isChecked = selectedAmenities.includes(amenity.id);

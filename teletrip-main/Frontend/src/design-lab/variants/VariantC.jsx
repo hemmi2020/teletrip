@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Star, MapPin, ChevronDown, ChevronUp, Check, ShieldCheck, Sparkles, Bed, ArrowUpRight, SlidersHorizontal, X } from 'lucide-react';
+import { Star, MapPin, ChevronDown, ChevronUp, Check, ShieldCheck, Bed, ArrowUpRight, SlidersHorizontal, X } from 'lucide-react';
 import { mockHotels } from '../fixtures';
 import { FilterSidebar } from '../components/FilterSidebar';
+import { AnimatedIcon } from '../../components/common/AnimatedIcon';
 
 export const VariantC = ({ onSelectHotel }) => {
   const [expandedHotel, setExpandedHotel] = useState(mockHotels[0].id);
@@ -108,7 +109,8 @@ export const VariantC = ({ onSelectHotel }) => {
                         <div className="flex items-center gap-1.5 flex-wrap">
                           <span className="font-extrabold text-sm text-gray-900 truncate">{hotel.name}</span>
                           {hotel.isLuxuryCollection && (
-                            <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-100 text-amber-900 border-0">
+                            <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-100 text-amber-900 border-0 flex items-center gap-1">
+                              <AnimatedIcon name="crown" animation="pulse" size={10} />
                               Luxury Collection
                             </span>
                           )}

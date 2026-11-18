@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { createPortal } from 'react-dom';
-import { MapPin, Calendar, Users, Search, ChevronDown, X, Plus, Minus, Loader2, Star, Clock, Tag, Plane, Building2, Hotel, Car, Compass, Trash2, ShieldCheck, CheckCircle, Sparkles } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
+import { MapPin, Calendar, Users, Search, ChevronDown, X, Plus, Minus, Loader2, Star, Clock, Tag, Plane, Building2, Hotel, Car, Compass, Trash2, ShieldCheck, CheckCircle, Crown } from 'lucide-react';
 import { addDays, format } from 'date-fns';
 import AnimatedIcon from './common/AnimatedIcon';
 import { searchTransfers } from '../services/transfersApi';
@@ -509,7 +510,7 @@ const TransfersTab = ({ variant = 'dark' }) => {
             <span>Free Cancellation 24h</span>
           </span>
           <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-900 font-bold border border-amber-200 text-[11px]">
-            <Sparkles className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+            <AnimatedIcon name="smile" animation="bounce" size={14} className="text-amber-600 shrink-0" />
             <span>Meet & Greet Available</span>
           </span>
         </div>
@@ -828,7 +829,7 @@ const ExperiencesTab = ({ variant = 'dark' }) => {
             <span>Skip-the-Line Entry</span>
           </span>
           <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-900 font-bold border border-amber-200 text-[11px]">
-            <Sparkles className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+            <AnimatedIcon name="shield" animation="pulse" size={14} className="text-amber-600 shrink-0" />
             <span>Best Rate Guarantee</span>
           </span>
         </div>
@@ -909,7 +910,9 @@ const OldExperiencesResults = ({ experiences }) => {
   );
 };
 
-const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' }) => {
+const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark', initialValues }) => {
+  const [urlSearchParams] = useSearchParams();
+
   // Date range state
   const [dateRange, setDateRange] = useState([
     {
@@ -943,6 +946,76 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
   ]);
   const [activeTab, setActiveTab] = useState(initialTab);
   const [luxuryOnly, setLuxuryOnly] = useState(false);
+
+  // Populate form with existing search details so modify search retains context
+  useEffect(() => {
+    // 1. Destination / Hotel
+    const hotelName = initialValues?.hotelName || urlSearchParams.get('hotelName');
+    const hotelCode = initialValues?.hotelCode || urlSearchParams.get('hotelCode');
+    const city = initialValues?.city || urlSearchParams.get('city');
+    const destinationCode = initialValues?.destinationCode || urlSearchParams.get('destinationCode');
+    const country = initialValues?.country || urlSearchParams.get('country');
+
+    if (hotelName || hotelCode) {
+      setSearchQuery(hotelName || '');
+      setHotelNameQuery(hotelName || '');
+      if (hotelCode) setSelectedHotelCode(hotelCode);
+      setSelectedLocation({
+        name: hotelName || 'Selected Hotel',
+        code: hotelCode,
+        type: 'hotel',
+        city,
+        country
+      });
+    } else if (city || destinationCode) {
+      const destLabel = city || destinationCode;
+      setSearchQuery(destLabel);
+      setSelectedLocation({
+        name: destLabel,
+        city: city || destLabel,
+        destinationCode,
+        country,
+        type: 'destination'
+      });
+    }
+
+    // 2. Dates
+    const checkInParam = initialValues?.checkIn || urlSearchParams.get('checkIn');
+    const checkOutParam = initialValues?.checkOut || urlSearchParams.get('checkOut');
+    if (checkInParam && checkOutParam) {
+      const start = new Date(checkInParam);
+      const end = new Date(checkOutParam);
+      if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+        setDateRange([{ startDate: start, endDate: end, key: 'selection' }]);
+      }
+    }
+
+    // 3. Room Configuration
+    const roomConfigsParam = initialValues?.roomConfigs || urlSearchParams.get('roomConfigs');
+    if (roomConfigsParam) {
+      try {
+        const parsed = typeof roomConfigsParam === 'string' ? JSON.parse(decodeURIComponent(roomConfigsParam)) : roomConfigsParam;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setRoomConfigs(parsed);
+        }
+      } catch (e) {
+        console.warn('Failed to parse roomConfigs:', e);
+      }
+    } else if (urlSearchParams.get('adults')) {
+      const adults = parseInt(urlSearchParams.get('adults'), 10) || 2;
+      const children = parseInt(urlSearchParams.get('children'), 10) || 0;
+      const childAgesParam = urlSearchParams.get('childAges');
+      const childAges = childAgesParam ? childAgesParam.split(',').map(a => parseInt(a, 10)) : [];
+      setRoomConfigs([{ adults, children, childAges }]);
+    }
+
+    // 4. Luxury Collection Filter
+    if (initialValues?.luxury !== undefined) {
+      setLuxuryOnly(Boolean(initialValues.luxury));
+    } else if (urlSearchParams.get('luxury') === 'true') {
+      setLuxuryOnly(true);
+    }
+  }, [urlSearchParams, initialValues]);
 
   // Room helper functions
   const addRoom = () => {
@@ -1492,7 +1565,7 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
                       onChange={(e) => setLuxuryOnly(e.target.checked)}
                       className="rounded text-amber-600 focus:ring-amber-500 w-3.5 h-3.5 cursor-pointer"
                     />
-                    <Sparkles className="w-3 h-3 text-amber-600 shrink-0 gg-anim-sparkle" />
+                    <AnimatedIcon name="crown" animation="pulse" size={13} className="text-amber-600 shrink-0" />
                     <span className="inline-flex items-center gap-1">Luxury Collection 5<AnimatedIcon name="star" animation="pulse" size={11} className="text-amber-500" /></span>
                   </label>
                 </div>
@@ -1524,7 +1597,7 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
           <div className="pt-3 flex flex-col items-center gap-2.5">
             <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
               <span className="text-xs font-black text-amber-300 flex items-center gap-1 bg-amber-950/60 backdrop-blur-md px-2.5 py-1 rounded-full border border-amber-400/30">
-                <Sparkles className="w-3 h-3 text-amber-400" />
+                <AnimatedIcon name="crown" animation="pulse" size={13} className="text-amber-400" />
                 <span>Trending:</span>
               </span>
               {[
@@ -1579,7 +1652,7 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
           <div className="pt-3 flex flex-col items-center gap-2.5">
             <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
               <span className="text-xs font-black text-amber-300 flex items-center gap-1 bg-amber-950/60 backdrop-blur-md px-2.5 py-1 rounded-full border border-amber-400/30">
-                <Sparkles className="w-3 h-3 text-amber-400" />
+                <AnimatedIcon name="car" animation="glide" size={13} className="text-amber-400" />
                 <span>Popular Routes:</span>
               </span>
               {[
@@ -1622,7 +1695,7 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark' })
           <div className="pt-3 flex flex-col items-center gap-2.5">
             <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
               <span className="text-xs font-black text-amber-300 flex items-center gap-1 bg-amber-950/60 backdrop-blur-md px-2.5 py-1 rounded-full border border-amber-400/30">
-                <Sparkles className="w-3 h-3 text-amber-400" />
+                <AnimatedIcon name="compass" animation="spin" size={13} className="text-amber-400" />
                 <span>Top Experiences:</span>
               </span>
               {[

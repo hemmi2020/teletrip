@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Star, MapPin, Sparkles, Navigation, Layers, Compass, CheckCircle, SlidersHorizontal, X, ExternalLink } from 'lucide-react';
+import { Star, MapPin, Navigation, Layers, Compass, CheckCircle, SlidersHorizontal, X, ExternalLink } from 'lucide-react';
 import { mockHotels } from '../fixtures';
 import { FilterSidebar } from '../components/FilterSidebar';
 

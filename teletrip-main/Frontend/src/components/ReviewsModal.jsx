@@ -167,7 +167,7 @@ const ReviewsModal = ({ isOpen, onClose, hotelName, reviewData }) => {
               {/* Category Ratings */}
               <div className="space-y-3">
                 <h4 className="text-xs font-extrabold uppercase tracking-wider text-gray-500 flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-blue-600" />
+                  <Filter className="w-3.5 h-3.5 text-blue-600" />
                   <span>Category Breakdown</span>
                 </h4>
                 <div className="space-y-2.5">

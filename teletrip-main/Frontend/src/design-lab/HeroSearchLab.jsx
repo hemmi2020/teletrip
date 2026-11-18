@@ -11,7 +11,6 @@ import {
   MapPin,
   Building2,
   ChevronDown,
-  Sparkles,
   Plane,
   Car,
   Compass,
@@ -23,6 +22,7 @@ import {
   ShieldCheck,
   X
 } from 'lucide-react';
+import { AnimatedIcon } from '../components/common/AnimatedIcon';
 import { FeedbackOverlay } from './FeedbackOverlay';
 
 export default function HeroSearchLab() {
@@ -190,7 +190,7 @@ export default function HeroSearchLab() {
           <div className="relative z-10 w-full max-w-5xl space-y-6 text-center">
             <div className="space-y-2">
               <span className="px-3.5 py-1 rounded-full text-xs font-black bg-blue-600/30 text-blue-200 border border-blue-400/40 inline-flex items-center gap-1.5 backdrop-blur-md">
-                <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                <AnimatedIcon name="shield" animation="pulse" size={14} className="text-amber-300" />
                 Official Bedsonline Global Wholesale API
               </span>
               <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight leading-tight">
@@ -283,7 +283,7 @@ export default function HeroSearchLab() {
                               {s.type === 'city' ? (
                                 <Building2 className="w-4 h-4 text-blue-600 shrink-0" />
                               ) : (
-                                <Sparkles className="w-4 h-4 text-amber-500 shrink-0" />
+                                <AnimatedIcon name="crown" animation="pulse" size={16} className="text-amber-500 shrink-0" />
                               )}
                               <div>
                                 <div className="font-extrabold text-xs text-gray-900">{s.name}</div>
@@ -419,7 +419,7 @@ export default function HeroSearchLab() {
                         onChange={(e) => setLuxuryOnly(e.target.checked)}
                         className="rounded text-amber-600 focus:ring-amber-500 w-3.5 h-3.5"
                       />
-                      <Sparkles className="w-3 h-3 text-amber-600 shrink-0 gg-anim-sparkle" />
+                      <AnimatedIcon name="crown" animation="pulse" size={13} className="text-amber-600 shrink-0" />
                       <span>Luxury Collection 5-Star</span>
                     </label>
                   </div>
@@ -438,7 +438,7 @@ export default function HeroSearchLab() {
               <div className="pt-2 flex flex-col items-center gap-3">
                 <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2">
                   <span className="text-xs font-black text-amber-300 flex items-center gap-1 bg-amber-950/60 backdrop-blur-md px-2.5 py-1 rounded-full border border-amber-400/30">
-                    <Sparkles className="w-3 h-3 text-amber-400" />
+                    <AnimatedIcon name="crown" animation="pulse" size={13} className="text-amber-400" />
                     <span>Trending:</span>
                   </span>
                   {[
@@ -680,7 +680,7 @@ export default function HeroSearchLab() {
                         onChange={(e) => setLuxuryOnly(e.target.checked)}
                         className="w-4 h-4 accent-amber-500 rounded"
                       />
-                      <span className="flex items-center gap-1"><Sparkles className="w-3.5 h-3.5 text-amber-500 gg-anim-sparkle" /> 5-Star Luxury Collection only</span>
+                      <span className="flex items-center gap-1.5"><AnimatedIcon name="crown" animation="pulse" size={14} className="text-amber-500" /> 5-Star Luxury Collection only</span>
                     </label>
 
                     <label className="flex items-center gap-2 cursor-pointer select-none">

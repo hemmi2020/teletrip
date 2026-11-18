@@ -18,7 +18,6 @@ import {
   Mail,
   Phone,
   Plane,
-  Sparkles,
   Lock,
   Trash2,
   Sliders,
@@ -373,8 +372,8 @@ export default function CartCheckoutLab() {
                           }`}
                         >
                           <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center shrink-0">
-                              <Sparkles className="w-5 h-5" />
+                            <div className="w-9 h-9 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
+                              <Building2 className="w-5 h-5" />
                             </div>
                             <div>
                               <span className="text-xs font-extrabold text-gray-900 block">Pay at Hotel / Office</span>
