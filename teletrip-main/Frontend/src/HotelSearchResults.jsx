@@ -50,6 +50,28 @@ import SearchLoadingScreen from './components/SearchLoadingScreen';
 import logo from './images/Telitrip-Logo.png';
 
 
+export const isPolicyOrNonPromo = (text) => {
+  if (!text || typeof text !== 'string') return true;
+  const lower = text.toLowerCase().trim();
+  return (
+    lower.includes('non-refundable') ||
+    lower.includes('non refundable') ||
+    lower.includes('no amendment') ||
+    lower.includes('no amendments') ||
+    lower.includes('cancellation') ||
+    lower.includes('cancel') ||
+    lower.includes('penalty') ||
+    lower.includes('terms') ||
+    lower.includes('policy') ||
+    lower.includes('fee applies') ||
+    lower.includes('fees apply') ||
+    lower.includes('tax') ||
+    lower === 'nrf' ||
+    lower === 'nor' ||
+    lower.length > 25
+  );
+};
+
 const RatingCircles = ({ rating, size = 'w-5 h-5' }) => {
   const numRating = Number(rating) || 0;
   const filledCircles = Math.round(numRating);
@@ -1102,9 +1124,16 @@ const HotelSearchResults = () => {
             hasFreeCancellation: isFreeCancel,
             hasPartialCancellation: cheapestRate?.rateClass !== 'NRF' && cancellationPolicy.length > 0 && !isFreeCancel,
             hasNoCancellationInfo: !cancellationPolicy || cancellationPolicy.length === 0,
-            promos: [...new Set(allRates.flatMap(r => (r.promotions || r.offers || []).map(p => p.name || p.code)).filter(Boolean))],
+            promos: [...new Set(allRates.flatMap(r => (r.promotions || r.offers || []).map(p => p.name || p.code))
+              .filter(Boolean)
+              .filter(p => !isPolicyOrNonPromo(p))
+              .map(p => p.trim())
+            )],
             discounts: [...new Set(allRates.flatMap(r => (r.rateCommentsId ? ['Discounted'] : []).concat(
-              (r.promotions || r.offers || []).filter(p => (p.name || '').toLowerCase().includes('discount')).map(p => p.name)
+              (r.promotions || r.offers || [])
+                .filter(p => !isPolicyOrNonPromo(p.name || p.code))
+                .filter(p => (p.name || '').toLowerCase().includes('discount'))
+                .map(p => p.name)
             )).filter(Boolean))],
             chain: hotel.chainCode || hotel.chain || null,
             packaging: allRates.some(r => r.packaging === true),
@@ -2049,27 +2078,20 @@ const HotelSearchResults = () => {
                           />
                           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
 
-                          {/* Top Badges */}
-                          <div className="absolute top-1.5 sm:top-2 left-1.5 sm:left-2 flex flex-col gap-1 items-start">
-                            {(hotel.isLuxuryCollection || hotel.stars >= 5 || hotel.establishmentProfiles?.includes('119')) && (
-                              <span className="px-1.5 sm:px-2 py-0.5 rounded-full text-[8px] sm:text-[10px] font-black bg-black/80 backdrop-blur-md text-amber-300 shadow-xs flex items-center gap-1">
+                          {/* Top Badge (clean, single badge) */}
+                          <div className="absolute top-2 left-2 flex items-start">
+                            {(hotel.isLuxuryCollection || hotel.stars >= 5 || hotel.establishmentProfiles?.includes('119')) ? (
+                              <span className="px-2 py-0.5 rounded-lg text-[9px] sm:text-[10px] font-black bg-black/75 backdrop-blur-md text-amber-300 shadow-xs flex items-center gap-1 border-0">
                                 <AnimatedIcon name="crown" animation="pulse" size={11} className="text-amber-300" />
                                 <span className="hidden sm:inline">Luxury</span>
                               </span>
-                            )}
-                            {hotel.hasFreeCancellation && (
-                              <span className="px-1.5 sm:px-2 py-0.5 rounded-full text-[8px] sm:text-[9px] font-bold bg-emerald-600/95 text-white shadow-xs">
-                                Free Cancel
+                            ) : (hotel.promos?.length > 0 || hotel.discounts?.length > 0) ? (
+                              <span className="px-2 py-0.5 rounded-lg text-[9px] sm:text-[10px] font-bold bg-amber-500/90 backdrop-blur-md text-white shadow-xs flex items-center gap-1 border-0">
+                                <Tag className="w-2.5 h-2.5" />
+                                <span className="truncate max-w-[85px]">{hotel.promos?.[0] || 'Offer'}</span>
                               </span>
-                            )}
+                            ) : null}
                           </div>
-
-                          {(hotel.promos?.length > 0 || hotel.discounts?.length > 0) && (
-                            <div className="absolute top-1.5 sm:top-2 right-1.5 sm:right-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white px-1.5 sm:px-2 py-0.5 rounded text-[8px] sm:text-[9px] font-black shadow-xs flex items-center gap-1">
-                              <Tag className="w-2.5 h-2.5" />
-                              <span className="truncate max-w-[80px]">{hotel.promos?.[0] || 'Promo'}</span>
-                            </div>
-                          )}
 
                           {/* Bottom Stars Overlay */}
                           <div className="absolute bottom-1.5 sm:bottom-2 left-2 right-2 flex items-center justify-between text-white">
@@ -2097,13 +2119,26 @@ const HotelSearchResults = () => {
                             <span className="truncate">{hotel.address}</span>
                           </div>
 
-                          {/* Board / Room tags */}
-                          {hotel.boards && hotel.boards.length > 0 && (
-                            <div className="pt-0.5 flex items-center gap-1 text-[10px] sm:text-[11px] font-semibold text-emerald-700 truncate">
-                              <CheckCircle className="w-3 h-3 shrink-0 text-emerald-600" />
-                              <span className="truncate">{hotel.boards[0]}</span>
-                            </div>
-                          )}
+                          {/* Board & Cancellation Inclusions */}
+                          <div className="pt-1 flex items-center gap-1.5 flex-wrap text-[10px] sm:text-[11px]">
+                            {hotel.boards && hotel.boards.length > 0 && (
+                              <span className="font-semibold text-gray-700 flex items-center gap-1 bg-gray-100 px-1.5 py-0.5 rounded-md truncate max-w-[120px]">
+                                <Check className="w-3 h-3 text-blue-600 shrink-0" />
+                                <span className="truncate">{hotel.boards[0]}</span>
+                              </span>
+                            )}
+                            {hotel.hasFreeCancellation ? (
+                              <span className="font-bold text-emerald-700 flex items-center gap-1 bg-emerald-50 px-1.5 py-0.5 rounded-md">
+                                <CheckCircle className="w-3 h-3 text-emerald-600 shrink-0" />
+                                <span>Free Cancel</span>
+                              </span>
+                            ) : (
+                              <span className="text-gray-400 flex items-center gap-1 bg-gray-50 px-1.5 py-0.5 rounded-md font-medium">
+                                <AlertCircle className="w-3 h-3 text-gray-400 shrink-0" />
+                                <span>Non-Refundable</span>
+                              </span>
+                            )}
+                          </div>
 
                           {roomTypes.length > 0 && (
                             <div className="pt-0.5 text-[9px] sm:text-[10px] text-blue-600 truncate font-medium">
@@ -2173,25 +2208,19 @@ const HotelSearchResults = () => {
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent md:hidden" />
 
-                      {/* Badges on Image */}
-                      <div className="absolute top-2.5 left-2.5 flex flex-col gap-1.5 items-start">
-                        {(hotel.isLuxuryCollection || hotel.stars >= 5 || hotel.establishmentProfiles?.includes('119')) && (
-                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-black/75 backdrop-blur-md text-amber-300 border-0 shadow-md flex items-center gap-1">
+                      {/* Badge on Image: Single discreet, elegant badge */}
+                      <div className="absolute top-2.5 left-2.5 flex items-start">
+                        {(hotel.isLuxuryCollection || hotel.stars >= 5 || hotel.establishmentProfiles?.includes('119')) ? (
+                          <span className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-black/70 backdrop-blur-md text-amber-300 border-0 shadow-md flex items-center gap-1.5">
                             <AnimatedIcon name="crown" animation="pulse" size={12} className="text-amber-400" />
                             <span>Luxury Collection</span>
                           </span>
-                        )}
-                        {hotel.hasFreeCancellation && (
-                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-600/90 text-white shadow-sm">
-                            Free Cancellation
+                        ) : (hotel.promos?.length > 0 || hotel.discounts?.length > 0) ? (
+                          <span className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-amber-500/90 backdrop-blur-md text-white border-0 shadow-md flex items-center gap-1.5">
+                            <Tag className="w-3 h-3" />
+                            <span>{hotel.promos?.[0] || 'Special Offer'}</span>
                           </span>
-                        )}
-                        {(hotel.promos?.length > 0 || hotel.discounts?.length > 0) && (
-                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-sm flex items-center gap-1">
-                            <Tag className="w-2.5 h-2.5" />
-                            <span>{hotel.promos?.[0] || 'Promo Offer'}</span>
-                          </span>
-                        )}
+                        ) : null}
                       </div>
 
                       {hotelReviews[hotel.id] && hotelReviews[hotel.id].rating && (
@@ -2249,12 +2278,38 @@ const HotelSearchResults = () => {
                         )}
                       </div>
 
-                      <div className="pt-3 mt-3 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
-                        <span className="font-semibold text-emerald-700 flex items-center gap-1">
-                          <Check className="w-3.5 h-3.5" /> {hotel.boards?.[0] || 'Room Only'}
-                        </span>
+                      <div className="pt-3 mt-3 border-t border-gray-100 flex items-center justify-between gap-3 text-xs flex-wrap">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {/* Board / Meal Plan */}
+                          <span className="font-semibold text-gray-700 flex items-center gap-1 text-[11px] sm:text-xs bg-gray-100/80 px-2 py-0.5 rounded-md">
+                            <Check className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                            <span>{hotel.boards?.[0] || 'Room Only'}</span>
+                          </span>
+
+                          {/* Cancellation Policy (Clear & Non-Contradictory) */}
+                          {hotel.hasFreeCancellation ? (
+                            <span className="font-semibold text-emerald-700 flex items-center gap-1 text-[11px] sm:text-xs bg-emerald-50 px-2 py-0.5 rounded-md">
+                              <CheckCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                              <span>Free Cancellation</span>
+                            </span>
+                          ) : (
+                            <span className="font-medium text-gray-500 flex items-center gap-1 text-[11px] sm:text-xs bg-gray-100/60 px-2 py-0.5 rounded-md">
+                              <AlertCircle className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                              <span>Non-Refundable</span>
+                            </span>
+                          )}
+
+                          {/* Real Promotional Offer (if present) */}
+                          {hotel.promos?.length > 0 && (
+                            <span className="font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md flex items-center gap-1 text-[10px] sm:text-[11px]">
+                              <Tag className="w-3 h-3 text-amber-600 shrink-0" />
+                              <span>{hotel.promos[0]}</span>
+                            </span>
+                          )}
+                        </div>
+
                         {hotel.rooms?.length > 0 && (
-                          <span className="text-[11px] text-gray-400">
+                          <span className="text-[11px] text-gray-400 font-medium">
                             {hotel.rooms.length} Room Options Available
                           </span>
                         )}

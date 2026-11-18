@@ -32,6 +32,28 @@ import {
   Sparkles
 } from 'lucide-react';
 
+const isPolicyOrNonPromo = (text) => {
+  if (!text || typeof text !== 'string') return true;
+  const lower = text.toLowerCase().trim();
+  return (
+    lower.includes('non-refundable') ||
+    lower.includes('non refundable') ||
+    lower.includes('no amendment') ||
+    lower.includes('no amendments') ||
+    lower.includes('cancellation') ||
+    lower.includes('cancel') ||
+    lower.includes('penalty') ||
+    lower.includes('terms') ||
+    lower.includes('policy') ||
+    lower.includes('fee applies') ||
+    lower.includes('fees apply') ||
+    lower.includes('tax') ||
+    lower === 'nrf' ||
+    lower === 'nor' ||
+    lower.length > 25
+  );
+};
+
 function buildImageAlbums(rawImages) {
   const albums = {
     'All': [],
@@ -838,22 +860,27 @@ export const HotelDetailModal = ({
                                     </div>
 
                                     {/* Promotional Offers & Discounts */}
-                                    {((rate.promotions && rate.promotions.length > 0) || (rate.offers && rate.offers.length > 0)) && (
-                                      <div className="flex gap-1.5 flex-wrap pt-0.5">
-                                        {(rate.promotions || []).map((promo, pi) => (
-                                          <span key={`p-${pi}`} className="text-[10px] px-2.5 py-0.5 bg-gradient-to-r from-emerald-50 to-teal-50 text-emerald-800 rounded-full flex items-center gap-1 font-bold border-0 shadow-2xs">
-                                            <Tag className="w-2.5 h-2.5 text-emerald-600" />
-                                            {promo.name || promo.code || 'Special Offer'}
-                                          </span>
-                                        ))}
-                                        {(rate.offers || []).map((offer, oi) => (
-                                          <span key={`o-${oi}`} className="text-[10px] px-2.5 py-0.5 bg-amber-50 text-amber-800 rounded-full flex items-center gap-1 font-semibold border-0 shadow-2xs">
-                                            <Tag className="w-2.5 h-2.5 text-amber-600" />
-                                            {offer.name}
-                                          </span>
-                                        ))}
-                                      </div>
-                                    )}
+                                    {(() => {
+                                      const validPromos = (rate.promotions || []).filter(p => !isPolicyOrNonPromo(p.name || p.code));
+                                      const validOffers = (rate.offers || []).filter(o => !isPolicyOrNonPromo(o.name || o.code));
+                                      if (validPromos.length === 0 && validOffers.length === 0) return null;
+                                      return (
+                                        <div className="flex gap-1.5 flex-wrap pt-0.5">
+                                          {validPromos.map((promo, pi) => (
+                                            <span key={`p-${pi}`} className="text-[10px] px-2.5 py-0.5 bg-gradient-to-r from-emerald-50 to-teal-50 text-emerald-800 rounded-full flex items-center gap-1 font-bold border-0 shadow-2xs">
+                                              <Tag className="w-2.5 h-2.5 text-emerald-600" />
+                                              {promo.name || promo.code || 'Special Offer'}
+                                            </span>
+                                          ))}
+                                          {validOffers.map((offer, oi) => (
+                                            <span key={`o-${oi}`} className="text-[10px] px-2.5 py-0.5 bg-amber-50 text-amber-800 rounded-full flex items-center gap-1 font-semibold border-0 shadow-2xs">
+                                              <Tag className="w-2.5 h-2.5 text-amber-600" />
+                                              {offer.name}
+                                            </span>
+                                          ))}
+                                        </div>
+                                      );
+                                    })()}
 
                                     {/* Cancellation date details */}
                                     {rate.cancellationPolicies && rate.cancellationPolicies.length > 0 && (
