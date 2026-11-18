@@ -4,6 +4,7 @@ import { useSearchParams } from 'react-router-dom';
 import { MapPin, Calendar, Users, Search, ChevronDown, X, Plus, Minus, Loader2, Star, Clock, Tag, Plane, Building2, Hotel, Car, Compass, Trash2, ShieldCheck, CheckCircle, Crown } from 'lucide-react';
 import { addDays, format } from 'date-fns';
 import AnimatedIcon from './common/AnimatedIcon';
+import { getInstantSuggestions } from '../utils/instantSearchData';
 import { searchTransfers } from '../services/transfersApi';
 import axios from 'axios';
 import 'react-date-range/dist/styles.css';
@@ -501,15 +502,15 @@ const TransfersTab = ({ variant = 'dark' }) => {
       {/* Lower Action Row: Reassurances & Search Transfers CTA Button */}
       <div className="mt-3.5 pt-3 border-t border-gray-100 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2 text-xs">
-          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 font-bold border border-emerald-100 text-[11px]">
+          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 font-bold border-0 text-[11px]">
             <CheckCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
             <span>Flight Tracking Included</span>
           </span>
-          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-800 font-bold border border-blue-100 text-[11px]">
+          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-800 font-bold border-0 text-[11px]">
             <ShieldCheck className="w-3.5 h-3.5 text-blue-600 shrink-0" />
             <span>Free Cancellation 24h</span>
           </span>
-          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-900 font-bold border border-amber-200 text-[11px]">
+          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-900 font-bold border-0 text-[11px]">
             <AnimatedIcon name="smile" animation="bounce" size={14} className="text-amber-600 shrink-0" />
             <span>Meet & Greet Available</span>
           </span>
@@ -820,15 +821,15 @@ const ExperiencesTab = ({ variant = 'dark' }) => {
       {/* Lower Action Row: Reassurances & Search Experiences CTA Button */}
       <div className="mt-3.5 pt-3 border-t border-gray-100 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2 text-xs">
-          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 font-bold border border-emerald-100 text-[11px]">
+          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 font-bold border-0 text-[11px]">
             <CheckCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
             <span>Instant Mobile Voucher</span>
           </span>
-          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-800 font-bold border border-blue-100 text-[11px]">
+          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-800 font-bold border-0 text-[11px]">
             <ShieldCheck className="w-3.5 h-3.5 text-blue-600 shrink-0" />
             <span>Skip-the-Line Entry</span>
           </span>
-          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-900 font-bold border border-amber-200 text-[11px]">
+          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-900 font-bold border-0 text-[11px]">
             <AnimatedIcon name="shield" animation="pulse" size={14} className="text-amber-600 shrink-0" />
             <span>Best Rate Guarantee</span>
           </span>
@@ -925,6 +926,7 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark', i
   const [showTravellerDropdown, setShowTravellerDropdown] = useState(false);
   const calendarRef = useRef(null);
   const travellerRef = useRef(null);
+  const isSelectingRef = useRef(false);
 
   // Location search states
   const [searchQuery, setSearchQuery] = useState('');
@@ -949,6 +951,7 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark', i
 
   // Populate form with existing search details so modify search retains context
   useEffect(() => {
+    isSelectingRef.current = true;
     // 1. Destination / Hotel
     const hotelName = initialValues?.hotelName || urlSearchParams.get('hotelName');
     const hotelCode = initialValues?.hotelCode || urlSearchParams.get('hotelCode');
@@ -969,7 +972,8 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark', i
       });
     } else if (city || destinationCode) {
       const destLabel = city || destinationCode;
-      setSearchQuery(destLabel);
+      const fullLabel = country ? `${destLabel}, ${country}` : destLabel;
+      setSearchQuery(fullLabel);
       setSelectedLocation({
         name: destLabel,
         city: city || destLabel,
@@ -1060,9 +1064,14 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark', i
   const getTotalChildren = () => roomConfigs.reduce((sum, r) => sum + r.children, 0);
   const getAllChildAges = () => roomConfigs.flatMap(r => r.childAges);
 
-  // Debounced unified search via API (destinations + hotels in one search, Bedsonline style)
+  // Debounced unified search via API + Instant Autocomplete
   useEffect(() => {
-    if (searchQuery.trim().length < 2) {
+    if (isSelectingRef.current) {
+      isSelectingRef.current = false;
+      return;
+    }
+    const queryTerm = searchQuery.trim();
+    if (queryTerm.length < 2) {
       setFilteredLocations([]);
       setHotelSuggestions([]);
       return;
@@ -1071,28 +1080,52 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark', i
     const timer = setTimeout(async () => {
       try {
         const API_BASE = import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
-        const queryTerm = searchQuery.trim();
 
         const [locRes, hotelRes] = await Promise.allSettled([
           fetch(`${API_BASE}/api/locations/search?q=${encodeURIComponent(queryTerm)}`),
           fetch(`${API_BASE}/api/hotels/search-by-name?q=${encodeURIComponent(queryTerm)}&limit=12`)
         ]);
 
-        let locs = [];
+        let apiLocs = [];
         if (locRes.status === 'fulfilled' && locRes.value.ok) {
           const data = await locRes.value.json();
-          if (data.success) locs = data.data || [];
+          if (data.success) apiLocs = data.data || [];
         }
 
-        let hotels = [];
+        let apiHotels = [];
         if (hotelRes.status === 'fulfilled' && hotelRes.value.ok) {
           const hData = await hotelRes.value.json();
-          if (hData.success) hotels = hData.data || [];
+          if (hData.success) apiHotels = hData.data || [];
         }
 
-        setFilteredLocations(locs);
-        setHotelSuggestions(hotels);
-        setShowLocationDropdown(true);
+        // Merge instant local suggestions with API results (deduplicate)
+        const instant = getInstantSuggestions(queryTerm);
+
+        const seenLocs = new Set();
+        const mergedLocs = [];
+        for (const loc of [...instant.locations, ...apiLocs]) {
+          const key = (loc.destinationCode || loc.code || loc.city || loc.name || '').toLowerCase();
+          if (key && !seenLocs.has(key)) {
+            seenLocs.add(key);
+            mergedLocs.push(loc);
+          }
+        }
+
+        const seenHotels = new Set();
+        const mergedHotels = [];
+        for (const hotel of [...instant.hotels, ...apiHotels]) {
+          const key = (hotel.code ? `code-${hotel.code}` : (hotel.name || '')).toLowerCase();
+          if (key && !seenHotels.has(key)) {
+            seenHotels.add(key);
+            mergedHotels.push(hotel);
+          }
+        }
+
+        if (!isSelectingRef.current) {
+          setFilteredLocations(mergedLocs);
+          setHotelSuggestions(mergedHotels);
+          setShowLocationDropdown(true);
+        }
       } catch (err) {
         console.warn('Search error:', err.message);
       } finally {
@@ -1126,13 +1159,18 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark', i
   }, []);
 
   const handleLocationSelect = (location) => {
+    isSelectingRef.current = true;
     setSelectedLocation(location);
     setSelectedHotelCode(null);
-    setSearchQuery(location.displayName || location.name);
+    const label = location.displayName || (location.country ? `${location.name || location.city}, ${location.country}` : (location.name || location.city));
+    setSearchQuery(label);
     setShowLocationDropdown(false);
+    setFilteredLocations([]);
+    setHotelSuggestions([]);
   };
 
   const handleHotelSelect = (hotel) => {
+    isSelectingRef.current = true;
     setSelectedHotelCode(hotel.code);
     setSelectedLocation({
       type: 'hotel',
@@ -1145,14 +1183,25 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark', i
     });
     setSearchQuery(hotel.name);
     setShowLocationDropdown(false);
+    setFilteredLocations([]);
+    setHotelSuggestions([]);
   };
 
   const handleSearchInputChange = (e) => {
-    setSearchQuery(e.target.value);
-    setShowLocationDropdown(true);
-    if (e.target.value.trim() === '') {
+    const val = e.target.value;
+    isSelectingRef.current = false;
+    setSearchQuery(val);
+    if (val.trim() === '') {
       setSelectedLocation(null);
       setSelectedHotelCode(null);
+      setFilteredLocations([]);
+      setHotelSuggestions([]);
+      setShowLocationDropdown(false);
+    } else {
+      const instant = getInstantSuggestions(val);
+      setFilteredLocations(instant.locations);
+      setHotelSuggestions(instant.hotels);
+      setShowLocationDropdown(true);
     }
   };
 
@@ -1261,13 +1310,13 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark', i
           {activeTab === 'stays' && (
             <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
               {/* Option 1 Unified 3-Column Single-Row Grid on Desktop */}
-              <div className="grid grid-cols-1 md:grid-cols-12 gap-2.5 sm:gap-3 relative items-end">
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-2.5 sm:gap-3 relative items-start">
                 {/* Field 1: Unified Destination or Hotel Search Field (5 columns) */}
                 <div className="md:col-span-5 relative" ref={locationRef}>
-                  <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-gray-500 mb-1 text-left">
+                  <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-gray-500 mb-1.5 text-left h-4 leading-4">
                     Destination or Hotel Name <span className="text-red-500">*</span>
                   </label>
-                  <div className={`flex items-center w-full border bg-white rounded-xl focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent px-3 py-2.5 sm:py-3 gap-2 ${
+                  <div className={`flex items-center w-full h-[50px] sm:h-[52px] border bg-white rounded-xl focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent px-3 gap-2 transition-all ${
                     selectedHotelCode
                       ? 'border-emerald-400 bg-emerald-50/20'
                       : selectedLocation
@@ -1275,51 +1324,64 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark', i
                       : 'border-gray-200 hover:border-gray-300'
                   }`}>
                     {selectedHotelCode ? (
-                      <Building2 className="flex-shrink-0 text-emerald-600" size={18} />
+                      <AnimatedIcon name="hotel" animation="pulse" size={18} className="text-emerald-600 shrink-0" />
                     ) : (
-                      <MapPin className={`flex-shrink-0 ${selectedLocation ? 'text-blue-600' : 'text-gray-400'}`} size={18} />
+                      <MapPin className={`shrink-0 ${selectedLocation ? 'text-blue-600' : 'text-gray-400'}`} size={18} />
                     )}
                     <input
                       type="text"
                       value={searchQuery}
                       onChange={handleSearchInputChange}
-                      onFocus={() => { if (filteredLocations.length > 0 || hotelSuggestions.length > 0) setShowLocationDropdown(true); }}
+                      onFocus={() => {
+                        if (!selectedLocation && (filteredLocations.length > 0 || hotelSuggestions.length > 0)) {
+                          setShowLocationDropdown(true);
+                        } else if (!selectedLocation && searchQuery.trim().length >= 1) {
+                          const instant = getInstantSuggestions(searchQuery);
+                          setFilteredLocations(instant.locations);
+                          setHotelSuggestions(instant.hotels);
+                          setShowLocationDropdown(true);
+                        }
+                      }}
                       placeholder="e.g. Dubai, Atlantis The Palm..."
                       className="flex-1 min-w-0 border-0 border-none outline-none focus:outline-none focus:ring-0 focus:border-0 shadow-none bg-transparent text-gray-800 text-xs sm:text-sm font-bold placeholder-gray-400"
                     />
+
+                    {/* Integrated Pill Badge Inside Field */}
+                    {selectedHotelCode && (
+                      <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full shrink-0 border-0">
+                        Hotel
+                      </span>
+                    )}
+                    {!selectedHotelCode && selectedLocation && (
+                      <span className="text-[10px] bg-blue-100 text-blue-800 font-bold px-2 py-0.5 rounded-full shrink-0 border-0">
+                        City
+                      </span>
+                    )}
+
                     {searchQuery && (
                       <button
                         type="button"
                         onClick={() => {
+                          isSelectingRef.current = false;
                           setSearchQuery('');
                           setSelectedLocation(null);
                           setSelectedHotelCode(null);
                           setFilteredLocations([]);
                           setHotelSuggestions([]);
+                          setShowLocationDropdown(false);
                         }}
-                        className="text-gray-400 hover:text-gray-600 flex-shrink-0 cursor-pointer"
+                        className="text-gray-400 hover:text-gray-600 shrink-0 cursor-pointer p-1"
+                        aria-label="Clear destination"
                       >
                         <X size={16} />
                       </button>
                     )}
                   </div>
 
-                  {/* Selected Status Indicator */}
-                  {selectedHotelCode && (
-                    <p className="text-[10px] text-emerald-600 mt-0.5 px-1 flex items-center gap-1 font-semibold">
-                      <AnimatedIcon name="hotel" animation="pulse" size={13} className="text-emerald-600 inline mr-0.5" /> Hotel: {searchQuery}
-                    </p>
-                  )}
-                  {!selectedHotelCode && selectedLocation && (
-                    <p className="text-[10px] text-blue-600 mt-0.5 px-1 flex items-center gap-1 font-semibold">
-                      <AnimatedIcon name="pin" animation="bounce" size={13} className="text-blue-600 inline mr-0.5" /> City: {selectedLocation.name || selectedLocation.city}
-                    </p>
-                  )}
-
                   {/* Unified Dropdown with Grouped Results */}
-                  {showLocationDropdown && searchQuery.trim().length >= 2 && (
-                    <div className="absolute left-0 right-0 top-full mt-1 z-[220] bg-white border border-gray-200 rounded-2xl shadow-2xl max-h-[60vh] overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
-                      {isLoadingLocations ? (
+                  {showLocationDropdown && searchQuery.trim().length >= 1 && (
+                    <div className="absolute left-0 right-0 top-full mt-1.5 z-[220] bg-white border border-gray-200 rounded-2xl shadow-2xl max-h-[60vh] overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
+                      {isLoadingLocations && (filteredLocations.length === 0 && hotelSuggestions.length === 0) ? (
                         <div className="p-4 text-center text-gray-400 text-sm flex items-center justify-center gap-2">
                           <span className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
                           <span>Searching destinations and hotels...</span>
@@ -1329,7 +1391,7 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark', i
                           {/* Section 1: Destinations */}
                           {filteredLocations.filter(l => l.type !== 'hotel').length > 0 && (
                             <div>
-                              <div className="px-3 pt-2.5 pb-1 text-[11px] font-bold text-gray-500 uppercase tracking-wider bg-gray-50/80 border-b border-gray-100 flex items-center gap-1.5">
+                              <div className="px-3.5 pt-2.5 pb-1 text-[11px] font-bold text-gray-500 uppercase tracking-wider bg-gray-50/90 border-b border-gray-100 flex items-center gap-1.5 sticky top-0 z-10">
                                 <MapPin size={13} className="text-blue-600" />
                                 <span>Destinations & Cities</span>
                               </div>
@@ -1339,12 +1401,14 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark', i
                                   onClick={() => handleLocationSelect(location)}
                                   className="px-3.5 py-2.5 hover:bg-blue-50 cursor-pointer transition-colors flex items-center gap-2.5 border-b border-gray-50 last:border-0"
                                 >
-                                  <MapPin size={16} className="text-blue-500 flex-shrink-0" />
+                                  <MapPin size={16} className="text-blue-500 shrink-0" />
                                   <div className="min-w-0 flex-1">
                                     <div className="text-[13px] font-semibold text-gray-800 truncate">{location.city || location.name}</div>
-                                    <div className="text-[11px] text-gray-400 truncate">{location.type === 'country' ? 'Country' : `${location.country || ''}${location.destinationCode ? ` · ${location.destinationCode}` : ''}`}</div>
+                                    <div className="text-[11px] text-gray-400 truncate">
+                                      {location.type === 'country' ? 'Country' : `${location.country || ''}${location.destinationCode ? ` · ${location.destinationCode}` : ''}`}
+                                    </div>
                                   </div>
-                                  <span className="text-[10px] bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full font-medium">City</span>
+                                  <span className="text-[10px] bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full font-bold border-0">City</span>
                                 </div>
                               ))}
                             </div>
@@ -1353,25 +1417,25 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark', i
                           {/* Section 2: Hotels */}
                           {(hotelSuggestions.length > 0 || filteredLocations.filter(l => l.type === 'hotel').length > 0) && (
                             <div>
-                              <div className="px-3 pt-2.5 pb-1 text-[11px] font-bold text-gray-500 uppercase tracking-wider bg-gray-50/80 border-b border-gray-100 flex items-center gap-1.5">
+                              <div className="px-3.5 pt-2.5 pb-1 text-[11px] font-bold text-gray-500 uppercase tracking-wider bg-gray-50/90 border-b border-gray-100 flex items-center gap-1.5 sticky top-0 z-10">
                                 <Building2 size={13} className="text-emerald-600" />
                                 <span>Hotels & Properties</span>
                               </div>
-                              {/* MongoDB/Cache Hotels */}
+                              {/* MongoDB/Cache/Instant Hotels */}
                               {hotelSuggestions.map((hotel, idx) => (
                                 <div
                                   key={`h-${idx}`}
                                   onClick={() => handleHotelSelect(hotel)}
                                   className="px-3.5 py-2.5 hover:bg-emerald-50 cursor-pointer transition-colors flex items-center gap-2.5 border-b border-gray-50 last:border-0"
                                 >
-                                  <Building2 size={16} className="text-emerald-600 flex-shrink-0" />
+                                  <Building2 size={16} className="text-emerald-600 shrink-0" />
                                   <div className="min-w-0 flex-1">
                                     <div className="text-[13px] font-semibold text-gray-800 truncate">{hotel.name}</div>
                                     <div className="text-[11px] text-gray-400 truncate">
                                       {hotel.zoneName || hotel.destinationName || ''} {hotel.countryCode ? `· ${hotel.countryCode}` : ''}
                                     </div>
                                   </div>
-                                  <span className="text-[10px] bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full font-medium">Hotel</span>
+                                  <span className="text-[10px] bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full font-bold border-0">Hotel</span>
                                 </div>
                               ))}
                               {/* Locations API Hotels */}
@@ -1381,14 +1445,14 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark', i
                                   onClick={() => handleHotelSelect(hotel)}
                                   className="px-3.5 py-2.5 hover:bg-emerald-50 cursor-pointer transition-colors flex items-center gap-2.5 border-b border-gray-50 last:border-0"
                                 >
-                                  <Building2 size={16} className="text-emerald-600 flex-shrink-0" />
+                                  <Building2 size={16} className="text-emerald-600 shrink-0" />
                                   <div className="min-w-0 flex-1">
                                     <div className="text-[13px] font-semibold text-gray-800 truncate">{hotel.name}</div>
                                     <div className="text-[11px] text-gray-400 truncate">
                                       {hotel.city || hotel.destinationCode || ''} {hotel.countryCode ? `· ${hotel.countryCode}` : ''}
                                     </div>
                                   </div>
-                                  <span className="text-[10px] bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full font-medium">Hotel</span>
+                                  <span className="text-[10px] bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full font-bold border-0">Hotel</span>
                                 </div>
                               ))}
                             </div>
@@ -1405,19 +1469,19 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark', i
 
                 {/* Field 2: Date Range Picker (4 columns) */}
                 <div className="md:col-span-4 relative" ref={calendarRef}>
-                  <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-gray-500 mb-1 text-left">
+                  <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-gray-500 mb-1.5 text-left h-4 leading-4">
                     Dates <span className="text-red-500">*</span>
                   </label>
                   <div
                     onClick={() => setShowCalendar(!showCalendar)}
-                    className="flex items-center w-full px-3 py-2.5 sm:py-3 border border-gray-200 hover:border-gray-300 bg-white rounded-xl cursor-pointer hover:border-blue-400 transition-all"
+                    className="flex items-center w-full h-[50px] sm:h-[52px] px-3 border border-gray-200 hover:border-gray-300 bg-white rounded-xl cursor-pointer hover:border-blue-400 transition-all"
                   >
-                    <Calendar className="text-blue-600 mr-2 flex-shrink-0" size={18} />
+                    <Calendar className="text-blue-600 mr-2 shrink-0" size={18} />
                     <span className="text-gray-800 font-bold flex-1 text-xs sm:text-sm truncate">
                       <span className="hidden sm:inline">{format(dateRange[0].startDate, 'MMM dd, yyyy')} - {format(dateRange[0].endDate, 'MMM dd, yyyy')}</span>
                       <span className="sm:hidden">{format(dateRange[0].startDate, 'MMM dd')} - {format(dateRange[0].endDate, 'MMM dd')}</span>
                     </span>
-                    <span className="text-[11px] font-bold text-blue-600 ml-1.5 flex-shrink-0 bg-blue-50 px-1.5 py-0.5 rounded-md">
+                    <span className="text-[11px] font-bold text-blue-600 ml-1.5 shrink-0 bg-blue-50 px-1.5 py-0.5 rounded-md border-0">
                       {calculateNights()}n
                     </span>
                   </div>
@@ -1460,18 +1524,18 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark', i
 
                 {/* Field 3: Travellers Dropdown (3 columns) */}
                 <div className="md:col-span-3 relative" ref={travellerRef}>
-                  <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-gray-500 mb-1 text-left">
+                  <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-gray-500 mb-1.5 text-left h-4 leading-4">
                     Travellers & Rooms <span className="text-red-500">*</span>
                   </label>
                   <div
                     onClick={() => setShowTravellerDropdown(!showTravellerDropdown)}
-                    className="flex items-center w-full px-3 py-2.5 sm:py-3 border border-gray-200 hover:border-gray-300 bg-white rounded-xl cursor-pointer hover:border-blue-400 transition-all"
+                    className="flex items-center w-full h-[50px] sm:h-[52px] px-3 border border-gray-200 hover:border-gray-300 bg-white rounded-xl cursor-pointer hover:border-blue-400 transition-all"
                   >
-                    <Users className="text-blue-600 mr-2 flex-shrink-0" size={18} />
+                    <Users className="text-blue-600 mr-2 shrink-0" size={18} />
                     <span className="text-gray-800 font-bold flex-1 text-xs sm:text-sm truncate">
                       {getTravellerSummary()}
                     </span>
-                    <ChevronDown className="text-gray-400 flex-shrink-0" size={16} />
+                    <ChevronDown className="text-gray-400 shrink-0" size={16} />
                   </div>
 
                   {showTravellerDropdown && createPortal(
@@ -1550,20 +1614,20 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark', i
               {/* Lower Action Row: Reassurances & Search Button (Eliminates Left Negative Space) */}
               <div className="mt-3.5 pt-3 border-t border-gray-100 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
                 <div className="flex flex-wrap items-center gap-2 text-xs">
-                  <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 font-bold border border-emerald-100 text-[11px]">
+                  <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-800 font-bold border-0 text-[11px]">
                     <CheckCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                     <span>Instant Confirmation</span>
                   </span>
-                  <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-800 font-bold border border-blue-100 text-[11px]">
+                  <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 text-blue-800 font-bold border-0 text-[11px]">
                     <ShieldCheck className="w-3.5 h-3.5 text-blue-600 shrink-0" />
                     <span>Free Cancellation Available</span>
                   </span>
-                  <label className="w-auto inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-900 font-bold border border-amber-200 text-[11px] cursor-pointer hover:bg-amber-100/70 transition-colors">
+                  <label className="w-auto inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-50 text-amber-900 font-bold border-0 text-[11px] cursor-pointer hover:bg-amber-100/70 transition-colors">
                     <input
                       type="checkbox"
                       checked={luxuryOnly}
                       onChange={(e) => setLuxuryOnly(e.target.checked)}
-                      className="rounded text-amber-600 focus:ring-amber-500 w-3.5 h-3.5 cursor-pointer"
+                      className="rounded text-amber-600 focus:ring-amber-500 w-3.5 h-3.5 cursor-pointer border-gray-300"
                     />
                     <AnimatedIcon name="crown" animation="pulse" size={13} className="text-amber-600 shrink-0" />
                     <span className="inline-flex items-center gap-1">Luxury Collection 5<AnimatedIcon name="star" animation="pulse" size={11} className="text-amber-500" /></span>
@@ -1612,9 +1676,13 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark', i
                   key={idx}
                   type="button"
                   onClick={() => {
+                    isSelectingRef.current = true;
                     setSearchQuery(dest.name);
                     setSelectedLocation({ name: dest.name, city: dest.city, destinationCode: dest.destinationCode });
                     setSelectedHotelCode(null);
+                    setShowLocationDropdown(false);
+                    setFilteredLocations([]);
+                    setHotelSuggestions([]);
                   }}
                   className="text-xs font-bold text-white/90 bg-white/10 hover:bg-white/20 active:bg-blue-600 px-3 py-1 rounded-full border border-white/15 backdrop-blur-md transition-all cursor-pointer flex items-center gap-1"
                 >

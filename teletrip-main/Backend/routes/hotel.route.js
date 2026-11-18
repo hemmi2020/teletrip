@@ -59,9 +59,11 @@ router.get('/hotels/search-by-name', async (req, res) => {
         }
 
         const query = {};
+        const safeQ = q.trim().replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+        const primaryTerm = q.split(',')[0].trim().replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
 
         // Text search on name
-        query.name = { $regex: q, $options: 'i' };
+        query.name = { $regex: primaryTerm || safeQ, $options: 'i' };
 
         // Optional destination filter (by code or by city/destination name)
         if (destination) {

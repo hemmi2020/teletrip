@@ -291,7 +291,9 @@ exports.searchLocations = async (req, res) => {
     }
 
     const query = q.toLowerCase().trim();
-    const aliasQuery = CITY_ALIASES[query] || null;
+    const primaryTerm = query.split(',')[0].trim();
+    const queryTokens = query.split(/[\s,]+/).filter(t => t.length > 1);
+    const aliasQuery = CITY_ALIASES[query] || CITY_ALIASES[primaryTerm] || null;
     const results = [];
     const seen = new Set();
 
@@ -300,17 +302,23 @@ exports.searchLocations = async (req, res) => {
     // 1. Search through Hotelbeds master destinations (7,423 real worldwide cities/destinations)
     if (destinations && destinations.length > 0) {
       for (const dest of destinations) {
-        const destNameLower = dest.name.toLowerCase();
+        const destNameLower = (dest.name || '').toLowerCase();
         const countryNameLower = (dest.country || '').toLowerCase();
         const codeLower = (dest.code || '').toLowerCase();
+        const fullDisplayLower = `${destNameLower}, ${countryNameLower}`;
 
         const matchesCity = destNameLower.startsWith(query) || 
                             destNameLower.includes(query) || 
                             codeLower === query ||
+                            codeLower === primaryTerm ||
+                            fullDisplayLower.includes(query) ||
+                            (primaryTerm.length >= 2 && destNameLower.includes(primaryTerm)) ||
+                            (queryTokens.length > 1 && queryTokens.every(tok => destNameLower.includes(tok) || countryNameLower.includes(tok))) ||
                             (aliasQuery && (destNameLower.startsWith(aliasQuery) || destNameLower.includes(aliasQuery)));
 
         const matchesCountry = countryNameLower.startsWith(query) || 
                                countryNameLower === query ||
+                               countryNameLower.includes(query) ||
                                (aliasQuery && countryNameLower === aliasQuery);
 
         if (matchesCity) {
@@ -370,11 +378,12 @@ exports.searchLocations = async (req, res) => {
     // 3. Search hotels from HotelIndex for unified search
     try {
       const HotelIndex = require('../models/hotelIndex.model');
+      const safeTerm = (primaryTerm || query).replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
       const hotels = await HotelIndex.find({
-        name: { $regex: query, $options: 'i' }
+        name: { $regex: safeTerm, $options: 'i' }
       })
       .select('code name destinationCode destinationName countryCode zoneName')
-      .limit(12)
+      .limit(16)
       .lean();
 
       if (hotels && hotels.length > 0) {

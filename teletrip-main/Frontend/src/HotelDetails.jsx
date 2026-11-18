@@ -666,7 +666,7 @@ const HotelDetails = () => {
               </h4>
               <div className="flex flex-wrap gap-1.5">
                 {hotel.roomPaidFacilities.map((f, i) => (
-                  <span key={`rpaid-${i}`} className="text-xs px-2.5 py-1 bg-amber-100 text-amber-900 border border-amber-200 rounded-full font-medium">
+                  <span key={`rpaid-${i}`} className="text-xs px-2.5 py-1 bg-amber-100 text-amber-900 border-0 rounded-full font-medium">
                     {f.description}{f.roomName ? ` (${f.roomName})` : ''}
                     <span className="ml-1 text-[10px] text-amber-700 font-bold uppercase">(Extra Fee)</span>
                   </span>

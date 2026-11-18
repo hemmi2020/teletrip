@@ -404,15 +404,15 @@ export default function HeroSearchLab() {
                 {/* Lower Action Row: Reassurances & Search Button (Eliminates Left Negative Space) */}
                 <div className="mt-3.5 pt-3 border-t border-gray-100 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
                   <div className="flex flex-wrap items-center gap-2 text-xs">
-                    <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 font-bold border border-emerald-100 text-[11px]">
+                    <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-800 font-bold border-0 text-[11px]">
                       <CheckCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                       <span>Instant Confirmation</span>
                     </span>
-                    <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-800 font-bold border border-blue-100 text-[11px]">
+                    <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 text-blue-800 font-bold border-0 text-[11px]">
                       <ShieldCheck className="w-3.5 h-3.5 text-blue-600 shrink-0" />
                       <span>Free Cancellation Available</span>
                     </span>
-                    <label className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-900 font-bold border border-amber-200 text-[11px] cursor-pointer hover:bg-amber-100/70 transition-colors">
+                    <label className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-50 text-amber-900 font-bold border-0 text-[11px] cursor-pointer hover:bg-amber-100/70 transition-colors">
                       <input
                         type="checkbox"
                         checked={luxuryOnly}
@@ -617,7 +617,7 @@ export default function HeroSearchLab() {
                     <h3 className="text-base font-extrabold text-gray-900 flex items-center gap-2">
                       <Building2 className="w-4 h-4 text-blue-600 gg-anim-pulse" />
                       <span>Find Deals for Any Season</span>
-                      <span className="text-[10px] bg-amber-100 text-amber-900 font-bold px-2 py-0.5 rounded-full border border-amber-200">
+                      <span className="text-[10px] bg-amber-100 text-amber-900 font-bold px-2 py-0.5 rounded-full border-0">
                         Price Match Guarantee
                       </span>
                     </h3>
