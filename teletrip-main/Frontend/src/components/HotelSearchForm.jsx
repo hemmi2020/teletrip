@@ -262,7 +262,7 @@ const TransfersTab = ({ variant = 'dark' }) => {
               onFocus={() => setShowPickupDropdown(true)}
               placeholder="Airport, hotel or area, e.g. DXB"
               required
-              className="flex-1 min-w-0 outline-none bg-transparent text-gray-800 text-xs sm:text-sm font-bold placeholder-gray-400"
+              className="flex-1 min-w-0 border-0 border-none outline-none focus:outline-none focus:ring-0 focus:border-0 shadow-none bg-transparent text-gray-800 text-xs sm:text-sm font-bold placeholder-gray-400"
             />
             {pickupQuery && (
               <button
@@ -347,7 +347,7 @@ const TransfersTab = ({ variant = 'dark' }) => {
               onFocus={() => setShowDropoffDropdown(true)}
               placeholder="Airport, hotel or area, e.g. Marina"
               required
-              className="flex-1 min-w-0 outline-none bg-transparent text-gray-800 text-xs sm:text-sm font-bold placeholder-gray-400"
+              className="flex-1 min-w-0 border-0 border-none outline-none focus:outline-none focus:ring-0 focus:border-0 shadow-none bg-transparent text-gray-800 text-xs sm:text-sm font-bold placeholder-gray-400"
             />
             {dropoffQuery && (
               <button
@@ -662,7 +662,7 @@ const ExperiencesTab = ({ variant = 'dark' }) => {
               }}
               onFocus={() => setShowLocationDropdown(true)}
               placeholder="Where are you going? e.g: Dubai, Paris"
-              className="flex-1 min-w-0 outline-none bg-transparent text-gray-800 text-xs sm:text-sm font-bold placeholder-gray-400"
+              className="flex-1 min-w-0 border-0 border-none outline-none focus:outline-none focus:ring-0 focus:border-0 shadow-none bg-transparent text-gray-800 text-xs sm:text-sm font-bold placeholder-gray-400"
               required
             />
             {searchQuery && (
@@ -1285,7 +1285,7 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark', i
                       onChange={handleSearchInputChange}
                       onFocus={() => { if (filteredLocations.length > 0 || hotelSuggestions.length > 0) setShowLocationDropdown(true); }}
                       placeholder="e.g. Dubai, Atlantis The Palm..."
-                      className="flex-1 min-w-0 outline-none bg-transparent text-gray-800 text-xs sm:text-sm font-bold placeholder-gray-400"
+                      className="flex-1 min-w-0 border-0 border-none outline-none focus:outline-none focus:ring-0 focus:border-0 shadow-none bg-transparent text-gray-800 text-xs sm:text-sm font-bold placeholder-gray-400"
                     />
                     {searchQuery && (
                       <button
@@ -1558,7 +1558,7 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark', i
                     <ShieldCheck className="w-3.5 h-3.5 text-blue-600 shrink-0" />
                     <span>Free Cancellation Available</span>
                   </span>
-                  <label className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-900 font-bold border border-amber-200 text-[11px] cursor-pointer hover:bg-amber-100/70 transition-colors">
+                  <label className="w-auto inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-900 font-bold border border-amber-200 text-[11px] cursor-pointer hover:bg-amber-100/70 transition-colors">
                     <input
                       type="checkbox"
                       checked={luxuryOnly}
