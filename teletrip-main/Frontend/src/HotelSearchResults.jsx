@@ -2050,12 +2050,12 @@ const HotelSearchResults = () => {
 
                 const hotelImage = hotel.thumbnail || (hotel.images && hotel.images[0]?.path ? `https://photos.hotelbeds.com/giata/original/${hotel.images[0].path.replace(/^\/+/, '')}` : "https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg");
 
-                {/* ── 2-COLUMN THUMBNAIL VIEW ── */}
+                {/* ── 2-COLUMN THUMBNAIL VIEW (BENTO GRID CARD) ── */}
                 if (viewMode === 'thumbnail') {
                   return (
                     <div
                       key={hotel.id}
-                      className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between group border-0"
+                      className="bento-card bg-white rounded-2xl overflow-hidden flex flex-col justify-between group"
                     >
                       <div>
                         {/* Image with Aspect Ratio & Badges */}
@@ -2076,17 +2076,17 @@ const HotelSearchResults = () => {
                               }
                             }}
                           />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent pointer-events-none" />
 
                           {/* Top Badge (clean, single badge) */}
-                          <div className="absolute top-2 left-2 flex items-start">
+                          <div className="absolute top-2 left-2 flex items-start pointer-events-none">
                             {(hotel.isLuxuryCollection || hotel.stars >= 5 || hotel.establishmentProfiles?.includes('119')) ? (
-                              <span className="px-2 py-0.5 rounded-lg text-[9px] sm:text-[10px] font-black bg-black/75 backdrop-blur-md text-amber-300 shadow-xs flex items-center gap-1 border-0">
+                              <span className="px-2 py-0.5 rounded-lg text-[9px] sm:text-[10px] font-black bg-black/75 backdrop-blur-md text-amber-300 shadow-xs flex items-center gap-1">
                                 <AnimatedIcon name="crown" animation="pulse" size={11} className="text-amber-300" />
                                 <span className="hidden sm:inline">Luxury</span>
                               </span>
                             ) : (hotel.promos?.length > 0 || hotel.discounts?.length > 0) ? (
-                              <span className="px-2 py-0.5 rounded-lg text-[9px] sm:text-[10px] font-bold bg-amber-500/90 backdrop-blur-md text-white shadow-xs flex items-center gap-1 border-0">
+                              <span className="px-2 py-0.5 rounded-lg text-[9px] sm:text-[10px] font-bold bg-amber-500/90 backdrop-blur-md text-white shadow-xs flex items-center gap-1">
                                 <Tag className="w-2.5 h-2.5" />
                                 <span className="truncate max-w-[85px]">{hotel.promos?.[0] || 'Offer'}</span>
                               </span>
@@ -2094,7 +2094,7 @@ const HotelSearchResults = () => {
                           </div>
 
                           {/* Bottom Stars Overlay */}
-                          <div className="absolute bottom-1.5 sm:bottom-2 left-2 right-2 flex items-center justify-between text-white">
+                          <div className="absolute bottom-1.5 sm:bottom-2 left-2 right-2 flex items-center justify-between text-white pointer-events-none">
                             <div className="flex text-amber-300">
                               {[...Array(hotel.stars || 4)].map((_, i) => (
                                 <Star key={i} className="w-2.5 sm:w-3 h-2.5 sm:h-3 fill-current" />
@@ -2182,14 +2182,14 @@ const HotelSearchResults = () => {
                   );
                 }
 
-                {/* ── OPTION A: SLEEK MODERN HORIZONTAL LIST VIEW ── */}
+                {/* ── OPTION A: SLEEK MODERN HORIZONTAL LIST VIEW (BENTO ROW) ── */}
                 return (
                   <div
                     key={hotel.id}
-                    className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col md:flex-row group border-0"
+                    className="bento-card bg-white rounded-2xl overflow-hidden flex flex-row group"
                   >
-                    {/* Left: High-Res Image with Luxury Badge */}
-                    <div className="md:w-72 relative h-48 md:h-auto overflow-hidden shrink-0">
+                    {/* Left: Small Thumbnail on Mobile, Wide on Desktop */}
+                    <div className="w-28 sm:w-36 md:w-72 relative shrink-0 overflow-hidden bg-gray-100 self-stretch min-h-[145px] sm:min-h-[160px] md:min-h-0">
                       <img
                         loading="lazy"
                         src={hotelImage}
@@ -2206,64 +2206,68 @@ const HotelSearchResults = () => {
                           }
                         }}
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent md:hidden" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent md:hidden pointer-events-none" />
 
-                      {/* Badge on Image: Single discreet, elegant badge */}
-                      <div className="absolute top-2.5 left-2.5 flex items-start">
+                      {/* Badge on Image: Luxury or Offer */}
+                      <div className="absolute top-1.5 sm:top-2.5 left-1.5 sm:left-2.5 flex items-start pointer-events-none">
                         {(hotel.isLuxuryCollection || hotel.stars >= 5 || hotel.establishmentProfiles?.includes('119')) ? (
-                          <span className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-black/70 backdrop-blur-md text-amber-300 border-0 shadow-md flex items-center gap-1.5">
-                            <AnimatedIcon name="crown" animation="pulse" size={12} className="text-amber-400" />
-                            <span>Luxury Collection</span>
+                          <span className="px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-md sm:rounded-lg text-[8px] sm:text-[10px] font-bold bg-black/75 backdrop-blur-md text-amber-300 shadow-md flex items-center gap-1 sm:gap-1.5">
+                            <AnimatedIcon name="crown" animation="pulse" size={11} className="text-amber-300" />
+                            <span className="hidden xs:inline sm:inline">Luxury</span>
                           </span>
                         ) : (hotel.promos?.length > 0 || hotel.discounts?.length > 0) ? (
-                          <span className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-amber-500/90 backdrop-blur-md text-white border-0 shadow-md flex items-center gap-1.5">
-                            <Tag className="w-3 h-3" />
-                            <span>{hotel.promos?.[0] || 'Special Offer'}</span>
+                          <span className="px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-md sm:rounded-lg text-[8px] sm:text-[10px] font-bold bg-amber-500/90 backdrop-blur-md text-white shadow-md flex items-center gap-1">
+                            <Tag className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                            <span className="truncate max-w-[70px] sm:max-w-none">{hotel.promos?.[0] || 'Offer'}</span>
                           </span>
                         ) : null}
                       </div>
 
+                      {/* Review score badge overlay on mobile thumbnail bottom */}
                       {hotelReviews[hotel.id] && hotelReviews[hotel.id].rating && (
-                        <span className="absolute bottom-2.5 right-2.5 bg-black/70 backdrop-blur-md text-white text-[10px] px-2 py-0.5 rounded-md font-semibold md:hidden inline-flex items-center gap-1">
-                          <AnimatedIcon name="star" animation="pulse" size={10} className="text-amber-400" /> {Number(hotelReviews[hotel.id].rating).toFixed(1)} ({hotelReviews[hotel.id].numReviews || 0})
+                        <span className="absolute bottom-1.5 sm:bottom-2 left-1.5 sm:left-2 bg-black/75 backdrop-blur-md text-white text-[8px] sm:text-[10px] px-1.5 py-0.5 rounded-md font-bold md:hidden inline-flex items-center gap-0.5 shadow-xs">
+                          <AnimatedIcon name="star" animation="pulse" size={9} className="text-amber-400" /> {Number(hotelReviews[hotel.id].rating).toFixed(1)}
                         </span>
                       )}
                     </div>
 
-                    {/* Center: Details & Credentials */}
-                    <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between min-w-0">
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2 flex-wrap">
+                    {/* Center Details: Mobile Rest of Area / Desktop Center Column */}
+                    <div className="p-2.5 sm:p-4 md:p-5 flex-1 min-w-0 flex flex-col justify-between">
+                      <div className="space-y-1 sm:space-y-1.5">
+                        {/* Stars + Rating / Zone */}
+                        <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
                           <div className="flex text-amber-400">
                             {[...Array(hotel.stars || 4)].map((_, i) => (
-                              <Star key={i} className="w-3.5 h-3.5 fill-current" />
+                              <Star key={i} className="w-2.5 sm:w-3.5 h-2.5 sm:h-3.5 fill-current" />
                             ))}
                           </div>
-                          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                          <span className="text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wider">
                             {hotel.stars >= 5 ? '5-Star Luxury' : `${hotel.stars || 4}-Star Hotel`}
                           </span>
                           {(hotel.zoneName || hotel.city) && (
                             <>
                               <span className="text-gray-300 hidden sm:inline">·</span>
-                              <span className="text-xs text-blue-600 font-bold bg-blue-50 px-2 py-0.5 rounded-md hidden sm:inline">
+                              <span className="text-[10px] sm:text-xs text-blue-600 font-bold bg-blue-50 px-1.5 sm:px-2 py-0.5 rounded-md hidden sm:inline">
                                 {hotel.zoneName || hotel.city}
                               </span>
                             </>
                           )}
                         </div>
 
-                        <h2 className="text-base sm:text-lg font-extrabold text-gray-900 group-hover:text-blue-600 transition-colors leading-snug">
+                        {/* Hotel Name */}
+                        <h2 className="text-xs sm:text-base md:text-lg font-extrabold text-gray-900 group-hover:text-blue-600 transition-colors leading-tight line-clamp-2">
                           {hotel.name}
                         </h2>
 
-                        <div className="flex items-center gap-1.5 text-xs text-gray-500">
-                          <MapPin className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                        {/* Location */}
+                        <div className="flex items-center gap-1 text-[10px] sm:text-xs text-gray-500 truncate">
+                          <MapPin className="w-3 sm:w-3.5 h-3 sm:h-3.5 text-gray-400 shrink-0" />
                           <span className="truncate">{hotel.address}</span>
                         </div>
 
-                        {/* Room types pills */}
+                        {/* Room Types pills (Desktop only) */}
                         {roomTypes.length > 0 && (
-                          <div className="flex gap-1.5 flex-wrap pt-1">
+                          <div className="hidden md:flex gap-1.5 flex-wrap pt-1">
                             {roomTypes.slice(0, 3).map((rt, i) => (
                               <span key={i} className="text-[10px] font-medium px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 truncate max-w-[180px]">
                                 {rt}
@@ -2276,49 +2280,80 @@ const HotelSearchResults = () => {
                             )}
                           </div>
                         )}
-                      </div>
 
-                      <div className="pt-3 mt-3 border-t border-gray-100 flex items-center justify-between gap-3 text-xs flex-wrap">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          {/* Board / Meal Plan */}
-                          <span className="font-semibold text-gray-700 flex items-center gap-1 text-[11px] sm:text-xs bg-gray-100/80 px-2 py-0.5 rounded-md">
-                            <Check className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                        {/* Meal & Cancellation Pills */}
+                        <div className="pt-0.5 sm:pt-1 flex items-center gap-1 sm:gap-2 flex-wrap text-[9px] sm:text-xs">
+                          {/* Board */}
+                          <span className="font-semibold text-gray-700 flex items-center gap-1 text-[9px] sm:text-xs bg-gray-100/80 px-1.5 sm:px-2 py-0.5 rounded-md">
+                            <Check className="w-2.5 sm:w-3.5 h-2.5 sm:h-3.5 text-blue-600 shrink-0" />
                             <span>{hotel.boards?.[0] || 'Room Only'}</span>
                           </span>
 
-                          {/* Cancellation Policy (Clear & Non-Contradictory) */}
+                          {/* Cancellation */}
                           {hotel.hasFreeCancellation ? (
-                            <span className="font-semibold text-emerald-700 flex items-center gap-1 text-[11px] sm:text-xs bg-emerald-50 px-2 py-0.5 rounded-md">
-                              <CheckCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                            <span className="font-semibold text-emerald-700 flex items-center gap-1 text-[9px] sm:text-xs bg-emerald-50 px-1.5 sm:px-2 py-0.5 rounded-md">
+                              <CheckCircle className="w-2.5 sm:w-3.5 h-2.5 sm:h-3.5 text-emerald-600 shrink-0" />
                               <span>Free Cancellation</span>
                             </span>
                           ) : (
-                            <span className="font-medium text-gray-500 flex items-center gap-1 text-[11px] sm:text-xs bg-gray-100/60 px-2 py-0.5 rounded-md">
-                              <AlertCircle className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                            <span className="font-medium text-gray-500 flex items-center gap-1 text-[9px] sm:text-xs bg-gray-100/60 px-1.5 sm:px-2 py-0.5 rounded-md">
+                              <AlertCircle className="w-2.5 sm:w-3.5 h-2.5 sm:h-3.5 text-gray-400 shrink-0" />
                               <span>Non-Refundable</span>
                             </span>
                           )}
 
-                          {/* Real Promotional Offer (if present) */}
+                          {/* Promo offer */}
                           {hotel.promos?.length > 0 && (
-                            <span className="font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md flex items-center gap-1 text-[10px] sm:text-[11px]">
-                              <Tag className="w-3 h-3 text-amber-600 shrink-0" />
-                              <span>{hotel.promos[0]}</span>
+                            <span className="font-bold text-amber-800 bg-amber-50 px-1.5 sm:px-2 py-0.5 rounded-md flex items-center gap-1 text-[9px] sm:text-[11px]">
+                              <Tag className="w-2.5 sm:w-3 h-2.5 sm:h-3 text-amber-600 shrink-0" />
+                              <span className="truncate max-w-[100px]">{hotel.promos[0]}</span>
                             </span>
                           )}
                         </div>
+                      </div>
 
+                      {/* Desktop Inclusions Footer (Border top, room options) */}
+                      <div className="hidden md:flex pt-3 mt-3 border-t border-gray-100 items-center justify-between text-xs text-gray-400 font-medium">
                         {hotel.rooms?.length > 0 && (
-                          <span className="text-[11px] text-gray-400 font-medium">
-                            {hotel.rooms.length} Room Options Available
-                          </span>
+                          <span>{hotel.rooms.length} Room Options Available</span>
                         )}
+                      </div>
+
+                      {/* Mobile-Only Bottom Row: Price on left, View Rooms button on right */}
+                      <div className="flex md:hidden items-end justify-between gap-1.5 pt-2 mt-1.5 border-t border-gray-100">
+                        <div>
+                          <div className="text-xs sm:text-sm font-black text-blue-600 leading-tight">
+                            {hotel.currency || 'AED'} {totalPrice.toFixed(0)}
+                          </div>
+                          {formatPKR(totalPrice, hotel.currency || 'AED', true) && (
+                            <div className="text-[9px] sm:text-[10px] font-bold text-amber-700">
+                              ≈ {formatPKR(totalPrice, hotel.currency || 'AED', true)}
+                            </div>
+                          )}
+                          <div className="text-[8px] sm:text-[9px] text-gray-400">
+                            {hotel.currency || 'AED'} {pricePerNight.toFixed(0)}/n · {nights}n
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setRoomSelections({});
+                            setActiveRoomTab(0);
+                            setSelectedHotel(hotel);
+                          }}
+                          className="px-2.5 sm:px-3 py-1.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-extrabold text-[10px] sm:text-xs rounded-xl shadow-xs flex items-center gap-1 shrink-0 cursor-pointer"
+                        >
+                          <Bed className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                          <span>View Rooms</span>
+                        </button>
                       </div>
                     </div>
 
-                    {/* Right: Transparent Pricing & Primary CTA */}
-                    <div className="p-4 sm:p-5 md:w-56 bg-slate-50/70 border-t md:border-t-0 md:border-l border-gray-100 flex flex-col justify-between shrink-0">
-                      <div className="text-left md:text-right space-y-1">
+                    {/* Right: Transparent Pricing & Primary CTA (Desktop Only) */}
+                    <div className="hidden md:flex p-4 sm:p-5 md:w-56 bg-slate-50/70 border-l border-gray-100 flex-col justify-between shrink-0">
+                      <div className="text-right space-y-1">
                         {hotelReviews[hotel.id] && hotelReviews[hotel.id].numReviews > 0 ? (
                           <button
                             type="button"
@@ -2326,7 +2361,7 @@ const HotelSearchResults = () => {
                               e.stopPropagation();
                               openReviewsModal(hotel);
                             }}
-                            className="flex items-center md:justify-end gap-1.5 cursor-pointer group/rev hover:opacity-80 transition-opacity bg-transparent border-0 p-0 w-full"
+                            className="flex items-center justify-end gap-1.5 cursor-pointer group/rev hover:opacity-80 transition-opacity bg-transparent border-0 p-0 w-full"
                             title="Click to view traveler reviews"
                           >
                             <div className="text-right">
@@ -2348,7 +2383,7 @@ const HotelSearchResults = () => {
                               e.stopPropagation();
                               openReviewsModal(hotel);
                             }}
-                            className="flex items-center md:justify-end gap-1 text-[11px] text-blue-600 hover:underline bg-transparent border-0 p-0 cursor-pointer"
+                            className="flex items-center justify-end gap-1 text-[11px] text-blue-600 hover:underline bg-transparent border-0 p-0 cursor-pointer"
                           >
                             <span>See traveler reviews</span>
                           </button>
