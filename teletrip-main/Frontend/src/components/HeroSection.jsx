@@ -533,6 +533,19 @@ export default function HeroSection() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const handleStartSearchClick = () => {
+    if (activeTab === "stays") {
+      setShowLocationDropdown(true);
+    } else if (activeTab === "transfers") {
+      setShowPickupDropdown(true);
+    } else if (activeTab === "experiences") {
+      setShowExperienceDropdown(true);
+    }
+    if (searchBarRef.current) {
+      searchBarRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  };
+
   // ═══════════════════════════════════════════════════════════════════════════
   // COMPREHENSIVE SEARCH SUBMISSION (Audited from HotelSearchForm.jsx)
   // ═══════════════════════════════════════════════════════════════════════════
@@ -772,7 +785,7 @@ export default function HeroSection() {
   const currentImage = currentTab.images[currentSlide] || currentTab.images[0];
 
   return (
-    <section className="relative w-full h-[100svh] min-h-[580px] max-h-[1050px] overflow-hidden bg-white flex flex-col justify-between pt-16 sm:pt-20 pb-4 sm:pb-6 select-none">
+    <section className="relative w-full h-[100svh] min-h-[580px] max-h-[1050px] overflow-visible bg-white flex flex-col justify-between pt-16 sm:pt-20 pb-4 sm:pb-6 select-none">
       
       {/* ════ BACKGROUND SLIDING IMAGES (Mid-to-Left Fade-to-Zero) ════ */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
@@ -823,19 +836,6 @@ export default function HeroSection() {
               exit={{ opacity: 0, y: -12 }}
               transition={{ duration: 0.35, ease: "easeOut" }}
             >
-              {/* Category Pill Tag */}
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-100/80 mb-3 shadow-xs">
-                <AnimatedIcon
-                  name={currentTab.icon}
-                  animation={currentTab.animation}
-                  size={14}
-                  className="text-blue-600"
-                />
-                <span className="text-[11px] font-bold tracking-wide uppercase text-blue-700">
-                  {currentTab.label} Collection
-                </span>
-              </div>
-
               {/* Dynamic Tagline */}
               <h1 className="text-3xl sm:text-5xl md:text-6xl font-black text-slate-900 tracking-tight leading-[1.08] mb-2 sm:mb-3">
                 {currentTab.headlinePrimary}{" "}
@@ -849,16 +849,15 @@ export default function HeroSection() {
                 {currentTab.subtitle}
               </p>
 
-              {/* Micro Perks */}
-              <div className="flex flex-wrap items-center gap-3 text-[11px] font-bold text-slate-600">
-                <div className="flex items-center gap-1.5 bg-white/90 backdrop-blur-xs px-2.5 py-1 rounded-lg border border-slate-100 shadow-2xs">
-                  <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
-                  <span>Direct Net Wholesale Rates</span>
-                </div>
-                <div className="flex items-center gap-1.5 bg-white/90 backdrop-blur-xs px-2.5 py-1 rounded-lg border border-slate-100 shadow-2xs">
-                  <ShieldCheck className="w-3.5 h-3.5 text-blue-600" />
-                  <span>Instant Voucher Guarantee</span>
-                </div>
+              {/* Action CTA Button */}
+              <div className="pt-1">
+                <button
+                  type="button"
+                  onClick={handleStartSearchClick}
+                  className="inline-flex items-center justify-center px-6 py-2.5 sm:py-3 bg-slate-900 hover:bg-blue-600 text-white rounded-full font-semibold text-xs sm:text-sm transition-all duration-300 shadow-sm hover:shadow-lg cursor-pointer"
+                >
+                  {currentTab.cta}
+                </button>
               </div>
             </motion.div>
           </AnimatePresence>
@@ -867,7 +866,7 @@ export default function HeroSection() {
         {/* ════ BOTTOM BAR: 3 TABS & FLOATING CAPSULE SEARCH BAR ════ */}
         <div
           ref={searchBarRef}
-          className="mt-4 sm:mt-6 mb-2 max-w-5xl relative z-40 w-full search-form-section"
+          className="mt-4 sm:mt-6 mb-2 max-w-5xl relative z-50 w-full search-form-section"
         >
           {/* Transfer Error Alert */}
           {activeTab === "transfers" && transferError && (
@@ -953,7 +952,7 @@ export default function HeroSection() {
 
           {/* ── Floating Capsule Search Bar (Collapses as it approaches header) ── */}
           <div
-            className="rounded-3xl sm:rounded-full p-1.5 sm:p-2 transition-all duration-200 relative z-40 bg-white"
+            className="rounded-3xl sm:rounded-full p-1.5 sm:p-2 transition-all duration-200 relative z-50 bg-white"
             style={{
               backgroundColor: `rgba(255, 255, 255, ${Math.max(0, 1 - collapseProgress)})`,
               boxShadow:
@@ -1051,7 +1050,7 @@ export default function HeroSection() {
                       {/* Dropdown with Grouped Autocomplete Results */}
                       {showLocationDropdown && (
                         <div
-                          className="absolute top-full left-0 mt-3 w-80 sm:w-96 bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.18)] border border-slate-100 z-[120] overflow-hidden divide-y divide-slate-100"
+                          className="absolute top-full left-0 mt-2 sm:mt-3 w-80 sm:w-96 bg-white rounded-2xl shadow-[0_25px_60px_rgba(0,0,0,0.25)] border border-slate-200 z-[200] overflow-hidden divide-y divide-slate-100"
                           style={{ scrollbarWidth: "thin" }}
                         >
                           <div className="p-2.5 bg-slate-50/90 text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center justify-between">
@@ -1231,7 +1230,7 @@ export default function HeroSection() {
 
                       {showPickupDropdown && (filteredPickupLocations.length > 0 || groupedPickup.length > 0 || isLoadingPickup) && (
                         <div
-                          className="absolute top-full left-0 mt-3 w-80 sm:w-96 bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.18)] border border-slate-100 z-[120] overflow-hidden divide-y divide-slate-100"
+                          className="absolute top-full left-0 mt-2 sm:mt-3 w-80 sm:w-96 bg-white rounded-2xl shadow-[0_25px_60px_rgba(0,0,0,0.25)] border border-slate-200 z-[200] overflow-hidden divide-y divide-slate-100"
                           style={{ scrollbarWidth: "thin" }}
                         >
                           <div className="p-2.5 bg-slate-50/90 text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center justify-between">
@@ -1310,7 +1309,7 @@ export default function HeroSection() {
 
                       {showDropoffDropdown && (filteredDropoffLocations.length > 0 || groupedDropoff.length > 0 || isLoadingDropoff) && (
                         <div
-                          className="absolute top-full left-0 sm:-left-20 mt-3 w-80 sm:w-96 bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.18)] border border-slate-100 z-[120] overflow-hidden divide-y divide-slate-100"
+                          className="absolute top-full left-0 sm:-left-20 mt-2 sm:mt-3 w-80 sm:w-96 bg-white rounded-2xl shadow-[0_25px_60px_rgba(0,0,0,0.25)] border border-slate-200 z-[200] overflow-hidden divide-y divide-slate-100"
                           style={{ scrollbarWidth: "thin" }}
                         >
                           <div className="p-2.5 bg-slate-50/90 text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center justify-between">
@@ -1433,7 +1432,7 @@ export default function HeroSection() {
 
                       {showExperienceDropdown && (
                         <div
-                          className="absolute top-full left-0 mt-3 w-80 sm:w-96 bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.18)] border border-slate-100 z-[120] overflow-hidden divide-y divide-slate-100"
+                          className="absolute top-full left-0 mt-2 sm:mt-3 w-80 sm:w-96 bg-white rounded-2xl shadow-[0_25px_60px_rgba(0,0,0,0.25)] border border-slate-200 z-[200] overflow-hidden divide-y divide-slate-100"
                           style={{ scrollbarWidth: "thin" }}
                         >
                           <div className="p-2.5 bg-slate-50/90 text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center justify-between">
