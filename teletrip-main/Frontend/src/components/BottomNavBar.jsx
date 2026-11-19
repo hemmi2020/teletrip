@@ -39,9 +39,13 @@ const BottomNavBar = () => {
       if (isSearchPage) {
         window.dispatchEvent(new CustomEvent("toggleModifySearch"));
       } else if (location.pathname === '/home' || location.pathname === '/') {
-        // On home page — scroll to search form
-        const el = document.querySelector('.search-form-section');
-        if (el) el.scrollIntoView({ behavior: 'smooth' });
+        // On home page: if scrolled down, open floating search modal; otherwise scroll to hero search
+        if (window.scrollY > 200) {
+          window.dispatchEvent(new CustomEvent("openHeaderSearch"));
+        } else {
+          const el = document.querySelector('.search-form-section');
+          if (el) el.scrollIntoView({ behavior: 'smooth' });
+        }
       } else {
         // On any other page — go home and scroll
         navigate('/home');

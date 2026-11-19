@@ -1,10 +1,12 @@
 import React, { useState, useContext, useEffect, useRef } from "react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import logo from "../images/Telitrip-Logo.png";
 import { SlideOutCart, AuthModal, useCart } from './CartSystem';
 import { UserDataContext } from './CartSystem';
 import BottomNavBar from './BottomNavBar';
-import { X, ShoppingCart, Phone, User, LogOut, Globe, MessageSquare } from 'lucide-react';
+import HeaderSearchModal from './HeaderSearchModal';
+import { X, ShoppingCart, Phone, User, LogOut, Globe, MessageSquare, Search } from 'lucide-react';
 
 const Header = () => {
   const navigate = useNavigate();
@@ -12,16 +14,16 @@ const Header = () => {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [isSearchSticky, setIsSearchSticky] = useState(false);
   const { user, setUser } = useContext(UserDataContext);
   const { getTotalItems, items: cartItems, getTotalPrice } = useCart();
 
-  // Listen for search form becoming sticky on the page (replacing header pill)
+  // Listen for open search modal event
   useEffect(() => {
-    const handler = (e) => setIsSearchSticky(Boolean(e.detail?.isSticky));
-    window.addEventListener('heroSearchSticky', handler);
-    return () => window.removeEventListener('heroSearchSticky', handler);
+    const handler = () => setIsSearchModalOpen(true);
+    window.addEventListener('openHeaderSearch', handler);
+    return () => window.removeEventListener('openHeaderSearch', handler);
   }, []);
 
   // Track scroll — pill becomes frosted glass after 60px
@@ -118,29 +120,43 @@ const Header = () => {
           animation: headerPillBounceIn 800ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
         }
       `}</style>
-      <header
-        className={headerClass}
-        style={{
-          transition: 'padding 0.3s ease, opacity 0.3s ease, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
-          opacity: isSearchSticky ? 0 : 1,
-          pointerEvents: isSearchSticky ? 'none' : undefined,
-          transform: isSearchSticky ? 'translateY(-28px) scale(0.96)' : 'translateY(0) scale(1)',
-        }}
-      >
+      <header className={headerClass} style={{ transition: 'padding 0.3s ease' }}>
         <div
           data-testid="header-pill"
           className="header-pill-bounce pointer-events-auto w-full max-w-5xl flex items-center justify-between gap-3 py-2"
-          style={{
-            ...pillStyle,
-            paddingLeft: '20px',
-            paddingRight: '12px',
-            pointerEvents: isSearchSticky ? 'none' : 'auto',
-          }}
+          style={{ ...pillStyle, paddingLeft: '20px', paddingRight: '12px' }}
         >
           {/* Logo — with left padding, full color */}
           <NavLink to="/home" className="flex-shrink-0 flex items-center pl-1">
             <img src={logo} alt="Telitrip" className="h-10 sm:h-12 w-auto object-contain" />
           </NavLink>
+
+          {/* ── Center: Minimized Search Button (Appears on scroll) ── */}
+          <AnimatePresence>
+            {scrolled && (
+              <motion.button
+                type="button"
+                onClick={() => setIsSearchModalOpen(true)}
+                initial={{ opacity: 0, scale: 0.88, y: -4 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.88, y: -4 }}
+                transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+                className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-1.5 rounded-full bg-white hover:bg-slate-50 border border-slate-200/90 shadow-[0_2px_12px_rgba(0,0,0,0.06)] hover:shadow-md transition-all cursor-pointer group mx-auto"
+                title="Search stays, transfers & experiences"
+              >
+                <div className="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                  <Search className="w-3.5 h-3.5 text-white" />
+                </div>
+                <div className="flex items-center gap-1.5 sm:gap-2 text-xs">
+                  <span className="font-extrabold text-slate-800">Where to?</span>
+                  <span className="w-1 h-1 rounded-full bg-slate-300 hidden sm:inline" />
+                  <span className="font-semibold text-slate-600 hidden sm:inline">Any week</span>
+                  <span className="w-1 h-1 rounded-full bg-slate-300 hidden md:inline" />
+                  <span className="font-medium text-slate-400 hidden md:inline">Add guests</span>
+                </div>
+              </motion.button>
+            )}
+          </AnimatePresence>
 
           {/* Desktop Right */}
           <div className="hidden md:flex items-center gap-2 flex-shrink-0">
@@ -282,6 +298,7 @@ const Header = () => {
 
       <SlideOutCart isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} onProceedToCheckout={handleProceedToCheckout} />
       <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} onAuthSuccess={handleAuthSuccess} defaultTab="login" returnUrl={location.pathname} />
+      <HeaderSearchModal isOpen={isSearchModalOpen} onClose={() => setIsSearchModalOpen(false)} />
       <BottomNavBar />
     </>
   );
