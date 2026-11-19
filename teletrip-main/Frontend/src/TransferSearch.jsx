@@ -78,7 +78,7 @@ const TransferSearch = () => {
         infants: parseInt(searchParams.get('infants') || '0'),
       });
     } else if (ss) {
-      try { setSearchInfo(JSON.parse(ss)); } catch {}
+      try { setSearchInfo(JSON.parse(ss)); } catch { }
     }
   }, [searchParams]);
 
@@ -179,7 +179,7 @@ const TransferSearch = () => {
           ${(sidebarCollapsed || transfers.length === 0) ? 'w-0 overflow-hidden border-0' : 'w-[300px]'}
           transition-all duration-200
         `}>
-          <div className="h-full overflow-y-auto px-4 py-4" style={{scrollbarWidth:'thin'}}>
+          <div className="h-full overflow-y-auto px-4 py-4" style={{ scrollbarWidth: 'thin' }}>
             <div className="flex items-center justify-between pb-3 mb-1 border-b border-gray-100">
               <span className="text-xs font-semibold text-gray-900 tracking-wider uppercase">Filters</span>
               <div className="flex items-center gap-2">
@@ -259,317 +259,317 @@ const TransferSearch = () => {
           {/* Sort bar — pill design, extension of header */}
           <div className="fixed top-16 sm:top-20 left-0 right-0 z-[99] flex justify-center px-3 sm:px-6 pt-1.5 sm:pt-2 pointer-events-none">
             <div className="pointer-events-auto w-full max-w-4xl" style={{ background: 'rgba(255,255,255,0.78)', backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)', borderRadius: 40, border: '1px solid rgba(255,255,255,0.5)', boxShadow: '0 2px 16px rgba(0,0,0,0.07)' }}>
-            <div className="px-4 sm:px-5 py-2 flex items-center gap-2">
-              {/* Mobile: count */}
-              <span className="text-[13px] font-semibold text-gray-900 md:hidden flex-1 min-w-0 truncate">
-                {filteredTransfers.length} Transfers
-              </span>
-              {/* Desktop: route summary */}
-              <div className="flex-1 min-w-0 hidden md:flex items-center gap-2 text-[13px] text-gray-600">
-                {searchInfo && (<>
-                  <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${searchInfo.tripType === 'round_trip' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'}`}>
-                    {searchInfo.tripType === 'round_trip' ? 'Round Trip' : 'One Way'}
-                  </span>
-                  <MapPin className="w-3.5 h-3.5 text-blue-500" />
-                  <span className="font-medium truncate">{searchInfo.pickupName || searchInfo.fromCode}</span>
-                  <ArrowRight className="w-3 h-3 text-gray-300 flex-shrink-0" />
-                  <span className="font-medium truncate">{searchInfo.dropoffName || searchInfo.toCode}</span>
-                  <span className="text-gray-300 mx-1 hidden lg:block">|</span>
-                  <span className="hidden lg:block">{filteredTransfers.length} of {transfers.length}</span>
-                </>)}
-              </div>
-              <select value={sortOption} onChange={(e) => setSortOption(e.target.value)} className="text-[12px] px-2 py-1.5 border border-gray-200 rounded-lg bg-white cursor-pointer outline-none flex-shrink-0" style={{minHeight:'unset'}}>
-                <option value="price_asc">Price ↑</option>
-                <option value="price_desc">Price ↓</option>
-                <option value="capacity">Capacity</option>
-              </select>
-              <button onClick={() => setShowModifySearch(!showModifySearch)} className="text-[12px] text-blue-600 font-medium cursor-pointer flex-shrink-0 px-3 py-1.5 rounded-lg border border-blue-200 bg-blue-50" style={{minHeight:'unset'}}>{showModifySearch ? 'Close' : 'Modify'}</button>
-            </div>
-            {showModifySearch && (
-              <div className="px-4 sm:px-5 pb-3 pt-2 border-t border-gray-100/50">
-                <HotelSearchForm defaultTab="transfers" variant="light" onSearch={() => setShowModifySearch(false)} />
-              </div>
-            )}
-            </div>
-          </div>
-
-        <div className="w-full px-3 sm:px-4 max-w-[980px] sm:max-w-[1280px] mx-auto py-4 pt-16 sm:pt-12">
-          {/* Error / Empty / No search states */}
-          {hasSearched && !error && transfers.length === 0 && (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-10 text-center">
-              <img src={logo} alt="Telitrip" className="h-10 mb-6 mx-auto opacity-80" />
-              <SearchX className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">No Transfers Available</h3>
-              <p className="text-gray-500 text-sm mb-1">No transfer services found for this route.</p>
-              <ul className="text-gray-400 text-[13px] max-w-sm mx-auto text-left list-disc list-inside space-y-1 mb-5">
-                <li>The route between these locations is not serviced</li>
-                <li>No vehicles available for the selected date/time</li>
-                <li>Try swapping pickup and dropoff locations</li>
-              </ul>
-              <button onClick={() => navigate('/home')} className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium cursor-pointer">Search Again</button>
-            </div>
-          )}
-          {!hasSearched && (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-10 text-center">
-              <img src={logo} alt="Telitrip" className="h-10 mb-6 mx-auto opacity-80" />
-              <Car className="w-10 h-10 text-blue-300 mx-auto mb-3" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Search for Transfers</h3>
-              <p className="text-gray-500 text-sm mb-5">Use the search form on the home page to find available transfers.</p>
-              <button onClick={() => navigate('/home')} className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium cursor-pointer">Go to Search</button>
-            </div>
-          )}
-
-          {/* Cards */}
-          {!error && transfers.length > 0 && (
-            <div className="space-y-3">
-              {filteredTransfers.length === 0 && (
-                <div className="bg-white rounded-xl p-8 text-center border border-gray-100">
-                  <p className="text-gray-500 text-sm">No transfers match your filters.</p>
-                  <button onClick={clearFilters} className="mt-3 text-blue-600 text-sm font-medium cursor-pointer">Clear Filters</button>
-                </div>
-              )}
-              {sortedTransfers.map((t, idx) => {
-                    const price = parseFloat(t.price?.amount || 0);
-                    const pkrPrice = formatPKR(price, t.price?.currency);
-                    const typeLabel = t.transferType === 'PRIVATE' ? 'Private' : t.transferType === 'SHARED' ? 'Shared' : t.transferType || 'Transfer';
-                    const details = t.transferDetails || [];
-                    const durationInfo = details.find(d => /duration|journey|time|min/i.test(d.name || d.description || ''));
-                    const luggageInfo = details.find(d => /luggage|suitcase|bag/i.test(d.name || d.description || ''));
-
-                    return (
-                      <div key={idx} className="bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-lg hover:border-gray-200 transition-all duration-200 flex flex-col sm:flex-row group">
-                        {/* Image — fixed height on mobile, cover properly */}
-                        <div className="sm:w-56 lg:w-64 relative overflow-hidden flex-shrink-0 bg-gradient-to-br from-blue-50 to-blue-100">
-                          {t.images?.[0] ? (
-                            <img src={t.images[0]} alt={t.vehicle} className="w-full h-40 sm:h-full object-cover group-hover:scale-105 transition-transform duration-500" onError={(e) => { e.target.style.display='none'; }} />
-                          ) : (
-                            <div className="w-full h-40 sm:h-full flex items-center justify-center">
-                              <Car className="w-12 h-12 text-blue-200" />
-                            </div>
-                          )}
-                          <span className={`absolute top-2 left-2 text-[10px] px-2 py-0.5 rounded font-medium ${t.transferType === 'PRIVATE' ? 'bg-blue-600/90 text-white' : 'bg-amber-500/90 text-white'}`}>{typeLabel}</span>
-                          {t.cancellationPolicies?.[0]?.amount === 0 && (
-                            <div className="absolute top-2 right-2 bg-green-600/90 text-white px-2 py-0.5 rounded text-[10px] font-medium">Free cancel</div>
-                          )}
-                        </div>
-
-                        {/* Content */}
-                        <div className="flex-1 p-3 sm:p-4 flex flex-col justify-between min-w-0">
-                          <div>
-                            {/* Name + Price row */}
-                            <div className="flex justify-between items-start gap-2 mb-1">
-                              <div className="min-w-0 flex-1">
-                                <h2 className="text-[14px] font-semibold text-gray-900 leading-tight line-clamp-1">{t.vehicle || 'Transfer Vehicle'}</h2>
-                                <p className="text-[12px] text-gray-500">{t.category || 'Standard'}</p>
-                              </div>
-                              <div className="text-right flex-shrink-0">
-                                <div className="text-base sm:text-lg font-bold text-blue-600 leading-tight whitespace-nowrap">{pkrPrice || '...'}</div>
-                                <div className="text-[10px] text-gray-400">total</div>
-                              </div>
-                            </div>
-
-                            {/* Route */}
-                            {searchInfo && (
-                              <div className="flex items-center text-gray-400 text-[12px] mb-2">
-                                <MapPin className="w-3 h-3 mr-0.5 flex-shrink-0" />
-                                <span className="truncate">{searchInfo.pickupName || searchInfo.fromCode} → {searchInfo.dropoffName || searchInfo.toCode}</span>
-                              </div>
-                            )}
-
-                            {/* Tags row */}
-                            <div className="flex gap-1 flex-wrap mb-1.5">
-                              <span className="text-[10px] px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded font-medium">{t.minPaxCapacity || 1}–{t.maxPaxCapacity || '?'} passengers</span>
-                              {durationInfo && <span className="text-[10px] px-1.5 py-0.5 bg-gray-50 text-gray-500 rounded">{durationInfo.name || durationInfo.description}</span>}
-                              {luggageInfo && <span className="text-[10px] px-1.5 py-0.5 bg-gray-50 text-gray-500 rounded">{luggageInfo.name || luggageInfo.description}</span>}
-                            </div>
-
-                            {/* Cancellation */}
-                            {t.cancellationPolicies?.length > 0 && (
-                              <div className="flex gap-1 flex-wrap">
-                                <span className={`text-[10px] px-1.5 py-0.5 rounded ${t.cancellationPolicies[0]?.amount === 0 ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-500'}`}>
-                                  {t.cancellationPolicies[0]?.amount === 0 ? 'Free cancellation' : 'Cancellation fee applies'}
-                                </span>
-                              </div>
-                            )}
-                          </div>
-
-                          {/* CTA — same as hotel card */}
-                          <div className="flex items-center justify-end mt-2 pt-2 border-t border-gray-50">
-                            <button onClick={() => setSelectedTransfer(t)} className="w-full sm:w-auto px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-[12px] font-medium inline-flex items-center justify-center gap-1 cursor-pointer" style={{minHeight:'40px'}}>
-                              <Eye className="w-3 h-3" /> View Details
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-            </div>
-          )}
-          </div>
-        </div>
-      {selectedTransfer && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[120] flex items-end sm:items-center justify-center" onClick={() => setSelectedTransfer(null)}>
-          <div className="relative bg-white w-full sm:max-w-2xl sm:rounded-2xl rounded-t-2xl flex flex-col shadow-2xl" style={{maxHeight:'calc(92vh - env(safe-area-inset-bottom, 0px))'}} onClick={(e) => e.stopPropagation()}>
-
-            {/* ── Sticky Header ── */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100" style={{flexShrink:0}}>
-              <div className="min-w-0 flex-1">
-                <h2 className="text-[15px] font-bold text-gray-900 truncate">{selectedTransfer.vehicle || 'Transfer'}</h2>
-                <p className="text-[12px] text-gray-500">{selectedTransfer.category} · {selectedTransfer.transferType}</p>
-              </div>
-              <button onClick={() => setSelectedTransfer(null)} className="ml-3 w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center flex-shrink-0 cursor-pointer"><X className="w-4 h-4 text-gray-600" /></button>
-            </div>
-
-            {/* ── Scrollable body ── */}
-            <div className="overflow-y-auto px-4 py-3 space-y-3" style={{flex:'1 1 auto', minHeight:0, overflow:'auto', scrollbarWidth:'thin'}}>
-
-              {/* Route */}
-              {searchInfo && (
-                <div className="bg-blue-50 rounded-xl p-3">
-                  <div className="flex items-center gap-2 mb-1.5">
-                    <span className="text-[11px] text-blue-600 font-semibold">Transfer Route</span>
-                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${searchInfo.tripType === 'round_trip' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-600'}`}>
+              <div className="px-4 sm:px-5 py-2 flex items-center gap-2">
+                {/* Mobile: count */}
+                <span className="text-[13px] font-semibold text-gray-900 md:hidden flex-1 min-w-0 truncate">
+                  {filteredTransfers.length} Transfers
+                </span>
+                {/* Desktop: route summary */}
+                <div className="flex-1 min-w-0 hidden md:flex items-center gap-2 text-[13px] text-gray-600">
+                  {searchInfo && (<>
+                    <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${searchInfo.tripType === 'round_trip' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'}`}>
                       {searchInfo.tripType === 'round_trip' ? 'Round Trip' : 'One Way'}
                     </span>
-                  </div>
-                  <div className="flex items-start gap-2 text-[13px] text-gray-800 font-medium mb-1">
-                    <span className="flex-1 min-w-0">{searchInfo.pickupName || searchInfo.fromCode}</span>
-                    <ArrowRight className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" />
-                    <span className="flex-1 min-w-0 text-right">{searchInfo.dropoffName || searchInfo.toCode}</span>
-                  </div>
-                  <div className="text-[11px] text-gray-500 space-y-0.5">
-                    <div>Outbound: {fmtDT(searchInfo.outbound)}</div>
-                    {searchInfo.inbound && <div>Return: {fmtDT(searchInfo.inbound)}</div>}
-                    <div>{searchInfo.adults || 1} Adult{(searchInfo.adults || 1) > 1 ? 's' : ''}{searchInfo.children > 0 ? `, ${searchInfo.children} Children` : ''}</div>
-                  </div>
+                    <MapPin className="w-3.5 h-3.5 text-blue-500" />
+                    <span className="font-medium truncate">{searchInfo.pickupName || searchInfo.fromCode}</span>
+                    <ArrowRight className="w-3 h-3 text-gray-300 flex-shrink-0" />
+                    <span className="font-medium truncate">{searchInfo.dropoffName || searchInfo.toCode}</span>
+                    <span className="text-gray-300 mx-1 hidden lg:block">|</span>
+                    <span className="hidden lg:block">{filteredTransfers.length} of {transfers.length}</span>
+                  </>)}
                 </div>
-              )}
-
-              {/* Stats — minimalist grid, 2 cols on mobile, 4 on desktop */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                {[
-                  { icon: Users, color: '#3b82f6', value: `${selectedTransfer.minPaxCapacity || 1}–${selectedTransfer.maxPaxCapacity || '?'}`, label: 'Passengers' },
-                  { icon: Car, color: '#22c55e', value: selectedTransfer.transferType || '—', label: 'Type' },
-                  { icon: Shield, color: '#a855f7', value: selectedTransfer.cancellationPolicies?.[0]?.amount === 0 ? 'Free' : 'Fee', label: 'Cancellation' },
-                  { icon: Briefcase, color: '#f59e0b', value: selectedTransfer.direction || 'ONE WAY', label: 'Direction' },
-                ].map(({ icon: Icon, color, value, label }) => (
-                  <div key={label} className="bg-gray-50 rounded-xl p-2.5 flex flex-col items-center text-center gap-1">
-                    <Icon size={16} style={{color, flexShrink:0}} />
-                    <div className="text-[11px] font-semibold text-gray-800 leading-tight">{value}</div>
-                    <div className="text-[9px] text-gray-400 leading-tight">{label}</div>
-                  </div>
-                ))}
+                <select value={sortOption} onChange={(e) => setSortOption(e.target.value)} className="text-[12px] px-2 py-1.5 border border-gray-200 rounded-lg bg-white cursor-pointer outline-none flex-shrink-0" style={{ minHeight: 'unset' }}>
+                  <option value="price_asc">Price ↑</option>
+                  <option value="price_desc">Price ↓</option>
+                  <option value="capacity">Capacity</option>
+                </select>
+                <button onClick={() => setShowModifySearch(!showModifySearch)} className="text-[12px] text-blue-600 font-medium cursor-pointer flex-shrink-0 px-3 py-1.5 rounded-lg border border-blue-200 bg-blue-50" style={{ minHeight: 'unset' }}>{showModifySearch ? 'Close' : 'Modify'}</button>
               </div>
-
-              {/* Service Details */}
-              {selectedTransfer.transferDetails?.length > 0 && (
-                <div>
-                  <p className="text-[12px] font-semibold text-gray-700 mb-1.5">Service Details</p>
-                  <div className="space-y-1">
-                    {selectedTransfer.transferDetails.map((d, i) => (
-                      <div key={i} className="flex items-start gap-2 text-[12px]">
-                        <CheckCircle className="w-3.5 h-3.5 text-green-500 mt-0.5 flex-shrink-0" />
-                        <span className="text-gray-600">{d.description || d.name}</span>
-                      </div>
-                    ))}
-                  </div>
+              {showModifySearch && (
+                <div className="px-4 sm:px-5 pb-3 pt-2 border-t border-gray-100/50">
+                  <HotelSearchForm defaultTab="transfers" variant="light" onSearch={() => setShowModifySearch(false)} />
                 </div>
               )}
+            </div>
+          </div>
 
-              {/* Remarks */}
-              {selectedTransfer.remarks?.length > 0 && (
-                <div>
-                  <p className="text-[12px] font-semibold text-gray-700 mb-1.5">Important Notes</p>
-                  <div className="space-y-1">
-                    {selectedTransfer.remarks.map((r, i) => (
-                      <div key={i} className={`flex items-start gap-2 text-[11px] ${r.mandatory ? 'text-red-600' : 'text-gray-500'}`}>
-                        <Info className={`w-3 h-3 mt-0.5 flex-shrink-0 ${r.mandatory ? 'text-red-400' : 'text-gray-400'}`} />
-                        <span>{r.description}</span>
-                      </div>
-                    ))}
+          <div className="w-full px-3 sm:px-4 max-w-[980px] sm:max-w-[1280px] mx-auto py-4 pt-16 sm:pt-12">
+            {/* Error / Empty / No search states */}
+            {hasSearched && !error && transfers.length === 0 && (
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-10 text-center">
+                <img src={logo} alt="Telitrip" className="h-10 mb-6 mx-auto opacity-80" />
+                <SearchX className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">No Transfers Available</h3>
+                <p className="text-gray-500 text-sm mb-1">No transfer services found for this route.</p>
+                <ul className="text-gray-400 text-[13px] max-w-sm mx-auto text-left list-disc list-inside space-y-1 mb-5">
+                  <li>The route between these locations is not serviced</li>
+                  <li>No vehicles available for the selected date/time</li>
+                  <li>Try swapping pickup and dropoff locations</li>
+                </ul>
+                <button onClick={() => navigate('/home')} className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium cursor-pointer">Search Again</button>
+              </div>
+            )}
+            {!hasSearched && (
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-10 text-center">
+                <img src={logo} alt="Telitrip" className="h-10 mb-6 mx-auto opacity-80" />
+                <Car className="w-10 h-10 text-blue-300 mx-auto mb-3" />
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Search for Transfers</h3>
+                <p className="text-gray-500 text-sm mb-5">Use the search form on the home page to find available transfers.</p>
+                <button onClick={() => navigate('/home')} className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium cursor-pointer">Go to Search</button>
+              </div>
+            )}
+
+            {/* Cards */}
+            {!error && transfers.length > 0 && (
+              <div className="space-y-3">
+                {filteredTransfers.length === 0 && (
+                  <div className="bg-white rounded-xl p-8 text-center border border-gray-100">
+                    <p className="text-gray-500 text-sm">No transfers match your filters.</p>
+                    <button onClick={clearFilters} className="mt-3 text-blue-600 text-sm font-medium cursor-pointer">Clear Filters</button>
                   </div>
-                </div>
-              )}
+                )}
+                {sortedTransfers.map((t, idx) => {
+                  const price = parseFloat(t.price?.amount || 0);
+                  const pkrPrice = formatPKR(price, t.price?.currency);
+                  const typeLabel = t.transferType === 'PRIVATE' ? 'Private' : t.transferType === 'SHARED' ? 'Shared' : t.transferType || 'Transfer';
+                  const details = t.transferDetails || [];
+                  const durationInfo = details.find(d => /duration|journey|time|min/i.test(d.name || d.description || ''));
+                  const luggageInfo = details.find(d => /luggage|suitcase|bag/i.test(d.name || d.description || ''));
 
-              {/* Cancellation Policy */}
-              {selectedTransfer.cancellationPolicies?.length > 0 && (
-                <div className="flex items-center gap-2 text-[12px]">
-                  <span className={`w-2 h-2 rounded-full flex-shrink-0 ${parseFloat(selectedTransfer.cancellationPolicies[0]?.amount) === 0 ? 'bg-green-500' : 'bg-red-500'}`} />
-                  <span className="text-gray-600 font-medium">
-                    {parseFloat(selectedTransfer.cancellationPolicies[0]?.amount) === 0 ? 'Free cancellation available' : `Cancellation fee applies`}
-                  </span>
-                </div>
-              )}
-
-              {/* Flight Details */}
-              {isAirportRoute && (
-                <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 space-y-3">
-                  <div className="flex items-center gap-2">
-                    <Plane className="w-4 h-4 text-amber-600 flex-shrink-0" />
-                    <p className="text-[12px] font-semibold text-amber-800">Flight Details Required</p>
-                  </div>
-                  {/* Outbound */}
-                  <div className="border-t border-amber-200 pt-2.5">
-                    <p className="text-[11px] font-medium text-gray-600 mb-2">{searchInfo?.pickupName || searchInfo?.fromCode} → {searchInfo?.dropoffName || searchInfo?.toCode}</p>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <label className="block text-[10px] font-medium text-gray-600 mb-1">Flight Code *</label>
-                        <input type="text" value={flightCode} onChange={(e) => setFlightCode(e.target.value.toUpperCase().slice(0, 7))} placeholder="e.g. EK203" maxLength={7} className="w-full px-2.5 py-2 text-[12px] border border-gray-300 rounded-lg outline-none focus:ring-1 focus:ring-blue-500" />
+                  return (
+                    <div key={idx} className="bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-lg hover:border-gray-200 transition-all duration-200 flex flex-col sm:flex-row group">
+                      {/* Image — fixed height on mobile, cover properly */}
+                      <div className="sm:w-56 lg:w-64 relative overflow-hidden flex-shrink-0 bg-gradient-to-br from-blue-50 to-blue-100">
+                        {t.images?.[0] ? (
+                          <img src={t.images[0]} alt={t.vehicle} className="w-full h-40 sm:h-full object-cover group-hover:scale-105 transition-transform duration-500" onError={(e) => { e.target.style.display = 'none'; }} />
+                        ) : (
+                          <div className="w-full h-40 sm:h-full flex items-center justify-center">
+                            <Car className="w-12 h-12 text-blue-200" />
+                          </div>
+                        )}
+                        <span className={`absolute top-2 left-2 text-[10px] px-2 py-0.5 rounded font-medium ${t.transferType === 'PRIVATE' ? 'bg-blue-600/90 text-white' : 'bg-amber-500/90 text-white'}`}>{typeLabel}</span>
+                        {t.cancellationPolicies?.[0]?.amount === 0 && (
+                          <div className="absolute top-2 right-2 bg-green-600/90 text-white px-2 py-0.5 rounded text-[10px] font-medium">Free cancel</div>
+                        )}
                       </div>
-                      <div>
-                        <label className="block text-[10px] font-medium text-gray-600 mb-1">{isDeparture ? 'Departure' : 'Arrival'} Time *</label>
-                        <input type="time" value={flightTime} onChange={(e) => setFlightTime(e.target.value)} className="w-full px-2.5 py-2 text-[12px] border border-gray-300 rounded-lg outline-none focus:ring-1 focus:ring-blue-500" />
+
+                      {/* Content */}
+                      <div className="flex-1 p-3 sm:p-4 flex flex-col justify-between min-w-0">
+                        <div>
+                          {/* Name + Price row */}
+                          <div className="flex justify-between items-start gap-2 mb-1">
+                            <div className="min-w-0 flex-1">
+                              <h2 className="text-[14px] font-semibold text-gray-900 leading-tight line-clamp-1">{t.vehicle || 'Transfer Vehicle'}</h2>
+                              <p className="text-[12px] text-gray-500">{t.category || 'Standard'}</p>
+                            </div>
+                            <div className="text-right flex-shrink-0">
+                              <div className="text-base sm:text-lg font-bold text-blue-600 leading-tight whitespace-nowrap">{pkrPrice || '...'}</div>
+                              <div className="text-[10px] text-gray-400">total</div>
+                            </div>
+                          </div>
+
+                          {/* Route */}
+                          {searchInfo && (
+                            <div className="flex items-center text-gray-400 text-[12px] mb-2">
+                              <MapPin className="w-3 h-3 mr-0.5 flex-shrink-0" />
+                              <span className="truncate">{searchInfo.pickupName || searchInfo.fromCode} → {searchInfo.dropoffName || searchInfo.toCode}</span>
+                            </div>
+                          )}
+
+                          {/* Tags row */}
+                          <div className="flex gap-1 flex-wrap mb-1.5">
+                            <span className="text-[10px] px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded font-medium">{t.minPaxCapacity || 1}–{t.maxPaxCapacity || '?'} passengers</span>
+                            {durationInfo && <span className="text-[10px] px-1.5 py-0.5 bg-gray-50 text-gray-500 rounded">{durationInfo.name || durationInfo.description}</span>}
+                            {luggageInfo && <span className="text-[10px] px-1.5 py-0.5 bg-gray-50 text-gray-500 rounded">{luggageInfo.name || luggageInfo.description}</span>}
+                          </div>
+
+                          {/* Cancellation */}
+                          {t.cancellationPolicies?.length > 0 && (
+                            <div className="flex gap-1 flex-wrap">
+                              <span className={`text-[10px] px-1.5 py-0.5 rounded ${t.cancellationPolicies[0]?.amount === 0 ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-500'}`}>
+                                {t.cancellationPolicies[0]?.amount === 0 ? 'Free cancellation' : 'Cancellation fee applies'}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* CTA — same as hotel card */}
+                        <div className="flex items-center justify-end mt-2 pt-2 border-t border-gray-50">
+                          <button onClick={() => setSelectedTransfer(t)} className="w-full sm:w-auto px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-[12px] font-medium inline-flex items-center justify-center gap-1 cursor-pointer" style={{ minHeight: '40px' }}>
+                            <Eye className="w-3 h-3" /> View Details
+                          </button>
+                        </div>
                       </div>
                     </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+        {selectedTransfer && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[120] flex items-end sm:items-center justify-center" onClick={() => setSelectedTransfer(null)}>
+            <div className="relative bg-white w-full sm:max-w-2xl sm:rounded-2xl rounded-t-2xl flex flex-col shadow-2xl" style={{ maxHeight: 'calc(92vh - env(safe-area-inset-bottom, 0px))' }} onClick={(e) => e.stopPropagation()}>
+
+              {/* ── Sticky Header ── */}
+              <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100" style={{ flexShrink: 0 }}>
+                <div className="min-w-0 flex-1">
+                  <h2 className="text-[15px] font-bold text-gray-900 truncate">{selectedTransfer.vehicle || 'Transfer'}</h2>
+                  <p className="text-[12px] text-gray-500">{selectedTransfer.category} · {selectedTransfer.transferType}</p>
+                </div>
+                <button onClick={() => setSelectedTransfer(null)} className="ml-3 w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center flex-shrink-0 cursor-pointer"><X className="w-4 h-4 text-gray-600" /></button>
+              </div>
+
+              {/* ── Scrollable body ── */}
+              <div className="overflow-y-auto px-4 py-3 space-y-3" style={{ flex: '1 1 auto', minHeight: 0, overflow: 'auto', scrollbarWidth: 'thin' }}>
+
+                {/* Route */}
+                {searchInfo && (
+                  <div className="bg-blue-50 rounded-xl p-3">
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <span className="text-[11px] text-blue-600 font-semibold">Transfer Route</span>
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${searchInfo.tripType === 'round_trip' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-600'}`}>
+                        {searchInfo.tripType === 'round_trip' ? 'Round Trip' : 'One Way'}
+                      </span>
+                    </div>
+                    <div className="flex items-start gap-2 text-[13px] text-gray-800 font-medium mb-1">
+                      <span className="flex-1 min-w-0">{searchInfo.pickupName || searchInfo.fromCode}</span>
+                      <ArrowRight className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" />
+                      <span className="flex-1 min-w-0 text-right">{searchInfo.dropoffName || searchInfo.toCode}</span>
+                    </div>
+                    <div className="text-[11px] text-gray-500 space-y-0.5">
+                      <div>Outbound: {fmtDT(searchInfo.outbound)}</div>
+                      {searchInfo.inbound && <div>Return: {fmtDT(searchInfo.inbound)}</div>}
+                      <div>{searchInfo.adults || 1} Adult{(searchInfo.adults || 1) > 1 ? 's' : ''}{searchInfo.children > 0 ? `, ${searchInfo.children} Children` : ''}</div>
+                    </div>
                   </div>
-                  {searchInfo?.tripType === 'round_trip' && (
+                )}
+
+                {/* Stats — minimalist grid, 2 cols on mobile, 4 on desktop */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {[
+                    { icon: Users, color: '#3b82f6', value: `${selectedTransfer.minPaxCapacity || 1}–${selectedTransfer.maxPaxCapacity || '?'}`, label: 'Passengers' },
+                    { icon: Car, color: '#22c55e', value: selectedTransfer.transferType || '—', label: 'Type' },
+                    { icon: Shield, color: '#a855f7', value: selectedTransfer.cancellationPolicies?.[0]?.amount === 0 ? 'Free' : 'Fee', label: 'Cancellation' },
+                    { icon: Briefcase, color: '#f59e0b', value: selectedTransfer.direction || 'ONE WAY', label: 'Direction' },
+                  ].map(({ icon: Icon, color, value, label }) => (
+                    <div key={label} className="bg-gray-50 rounded-xl p-2.5 flex flex-col items-center text-center gap-1">
+                      <Icon size={16} style={{ color, flexShrink: 0 }} />
+                      <div className="text-[11px] font-semibold text-gray-800 leading-tight">{value}</div>
+                      <div className="text-[9px] text-gray-400 leading-tight">{label}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Service Details */}
+                {selectedTransfer.transferDetails?.length > 0 && (
+                  <div>
+                    <p className="text-[12px] font-semibold text-gray-700 mb-1.5">Service Details</p>
+                    <div className="space-y-1">
+                      {selectedTransfer.transferDetails.map((d, i) => (
+                        <div key={i} className="flex items-start gap-2 text-[12px]">
+                          <CheckCircle className="w-3.5 h-3.5 text-green-500 mt-0.5 flex-shrink-0" />
+                          <span className="text-gray-600">{d.description || d.name}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Remarks */}
+                {selectedTransfer.remarks?.length > 0 && (
+                  <div>
+                    <p className="text-[12px] font-semibold text-gray-700 mb-1.5">Important Notes</p>
+                    <div className="space-y-1">
+                      {selectedTransfer.remarks.map((r, i) => (
+                        <div key={i} className={`flex items-start gap-2 text-[11px] ${r.mandatory ? 'text-red-600' : 'text-gray-500'}`}>
+                          <Info className={`w-3 h-3 mt-0.5 flex-shrink-0 ${r.mandatory ? 'text-red-400' : 'text-gray-400'}`} />
+                          <span>{r.description}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Cancellation Policy */}
+                {selectedTransfer.cancellationPolicies?.length > 0 && (
+                  <div className="flex items-center gap-2 text-[12px]">
+                    <span className={`w-2 h-2 rounded-full flex-shrink-0 ${parseFloat(selectedTransfer.cancellationPolicies[0]?.amount) === 0 ? 'bg-green-500' : 'bg-red-500'}`} />
+                    <span className="text-gray-600 font-medium">
+                      {parseFloat(selectedTransfer.cancellationPolicies[0]?.amount) === 0 ? 'Free cancellation available' : `Cancellation fee applies`}
+                    </span>
+                  </div>
+                )}
+
+                {/* Flight Details */}
+                {isAirportRoute && (
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Plane className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                      <p className="text-[12px] font-semibold text-amber-800">Flight Details Required</p>
+                    </div>
+                    {/* Outbound */}
                     <div className="border-t border-amber-200 pt-2.5">
-                      <p className="text-[11px] font-medium text-gray-600 mb-2">{searchInfo?.dropoffName || searchInfo?.toCode} → {searchInfo?.pickupName || searchInfo?.fromCode}</p>
+                      <p className="text-[11px] font-medium text-gray-600 mb-2">{searchInfo?.pickupName || searchInfo?.fromCode} → {searchInfo?.dropoffName || searchInfo?.toCode}</p>
                       <div className="grid grid-cols-2 gap-2">
                         <div>
                           <label className="block text-[10px] font-medium text-gray-600 mb-1">Flight Code *</label>
-                          <input type="text" value={returnFlightCode} onChange={(e) => setReturnFlightCode(e.target.value.toUpperCase().slice(0, 7))} placeholder="e.g. EK204" maxLength={7} className="w-full px-2.5 py-2 text-[12px] border border-gray-300 rounded-lg outline-none focus:ring-1 focus:ring-blue-500" />
+                          <input type="text" value={flightCode} onChange={(e) => setFlightCode(e.target.value.toUpperCase().slice(0, 7))} placeholder="e.g. EK203" maxLength={7} className="w-full px-2.5 py-2 text-[12px] border border-gray-300 rounded-lg outline-none focus:ring-1 focus:ring-blue-500" />
                         </div>
                         <div>
-                          <label className="block text-[10px] font-medium text-gray-600 mb-1">Departure Time *</label>
-                          <input type="time" value={returnFlightTime} onChange={(e) => setReturnFlightTime(e.target.value)} className="w-full px-2.5 py-2 text-[12px] border border-gray-300 rounded-lg outline-none focus:ring-1 focus:ring-blue-500" />
+                          <label className="block text-[10px] font-medium text-gray-600 mb-1">{isDeparture ? 'Departure' : 'Arrival'} Time *</label>
+                          <input type="time" value={flightTime} onChange={(e) => setFlightTime(e.target.value)} className="w-full px-2.5 py-2 text-[12px] border border-gray-300 rounded-lg outline-none focus:ring-1 focus:ring-blue-500" />
                         </div>
                       </div>
                     </div>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* ── Sticky Footer: Price + Add to Cart ── */}
-            <div style={{flexShrink:0, paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 60px)'}} className="border-t border-gray-100 px-4 py-3 bg-white sm:pb-3 flex items-center justify-between gap-3">
-              <div>
-                <div className="text-[10px] text-gray-400 uppercase tracking-wide">Total</div>
-                <div className="text-[17px] font-bold text-blue-600 leading-tight">{formatPKR(parseFloat(selectedTransfer.price?.amount || 0), selectedTransfer.price?.currency) || '...'}</div>
+                    {searchInfo?.tripType === 'round_trip' && (
+                      <div className="border-t border-amber-200 pt-2.5">
+                        <p className="text-[11px] font-medium text-gray-600 mb-2">{searchInfo?.dropoffName || searchInfo?.toCode} → {searchInfo?.pickupName || searchInfo?.fromCode}</p>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="block text-[10px] font-medium text-gray-600 mb-1">Flight Code *</label>
+                            <input type="text" value={returnFlightCode} onChange={(e) => setReturnFlightCode(e.target.value.toUpperCase().slice(0, 7))} placeholder="e.g. EK204" maxLength={7} className="w-full px-2.5 py-2 text-[12px] border border-gray-300 rounded-lg outline-none focus:ring-1 focus:ring-blue-500" />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] font-medium text-gray-600 mb-1">Departure Time *</label>
+                            <input type="time" value={returnFlightTime} onChange={(e) => setReturnFlightTime(e.target.value)} className="w-full px-2.5 py-2 text-[12px] border border-gray-300 rounded-lg outline-none focus:ring-1 focus:ring-blue-500" />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
-              <button
-                onClick={() => handleAddToCart(selectedTransfer)}
-                disabled={!flightCode.trim() || !flightTime || (searchInfo?.tripType === 'round_trip' && (!returnFlightCode.trim() || !returnFlightTime))}
-                style={{minHeight:'unset'}}
-                className="no-min-h flex-1 max-w-[180px] inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-semibold text-[13px] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <ShoppingCart className="w-4 h-4" /> Add to Cart
-              </button>
+
+              {/* ── Sticky Footer: Price + Add to Cart ── */}
+              <div style={{ flexShrink: 0, paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 60px)' }} className="border-t border-gray-100 px-4 py-3 bg-white sm:pb-3 flex items-center justify-between gap-3">
+                <div>
+                  <div className="text-[10px] text-gray-400 uppercase tracking-wide">Total</div>
+                  <div className="text-[17px] font-bold text-blue-600 leading-tight">{formatPKR(parseFloat(selectedTransfer.price?.amount || 0), selectedTransfer.price?.currency) || '...'}</div>
+                </div>
+                <button
+                  onClick={() => handleAddToCart(selectedTransfer)}
+                  disabled={!flightCode.trim() || !flightTime || (searchInfo?.tripType === 'round_trip' && (!returnFlightCode.trim() || !returnFlightTime))}
+                  style={{ minHeight: 'unset' }}
+                  className="no-min-h flex-1 max-w-[180px] inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-semibold text-[13px] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <ShoppingCart className="w-4 h-4" /> Add to Cart
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Gallery */}
-      {galleryOpen && galleryImages.length > 0 && (
-        <div className="fixed inset-0 bg-black/90 z-[200] flex items-center justify-center" onClick={() => setGalleryOpen(false)}>
-          <button onClick={() => setGalleryOpen(false)} className="absolute top-4 right-4 text-white/70 hover:text-white z-10 cursor-pointer"><X className="w-8 h-8" /></button>
-          <button onClick={(e) => { e.stopPropagation(); setGalleryIndex(i => (i - 1 + galleryImages.length) % galleryImages.length); }} className="absolute left-4 text-white/70 hover:text-white z-10 cursor-pointer"><ChevronLeft className="w-10 h-10" /></button>
-          <img src={galleryImages[galleryIndex]} alt="" className="max-h-[85vh] max-w-[90vw] object-contain rounded-lg" onClick={(e) => e.stopPropagation()} />
-          <button onClick={(e) => { e.stopPropagation(); setGalleryIndex(i => (i + 1) % galleryImages.length); }} className="absolute right-4 text-white/70 hover:text-white z-10 cursor-pointer"><ChevronRight className="w-10 h-10" /></button>
-          <div className="absolute bottom-4 text-white/60 text-sm">{galleryIndex + 1} / {galleryImages.length}</div>
-        </div>
-      )}
+        {/* Gallery */}
+        {galleryOpen && galleryImages.length > 0 && (
+          <div className="fixed inset-0 bg-black/90 z-[200] flex items-center justify-center" onClick={() => setGalleryOpen(false)}>
+            <button onClick={() => setGalleryOpen(false)} className="absolute top-4 right-4 text-white/70 hover:text-white z-10 cursor-pointer"><X className="w-8 h-8" /></button>
+            <button onClick={(e) => { e.stopPropagation(); setGalleryIndex(i => (i - 1 + galleryImages.length) % galleryImages.length); }} className="absolute left-4 text-white/70 hover:text-white z-10 cursor-pointer"><ChevronLeft className="w-10 h-10" /></button>
+            <img src={galleryImages[galleryIndex]} alt="" className="max-h-[85vh] max-w-[90vw] object-contain rounded-lg" onClick={(e) => e.stopPropagation()} />
+            <button onClick={(e) => { e.stopPropagation(); setGalleryIndex(i => (i + 1) % galleryImages.length); }} className="absolute right-4 text-white/70 hover:text-white z-10 cursor-pointer"><ChevronRight className="w-10 h-10" /></button>
+            <div className="absolute bottom-4 text-white/60 text-sm">{galleryIndex + 1} / {galleryImages.length}</div>
+          </div>
+        )}
 
       </div>
 

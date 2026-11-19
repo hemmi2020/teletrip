@@ -999,13 +999,13 @@ const HotelSearchResults = () => {
           ...(destinationCode
             ? { destination: { code: destinationCode.toUpperCase() } }
             : {
-                geolocation: {
-                  latitude: parseFloat(lat),
-                  longitude: parseFloat(lon),
-                  radius: 30,
-                  unit: "km",
-                },
-              }),
+              geolocation: {
+                latitude: parseFloat(lat),
+                longitude: parseFloat(lon),
+                radius: 30,
+                unit: "km",
+              },
+            }),
         };
 
         // If a specific hotel code is provided, use hotel-by-ID search
@@ -1381,11 +1381,10 @@ const HotelSearchResults = () => {
                   onClick={() => {
                     setSelectedEstablishment(prev => prev.includes('119') ? prev.filter(x => x !== '119') : [...prev, '119']);
                   }}
-                  className={`flex items-center justify-between p-2.5 rounded-xl cursor-pointer select-none transition-all ${
-                    selectedEstablishment.includes('119')
-                      ? 'bg-amber-50 border border-amber-300 text-amber-950 font-bold shadow-xs'
-                      : 'bg-gray-50/80 hover:bg-gray-100 text-gray-700 border border-transparent'
-                  }`}
+                  className={`flex items-center justify-between p-2.5 rounded-xl cursor-pointer select-none transition-all ${selectedEstablishment.includes('119')
+                    ? 'bg-amber-50 border border-amber-300 text-amber-950 font-bold shadow-xs'
+                    : 'bg-gray-50/80 hover:bg-gray-100 text-gray-700 border border-transparent'
+                    }`}
                 >
                   <div className="flex items-center gap-2 text-xs">
                     <AnimatedIcon name="crown" animation="pulse" size={16} className="text-amber-500" />
@@ -1394,7 +1393,7 @@ const HotelSearchResults = () => {
                   <input
                     type="checkbox"
                     checked={selectedEstablishment.includes('119')}
-                    onChange={() => {}}
+                    onChange={() => { }}
                     className="w-4 h-4 accent-amber-500 rounded cursor-pointer"
                   />
                 </label>
@@ -1403,11 +1402,10 @@ const HotelSearchResults = () => {
                   onClick={() => {
                     setSelectedCancellation(prev => prev === 'free' ? '' : 'free');
                   }}
-                  className={`flex items-center justify-between p-2.5 rounded-xl cursor-pointer select-none transition-all ${
-                    selectedCancellation === 'free'
-                      ? 'bg-emerald-50 border border-emerald-300 text-emerald-950 font-bold shadow-xs'
-                      : 'bg-gray-50/80 hover:bg-gray-100 text-gray-700 border border-transparent'
-                  }`}
+                  className={`flex items-center justify-between p-2.5 rounded-xl cursor-pointer select-none transition-all ${selectedCancellation === 'free'
+                    ? 'bg-emerald-50 border border-emerald-300 text-emerald-950 font-bold shadow-xs'
+                    : 'bg-gray-50/80 hover:bg-gray-100 text-gray-700 border border-transparent'
+                    }`}
                 >
                   <div className="flex items-center gap-2 text-xs">
                     <ShieldCheck className="w-4 h-4 text-emerald-600" />
@@ -1416,467 +1414,467 @@ const HotelSearchResults = () => {
                   <input
                     type="checkbox"
                     checked={selectedCancellation === 'free'}
-                    onChange={() => {}}
+                    onChange={() => { }}
                     className="w-4 h-4 accent-emerald-600 rounded cursor-pointer"
                   />
                 </label>
               </div>
 
-            {/* 1. Hotel Name Search */}
-            <div className="py-3 border-b border-gray-50">
-              <button
-                onClick={() => toggleSection('hotelName')}
-                className="flex items-center justify-between w-full cursor-pointer"
-              >
-                <span className="text-[13px] font-semibold text-gray-800">Hotel Name</span>
-                {expandedSections.hotelName ? <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 rotate-180" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200" />}
-              </button>
-              {expandedSections.hotelName && (
-                <input
-                  type="text"
-                  value={hotelNameSearch}
-                  onChange={(e) => setHotelNameSearch(e.target.value)}
-                  placeholder="Search hotel name..."
-                  className="w-full px-3 py-1.5 text-[13px] border border-gray-200 rounded-md bg-gray-50/50 focus:bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                />
-              )}
-            </div>
+              {/* 1. Hotel Name Search */}
+              <div className="py-3 border-b border-gray-50">
+                <button
+                  onClick={() => toggleSection('hotelName')}
+                  className="flex items-center justify-between w-full cursor-pointer"
+                >
+                  <span className="text-[13px] font-semibold text-gray-800">Hotel Name</span>
+                  {expandedSections.hotelName ? <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 rotate-180" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200" />}
+                </button>
+                {expandedSections.hotelName && (
+                  <input
+                    type="text"
+                    value={hotelNameSearch}
+                    onChange={(e) => setHotelNameSearch(e.target.value)}
+                    placeholder="Search hotel name..."
+                    className="w-full px-3 py-1.5 text-[13px] border border-gray-200 rounded-md bg-gray-50/50 focus:bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                  />
+                )}
+              </div>
 
-            {/* Distance From */}
-            <div className="py-3 border-b border-gray-50">
-              <span className="text-[13px] font-semibold text-gray-800">Distance from</span>
-              <div className="mt-2.5 space-y-2.5">
-                <div>
-                  <label className="text-[11px] text-gray-500 mb-1 block">Popular sight</label>
-                  <select value={selectedSight} onChange={(e) => setSelectedSight(e.target.value)} className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 rounded-md bg-gray-50/50 focus:bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none">
-                    <option value="">Select</option>
-                    {dynamicZones.map(zone => <option key={zone} value={zone}>{zone}</option>)}
-                  </select>
+              {/* Distance From */}
+              <div className="py-3 border-b border-gray-50">
+                <span className="text-[13px] font-semibold text-gray-800">Distance from</span>
+                <div className="mt-2.5 space-y-2.5">
+                  <div>
+                    <label className="text-[11px] text-gray-500 mb-1 block">Popular sight</label>
+                    <select value={selectedSight} onChange={(e) => setSelectedSight(e.target.value)} className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 rounded-md bg-gray-50/50 focus:bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none">
+                      <option value="">Select</option>
+                      {dynamicZones.map(zone => <option key={zone} value={zone}>{zone}</option>)}
+                    </select>
+                  </div>
+                  <div className="relative" ref={addressRef}>
+                    <label className="text-[11px] text-gray-500 mb-1 block">Specific address</label>
+                    <input type="text" value={addressSearch} onChange={(e) => setAddressSearch(e.target.value)} onFocus={() => addressSuggestions.length > 0 && setShowAddressSuggestions(true)} placeholder="Street, point of interest..." className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 rounded-md bg-gray-50/50 focus:bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none" />
+                    {showAddressSuggestions && (
+                      <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-52 overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
+                        {loadingAddress ? (
+                          <div className="px-2.5 py-2 text-[12px] text-gray-400 text-center">Searching...</div>
+                        ) : addressSuggestions.length > 0 ? (
+                          addressSuggestions.map((s, i) => (
+                            <div key={i} onClick={() => { setAddressSearch(s.short); setShowAddressSuggestions(false); }} className="px-2.5 py-1.5 hover:bg-blue-50 cursor-pointer transition-colors">
+                              <div className="text-[12px] text-gray-700 truncate">{s.short}</div>
+                              <div className="text-[10px] text-gray-400 truncate">{s.display}</div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="px-2.5 py-2 text-[12px] text-gray-400 text-center">No results</div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <div className="relative" ref={addressRef}>
-                  <label className="text-[11px] text-gray-500 mb-1 block">Specific address</label>
-                  <input type="text" value={addressSearch} onChange={(e) => setAddressSearch(e.target.value)} onFocus={() => addressSuggestions.length > 0 && setShowAddressSuggestions(true)} placeholder="Street, point of interest..." className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 rounded-md bg-gray-50/50 focus:bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none" />
-                  {showAddressSuggestions && (
-                    <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-52 overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
-                      {loadingAddress ? (
-                        <div className="px-2.5 py-2 text-[12px] text-gray-400 text-center">Searching...</div>
-                      ) : addressSuggestions.length > 0 ? (
-                        addressSuggestions.map((s, i) => (
-                          <div key={i} onClick={() => { setAddressSearch(s.short); setShowAddressSuggestions(false); }} className="px-2.5 py-1.5 hover:bg-blue-50 cursor-pointer transition-colors">
-                            <div className="text-[12px] text-gray-700 truncate">{s.short}</div>
-                            <div className="text-[10px] text-gray-400 truncate">{s.display}</div>
-                          </div>
-                        ))
-                      ) : (
-                        <div className="px-2.5 py-2 text-[12px] text-gray-400 text-center">No results</div>
-                      )}
+              </div>
+
+              {/* Board */}
+              {dynamicBoards.length > 0 && (
+                <div className="py-3 border-b border-gray-50">
+                  <button
+                    onClick={() => toggleSection('board')}
+                    className="flex items-center justify-between w-full cursor-pointer"
+                  >
+                    <span className="text-[13px] font-semibold text-gray-800">Board</span>
+                    {expandedSections.board ? <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 rotate-180" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200" />}
+                  </button>
+                  {expandedSections.board && (
+                    <div className="space-y-1.5">
+                      {dynamicBoards.map(board => (
+                        <label key={board} className="w-full flex flex-row items-center justify-start gap-2.5 py-0.5 cursor-pointer group">
+                          <input type="checkbox" checked={selectedBoards.includes(board)} onChange={() => setSelectedBoards(prev => prev.includes(board) ? prev.filter(b => b !== board) : [...prev, board])} className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer" />
+                          <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1 text-left">{board}</span>
+                          <span className="text-[11px] text-gray-400">{filterCounts.boards[board] || 0}</span>
+                        </label>
+                      ))}
                     </div>
                   )}
                 </div>
-              </div>
-            </div>
+              )}
 
-            {/* Board */}
-            {dynamicBoards.length > 0 && (
-              <div className="py-3 border-b border-gray-50">
-                <button
-                  onClick={() => toggleSection('board')}
-                  className="flex items-center justify-between w-full cursor-pointer"
-                >
-                  <span className="text-[13px] font-semibold text-gray-800">Board</span>
-                  {expandedSections.board ? <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 rotate-180" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200" />}
-                </button>
-                {expandedSections.board && (
-                  <div className="space-y-1.5">
-                    {dynamicBoards.map(board => (
-                      <label key={board} className="w-full flex flex-row items-center justify-start gap-2.5 py-0.5 cursor-pointer group">
-                        <input type="checkbox" checked={selectedBoards.includes(board)} onChange={() => setSelectedBoards(prev => prev.includes(board) ? prev.filter(b => b !== board) : [...prev, board])} className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer" />
-                        <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1 text-left">{board}</span>
-                        <span className="text-[11px] text-gray-400">{filterCounts.boards[board] || 0}</span>
-                      </label>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* 3. Category (Star Rating) */}
-            {dynamicCategories.length > 0 && (
-              <div className="py-3 border-b border-gray-50">
-                <button
-                  onClick={() => toggleSection('category')}
-                  className="flex items-center justify-between w-full cursor-pointer"
-                >
-                  <span className="text-[13px] font-semibold text-gray-800">Category</span>
-                  {expandedSections.category ? <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 rotate-180" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200" />}
-                </button>
-                {expandedSections.category && (
-                  <div className="space-y-1.5">
-                    {dynamicCategories.map(cat => (
-                      <label key={cat} className="flex flex-row items-center justify-start gap-2.5 py-0.5 cursor-pointer group">
-                        <input type="checkbox" checked={selectedCategories.includes(cat)} onChange={() => setSelectedCategories(prev => prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat])} className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer" />
-                        <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1 text-left">{cat}</span>
-                        <span className="text-[11px] text-gray-400">{filterCounts.categories[cat] || 0}</span>
-                      </label>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* 4. Customer Reviews */}
-            <div className="py-3 border-b border-gray-50">
-              <button
-                onClick={() => toggleSection('reviews')}
-                className="flex items-center justify-between w-full cursor-pointer"
-              >
-                <span className="text-[13px] font-semibold text-gray-800">Customer Reviews</span>
-                {expandedSections.reviews ? <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 rotate-180" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200" />}
-              </button>
-              {expandedSections.reviews && (
-                <div className="space-y-1.5">
-                  {[
-                    { value: 4.5, label: "Wonderful 4.5+" },
-                    { value: 4, label: "Very good 4+" },
-                    { value: 3.5, label: "Good 3.5+" },
-                    { value: 3, label: "Nice 3+" },
-                  ].map(opt => (
-                    <label key={opt.value} className="flex flex-row items-center justify-start gap-2.5 py-0.5 cursor-pointer group">
-                      <input type="radio" name="reviewRating" value={opt.value} checked={selectedReviewRatings.includes(opt.value)} onChange={() => setSelectedReviewRatings([opt.value])} className="h-3.5 w-3.5 border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer" />
-                      <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1 text-left">{opt.label}</span>
-                      <span className="text-[11px] text-gray-400">{countReview(opt.value)}</span>
-                    </label>
-                  ))}
-                  {selectedReviewRatings.length > 0 && (
-                    <button
-                      onClick={() => setSelectedReviewRatings([])}
-                      className="text-xs text-blue-600 hover:text-blue-800 cursor-pointer"
-                    >Clear</button>
+              {/* 3. Category (Star Rating) */}
+              {dynamicCategories.length > 0 && (
+                <div className="py-3 border-b border-gray-50">
+                  <button
+                    onClick={() => toggleSection('category')}
+                    className="flex items-center justify-between w-full cursor-pointer"
+                  >
+                    <span className="text-[13px] font-semibold text-gray-800">Category</span>
+                    {expandedSections.category ? <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 rotate-180" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200" />}
+                  </button>
+                  {expandedSections.category && (
+                    <div className="space-y-1.5">
+                      {dynamicCategories.map(cat => (
+                        <label key={cat} className="flex flex-row items-center justify-start gap-2.5 py-0.5 cursor-pointer group">
+                          <input type="checkbox" checked={selectedCategories.includes(cat)} onChange={() => setSelectedCategories(prev => prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat])} className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer" />
+                          <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1 text-left">{cat}</span>
+                          <span className="text-[11px] text-gray-400">{filterCounts.categories[cat] || 0}</span>
+                        </label>
+                      ))}
+                    </div>
                   )}
                 </div>
               )}
-            </div>
 
-            {/* Price Range */}
-            <div className="py-3 border-b border-gray-50">
-              <button
-                onClick={() => toggleSection('price')}
-                className="flex items-center justify-between w-full cursor-pointer"
-              >
-                <span className="text-[13px] font-semibold text-gray-800">Price Range (PKR)</span>
-                {expandedSections.price ? <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 rotate-180" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200" />}
-              </button>
-              {expandedSections.price && (
-                <div className="mt-2 space-y-3">
-                  <div className="relative h-6 flex items-center">
-                    <div className="absolute left-0 right-0 h-1 bg-gray-200 rounded-full" />
-                    <div
-                      className="absolute h-1 bg-blue-500 rounded-full"
-                      style={{
-                        left: `${((parseFloat(priceMin) || priceBounds.min) - priceBounds.min) / (priceBounds.max - priceBounds.min || 1) * 100}%`,
-                        right: `${100 - ((parseFloat(priceMax) || priceBounds.max) - priceBounds.min) / (priceBounds.max - priceBounds.min || 1) * 100}%`
-                      }}
-                    />
-                    <input
-                      type="range"
-                      min={priceBounds.min}
-                      max={priceBounds.max}
-                      value={parseFloat(priceMin) || priceBounds.min}
-                      onChange={(e) => {
-                        const v = parseFloat(e.target.value);
-                        const maxV = parseFloat(priceMax) || priceBounds.max;
-                        setPriceMin(v >= maxV ? String(maxV - 1) : String(v));
-                      }}
-                      className="absolute w-full appearance-none bg-transparent pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-blue-500 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:shadow-sm [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-blue-500 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:cursor-pointer"
-                      style={{ zIndex: 3 }}
-                    />
-                    <input
-                      type="range"
-                      min={priceBounds.min}
-                      max={priceBounds.max}
-                      value={parseFloat(priceMax) || priceBounds.max}
-                      onChange={(e) => {
-                        const v = parseFloat(e.target.value);
-                        const minV = parseFloat(priceMin) || priceBounds.min;
-                        setPriceMax(v <= minV ? String(minV + 1) : String(v));
-                      }}
-                      className="absolute w-full appearance-none bg-transparent pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-blue-500 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:shadow-sm [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-blue-500 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:cursor-pointer"
-                      style={{ zIndex: 4 }}
-                    />
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="number"
-                      value={priceMin}
-                      onChange={(e) => setPriceMin(e.target.value)}
-                      placeholder={String(priceBounds.min)}
-                      className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 rounded-md bg-gray-50/50 focus:bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                    />
-                    <span className="text-gray-300 text-xs">–</span>
-                    <input
-                      type="number"
-                      value={priceMax}
-                      onChange={(e) => setPriceMax(e.target.value)}
-                      placeholder={String(priceBounds.max)}
-                      className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 rounded-md bg-gray-50/50 focus:bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                    />
-                  </div>
-                  <div className="flex justify-between text-[10px] text-gray-400">
-                    <span>PKR {priceBounds.min.toLocaleString()}</span>
-                    <span>PKR {priceBounds.max.toLocaleString()}</span>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* 7. Zone */}
-            {dynamicZones.length > 0 && (
+              {/* 4. Customer Reviews */}
               <div className="py-3 border-b border-gray-50">
                 <button
-                  onClick={() => toggleSection('zone')}
+                  onClick={() => toggleSection('reviews')}
                   className="flex items-center justify-between w-full cursor-pointer"
                 >
-                  <span className="text-[13px] font-semibold text-gray-800">Zone</span>
-                  {expandedSections.zone ? <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 rotate-180" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200" />}
+                  <span className="text-[13px] font-semibold text-gray-800">Customer Reviews</span>
+                  {expandedSections.reviews ? <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 rotate-180" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200" />}
                 </button>
-                {expandedSections.zone && (
-                  <div className="space-y-1.5 max-h-44 overflow-y-auto">
-                    {dynamicZones.map(zone => (
-                      <label key={zone} className="flex flex-row items-center justify-start gap-2.5 py-0.5 cursor-pointer group">
-                        <input
-                          type="checkbox"
-                          checked={selectedZones.includes(zone)}
-                          onChange={() => setSelectedZones(prev => prev.includes(zone) ? prev.filter(z => z !== zone) : [...prev, zone])}
-                          className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
-                        />
-                        <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1 text-left">{zone}</span>
-                        <span className="text-[11px] text-gray-400">{filterCounts.zones[zone] || 0}</span>
+                {expandedSections.reviews && (
+                  <div className="space-y-1.5">
+                    {[
+                      { value: 4.5, label: "Wonderful 4.5+" },
+                      { value: 4, label: "Very good 4+" },
+                      { value: 3.5, label: "Good 3.5+" },
+                      { value: 3, label: "Nice 3+" },
+                    ].map(opt => (
+                      <label key={opt.value} className="flex flex-row items-center justify-start gap-2.5 py-0.5 cursor-pointer group">
+                        <input type="radio" name="reviewRating" value={opt.value} checked={selectedReviewRatings.includes(opt.value)} onChange={() => setSelectedReviewRatings([opt.value])} className="h-3.5 w-3.5 border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer" />
+                        <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1 text-left">{opt.label}</span>
+                        <span className="text-[11px] text-gray-400">{countReview(opt.value)}</span>
                       </label>
                     ))}
+                    {selectedReviewRatings.length > 0 && (
+                      <button
+                        onClick={() => setSelectedReviewRatings([])}
+                        className="text-xs text-blue-600 hover:text-blue-800 cursor-pointer"
+                      >Clear</button>
+                    )}
                   </div>
                 )}
               </div>
-            )}
 
-            {/* Accommodation Type */}
-            <div className="py-3 border-b border-gray-50">
-              <button
-                onClick={() => toggleSection('accommodationType')}
-                className="flex items-center justify-between w-full cursor-pointer"
-              >
-                <span className="text-[13px] font-semibold text-gray-800">Accommodation Type</span>
-                {expandedSections.accommodationType ? <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 rotate-180" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200" />}
-              </button>
-              {expandedSections.accommodationType && (
-                <div className="space-y-1.5">
-                  {accommodationTypes.map(type => (
-                    <label key={type.id} className="flex flex-row items-center justify-start gap-2.5 py-0.5 cursor-pointer group">
-                      <input type="checkbox" checked={selectedAccommodationTypes.includes(type.id)} onChange={() => handleAccommodationTypeChange(type.id)} className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer" />
-                      <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1 text-left">{type.name}</span>
-                      <span className="text-[11px] text-gray-400">{filterCounts.accommodationTypes[type.id] || 0}</span>
-                    </label>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Amenities */}
-            <div className="py-3 border-b border-gray-50">
-              <button
-                onClick={() => toggleSection('amenities')}
-                className="flex items-center justify-between w-full cursor-pointer"
-              >
-                <span className="text-[13px] font-semibold text-gray-800">Amenities</span>
-                {expandedSections.amenities ? <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 rotate-180" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200" />}
-              </button>
-              {expandedSections.amenities && (
-                <div className="space-y-1.5">
-                  {availableAmenities.map(amenity => (
-                    <label key={amenity.id} className="flex flex-row items-center justify-start gap-2.5 py-0.5 cursor-pointer group">
-                      <input
-                        type="checkbox"
-                        checked={selectedAmenities.includes(amenity.id)}
-                        onChange={() => handleAmenityChange(amenity.id)}
-                        className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
+              {/* Price Range */}
+              <div className="py-3 border-b border-gray-50">
+                <button
+                  onClick={() => toggleSection('price')}
+                  className="flex items-center justify-between w-full cursor-pointer"
+                >
+                  <span className="text-[13px] font-semibold text-gray-800">Price Range (PKR)</span>
+                  {expandedSections.price ? <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 rotate-180" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200" />}
+                </button>
+                {expandedSections.price && (
+                  <div className="mt-2 space-y-3">
+                    <div className="relative h-6 flex items-center">
+                      <div className="absolute left-0 right-0 h-1 bg-gray-200 rounded-full" />
+                      <div
+                        className="absolute h-1 bg-blue-500 rounded-full"
+                        style={{
+                          left: `${((parseFloat(priceMin) || priceBounds.min) - priceBounds.min) / (priceBounds.max - priceBounds.min || 1) * 100}%`,
+                          right: `${100 - ((parseFloat(priceMax) || priceBounds.max) - priceBounds.min) / (priceBounds.max - priceBounds.min || 1) * 100}%`
+                        }}
                       />
-                      <amenity.icon className="w-3.5 h-3.5 text-gray-400 group-hover:text-gray-600" />
-                      <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1 text-left">{amenity.name}</span>
-                      <span className="text-[11px] text-gray-400">{filterCounts.amenities[amenity.id] || 0}</span>
-                    </label>
-                  ))}
+                      <input
+                        type="range"
+                        min={priceBounds.min}
+                        max={priceBounds.max}
+                        value={parseFloat(priceMin) || priceBounds.min}
+                        onChange={(e) => {
+                          const v = parseFloat(e.target.value);
+                          const maxV = parseFloat(priceMax) || priceBounds.max;
+                          setPriceMin(v >= maxV ? String(maxV - 1) : String(v));
+                        }}
+                        className="absolute w-full appearance-none bg-transparent pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-blue-500 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:shadow-sm [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-blue-500 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:cursor-pointer"
+                        style={{ zIndex: 3 }}
+                      />
+                      <input
+                        type="range"
+                        min={priceBounds.min}
+                        max={priceBounds.max}
+                        value={parseFloat(priceMax) || priceBounds.max}
+                        onChange={(e) => {
+                          const v = parseFloat(e.target.value);
+                          const minV = parseFloat(priceMin) || priceBounds.min;
+                          setPriceMax(v <= minV ? String(minV + 1) : String(v));
+                        }}
+                        className="absolute w-full appearance-none bg-transparent pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-blue-500 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:shadow-sm [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-blue-500 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:cursor-pointer"
+                        style={{ zIndex: 4 }}
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        value={priceMin}
+                        onChange={(e) => setPriceMin(e.target.value)}
+                        placeholder={String(priceBounds.min)}
+                        className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 rounded-md bg-gray-50/50 focus:bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                      />
+                      <span className="text-gray-300 text-xs">–</span>
+                      <input
+                        type="number"
+                        value={priceMax}
+                        onChange={(e) => setPriceMax(e.target.value)}
+                        placeholder={String(priceBounds.max)}
+                        className="w-full px-2.5 py-1.5 text-[13px] border border-gray-200 rounded-md bg-gray-50/50 focus:bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                      />
+                    </div>
+                    <div className="flex justify-between text-[10px] text-gray-400">
+                      <span>PKR {priceBounds.min.toLocaleString()}</span>
+                      <span>PKR {priceBounds.max.toLocaleString()}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* 7. Zone */}
+              {dynamicZones.length > 0 && (
+                <div className="py-3 border-b border-gray-50">
+                  <button
+                    onClick={() => toggleSection('zone')}
+                    className="flex items-center justify-between w-full cursor-pointer"
+                  >
+                    <span className="text-[13px] font-semibold text-gray-800">Zone</span>
+                    {expandedSections.zone ? <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 rotate-180" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200" />}
+                  </button>
+                  {expandedSections.zone && (
+                    <div className="space-y-1.5 max-h-44 overflow-y-auto">
+                      {dynamicZones.map(zone => (
+                        <label key={zone} className="flex flex-row items-center justify-start gap-2.5 py-0.5 cursor-pointer group">
+                          <input
+                            type="checkbox"
+                            checked={selectedZones.includes(zone)}
+                            onChange={() => setSelectedZones(prev => prev.includes(zone) ? prev.filter(z => z !== zone) : [...prev, zone])}
+                            className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
+                          />
+                          <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1 text-left">{zone}</span>
+                          <span className="text-[11px] text-gray-400">{filterCounts.zones[zone] || 0}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
-            </div>
 
-            {/* Promos */}
-            {dynamicPromos.length > 0 && (
+              {/* Accommodation Type */}
               <div className="py-3 border-b border-gray-50">
                 <button
-                  onClick={() => toggleSection('promos')}
+                  onClick={() => toggleSection('accommodationType')}
                   className="flex items-center justify-between w-full cursor-pointer"
                 >
-                  <span className="text-[13px] font-semibold text-gray-800">Promos</span>
-                  {expandedSections.promos ? <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 rotate-180" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200" />}
+                  <span className="text-[13px] font-semibold text-gray-800">Accommodation Type</span>
+                  {expandedSections.accommodationType ? <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 rotate-180" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200" />}
                 </button>
-                {expandedSections.promos && (
+                {expandedSections.accommodationType && (
                   <div className="space-y-1.5">
-                    {dynamicPromos.map(promo => (
-                      <label key={promo} className="flex flex-row items-center justify-start gap-2.5 py-0.5 cursor-pointer group">
-                        <input
-                          type="checkbox"
-                          checked={selectedPromos.includes(promo)}
-                          onChange={() => setSelectedPromos(prev => prev.includes(promo) ? prev.filter(p => p !== promo) : [...prev, promo])}
-                          className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
-                        />
-                        <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1 text-left">{promo}</span>
-                        <span className="text-[11px] text-gray-400">{filterCounts.promos[promo] || 0}</span>
+                    {accommodationTypes.map(type => (
+                      <label key={type.id} className="flex flex-row items-center justify-start gap-2.5 py-0.5 cursor-pointer group">
+                        <input type="checkbox" checked={selectedAccommodationTypes.includes(type.id)} onChange={() => handleAccommodationTypeChange(type.id)} className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer" />
+                        <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1 text-left">{type.name}</span>
+                        <span className="text-[11px] text-gray-400">{filterCounts.accommodationTypes[type.id] || 0}</span>
                       </label>
                     ))}
                   </div>
                 )}
               </div>
-            )}
 
-            {/* Cancellation Fees (expanded) */}
-            <div className="py-3 border-b border-gray-50">
-              <button
-                onClick={() => toggleSection('cancellation')}
-                className="flex items-center justify-between w-full cursor-pointer"
-              >
-                <span className="text-[13px] font-semibold text-gray-800">Cancellation Fees</span>
-                {expandedSections.cancellation ? <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 rotate-180" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200" />}
-              </button>
-              {expandedSections.cancellation && (
-                <div className="space-y-1.5">
-                  {[
-                    { value: "", label: "All", count: hotels.length },
-                    { value: "free", label: "Free cancellation", count: filterCounts.freeCancellation },
-                    { value: "partial", label: "Partial cancellation fees", count: filterCounts.partialCancellation },
-                    { value: "nonrefundable", label: "Non refundable", count: filterCounts.nonRefundable },
-                    { value: "notavailable", label: "Fees not available", count: filterCounts.noCancellationInfo },
-                  ].map(opt => (
-                    <label key={opt.value} className="flex flex-row items-center justify-start gap-2.5 py-0.5 cursor-pointer group">
-                      <input type="radio" name="cancellation" value={opt.value} checked={selectedCancellation === opt.value} onChange={(e) => setSelectedCancellation(e.target.value)} className="h-3.5 w-3.5 border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer" />
-                      <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1 text-left">{opt.label}</span>
-                      <span className="text-[11px] text-gray-400">{opt.count}</span>
-                    </label>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Establishment Profile */}
-            {dynamicEstablishment.length > 0 && (
+              {/* Amenities */}
               <div className="py-3 border-b border-gray-50">
                 <button
-                  onClick={() => toggleSection('establishment')}
+                  onClick={() => toggleSection('amenities')}
                   className="flex items-center justify-between w-full cursor-pointer"
                 >
-                  <span className="text-[13px] font-semibold text-gray-800">Establishment Profile</span>
-                  {expandedSections.establishment ? <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 rotate-180" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200" />}
+                  <span className="text-[13px] font-semibold text-gray-800">Amenities</span>
+                  {expandedSections.amenities ? <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 rotate-180" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200" />}
                 </button>
-                {expandedSections.establishment && (
-                  <div className="space-y-1.5 max-h-44 overflow-y-auto">
-                    {dynamicEstablishment.map(est => (
-                      <label key={est} className="flex flex-row items-center justify-start gap-2.5 py-0.5 cursor-pointer group">
-                        <input
-                          type="checkbox"
-                          checked={selectedEstablishment.includes(est)}
-                          onChange={() => setSelectedEstablishment(prev => prev.includes(est) ? prev.filter(e => e !== est) : [...prev, est])}
-                          className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
-                        />
-                        <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1 text-left">{establishmentLabels[est] || est}</span>
-                        <span className="text-[11px] text-gray-400">{filterCounts.establishment[est] || 0}</span>
-                      </label>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Discounts */}
-            {dynamicDiscounts.length > 0 && (
-              <div className="py-3 border-b border-gray-50">
-                <button
-                  onClick={() => toggleSection('discounts')}
-                  className="flex items-center justify-between w-full cursor-pointer"
-                >
-                  <span className="text-[13px] font-semibold text-gray-800">Discounts</span>
-                  {expandedSections.discounts ? <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 rotate-180" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200" />}
-                </button>
-                {expandedSections.discounts && (
+                {expandedSections.amenities && (
                   <div className="space-y-1.5">
-                    {dynamicDiscounts.map(disc => (
-                      <label key={disc} className="flex flex-row items-center justify-start gap-2.5 py-0.5 cursor-pointer group">
+                    {availableAmenities.map(amenity => (
+                      <label key={amenity.id} className="flex flex-row items-center justify-start gap-2.5 py-0.5 cursor-pointer group">
                         <input
                           type="checkbox"
-                          checked={selectedDiscounts.includes(disc)}
-                          onChange={() => setSelectedDiscounts(prev => prev.includes(disc) ? prev.filter(d => d !== disc) : [...prev, disc])}
+                          checked={selectedAmenities.includes(amenity.id)}
+                          onChange={() => handleAmenityChange(amenity.id)}
                           className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
                         />
-                        <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1 text-left">{disc}</span>
-                        <span className="text-[11px] text-gray-400">{filterCounts.discounts[disc] || 0}</span>
+                        <amenity.icon className="w-3.5 h-3.5 text-gray-400 group-hover:text-gray-600" />
+                        <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1 text-left">{amenity.name}</span>
+                        <span className="text-[11px] text-gray-400">{filterCounts.amenities[amenity.id] || 0}</span>
                       </label>
                     ))}
                   </div>
                 )}
               </div>
-            )}
 
-            {/* Chain */}
-            {dynamicChains.length > 0 && (
-              <div className="py-3 border-b border-gray-50">
-                <button
-                  onClick={() => toggleSection('chain')}
-                  className="flex items-center justify-between w-full cursor-pointer"
-                >
-                  <span className="text-[13px] font-semibold text-gray-800">Chain</span>
-                  {expandedSections.chain ? <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 rotate-180" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200" />}
-                </button>
-                {expandedSections.chain && (
-                  <div className="space-y-1.5 max-h-44 overflow-y-auto">
-                    {dynamicChains.map(chain => (
-                      <label key={chain} className="flex flex-row items-center justify-start gap-2.5 py-0.5 cursor-pointer group">
-                        <input
-                          type="checkbox"
-                          checked={selectedChains.includes(chain)}
-                          onChange={() => setSelectedChains(prev => prev.includes(chain) ? prev.filter(c => c !== chain) : [...prev, chain])}
-                          className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
-                        />
-                        <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1 text-left">{chain}</span>
-                        <span className="text-[11px] text-gray-400">{filterCounts.chains[chain] || 0}</span>
-                      </label>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Product for Packaging */}
-            <div className="py-3 border-b border-gray-50">
-              <button
-                onClick={() => toggleSection('packaging')}
-                className="flex items-center justify-between w-full cursor-pointer"
-              >
-                <span className="text-[13px] font-semibold text-gray-800">Product for Packaging</span>
-                {expandedSections.packaging ? <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 rotate-180" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200" />}
-              </button>
-              {expandedSections.packaging && (
-                <div className="space-y-1.5">
-                  {[
-                    { value: "", label: "All", count: hotels.length },
-                    { value: "without", label: "Without package", count: filterCounts.packagingWithout },
-                    { value: "with", label: "With package", count: filterCounts.packagingWith },
-                  ].map(opt => (
-                    <label key={opt.value} className="flex flex-row items-center justify-start gap-2.5 py-0.5 cursor-pointer group">
-                      <input type="radio" name="packaging" value={opt.value} checked={selectedPackaging === opt.value} onChange={(e) => setSelectedPackaging(e.target.value)} className="h-3.5 w-3.5 border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer" />
-                      <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1 text-left">{opt.label}</span>
-                      <span className="text-[11px] text-gray-400">{opt.count}</span>
-                    </label>
-                  ))}
+              {/* Promos */}
+              {dynamicPromos.length > 0 && (
+                <div className="py-3 border-b border-gray-50">
+                  <button
+                    onClick={() => toggleSection('promos')}
+                    className="flex items-center justify-between w-full cursor-pointer"
+                  >
+                    <span className="text-[13px] font-semibold text-gray-800">Promos</span>
+                    {expandedSections.promos ? <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 rotate-180" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200" />}
+                  </button>
+                  {expandedSections.promos && (
+                    <div className="space-y-1.5">
+                      {dynamicPromos.map(promo => (
+                        <label key={promo} className="flex flex-row items-center justify-start gap-2.5 py-0.5 cursor-pointer group">
+                          <input
+                            type="checkbox"
+                            checked={selectedPromos.includes(promo)}
+                            onChange={() => setSelectedPromos(prev => prev.includes(promo) ? prev.filter(p => p !== promo) : [...prev, promo])}
+                            className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
+                          />
+                          <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1 text-left">{promo}</span>
+                          <span className="text-[11px] text-gray-400">{filterCounts.promos[promo] || 0}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
-            </div>
+
+              {/* Cancellation Fees (expanded) */}
+              <div className="py-3 border-b border-gray-50">
+                <button
+                  onClick={() => toggleSection('cancellation')}
+                  className="flex items-center justify-between w-full cursor-pointer"
+                >
+                  <span className="text-[13px] font-semibold text-gray-800">Cancellation Fees</span>
+                  {expandedSections.cancellation ? <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 rotate-180" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200" />}
+                </button>
+                {expandedSections.cancellation && (
+                  <div className="space-y-1.5">
+                    {[
+                      { value: "", label: "All", count: hotels.length },
+                      { value: "free", label: "Free cancellation", count: filterCounts.freeCancellation },
+                      { value: "partial", label: "Partial cancellation fees", count: filterCounts.partialCancellation },
+                      { value: "nonrefundable", label: "Non refundable", count: filterCounts.nonRefundable },
+                      { value: "notavailable", label: "Fees not available", count: filterCounts.noCancellationInfo },
+                    ].map(opt => (
+                      <label key={opt.value} className="flex flex-row items-center justify-start gap-2.5 py-0.5 cursor-pointer group">
+                        <input type="radio" name="cancellation" value={opt.value} checked={selectedCancellation === opt.value} onChange={(e) => setSelectedCancellation(e.target.value)} className="h-3.5 w-3.5 border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer" />
+                        <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1 text-left">{opt.label}</span>
+                        <span className="text-[11px] text-gray-400">{opt.count}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Establishment Profile */}
+              {dynamicEstablishment.length > 0 && (
+                <div className="py-3 border-b border-gray-50">
+                  <button
+                    onClick={() => toggleSection('establishment')}
+                    className="flex items-center justify-between w-full cursor-pointer"
+                  >
+                    <span className="text-[13px] font-semibold text-gray-800">Establishment Profile</span>
+                    {expandedSections.establishment ? <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 rotate-180" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200" />}
+                  </button>
+                  {expandedSections.establishment && (
+                    <div className="space-y-1.5 max-h-44 overflow-y-auto">
+                      {dynamicEstablishment.map(est => (
+                        <label key={est} className="flex flex-row items-center justify-start gap-2.5 py-0.5 cursor-pointer group">
+                          <input
+                            type="checkbox"
+                            checked={selectedEstablishment.includes(est)}
+                            onChange={() => setSelectedEstablishment(prev => prev.includes(est) ? prev.filter(e => e !== est) : [...prev, est])}
+                            className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
+                          />
+                          <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1 text-left">{establishmentLabels[est] || est}</span>
+                          <span className="text-[11px] text-gray-400">{filterCounts.establishment[est] || 0}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Discounts */}
+              {dynamicDiscounts.length > 0 && (
+                <div className="py-3 border-b border-gray-50">
+                  <button
+                    onClick={() => toggleSection('discounts')}
+                    className="flex items-center justify-between w-full cursor-pointer"
+                  >
+                    <span className="text-[13px] font-semibold text-gray-800">Discounts</span>
+                    {expandedSections.discounts ? <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 rotate-180" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200" />}
+                  </button>
+                  {expandedSections.discounts && (
+                    <div className="space-y-1.5">
+                      {dynamicDiscounts.map(disc => (
+                        <label key={disc} className="flex flex-row items-center justify-start gap-2.5 py-0.5 cursor-pointer group">
+                          <input
+                            type="checkbox"
+                            checked={selectedDiscounts.includes(disc)}
+                            onChange={() => setSelectedDiscounts(prev => prev.includes(disc) ? prev.filter(d => d !== disc) : [...prev, disc])}
+                            className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
+                          />
+                          <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1 text-left">{disc}</span>
+                          <span className="text-[11px] text-gray-400">{filterCounts.discounts[disc] || 0}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Chain */}
+              {dynamicChains.length > 0 && (
+                <div className="py-3 border-b border-gray-50">
+                  <button
+                    onClick={() => toggleSection('chain')}
+                    className="flex items-center justify-between w-full cursor-pointer"
+                  >
+                    <span className="text-[13px] font-semibold text-gray-800">Chain</span>
+                    {expandedSections.chain ? <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 rotate-180" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200" />}
+                  </button>
+                  {expandedSections.chain && (
+                    <div className="space-y-1.5 max-h-44 overflow-y-auto">
+                      {dynamicChains.map(chain => (
+                        <label key={chain} className="flex flex-row items-center justify-start gap-2.5 py-0.5 cursor-pointer group">
+                          <input
+                            type="checkbox"
+                            checked={selectedChains.includes(chain)}
+                            onChange={() => setSelectedChains(prev => prev.includes(chain) ? prev.filter(c => c !== chain) : [...prev, chain])}
+                            className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer"
+                          />
+                          <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1 text-left">{chain}</span>
+                          <span className="text-[11px] text-gray-400">{filterCounts.chains[chain] || 0}</span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Product for Packaging */}
+              <div className="py-3 border-b border-gray-50">
+                <button
+                  onClick={() => toggleSection('packaging')}
+                  className="flex items-center justify-between w-full cursor-pointer"
+                >
+                  <span className="text-[13px] font-semibold text-gray-800">Product for Packaging</span>
+                  {expandedSections.packaging ? <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 rotate-180" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-400 transition-transform duration-200" />}
+                </button>
+                {expandedSections.packaging && (
+                  <div className="space-y-1.5">
+                    {[
+                      { value: "", label: "All", count: hotels.length },
+                      { value: "without", label: "Without package", count: filterCounts.packagingWithout },
+                      { value: "with", label: "With package", count: filterCounts.packagingWith },
+                    ].map(opt => (
+                      <label key={opt.value} className="flex flex-row items-center justify-start gap-2.5 py-0.5 cursor-pointer group">
+                        <input type="radio" name="packaging" value={opt.value} checked={selectedPackaging === opt.value} onChange={(e) => setSelectedPackaging(e.target.value)} className="h-3.5 w-3.5 border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 cursor-pointer" />
+                        <span className="text-[13px] text-gray-600 group-hover:text-gray-900 transition-colors flex-1 text-left">{opt.label}</span>
+                        <span className="text-[11px] text-gray-400">{opt.count}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
             </aside>
           </div>
 
@@ -1889,11 +1887,10 @@ const HotelSearchResults = () => {
                 onClick={() => {
                   setSelectedEstablishment(prev => prev.includes('119') ? prev.filter(x => x !== '119') : [...prev, '119']);
                 }}
-                className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${
-                  selectedEstablishment.includes('119')
-                    ? 'bg-amber-500 text-white shadow-sm ring-1 ring-amber-500'
-                    : 'bg-white text-gray-700 border border-gray-200 shadow-2xs hover:bg-gray-50'
-                }`}
+                className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${selectedEstablishment.includes('119')
+                  ? 'bg-amber-500 text-white shadow-sm ring-1 ring-amber-500'
+                  : 'bg-white text-gray-700 border border-gray-200 shadow-2xs hover:bg-gray-50'
+                  }`}
               >
                 <AnimatedIcon name="crown" animation="pulse" size={13} className={selectedEstablishment.includes('119') ? 'text-amber-100' : 'text-amber-500'} />
                 <span>Luxury Collection</span>
@@ -1904,11 +1901,10 @@ const HotelSearchResults = () => {
                 onClick={() => {
                   setSelectedCancellation(prev => prev === 'free' ? '' : 'free');
                 }}
-                className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${
-                  selectedCancellation === 'free'
-                    ? 'bg-emerald-600 text-white shadow-sm ring-1 ring-emerald-600'
-                    : 'bg-white text-gray-700 border border-gray-200 shadow-2xs hover:bg-gray-50'
-                }`}
+                className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${selectedCancellation === 'free'
+                  ? 'bg-emerald-600 text-white shadow-sm ring-1 ring-emerald-600'
+                  : 'bg-white text-gray-700 border border-gray-200 shadow-2xs hover:bg-gray-50'
+                  }`}
               >
                 <AnimatedIcon name="shield" animation="pulse" size={13} className={selectedCancellation === 'free' ? 'text-emerald-100' : 'text-emerald-500'} />
                 <span>Free Cancellation</span>
@@ -1923,11 +1919,10 @@ const HotelSearchResults = () => {
                       setSelectedBoards(prev => prev.includes(bf) ? prev.filter(x => x !== bf) : [...prev, bf]);
                     }
                   }}
-                  className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${
-                    selectedBoards.some(b => b.toUpperCase().includes('BREAKFAST'))
-                      ? 'bg-blue-600 text-white shadow-sm ring-1 ring-blue-600'
-                      : 'bg-white text-gray-700 border border-gray-200 shadow-2xs hover:bg-gray-50'
-                  }`}
+                  className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${selectedBoards.some(b => b.toUpperCase().includes('BREAKFAST'))
+                    ? 'bg-blue-600 text-white shadow-sm ring-1 ring-blue-600'
+                    : 'bg-white text-gray-700 border border-gray-200 shadow-2xs hover:bg-gray-50'
+                    }`}
                 >
                   <AnimatedIcon name="breakfast" animation="bounce" size={13} className={selectedBoards.some(b => b.toUpperCase().includes('BREAKFAST')) ? 'text-amber-200' : 'text-amber-600'} />
                   <span>Breakfast Included</span>
@@ -1943,11 +1938,10 @@ const HotelSearchResults = () => {
                       setSelectedCategories(prev => prev.includes(five) ? prev.filter(x => x !== five) : [...prev, five]);
                     }
                   }}
-                  className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${
-                    selectedCategories.some(c => c.startsWith('5'))
-                      ? 'bg-blue-600 text-white shadow-sm ring-1 ring-blue-600'
-                      : 'bg-white text-gray-700 border border-gray-200 shadow-2xs hover:bg-gray-50'
-                  }`}
+                  className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${selectedCategories.some(c => c.startsWith('5'))
+                    ? 'bg-blue-600 text-white shadow-sm ring-1 ring-blue-600'
+                    : 'bg-white text-gray-700 border border-gray-200 shadow-2xs hover:bg-gray-50'
+                    }`}
                 >
                   <AnimatedIcon name="star" animation="pulse" size={13} className={selectedCategories.some(c => c.startsWith('5')) ? 'text-amber-200' : 'text-amber-400'} />
                   <span>5-Star Only</span>
@@ -1982,11 +1976,10 @@ const HotelSearchResults = () => {
                   <button
                     type="button"
                     onClick={() => setViewMode('list')}
-                    className={`px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
-                      viewMode === 'list'
-                        ? 'bg-white text-blue-600 shadow-xs font-black'
-                        : 'text-gray-500 hover:text-gray-900'
-                    }`}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${viewMode === 'list'
+                      ? 'bg-white text-blue-600 shadow-xs font-black'
+                      : 'text-gray-500 hover:text-gray-900'
+                      }`}
                     title="List View"
                   >
                     <List className="w-3.5 h-3.5" />
@@ -1995,11 +1988,10 @@ const HotelSearchResults = () => {
                   <button
                     type="button"
                     onClick={() => setViewMode('thumbnail')}
-                    className={`px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
-                      viewMode === 'thumbnail'
-                        ? 'bg-white text-blue-600 shadow-xs font-black'
-                        : 'text-gray-500 hover:text-gray-900'
-                    }`}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${viewMode === 'thumbnail'
+                      ? 'bg-white text-blue-600 shadow-xs font-black'
+                      : 'text-gray-500 hover:text-gray-900'
+                      }`}
                     title="Grid View"
                   >
                     <LayoutGrid className="w-3.5 h-3.5" />
@@ -2022,7 +2014,7 @@ const HotelSearchResults = () => {
 
                 const hotelImage = hotel.thumbnail || (hotel.images && hotel.images[0]?.path ? `https://photos.hotelbeds.com/giata/original/${hotel.images[0].path.replace(/^\/+/, '')}` : "https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg");
 
-                {/* ── BENTO GRID CARD (3-COLUMNS ON DESKTOP, COMPLETE DETAILS) ── */}
+                {/* ── BENTO GRID CARD (3-COLUMNS ON DESKTOP, COMPLETE DETAILS) ── */ }
                 if (viewMode === 'thumbnail') {
                   return (
                     <div
@@ -2236,7 +2228,7 @@ const HotelSearchResults = () => {
                   );
                 }
 
-                {/* ── OPTION A: SLEEK MODERN HORIZONTAL LIST VIEW (BENTO ROW) ── */}
+                {/* ── OPTION A: SLEEK MODERN HORIZONTAL LIST VIEW (BENTO ROW) ── */ }
                 return (
                   <div
                     key={hotel.id}
@@ -2614,246 +2606,245 @@ const HotelSearchResults = () => {
       />
 
       {/* Reviews Modal */}
-        <ReviewsModal
-          isOpen={reviewsModal.isOpen}
-          onClose={closeReviewsModal}
-          hotelName={reviewsModal.hotelName}
-          reviewData={reviewsModal.hotelId ? hotelReviews[reviewsModal.hotelId] : null}
+      <ReviewsModal
+        isOpen={reviewsModal.isOpen}
+        onClose={closeReviewsModal}
+        hotelName={reviewsModal.hotelName}
+        reviewData={reviewsModal.hotelId ? hotelReviews[reviewsModal.hotelId] : null}
+      />
+
+      {/* Hotel Detail Modal */}
+      {selectedHotel && (
+        <HotelDetailModal
+          isOpen={true}
+          onClose={() => setSelectedHotel(null)}
+          hotel={selectedHotel}
+          hotelContentData={hotelContentData}
+          searchParams={searchParams}
+          formatPKR={formatPKR}
+          convert={convert}
+          applyCommission={applyCommission}
+          onAddToCart={handleAddToCart}
+          onMultiRoomAddToCart={handleMultiRoomAddToCart}
+          openGallery={(idx = 0, customImages = null, title = '', customAlbums = null, initialAlbum = 'All') => {
+            const rawImages = (hotelContentData?.images && hotelContentData.images.length >= (selectedHotel?.images?.length || 0))
+              ? hotelContentData.images
+              : (selectedHotel?.images && selectedHotel.images.length > 0 ? selectedHotel.images : (hotelContentData?.images || []));
+
+            const computedAlbums = customAlbums || buildImageAlbums(rawImages);
+            const allImages = (computedAlbums['All'] && computedAlbums['All'].length > 0)
+              ? computedAlbums['All']
+              : rawImages.map(img => img.path ? `https://photos.hotelbeds.com/giata/original/${img.path.replace(/^\/+/, '')}` : (typeof img === 'string' ? img : null)).filter(Boolean);
+
+            if (allImages.length === 0 && selectedHotel?.thumbnail) allImages.push(selectedHotel.thumbnail);
+
+            setGalleryAlbums(computedAlbums);
+            setActiveGalleryAlbum(initialAlbum || 'All');
+
+            if (customImages && customImages.length > 0) {
+              setGalleryImages(customImages);
+            } else if (initialAlbum && computedAlbums[initialAlbum] && computedAlbums[initialAlbum].length > 0) {
+              setGalleryImages(computedAlbums[initialAlbum]);
+            } else {
+              setGalleryImages(allImages);
+            }
+
+            setGalleryIndex(idx || 0);
+            setGalleryTitle(title || selectedHotel?.name || '');
+            setGalleryOpen(true);
+          }}
+          onSelectRoomDetail={(room) => setSelectedRoomDetail(room)}
+          activeRoomTab={activeRoomTab}
+          setActiveRoomTab={setActiveRoomTab}
+          roomSelections={roomSelections}
+          setRoomSelections={setRoomSelections}
+          formatCancellationPolicy={formatCancellationPolicy}
+          selectedBoards={selectedBoards}
+          selectedCancellation={selectedCancellation}
+          selectedPackaging={selectedPackaging}
+          selectedPromos={selectedPromos}
+          priceMin={priceMin}
+          priceMax={priceMax}
         />
+      )}
 
-        {/* Hotel Detail Modal */}
-        {selectedHotel && (
-          <HotelDetailModal
-            isOpen={true}
-            onClose={() => setSelectedHotel(null)}
-            hotel={selectedHotel}
-            hotelContentData={hotelContentData}
-            searchParams={searchParams}
-            formatPKR={formatPKR}
-            convert={convert}
-            applyCommission={applyCommission}
-            onAddToCart={handleAddToCart}
-            onMultiRoomAddToCart={handleMultiRoomAddToCart}
-            openGallery={(idx = 0, customImages = null, title = '', customAlbums = null, initialAlbum = 'All') => {
-              const rawImages = (hotelContentData?.images && hotelContentData.images.length >= (selectedHotel?.images?.length || 0))
-                ? hotelContentData.images
-                : (selectedHotel?.images && selectedHotel.images.length > 0 ? selectedHotel.images : (hotelContentData?.images || []));
+      {/* Room Detail Modal */}
+      {selectedRoomDetail && (
+        <div className="fixed inset-0 z-[160] flex items-end sm:items-center justify-center" onClick={() => setSelectedRoomDetail(null)}>
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+          <div className="relative bg-white w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl max-h-[85vh] overflow-hidden flex flex-col shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            {/* Header */}
+            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 flex-shrink-0">
+              <h3 className="text-[15px] font-bold text-gray-900 line-clamp-2 flex-1 pr-2">{selectedRoomDetail.name}</h3>
+              <button onClick={() => setSelectedRoomDetail(null)} className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center"><X className="w-4 h-4 text-gray-600" /></button>
+            </div>
+            {/* Scrollable body */}
+            <div className="overflow-y-auto flex-1 p-4" style={{ scrollbarWidth: 'thin' }}>
+              {/* Room images */}
+              {(() => {
+                const rawImages = (hotelContentData?.images && hotelContentData.images.length > 0)
+                  ? hotelContentData.images
+                  : (selectedHotel?.images || []);
+                const roomImages = rawImages
+                  .filter(img => img.roomCode === selectedRoomDetail.code)
+                  .map(img => img.path ? `https://photos.hotelbeds.com/giata/original/${img.path}` : null)
+                  .filter(Boolean);
+                return roomImages.length > 0 ? (
+                  <div className="grid grid-cols-2 gap-1 mb-4 rounded-xl overflow-hidden">
+                    {roomImages.slice(0, 4).map((img, i) => (
+                      <div key={i} className="aspect-video overflow-hidden cursor-pointer" onClick={() => { setGalleryImages(roomImages); setGalleryIndex(i); setGalleryTitle(selectedRoomDetail.name + ' Photos'); setGalleryOpen(true); }}>
+                        <img src={img} alt="" className="w-full h-full object-cover hover:scale-105 transition-transform" onError={(e) => e.target.style.display = 'none'} />
+                      </div>
+                    ))}
+                  </div>
+                ) : null;
+              })()}
+              {/* Room code */}
+              <p className="text-xs text-gray-400 mb-3">Room code: {selectedRoomDetail.code}</p>
+              {/* Room Facilities - Mandatory Hotelbeds Certification: Clearly separate paid (indFee=true) vs Free */}
+              {(() => {
+                const roomFacilities = selectedRoomDetail.facilities ||
+                  hotelContentData?.rooms?.find(r => r.roomCode === selectedRoomDetail.code)?.facilities ||
+                  (selectedHotel?.facilities || []).filter(f => f.roomCode === selectedRoomDetail.code || !f.roomCode);
+                if (!roomFacilities || roomFacilities.length === 0) return null;
 
-              const computedAlbums = customAlbums || buildImageAlbums(rawImages);
-              const allImages = (computedAlbums['All'] && computedAlbums['All'].length > 0)
-                ? computedAlbums['All']
-                : rawImages.map(img => img.path ? `https://photos.hotelbeds.com/giata/original/${img.path.replace(/^\/+/, '')}` : (typeof img === 'string' ? img : null)).filter(Boolean);
+                const paid = roomFacilities.filter(f => f.indFee === true);
+                const free = roomFacilities.filter(f => f.indFee !== true);
 
-              if (allImages.length === 0 && selectedHotel?.thumbnail) allImages.push(selectedHotel.thumbnail);
-
-              setGalleryAlbums(computedAlbums);
-              setActiveGalleryAlbum(initialAlbum || 'All');
-
-              if (customImages && customImages.length > 0) {
-                setGalleryImages(customImages);
-              } else if (initialAlbum && computedAlbums[initialAlbum] && computedAlbums[initialAlbum].length > 0) {
-                setGalleryImages(computedAlbums[initialAlbum]);
-              } else {
-                setGalleryImages(allImages);
-              }
-
-              setGalleryIndex(idx || 0);
-              setGalleryTitle(title || selectedHotel?.name || '');
-              setGalleryOpen(true);
-            }}
-            onSelectRoomDetail={(room) => setSelectedRoomDetail(room)}
-            activeRoomTab={activeRoomTab}
-            setActiveRoomTab={setActiveRoomTab}
-            roomSelections={roomSelections}
-            setRoomSelections={setRoomSelections}
-            formatCancellationPolicy={formatCancellationPolicy}
-            selectedBoards={selectedBoards}
-            selectedCancellation={selectedCancellation}
-            selectedPackaging={selectedPackaging}
-            selectedPromos={selectedPromos}
-            priceMin={priceMin}
-            priceMax={priceMax}
-          />
-        )}
-
-        {/* Room Detail Modal */}
-        {selectedRoomDetail && (
-          <div className="fixed inset-0 z-[160] flex items-end sm:items-center justify-center" onClick={() => setSelectedRoomDetail(null)}>
-            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
-            <div className="relative bg-white w-full sm:max-w-lg sm:rounded-2xl rounded-t-2xl max-h-[85vh] overflow-hidden flex flex-col shadow-2xl" onClick={(e) => e.stopPropagation()}>
-              {/* Header */}
-              <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 flex-shrink-0">
-                <h3 className="text-[15px] font-bold text-gray-900 line-clamp-2 flex-1 pr-2">{selectedRoomDetail.name}</h3>
-                <button onClick={() => setSelectedRoomDetail(null)} className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center"><X className="w-4 h-4 text-gray-600" /></button>
-              </div>
-              {/* Scrollable body */}
-              <div className="overflow-y-auto flex-1 p-4" style={{ scrollbarWidth: 'thin' }}>
-                {/* Room images */}
-                {(() => {
-                  const rawImages = (hotelContentData?.images && hotelContentData.images.length > 0)
-                    ? hotelContentData.images
-                    : (selectedHotel?.images || []);
-                  const roomImages = rawImages
-                    .filter(img => img.roomCode === selectedRoomDetail.code)
-                    .map(img => img.path ? `https://photos.hotelbeds.com/giata/original/${img.path}` : null)
-                    .filter(Boolean);
-                  return roomImages.length > 0 ? (
-                    <div className="grid grid-cols-2 gap-1 mb-4 rounded-xl overflow-hidden">
-                      {roomImages.slice(0, 4).map((img, i) => (
-                        <div key={i} className="aspect-video overflow-hidden cursor-pointer" onClick={() => { setGalleryImages(roomImages); setGalleryIndex(i); setGalleryTitle(selectedRoomDetail.name + ' Photos'); setGalleryOpen(true); }}>
-                          <img src={img} alt="" className="w-full h-full object-cover hover:scale-105 transition-transform" onError={(e) => e.target.style.display = 'none'} />
+                return (
+                  <div className="space-y-3">
+                    {paid.length > 0 && (
+                      <div className="p-2.5 bg-orange-50 border border-orange-200 rounded-lg">
+                        <h4 className="text-xs font-semibold text-orange-800 mb-1.5 flex items-center">
+                          <AlertCircle className="w-3.5 h-3.5 mr-1 text-orange-600 flex-shrink-0" />
+                          Room Facilities with Additional Charges (payable on-site):
+                        </h4>
+                        <div className="flex flex-wrap gap-1.5">
+                          {paid.map((f, i) => (
+                            <span key={`r-paid-${i}`} className="text-[11px] px-2 py-0.5 bg-orange-100 text-orange-800 rounded font-medium border border-orange-200">
+                              {f.description?.content || f.description || f.facilityName || `Facility ${f.facilityCode || f.code}`} (Extra Fee)
+                            </span>
+                          ))}
                         </div>
-                      ))}
-                    </div>
-                  ) : null;
-                })()}
-                {/* Room code */}
-                <p className="text-xs text-gray-400 mb-3">Room code: {selectedRoomDetail.code}</p>
-                {/* Room Facilities - Mandatory Hotelbeds Certification: Clearly separate paid (indFee=true) vs Free */}
-                {(() => {
-                  const roomFacilities = selectedRoomDetail.facilities || 
-                    hotelContentData?.rooms?.find(r => r.roomCode === selectedRoomDetail.code)?.facilities || 
-                    (selectedHotel?.facilities || []).filter(f => f.roomCode === selectedRoomDetail.code || !f.roomCode);
-                  if (!roomFacilities || roomFacilities.length === 0) return null;
-                  
-                  const paid = roomFacilities.filter(f => f.indFee === true);
-                  const free = roomFacilities.filter(f => f.indFee !== true);
-
-                  return (
-                    <div className="space-y-3">
-                      {paid.length > 0 && (
-                        <div className="p-2.5 bg-orange-50 border border-orange-200 rounded-lg">
-                          <h4 className="text-xs font-semibold text-orange-800 mb-1.5 flex items-center">
-                            <AlertCircle className="w-3.5 h-3.5 mr-1 text-orange-600 flex-shrink-0" />
-                            Room Facilities with Additional Charges (payable on-site):
-                          </h4>
-                          <div className="flex flex-wrap gap-1.5">
-                            {paid.map((f, i) => (
-                              <span key={`r-paid-${i}`} className="text-[11px] px-2 py-0.5 bg-orange-100 text-orange-800 rounded font-medium border border-orange-200">
-                                {f.description?.content || f.description || f.facilityName || `Facility ${f.facilityCode || f.code}`} (Extra Fee)
-                              </span>
-                            ))}
-                          </div>
-                          <p className="text-[10px] text-orange-700 mt-1">These room facilities require additional payment directly at the property.</p>
+                        <p className="text-[10px] text-orange-700 mt-1">These room facilities require additional payment directly at the property.</p>
+                      </div>
+                    )}
+                    {free.length > 0 && (
+                      <div>
+                        <h4 className="text-xs font-semibold text-gray-700 mb-1.5 flex items-center">
+                          <CheckCircle className="w-3.5 h-3.5 mr-1 text-green-600 flex-shrink-0" />
+                          Complimentary Room Amenities:
+                        </h4>
+                        <div className="flex flex-wrap gap-1.5">
+                          {free.slice(0, 25).map((f, i) => (
+                            <span key={`r-free-${i}`} className="text-[11px] px-2 py-0.5 bg-gray-50 text-gray-700 rounded border border-gray-200">
+                              {f.description?.content || f.description || f.facilityName || `Facility ${f.facilityCode || f.code}`}
+                            </span>
+                          ))}
                         </div>
-                      )}
-                      {free.length > 0 && (
-                        <div>
-                          <h4 className="text-xs font-semibold text-gray-700 mb-1.5 flex items-center">
-                            <CheckCircle className="w-3.5 h-3.5 mr-1 text-green-600 flex-shrink-0" />
-                            Complimentary Room Amenities:
-                          </h4>
-                          <div className="flex flex-wrap gap-1.5">
-                            {free.slice(0, 25).map((f, i) => (
-                              <span key={`r-free-${i}`} className="text-[11px] px-2 py-0.5 bg-gray-50 text-gray-700 rounded border border-gray-200">
-                                {f.description?.content || f.description || f.facilityName || `Facility ${f.facilityCode || f.code}`}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })()}
-              </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Image Gallery Lightbox */}
-        {galleryOpen && galleryImages.length > 0 && (
-          <div className="fixed inset-0 z-[200] bg-black/95 flex flex-col">
-            {/* Top bar */}
-            <div className="flex items-center justify-between px-4 py-3 flex-shrink-0 border-b border-white/10">
-              <div className="flex items-center gap-3 min-w-0 pr-4">
-                {galleryTitle && (
-                  <span className="text-white font-medium text-sm sm:text-base truncate max-w-[200px] sm:max-w-md">
-                    {galleryTitle}
-                  </span>
-                )}
-                <span className="text-white/70 text-xs sm:text-sm flex-shrink-0">
-                  ({galleryIndex + 1} / {galleryImages.length})
+      {/* Image Gallery Lightbox */}
+      {galleryOpen && galleryImages.length > 0 && (
+        <div className="fixed inset-0 z-[200] bg-black/95 flex flex-col">
+          {/* Top bar */}
+          <div className="flex items-center justify-between px-4 py-3 flex-shrink-0 border-b border-white/10">
+            <div className="flex items-center gap-3 min-w-0 pr-4">
+              {galleryTitle && (
+                <span className="text-white font-medium text-sm sm:text-base truncate max-w-[200px] sm:max-w-md">
+                  {galleryTitle}
                 </span>
-              </div>
-              <div className="flex items-center gap-2 flex-shrink-0">
-                {galleryTitle && selectedHotel && galleryTitle !== selectedHotel.name && (
-                  <button
-                    onClick={() => {
-                      const rawImages = (hotelContentData?.images && hotelContentData.images.length >= (selectedHotel?.images?.length || 0))
-                        ? hotelContentData.images
-                        : (selectedHotel?.images && selectedHotel.images.length > 0 ? selectedHotel.images : (hotelContentData?.images || []));
-                      const allImages = rawImages
-                        .map(img => img.path ? `https://photos.hotelbeds.com/giata/original/${img.path.replace(/^\/+/, '')}` : (typeof img === 'string' ? img : null))
-                        .filter(Boolean);
-                      if (allImages.length === 0 && selectedHotel?.thumbnail) allImages.push(selectedHotel.thumbnail);
-                      setGalleryImages(allImages);
-                      setGalleryIndex(0);
-                      setGalleryTitle(selectedHotel.name);
-                      setActiveGalleryAlbum('All');
-                    }}
-                    className="text-xs px-2.5 py-1 rounded-full bg-white/15 hover:bg-white/25 text-white transition-colors cursor-pointer"
-                  >
-                    View All Hotel Photos
-                  </button>
-                )}
-                <button onClick={() => setGalleryOpen(false)} className="p-2 sm:p-2.5 rounded-full bg-white/15 hover:bg-white/25 transition-colors cursor-pointer">
-                  <X className="w-5 h-5 text-white" />
+              )}
+              <span className="text-white/70 text-xs sm:text-sm flex-shrink-0">
+                ({galleryIndex + 1} / {galleryImages.length})
+              </span>
+            </div>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              {galleryTitle && selectedHotel && galleryTitle !== selectedHotel.name && (
+                <button
+                  onClick={() => {
+                    const rawImages = (hotelContentData?.images && hotelContentData.images.length >= (selectedHotel?.images?.length || 0))
+                      ? hotelContentData.images
+                      : (selectedHotel?.images && selectedHotel.images.length > 0 ? selectedHotel.images : (hotelContentData?.images || []));
+                    const allImages = rawImages
+                      .map(img => img.path ? `https://photos.hotelbeds.com/giata/original/${img.path.replace(/^\/+/, '')}` : (typeof img === 'string' ? img : null))
+                      .filter(Boolean);
+                    if (allImages.length === 0 && selectedHotel?.thumbnail) allImages.push(selectedHotel.thumbnail);
+                    setGalleryImages(allImages);
+                    setGalleryIndex(0);
+                    setGalleryTitle(selectedHotel.name);
+                    setActiveGalleryAlbum('All');
+                  }}
+                  className="text-xs px-2.5 py-1 rounded-full bg-white/15 hover:bg-white/25 text-white transition-colors cursor-pointer"
+                >
+                  View All Hotel Photos
                 </button>
-              </div>
+              )}
+              <button onClick={() => setGalleryOpen(false)} className="p-2 sm:p-2.5 rounded-full bg-white/15 hover:bg-white/25 transition-colors cursor-pointer">
+                <X className="w-5 h-5 text-white" />
+              </button>
             </div>
+          </div>
 
-            {/* Category / Album Tabs Bar */}
-            {galleryAlbums && Object.keys(galleryAlbums).length > 1 && (
-              <div className="flex items-center gap-2 px-4 py-2 bg-black/60 border-b border-white/10 overflow-x-auto flex-shrink-0" style={{ scrollbarWidth: 'thin' }}>
-                {Object.entries(galleryAlbums).map(([catKey, catImages]) => {
-                  if (!catImages || catImages.length === 0) return null;
-                  const isActive = activeGalleryAlbum === catKey;
-                  return (
-                    <button
-                      key={catKey}
-                      type="button"
-                      onClick={() => {
-                        setActiveGalleryAlbum(catKey);
-                        setGalleryImages(catImages);
-                        setGalleryIndex(0);
-                      }}
-                      className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
-                        isActive
-                          ? 'bg-blue-600 text-white shadow-sm ring-2 ring-white/30'
-                          : 'bg-white/10 text-white/80 hover:bg-white/20'
+          {/* Category / Album Tabs Bar */}
+          {galleryAlbums && Object.keys(galleryAlbums).length > 1 && (
+            <div className="flex items-center gap-2 px-4 py-2 bg-black/60 border-b border-white/10 overflow-x-auto flex-shrink-0" style={{ scrollbarWidth: 'thin' }}>
+              {Object.entries(galleryAlbums).map(([catKey, catImages]) => {
+                if (!catImages || catImages.length === 0) return null;
+                const isActive = activeGalleryAlbum === catKey;
+                return (
+                  <button
+                    key={catKey}
+                    type="button"
+                    onClick={() => {
+                      setActiveGalleryAlbum(catKey);
+                      setGalleryImages(catImages);
+                      setGalleryIndex(0);
+                    }}
+                    className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${isActive
+                      ? 'bg-blue-600 text-white shadow-sm ring-2 ring-white/30'
+                      : 'bg-white/10 text-white/80 hover:bg-white/20'
                       }`}
-                    >
-                      {catKey} ({catImages.length})
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-            {/* Main image */}
-            <div className="flex-1 flex items-center justify-center px-4 relative min-h-0">
-              <button onClick={() => setGalleryIndex(prev => prev > 0 ? prev - 1 : galleryImages.length - 1)} className="absolute left-2 sm:left-6 p-2.5 rounded-full bg-white/10 hover:bg-white/20 transition-colors z-10"><ChevronDown className="w-5 h-5 text-white rotate-90" /></button>
-              <img src={galleryImages[galleryIndex]} alt="" className="max-h-full max-w-full object-contain rounded-lg" onError={(e) => e.target.src = 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg'} />
-              <button onClick={() => setGalleryIndex(prev => prev < galleryImages.length - 1 ? prev + 1 : 0)} className="absolute right-2 sm:right-6 p-2.5 rounded-full bg-white/10 hover:bg-white/20 transition-colors z-10"><ChevronDown className="w-5 h-5 text-white -rotate-90" /></button>
-            </div>
-            {/* Thumbnail strip */}
-            <div className="flex-shrink-0 px-4 py-3 overflow-x-auto">
-              <div className="flex gap-1.5 justify-center">
-                {galleryImages.map((img, i) => (
-                  <button key={i} onClick={() => setGalleryIndex(i)} className={`flex-shrink-0 w-16 h-12 rounded-md overflow-hidden border-2 transition-all ${i === galleryIndex ? 'border-white opacity-100' : 'border-transparent opacity-50 hover:opacity-80'}`}>
-                    <img src={img} alt="" className="w-full h-full object-cover" onError={(e) => e.target.src = 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg'} />
+                  >
+                    {catKey} ({catImages.length})
                   </button>
-                ))}
-              </div>
+                );
+              })}
+            </div>
+          )}
+          {/* Main image */}
+          <div className="flex-1 flex items-center justify-center px-4 relative min-h-0">
+            <button onClick={() => setGalleryIndex(prev => prev > 0 ? prev - 1 : galleryImages.length - 1)} className="absolute left-2 sm:left-6 p-2.5 rounded-full bg-white/10 hover:bg-white/20 transition-colors z-10"><ChevronDown className="w-5 h-5 text-white rotate-90" /></button>
+            <img src={galleryImages[galleryIndex]} alt="" className="max-h-full max-w-full object-contain rounded-lg" onError={(e) => e.target.src = 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg'} />
+            <button onClick={() => setGalleryIndex(prev => prev < galleryImages.length - 1 ? prev + 1 : 0)} className="absolute right-2 sm:right-6 p-2.5 rounded-full bg-white/10 hover:bg-white/20 transition-colors z-10"><ChevronDown className="w-5 h-5 text-white -rotate-90" /></button>
+          </div>
+          {/* Thumbnail strip */}
+          <div className="flex-shrink-0 px-4 py-3 overflow-x-auto">
+            <div className="flex gap-1.5 justify-center">
+              {galleryImages.map((img, i) => (
+                <button key={i} onClick={() => setGalleryIndex(i)} className={`flex-shrink-0 w-16 h-12 rounded-md overflow-hidden border-2 transition-all ${i === galleryIndex ? 'border-white opacity-100' : 'border-transparent opacity-50 hover:opacity-80'}`}>
+                  <img src={img} alt="" className="w-full h-full object-cover" onError={(e) => e.target.src = 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg'} />
+                </button>
+              ))}
             </div>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Notification */}
-        {notification.show && (
-          <div className="fixed bottom-4 right-4 z-50 bg-green-600 text-white px-4 py-2.5 rounded-lg shadow-lg text-sm font-medium flex items-center gap-2 animate-in slide-in-from-bottom">
-            <CheckCircle className="w-4 h-4" />{notification.message}
-          </div>
-        )}
+      {/* Notification */}
+      {notification.show && (
+        <div className="fixed bottom-4 right-4 z-50 bg-green-600 text-white px-4 py-2.5 rounded-lg shadow-lg text-sm font-medium flex items-center gap-2 animate-in slide-in-from-bottom">
+          <CheckCircle className="w-4 h-4" />{notification.message}
+        </div>
+      )}
 
       {/* Overlay for mobile */}
       {showFilters && (

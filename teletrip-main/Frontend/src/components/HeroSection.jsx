@@ -852,7 +852,7 @@ export default function HeroSection() {
 
   return (
     <section className="relative w-full min-h-0 sm:min-h-[540px] lg:min-h-[580px] overflow-visible bg-white flex flex-col justify-center pt-20 sm:pt-24 lg:pt-28 pb-6 sm:pb-8 lg:pb-10 select-none">
-      
+
       {/* ════ BACKGROUND SLIDING IMAGES (Mid-to-Left Fade-to-Zero) ════ */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
         <AnimatePresence initial={false} custom={slideDirection}>
@@ -891,7 +891,7 @@ export default function HeroSection() {
 
       {/* ════ MAIN CONTAINER ════ */}
       <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full flex flex-col justify-center py-2 sm:py-3">
-        
+
         {/* ── TOP SECTION: Dynamic Headline & Subtitle ── */}
         <div className="max-w-3xl mb-5 sm:mb-7 lg:mb-8">
           <AnimatePresence mode="wait">
@@ -954,9 +954,8 @@ export default function HeroSection() {
                     key={tab.id}
                     type="button"
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center gap-2 pb-1.5 text-xs sm:text-sm font-black transition-all cursor-pointer relative ${
-                      isActive ? "text-blue-600" : "text-slate-600 hover:text-slate-900"
-                    }`}
+                    className={`flex items-center gap-2 pb-1.5 text-xs sm:text-sm font-black transition-all cursor-pointer relative ${isActive ? "text-blue-600" : "text-slate-600 hover:text-slate-900"
+                      }`}
                   >
                     <AnimatedIcon
                       name={tab.icon}
@@ -982,22 +981,20 @@ export default function HeroSection() {
                 <button
                   type="button"
                   onClick={() => setTripType("one_way")}
-                  className={`px-3 py-1 rounded-full transition-all cursor-pointer ${
-                    tripType === "one_way"
-                      ? "bg-blue-600 text-white shadow-xs"
-                      : "text-slate-600 hover:text-slate-900"
-                  }`}
+                  className={`px-3 py-1 rounded-full transition-all cursor-pointer ${tripType === "one_way"
+                    ? "bg-blue-600 text-white shadow-xs"
+                    : "text-slate-600 hover:text-slate-900"
+                    }`}
                 >
                   One Way
                 </button>
                 <button
                   type="button"
                   onClick={() => setTripType("round_trip")}
-                  className={`px-3 py-1 rounded-full transition-all cursor-pointer ${
-                    tripType === "round_trip"
-                      ? "bg-blue-600 text-white shadow-xs"
-                      : "text-slate-600 hover:text-slate-900"
-                  }`}
+                  className={`px-3 py-1 rounded-full transition-all cursor-pointer ${tripType === "round_trip"
+                    ? "bg-blue-600 text-white shadow-xs"
+                    : "text-slate-600 hover:text-slate-900"
+                    }`}
                 >
                   Round Trip
                 </button>

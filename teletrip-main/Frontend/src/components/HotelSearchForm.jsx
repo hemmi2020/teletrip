@@ -229,7 +229,7 @@ export default function HotelSearchForm({
         if (isValid(d)) {
           setTransferDateRange([{ startDate: d, endDate: d, key: 'selection' }]);
         }
-      } catch (err) {}
+      } catch (err) { }
     }
 
     // 3. Experiences URL params
@@ -590,11 +590,10 @@ export default function HotelSearchForm({
                 key={tab.id}
                 type="button"
                 onClick={() => setActiveTab(tab.id)}
-                className={`relative px-3.5 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-bold rounded-full transition-all cursor-pointer flex items-center gap-1.5 sm:gap-2 ${
-                  isActive
-                    ? 'text-blue-600 font-extrabold'
-                    : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
-                }`}
+                className={`relative px-3.5 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-bold rounded-full transition-all cursor-pointer flex items-center gap-1.5 sm:gap-2 ${isActive
+                  ? 'text-blue-600 font-extrabold'
+                  : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
+                  }`}
               >
                 <Icon className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isActive ? 'text-blue-600' : 'text-slate-400'}`} />
                 <span>{tab.label}</span>
@@ -615,22 +614,20 @@ export default function HotelSearchForm({
             <button
               type="button"
               onClick={() => setTripType('one_way')}
-              className={`px-3 py-1 rounded-full text-xs transition-all cursor-pointer ${
-                tripType === 'one_way'
-                  ? 'bg-blue-600 text-white shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
+              className={`px-3 py-1 rounded-full text-xs transition-all cursor-pointer ${tripType === 'one_way'
+                ? 'bg-blue-600 text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900'
+                }`}
             >
               One Way
             </button>
             <button
               type="button"
               onClick={() => setTripType('round_trip')}
-              className={`px-3 py-1 rounded-full text-xs transition-all cursor-pointer ${
-                tripType === 'round_trip'
-                  ? 'bg-blue-600 text-white shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
+              className={`px-3 py-1 rounded-full text-xs transition-all cursor-pointer ${tripType === 'round_trip'
+                ? 'bg-blue-600 text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900'
+                }`}
             >
               Round Trip
             </button>
@@ -1493,9 +1490,8 @@ export default function HotelSearchForm({
                 <button
                   type="button"
                   onClick={() => setLuxuryOnly(!luxuryOnly)}
-                  className={`text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 transition-colors cursor-pointer ${
-                    luxuryOnly ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'text-slate-500 hover:text-slate-800'
-                  }`}
+                  className={`text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 transition-colors cursor-pointer ${luxuryOnly ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'text-slate-500 hover:text-slate-800'
+                    }`}
                 >
                   <Crown size={13} className={luxuryOnly ? 'text-amber-600' : 'text-slate-400'} />
                   <span>5-Star Luxury Only</span>
