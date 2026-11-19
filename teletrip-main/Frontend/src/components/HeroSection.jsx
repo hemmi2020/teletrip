@@ -20,7 +20,7 @@ import { format, addDays } from "date-fns";
 import AnimatedIcon from "./common/AnimatedIcon";
 import {
   TOP_DESTINATIONS,
-  ICONIC_HOTELS,
+  TOP_HOTELS,
   getInstantSuggestions
 } from "../utils/instantSearchData";
 
@@ -81,7 +81,7 @@ export default function HeroSection() {
 
   // Autocomplete suggestions
   const [filteredDestinations, setFilteredDestinations] = useState(TOP_DESTINATIONS.slice(0, 5));
-  const [filteredHotels, setFilteredHotels] = useState(ICONIC_HOTELS.slice(0, 4));
+  const [filteredHotels, setFilteredHotels] = useState(TOP_HOTELS.slice(0, 4));
 
   const locationRef = useRef(null);
   const dateRef = useRef(null);
@@ -111,7 +111,7 @@ export default function HeroSection() {
     setSelectedHotelCode(null);
     if (!val || val.trim().length === 0) {
       setFilteredDestinations(TOP_DESTINATIONS.slice(0, 5));
-      setFilteredHotels(ICONIC_HOTELS.slice(0, 4));
+      setFilteredHotels(TOP_HOTELS.slice(0, 4));
       return;
     }
     const res = getInstantSuggestions(val);
