@@ -72,9 +72,9 @@ textarea:focus {
 
 /* NO INNER BORDER: Any input inside an icon wrapper/container, search bar, or with bg-transparent */
 input.bg-transparent,
-[class*="bg-transparent"],
-[class*="border-0"],
-[class*="border-none"],
+input[class*="bg-transparent"],
+input[class*="border-0"],
+input[class*="border-none"],
 .search-form-input,
 div[class*="border"] input:not([type="checkbox"]):not([type="radio"]),
 div[class*="rounded"] input:not([type="checkbox"]):not([type="radio"]),
@@ -89,9 +89,9 @@ form div.flex input:not([type="checkbox"]):not([type="radio"]) {
 }
 
 input.bg-transparent:focus,
-[class*="bg-transparent"]:focus,
-[class*="border-0"]:focus,
-[class*="border-none"]:focus,
+input[class*="bg-transparent"]:focus,
+input[class*="border-0"]:focus,
+input[class*="border-none"]:focus,
 .search-form-input:focus,
 div[class*="border"] input:focus,
 div[class*="rounded"] input:focus,

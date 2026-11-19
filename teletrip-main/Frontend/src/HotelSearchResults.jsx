@@ -1409,10 +1409,10 @@ const HotelSearchResults = () => {
                   onClick={() => {
                     setSelectedEstablishment(prev => prev.includes('119') ? prev.filter(x => x !== '119') : [...prev, '119']);
                   }}
-                  className={`flex items-center justify-between p-2.5 rounded-xl border-0 cursor-pointer select-none transition-all ${
+                  className={`flex items-center justify-between p-2.5 rounded-xl cursor-pointer select-none transition-all ${
                     selectedEstablishment.includes('119')
-                      ? 'bg-amber-100/80 text-amber-950 font-bold shadow-xs'
-                      : 'bg-gray-50/80 hover:bg-gray-100 text-gray-700'
+                      ? 'bg-amber-50 border border-amber-300 text-amber-950 font-bold shadow-xs'
+                      : 'bg-gray-50/80 hover:bg-gray-100 text-gray-700 border border-transparent'
                   }`}
                 >
                   <div className="flex items-center gap-2 text-xs">
@@ -1431,10 +1431,10 @@ const HotelSearchResults = () => {
                   onClick={() => {
                     setSelectedCancellation(prev => prev === 'free' ? '' : 'free');
                   }}
-                  className={`flex items-center justify-between p-2.5 rounded-xl border-0 cursor-pointer select-none transition-all ${
+                  className={`flex items-center justify-between p-2.5 rounded-xl cursor-pointer select-none transition-all ${
                     selectedCancellation === 'free'
-                      ? 'bg-emerald-100/80 text-emerald-950 font-bold shadow-xs'
-                      : 'bg-gray-50/80 hover:bg-gray-100 text-gray-700'
+                      ? 'bg-emerald-50 border border-emerald-300 text-emerald-950 font-bold shadow-xs'
+                      : 'bg-gray-50/80 hover:bg-gray-100 text-gray-700 border border-transparent'
                   }`}
                 >
                   <div className="flex items-center gap-2 text-xs">
@@ -1917,13 +1917,13 @@ const HotelSearchResults = () => {
                 onClick={() => {
                   setSelectedEstablishment(prev => prev.includes('119') ? prev.filter(x => x !== '119') : [...prev, '119']);
                 }}
-                className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 border-0 cursor-pointer ${
+                className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${
                   selectedEstablishment.includes('119')
-                    ? 'bg-amber-500 text-white shadow-sm'
-                    : 'bg-white text-gray-700 shadow-2xs hover:bg-gray-50'
+                    ? 'bg-amber-500 text-white shadow-sm ring-1 ring-amber-500'
+                    : 'bg-white text-gray-700 border border-gray-200 shadow-2xs hover:bg-gray-50'
                 }`}
               >
-                <AnimatedIcon name="crown" animation="pulse" size={13} className="text-amber-400" />
+                <AnimatedIcon name="crown" animation="pulse" size={13} className={selectedEstablishment.includes('119') ? 'text-amber-100' : 'text-amber-500'} />
                 <span>Luxury Collection</span>
               </button>
 
@@ -1932,13 +1932,13 @@ const HotelSearchResults = () => {
                 onClick={() => {
                   setSelectedCancellation(prev => prev === 'free' ? '' : 'free');
                 }}
-                className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 border-0 cursor-pointer ${
+                className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${
                   selectedCancellation === 'free'
-                    ? 'bg-emerald-600 text-white shadow-sm'
-                    : 'bg-white text-gray-700 shadow-2xs hover:bg-gray-50'
+                    ? 'bg-emerald-600 text-white shadow-sm ring-1 ring-emerald-600'
+                    : 'bg-white text-gray-700 border border-gray-200 shadow-2xs hover:bg-gray-50'
                 }`}
               >
-                <AnimatedIcon name="shield" animation="pulse" size={13} className="text-emerald-500" />
+                <AnimatedIcon name="shield" animation="pulse" size={13} className={selectedCancellation === 'free' ? 'text-emerald-100' : 'text-emerald-500'} />
                 <span>Free Cancellation</span>
               </button>
 
@@ -1951,13 +1951,13 @@ const HotelSearchResults = () => {
                       setSelectedBoards(prev => prev.includes(bf) ? prev.filter(x => x !== bf) : [...prev, bf]);
                     }
                   }}
-                  className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 border-0 cursor-pointer ${
+                  className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${
                     selectedBoards.some(b => b.toUpperCase().includes('BREAKFAST'))
-                      ? 'bg-blue-600 text-white shadow-sm'
-                      : 'bg-white text-gray-700 shadow-2xs hover:bg-gray-50'
+                      ? 'bg-blue-600 text-white shadow-sm ring-1 ring-blue-600'
+                      : 'bg-white text-gray-700 border border-gray-200 shadow-2xs hover:bg-gray-50'
                   }`}
                 >
-                  <AnimatedIcon name="breakfast" animation="bounce" size={13} className="text-amber-600" />
+                  <AnimatedIcon name="breakfast" animation="bounce" size={13} className={selectedBoards.some(b => b.toUpperCase().includes('BREAKFAST')) ? 'text-amber-200' : 'text-amber-600'} />
                   <span>Breakfast Included</span>
                 </button>
               )}
@@ -1971,13 +1971,13 @@ const HotelSearchResults = () => {
                       setSelectedCategories(prev => prev.includes(five) ? prev.filter(x => x !== five) : [...prev, five]);
                     }
                   }}
-                  className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 border-0 cursor-pointer ${
+                  className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${
                     selectedCategories.some(c => c.startsWith('5'))
-                      ? 'bg-blue-600 text-white shadow-sm'
-                      : 'bg-white text-gray-700 shadow-2xs hover:bg-gray-50'
+                      ? 'bg-blue-600 text-white shadow-sm ring-1 ring-blue-600'
+                      : 'bg-white text-gray-700 border border-gray-200 shadow-2xs hover:bg-gray-50'
                   }`}
                 >
-                  <AnimatedIcon name="star" animation="pulse" size={13} className="text-amber-400" />
+                  <AnimatedIcon name="star" animation="pulse" size={13} className={selectedCategories.some(c => c.startsWith('5')) ? 'text-amber-200' : 'text-amber-400'} />
                   <span>5-Star Only</span>
                 </button>
               )}
