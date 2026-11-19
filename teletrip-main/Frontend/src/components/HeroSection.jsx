@@ -102,8 +102,34 @@ export default function HeroSection() {
   const [activeTab, setActiveTab] = useState("stays");
   const [currentSlide, setCurrentSlide] = useState(0);
   const [slideDirection, setSlideDirection] = useState(1);
+  const [reachedHeader, setReachedHeader] = useState(false);
 
   const currentTab = TAB_DATA[activeTab];
+
+  // Monitor scroll: Detect when the search form physically reaches the header pill (<= 75px)
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!searchBarRef.current) return;
+      const rect = searchBarRef.current.getBoundingClientRect();
+      const isReached = rect.top <= 75;
+      setReachedHeader(isReached);
+      window.dispatchEvent(
+        new CustomEvent("heroSearchReachedHeader", { detail: { reached: isReached } })
+      );
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    window.addEventListener("resize", handleScroll, { passive: true });
+    handleScroll();
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", handleScroll);
+      window.dispatchEvent(
+        new CustomEvent("heroSearchReachedHeader", { detail: { reached: false } })
+      );
+    };
+  }, []);
 
   // Auto-advance sliding pictures every 5.5s
   useEffect(() => {
@@ -371,7 +397,15 @@ export default function HeroSection() {
         </div>
 
         {/* ════ BOTTOM BAR: 3 TABS & FLOATING CAPSULE SEARCH BAR (HIGH Z-INDEX) ════ */}
-        <div ref={searchBarRef} className="mt-4 sm:mt-6 mb-2 max-w-5xl relative z-40 w-full">
+        <div
+          ref={searchBarRef}
+          className="mt-4 sm:mt-6 mb-2 max-w-5xl relative z-40 w-full search-form-section transition-all duration-300 ease-out"
+          style={{
+            opacity: reachedHeader ? 0 : 1,
+            transform: reachedHeader ? "scale(0.95) translateY(-14px)" : "scale(1) translateY(0)",
+            pointerEvents: reachedHeader ? "none" : "auto",
+          }}
+        >
           
           {/* ── 3 Category Tabs (Stays, Transfers, Experiences) ── */}
           <div className="flex items-center gap-6 sm:gap-8 mb-2 px-3 sm:px-4">

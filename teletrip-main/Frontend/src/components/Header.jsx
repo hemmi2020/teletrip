@@ -16,8 +16,19 @@ const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [searchReachedHeader, setSearchReachedHeader] = useState(false);
   const { user, setUser } = useContext(UserDataContext);
   const { getTotalItems, items: cartItems, getTotalPrice } = useCart();
+
+  // Listen for search form physically reaching the header pill
+  useEffect(() => {
+    const handler = (e) => setSearchReachedHeader(Boolean(e.detail?.reached));
+    window.addEventListener('heroSearchReachedHeader', handler);
+    return () => window.removeEventListener('heroSearchReachedHeader', handler);
+  }, []);
+
+  const isHomePage = location.pathname === '/' || location.pathname === '/home';
+  const showSearchIcon = isHomePage ? searchReachedHeader : scrolled;
 
   // Listen for open search modal event
   useEffect(() => {
@@ -133,16 +144,16 @@ const Header = () => {
 
           {/* Desktop Right */}
           <div className="hidden md:flex items-center gap-2 flex-shrink-0">
-            {/* Search Icon Button with Blue Background (Animatedly appears on scroll adjacent to icons) */}
+            {/* Search Icon Button with Blue Background (Animatedly converts & flies to pill when screen reaches hero search) */}
             <AnimatePresence>
-              {scrolled && (
+              {showSearchIcon && (
                 <motion.button
                   type="button"
                   onClick={() => setIsSearchModalOpen(true)}
-                  initial={{ opacity: 0, scale: 0.3, y: 10 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.3, y: 10 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                  initial={{ opacity: 0, scale: 1.4, y: 35, x: -35 }}
+                  animate={{ opacity: 1, scale: 1, y: 0, x: 0 }}
+                  exit={{ opacity: 0, scale: 1.4, y: 35, x: -35 }}
+                  transition={{ type: "spring", stiffness: 360, damping: 24 }}
                   whileHover={{ scale: 1.08 }}
                   whileTap={{ scale: 0.95 }}
                   className="flex items-center justify-center rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow-md transition-colors cursor-pointer shrink-0"
@@ -199,16 +210,16 @@ const Header = () => {
 
           {/* Mobile */}
           <div className="flex md:hidden items-center gap-2 flex-shrink-0">
-            {/* Mobile Search Icon Button with Blue Background (Animatedly appears on scroll adjacent to icons) */}
+            {/* Mobile Search Icon Button with Blue Background (Animatedly appears when screen reaches search) */}
             <AnimatePresence>
-              {scrolled && (
+              {showSearchIcon && (
                 <motion.button
                   type="button"
                   onClick={() => setIsSearchModalOpen(true)}
-                  initial={{ opacity: 0, scale: 0.3, y: 8 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.3, y: 8 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                  initial={{ opacity: 0, scale: 1.4, y: 25, x: -25 }}
+                  animate={{ opacity: 1, scale: 1, y: 0, x: 0 }}
+                  exit={{ opacity: 0, scale: 1.4, y: 25, x: -25 }}
+                  transition={{ type: "spring", stiffness: 360, damping: 24 }}
                   whileTap={{ scale: 0.95 }}
                   className="flex items-center justify-center rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition-colors cursor-pointer shrink-0"
                   style={{ width: 38, height: 38, minHeight: 'unset' }}
