@@ -103,16 +103,26 @@ export default function HeroSection() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [slideDirection, setSlideDirection] = useState(1);
   const [reachedHeader, setReachedHeader] = useState(false);
+  const [collapseProgress, setCollapseProgress] = useState(0);
 
   const currentTab = TAB_DATA[activeTab];
 
-  // Monitor scroll: Detect when the search form physically reaches the header pill (<= 75px)
+  // Monitor scroll: Collapse search inputs toward the blue button as it approaches and reaches the header pill
   useEffect(() => {
     const handleScroll = () => {
       if (!searchBarRef.current) return;
       const rect = searchBarRef.current.getBoundingClientRect();
-      const isReached = rect.top <= 75;
+      const isReached = rect.top <= 65;
       setReachedHeader(isReached);
+
+      if (rect.top > 140) {
+        setCollapseProgress(0);
+      } else if (rect.top <= 65) {
+        setCollapseProgress(1);
+      } else {
+        setCollapseProgress((140 - rect.top) / (140 - 65));
+      }
+
       window.dispatchEvent(
         new CustomEvent("heroSearchReachedHeader", { detail: { reached: isReached } })
       );
@@ -399,16 +409,18 @@ export default function HeroSection() {
         {/* ════ BOTTOM BAR: 3 TABS & FLOATING CAPSULE SEARCH BAR (HIGH Z-INDEX) ════ */}
         <div
           ref={searchBarRef}
-          className="mt-4 sm:mt-6 mb-2 max-w-5xl relative z-40 w-full search-form-section transition-all duration-300 ease-out"
-          style={{
-            opacity: reachedHeader ? 0 : 1,
-            transform: reachedHeader ? "scale(0.95) translateY(-14px)" : "scale(1) translateY(0)",
-            pointerEvents: reachedHeader ? "none" : "auto",
-          }}
+          className="mt-4 sm:mt-6 mb-2 max-w-5xl relative z-40 w-full search-form-section"
         >
           
           {/* ── 3 Category Tabs (Stays, Transfers, Experiences) ── */}
-          <div className="flex items-center gap-6 sm:gap-8 mb-2 px-3 sm:px-4">
+          <div
+            className="flex items-center gap-6 sm:gap-8 mb-2 px-3 sm:px-4 transition-all duration-200"
+            style={{
+              opacity: Math.max(0, 1 - collapseProgress * 1.5),
+              transform: `translateY(${-collapseProgress * 8}px)`,
+              pointerEvents: collapseProgress > 0.4 ? "none" : "auto",
+            }}
+          >
             {tabs.map((tab) => {
               const isActive = activeTab === tab.id;
               return (
@@ -444,10 +456,29 @@ export default function HeroSection() {
             })}
           </div>
 
-          {/* ── Floating Capsule Search Bar (z-50) ── */}
-          <div className="bg-white rounded-3xl sm:rounded-full shadow-[0_12px_45px_rgba(0,0,0,0.09)] border border-slate-100 p-1.5 sm:p-2 transition-all relative z-40">
-            
-            <form onSubmit={handleSearchSubmit} className="flex flex-col sm:flex-row sm:items-center w-full gap-2 sm:gap-0">
+          {/* ── Floating Capsule Search Bar (Collapses as it approaches header) ── */}
+          <div
+            className="rounded-3xl sm:rounded-full p-1.5 sm:p-2 transition-all duration-200 relative z-40"
+            style={{
+              backgroundColor: `rgba(255, 255, 255, ${Math.max(0, 1 - collapseProgress)})`,
+              boxShadow: collapseProgress > 0.8
+                ? "none"
+                : `0 12px 45px rgba(0,0,0, ${0.09 * (1 - collapseProgress)})`,
+              borderColor: `rgba(241, 245, 249, ${Math.max(0, 1 - collapseProgress)})`,
+              borderWidth: 1,
+            }}
+          >
+            <form onSubmit={handleSearchSubmit} className="flex flex-col sm:flex-row sm:items-center w-full gap-2 sm:gap-0 justify-between">
+              
+              {/* Input Fields (Slide right and collapse toward the blue search button) */}
+              <div
+                className="flex flex-col sm:flex-row sm:items-center flex-1 transition-all duration-200"
+                style={{
+                  opacity: Math.max(0, 1 - collapseProgress * 1.3),
+                  transform: `translateX(${collapseProgress * 24}px)`,
+                  pointerEvents: collapseProgress > 0.4 ? "none" : "auto",
+                }}
+              >
               
               {/* ── STAYS SEARCH VIEW ── */}
               {activeTab === "stays" && (
@@ -889,17 +920,23 @@ export default function HeroSection() {
                   </div>
                 </>
               )}
+            </div>
 
-              {/* ── Circular Search Action Button ── */}
-              <div className="p-1 sm:p-0 sm:pr-1 flex justify-end shrink-0">
-                <button
-                  type="submit"
-                  aria-label="Search"
-                  className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-blue-600 hover:bg-blue-700 active:scale-95 text-white flex items-center justify-center shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer"
-                >
-                  <Search className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-                </button>
-              </div>
+            {/* ── Circular Search Action Button (Transitions smoothly into header pill on reach) ── */}
+            <div className="p-1 sm:p-0 sm:pr-1 flex justify-end shrink-0">
+              <button
+                type="submit"
+                aria-label="Search"
+                style={{
+                  opacity: reachedHeader ? 0 : 1,
+                  transform: reachedHeader ? "scale(0.85) translateY(-6px)" : "scale(1) translateY(0)",
+                  transition: "opacity 0.15s ease, transform 0.15s ease",
+                }}
+                className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-blue-600 hover:bg-blue-700 active:scale-95 text-white flex items-center justify-center shadow-md hover:shadow-lg cursor-pointer"
+              >
+                <Search className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+              </button>
+            </div>
 
             </form>
           </div>
