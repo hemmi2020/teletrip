@@ -12,8 +12,7 @@ import {
   X,
   Building2,
   Navigation,
-  Sparkles,
-  ArrowRight
+  Sparkles
 } from "lucide-react";
 import { format, addDays } from "date-fns";
 import AnimatedIcon from "./common/AnimatedIcon";
@@ -23,7 +22,7 @@ import {
   getInstantSuggestions
 } from "../utils/instantSearchData";
 
-// Curated Category Data: Taglines, Subtitles, and High-Resolution Visuals
+// Curated Category Data: Dynamic Taglines & High-Resolution Sliding Visuals
 const TAB_DATA = {
   stays: {
     label: "Stays",
@@ -35,19 +34,16 @@ const TAB_DATA = {
     cta: "Start your search",
     images: [
       {
-        url: "https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=1600&auto=format&fit=crop&q=85",
-        title: "Overwater Villas",
-        location: "Maldives"
+        url: "https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=1920&auto=format&fit=crop&q=85",
+        title: "Overwater Villas"
       },
       {
-        url: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=1600&auto=format&fit=crop&q=85",
-        title: "Tropical Infinity Pool",
-        location: "Bali, Indonesia"
+        url: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=1920&auto=format&fit=crop&q=85",
+        title: "Tropical Infinity Pool"
       },
       {
-        url: "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=1600&auto=format&fit=crop&q=85",
-        title: "Grand Luxury Suites",
-        location: "Dubai, UAE"
+        url: "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=1920&auto=format&fit=crop&q=85",
+        title: "Grand Luxury Suites"
       }
     ]
   },
@@ -61,19 +57,16 @@ const TAB_DATA = {
     cta: "Find your ride",
     images: [
       {
-        url: "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?w=1600&auto=format&fit=crop&q=85",
-        title: "Executive Chauffeur",
-        location: "VIP Airport Transfers"
+        url: "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?w=1920&auto=format&fit=crop&q=85",
+        title: "Executive Chauffeur"
       },
       {
-        url: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=1600&auto=format&fit=crop&q=85",
-        title: "Luxury Transport Fleet",
-        location: "City & Intercity Rides"
+        url: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=1920&auto=format&fit=crop&q=85",
+        title: "Luxury Transport Fleet"
       },
       {
-        url: "https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?w=1600&auto=format&fit=crop&q=85",
-        title: "Scenic Coastal Drive",
-        location: "Door-to-Door Comfort"
+        url: "https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?w=1920&auto=format&fit=crop&q=85",
+        title: "Scenic Coastal Drive"
       }
     ]
   },
@@ -87,19 +80,16 @@ const TAB_DATA = {
     cta: "Explore activities",
     images: [
       {
-        url: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=1600&auto=format&fit=crop&q=85",
-        title: "Red Dunes Safari",
-        location: "Dubai Desert"
+        url: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=1920&auto=format&fit=crop&q=85",
+        title: "Red Dunes Safari"
       },
       {
-        url: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1600&auto=format&fit=crop&q=85",
-        title: "Private Yacht Cruise",
-        location: "Marina & Coastline"
+        url: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1920&auto=format&fit=crop&q=85",
+        title: "Private Yacht Cruise"
       },
       {
-        url: "https://images.unsplash.com/photo-1534447677768-be436bb09401?w=1600&auto=format&fit=crop&q=85",
-        title: "Sunrise Balloon Flight",
-        location: "Panoramic Mountain Peaks"
+        url: "https://images.unsplash.com/photo-1534447677768-be436bb09401?w=1920&auto=format&fit=crop&q=85",
+        title: "Sunrise Balloon Flight"
       }
     ]
   }
@@ -111,17 +101,28 @@ export default function HeroSection() {
   // Active Category Tab: 'stays' | 'transfers' | 'experiences'
   const [activeTab, setActiveTab] = useState("stays");
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [slideDirection, setSlideDirection] = useState(1);
 
   const currentTab = TAB_DATA[activeTab];
 
   // Auto-advance sliding pictures every 5.5s
   useEffect(() => {
     setCurrentSlide(0);
+    setSlideDirection(1);
     const interval = setInterval(() => {
+      setSlideDirection(1);
       setCurrentSlide((prev) => (prev + 1) % currentTab.images.length);
     }, 5500);
     return () => clearInterval(interval);
-  }, [activeTab]);
+  }, [activeTab, currentTab.images.length]);
+
+  // Preload tab images for buttery-smooth transitions
+  useEffect(() => {
+    currentTab.images.forEach((img) => {
+      const pic = new Image();
+      pic.src = img.url;
+    });
+  }, [activeTab, currentTab.images]);
 
   // Search Fields — Stays & Experiences
   const [locationQuery, setLocationQuery] = useState("Dubai, United Arab Emirates");
@@ -186,7 +187,7 @@ export default function HeroSection() {
     setFilteredHotels(res.hotels || []);
   };
 
-  // Scroll / focus search capsule when clicking "Start your search"
+  // Scroll / focus search capsule when clicking CTA button
   const handleStartSearchClick = () => {
     setIsLocationOpen(true);
     if (searchBarRef.current) {
@@ -225,73 +226,105 @@ export default function HeroSection() {
 
   const currentImage = currentTab.images[currentSlide] || currentTab.images[0];
 
+  // Sliding fade transition variants for buttery-smooth cross-slide
+  const slideVariants = {
+    enter: (dir) => ({
+      x: dir > 0 ? "7%" : "-7%",
+      opacity: 0,
+      scale: 1.025,
+    }),
+    center: {
+      x: "0%",
+      opacity: 1,
+      scale: 1,
+      transition: {
+        x: { type: "tween", duration: 1.15, ease: [0.16, 1, 0.3, 1] },
+        opacity: { duration: 0.95, ease: "easeInOut" },
+        scale: { duration: 1.25, ease: [0.16, 1, 0.3, 1] },
+      },
+    },
+    exit: (dir) => ({
+      x: dir > 0 ? "-5%" : "5%",
+      opacity: 0,
+      scale: 0.985,
+      transition: {
+        x: { type: "tween", duration: 1.05, ease: [0.16, 1, 0.3, 1] },
+        opacity: { duration: 0.85, ease: "easeInOut" },
+        scale: { duration: 1.1, ease: [0.16, 1, 0.3, 1] },
+      },
+    }),
+  };
+
   return (
     <section className="relative z-30 w-full bg-white min-h-[100svh] lg:h-[100svh] lg:max-h-[960px] flex flex-col justify-between pt-20 sm:pt-22 lg:pt-20 pb-4 sm:pb-6 selection:bg-blue-600/10">
       
-      {/* ── Soft Ambient Glow Mesh in Background ── */}
-      <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-gradient-to-br from-rose-100/40 via-pink-50/20 to-transparent rounded-full blur-3xl pointer-events-none -translate-x-1/4 -translate-y-1/4" />
-      <div className="absolute top-1/4 left-1/3 w-[400px] h-[400px] bg-gradient-to-tr from-blue-100/30 via-indigo-50/15 to-transparent rounded-full blur-3xl pointer-events-none" />
-
-      {/* ════ RIGHT SIDE SLIDING PICTURES WITH FADE-TO-ZERO GRADIENT ON THE LEFT ════ */}
-      <div className="hidden lg:block absolute top-0 right-0 bottom-0 w-[52%] xl:w-[50%] overflow-hidden pointer-events-none z-10">
+      {/* ══════════════════════════════════════════════════════════════════════════════
+          FULL-WIDTH SLIDING PICTURE WITH LEFT FADE-TO-ZERO GRADIENT (STARTS FROM MID)
+         ══════════════════════════════════════════════════════════════════════════════ */}
+      <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none z-0">
         
-        {/* Sliding Picture Canvas */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={`${activeTab}-${currentSlide}`}
-            initial={{ opacity: 0, scale: 1.05 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.98 }}
-            transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1] }}
-            className="absolute inset-0 w-full h-full"
-          >
-            <img
-              src={currentImage.url}
-              alt={currentImage.title}
-              className="w-full h-full object-cover object-center"
-              loading="eager"
-            />
-          </motion.div>
-        </AnimatePresence>
-
-        {/* ── FADE-TO-ZERO GRADIENTS: Melts seamlessly into the white text area on the left ── */}
-        {/* Left Edge Fade to Zero: 100% white on the left (center screen) smoothly transitioning to transparent */}
+        {/* Full-width sliding picture container with smooth mid-to-zero left fade mask */}
         <div
-          className="absolute inset-0 pointer-events-none z-20"
+          className="absolute inset-0 w-full h-full"
+          style={{
+            WebkitMaskImage:
+              "linear-gradient(to right, transparent 0%, rgba(0,0,0,0.02) 10%, rgba(0,0,0,0.08) 18%, rgba(0,0,0,0.22) 26%, rgba(0,0,0,0.45) 34%, rgba(0,0,0,0.72) 42%, rgba(0,0,0,0.95) 48%, #000000 52%, #000000 100%)",
+            maskImage:
+              "linear-gradient(to right, transparent 0%, rgba(0,0,0,0.02) 10%, rgba(0,0,0,0.08) 18%, rgba(0,0,0,0.22) 26%, rgba(0,0,0,0.45) 34%, rgba(0,0,0,0.72) 42%, rgba(0,0,0,0.95) 48%, #000000 52%, #000000 100%)"
+          }}
+        >
+          {/* True Sliding Fade: Simultaneous crossfade & directional slide without blank gaps */}
+          <AnimatePresence initial={false} custom={slideDirection}>
+            <motion.div
+              key={`${activeTab}-${currentSlide}`}
+              custom={slideDirection}
+              variants={slideVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              className="absolute inset-0 w-full h-full"
+            >
+              <img
+                src={currentImage.url}
+                alt=""
+                className="w-full h-full object-cover object-center"
+                loading="eager"
+              />
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
+        {/* ── Soft Ambient Fade Overlay on Left (Ends at Mid 52%, leaving Right 100% Pure Photo) ── */}
+        <div
+          className="absolute inset-0 pointer-events-none"
           style={{
             background:
-              "linear-gradient(to right, #ffffff 0%, rgba(255,255,255,0.95) 8%, rgba(255,255,255,0.4) 26%, transparent 55%), " +
-              "linear-gradient(to top, rgba(255,255,255,0.85) 0%, transparent 16%), " +
-              "linear-gradient(to bottom, rgba(255,255,255,0.7) 0%, transparent 12%)"
+              "linear-gradient(to right, rgba(255,255,255,1) 0%, rgba(255,255,255,0.92) 20%, rgba(255,255,255,0.6) 35%, rgba(255,255,255,0.15) 45%, transparent 52%), " +
+              "linear-gradient(to top, rgba(255,255,255,0.7) 0%, transparent 16%)"
           }}
         />
 
-        {/* Bottom-right photo caption pill + slide progress dots */}
-        <div className="absolute bottom-8 right-8 z-30 pointer-events-auto flex items-center gap-3">
-          <div className="px-3.5 py-1.5 rounded-full bg-slate-900/75 backdrop-blur-md text-white text-[11px] font-bold shadow-lg flex items-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            <span>{currentImage.title} · {currentImage.location}</span>
-          </div>
-
-          {/* Interactive Slide Dots */}
-          <div className="flex items-center gap-1.5 bg-slate-900/50 backdrop-blur-md px-2.5 py-1.5 rounded-full">
-            {currentTab.images.map((_, i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={() => setCurrentSlide(i)}
-                aria-label={`Slide ${i + 1}`}
-                className={`transition-all duration-300 rounded-full cursor-pointer ${
-                  i === currentSlide ? "w-5 h-1.5 bg-white" : "w-1.5 h-1.5 bg-white/40 hover:bg-white/80"
-                }`}
-              />
-            ))}
-          </div>
+        {/* Minimalist Slide Navigation Dots at bottom right */}
+        <div className="hidden lg:flex absolute bottom-8 right-8 z-20 pointer-events-auto items-center gap-1.5 bg-slate-900/35 hover:bg-slate-900/50 backdrop-blur-md px-3 py-1.5 rounded-full transition-all">
+          {currentTab.images.map((_, i) => (
+            <button
+              key={i}
+              type="button"
+              onClick={() => {
+                setSlideDirection(i >= currentSlide ? 1 : -1);
+                setCurrentSlide(i);
+              }}
+              aria-label={`Slide ${i + 1}`}
+              className={`transition-all duration-300 rounded-full cursor-pointer ${
+                i === currentSlide ? "w-6 h-1.5 bg-white shadow-sm" : "w-1.5 h-1.5 bg-white/40 hover:bg-white/80"
+              }`}
+            />
+          ))}
         </div>
 
       </div>
 
-      {/* ── Content Wrapper: Guaranteed to Fit on One Screen ── */}
+      {/* ── Main Interactive Content (Guaranteed to Fit on 1 Screen) ── */}
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full flex-1 flex flex-col justify-between my-auto z-20">
         
         {/* ── Top Half: Dynamic Typography & CTA (Changes with Tab) ── */}
@@ -299,7 +332,7 @@ export default function HeroSection() {
           
           <div className="lg:col-span-7 flex flex-col items-start text-left z-20 max-w-xl">
             
-            {/* Dynamic Headline & Subtext Transition */}
+            {/* Dynamic Headline & Subtext with Smooth Sliding Fade */}
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeTab}
@@ -335,19 +368,6 @@ export default function HeroSection() {
 
           </div>
 
-          {/* Mobile picture preview card (Only on small screens where desktop slider is hidden) */}
-          <div className="lg:hidden w-full rounded-2xl overflow-hidden shadow-md h-44 relative bg-slate-100">
-            <img
-              src={currentImage.url}
-              alt={currentImage.title}
-              className="w-full h-full object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
-            <div className="absolute bottom-2.5 left-3 text-white text-[11px] font-bold">
-              {currentImage.title} · {currentImage.location}
-            </div>
-          </div>
-
         </div>
 
         {/* ════ BOTTOM BAR: 3 TABS & FLOATING CAPSULE SEARCH BAR (HIGH Z-INDEX) ════ */}
@@ -361,7 +381,13 @@ export default function HeroSection() {
                 <button
                   key={tab.id}
                   type="button"
-                  onClick={() => setActiveTab(tab.id)}
+                  onClick={() => {
+                    if (activeTab !== tab.id) {
+                      setSlideDirection(1);
+                      setActiveTab(tab.id);
+                      setCurrentSlide(0);
+                    }
+                  }}
                   className={`inline-flex items-center gap-2 py-1.5 text-xs sm:text-sm transition-all duration-200 cursor-pointer ${
                     isActive
                       ? "text-slate-900 font-extrabold"
