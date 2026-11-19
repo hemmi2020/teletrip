@@ -12,7 +12,8 @@ import {
   X,
   Building2,
   Navigation,
-  Sparkles
+  Sparkles,
+  ArrowRight
 } from "lucide-react";
 import { format, addDays } from "date-fns";
 import AnimatedIcon from "./common/AnimatedIcon";
@@ -22,36 +23,105 @@ import {
   getInstantSuggestions
 } from "../utils/instantSearchData";
 
-// Subtle floating animations for travel collage
-const heroFloatStyles = `
-@keyframes heroFloat1 {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-6px); }
-}
-@keyframes heroFloat2 {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(6px); }
-}
-@keyframes heroFloat3 {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-5px); }
-}
-.animate-hero-float-1 {
-  animation: heroFloat1 6s ease-in-out infinite;
-}
-.animate-hero-float-2 {
-  animation: heroFloat2 7s ease-in-out infinite 1s;
-}
-.animate-hero-float-3 {
-  animation: heroFloat3 8s ease-in-out infinite 0.5s;
-}
-`;
+// Curated Category Data: Taglines, Subtitles, and High-Resolution Visuals
+const TAB_DATA = {
+  stays: {
+    label: "Stays",
+    icon: "hotel",
+    animation: "pulse",
+    headlinePrimary: "Hotel, resorts,",
+    headlineSecondary: "luxury stays",
+    subtitle: "Compare 250,000+ handpicked hotels & 5-star resorts with guaranteed direct B2B net rates.",
+    cta: "Start your search",
+    images: [
+      {
+        url: "https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=1600&auto=format&fit=crop&q=85",
+        title: "Overwater Villas",
+        location: "Maldives"
+      },
+      {
+        url: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=1600&auto=format&fit=crop&q=85",
+        title: "Tropical Infinity Pool",
+        location: "Bali, Indonesia"
+      },
+      {
+        url: "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=1600&auto=format&fit=crop&q=85",
+        title: "Grand Luxury Suites",
+        location: "Dubai, UAE"
+      }
+    ]
+  },
+  transfers: {
+    label: "Transfers",
+    icon: "car",
+    animation: "glide",
+    headlinePrimary: "Airport, city,",
+    headlineSecondary: "private transfers",
+    subtitle: "Reliable private airport transfers, premium vans & executive chauffeurs waiting when you land.",
+    cta: "Find your ride",
+    images: [
+      {
+        url: "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?w=1600&auto=format&fit=crop&q=85",
+        title: "Executive Chauffeur",
+        location: "VIP Airport Transfers"
+      },
+      {
+        url: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=1600&auto=format&fit=crop&q=85",
+        title: "Luxury Transport Fleet",
+        location: "City & Intercity Rides"
+      },
+      {
+        url: "https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?w=1600&auto=format&fit=crop&q=85",
+        title: "Scenic Coastal Drive",
+        location: "Door-to-Door Comfort"
+      }
+    ]
+  },
+  experiences: {
+    label: "Experiences",
+    icon: "experiences",
+    animation: "bounce",
+    headlinePrimary: "Tours, safaris,",
+    headlineSecondary: "epic experiences",
+    subtitle: "Exclusive desert safaris, private yacht cruises, and bucket-list adventures curated for you.",
+    cta: "Explore activities",
+    images: [
+      {
+        url: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=1600&auto=format&fit=crop&q=85",
+        title: "Red Dunes Safari",
+        location: "Dubai Desert"
+      },
+      {
+        url: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1600&auto=format&fit=crop&q=85",
+        title: "Private Yacht Cruise",
+        location: "Marina & Coastline"
+      },
+      {
+        url: "https://images.unsplash.com/photo-1534447677768-be436bb09401?w=1600&auto=format&fit=crop&q=85",
+        title: "Sunrise Balloon Flight",
+        location: "Panoramic Mountain Peaks"
+      }
+    ]
+  }
+};
 
 export default function HeroSection() {
   const navigate = useNavigate();
 
-  // ONLY 3 CATEGORIES: 'stays' | 'transfers' | 'experiences'
+  // Active Category Tab: 'stays' | 'transfers' | 'experiences'
   const [activeTab, setActiveTab] = useState("stays");
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  const currentTab = TAB_DATA[activeTab];
+
+  // Auto-advance sliding pictures every 5.5s
+  useEffect(() => {
+    setCurrentSlide(0);
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % currentTab.images.length);
+    }, 5500);
+    return () => clearInterval(interval);
+  }, [activeTab]);
 
   // Search Fields — Stays & Experiences
   const [locationQuery, setLocationQuery] = useState("Dubai, United Arab Emirates");
@@ -116,7 +186,7 @@ export default function HeroSection() {
     setFilteredHotels(res.hotels || []);
   };
 
-  // Scroll smoothly to search capsule when clicking "Start your search"
+  // Scroll / focus search capsule when clicking "Start your search"
   const handleStartSearchClick = () => {
     setIsLocationOpen(true);
     if (searchBarRef.current) {
@@ -147,138 +217,141 @@ export default function HeroSection() {
     }
   };
 
-  // Exactly 3 Tabs as requested by user
   const tabs = [
-    { id: "stays", label: "Stays", icon: "hotel", animation: "pulse" },
-    { id: "transfers", label: "Transfers", icon: "car", animation: "glide" },
-    { id: "experiences", label: "Experiences", icon: "experiences", animation: "bounce" },
+    { id: "stays", ...TAB_DATA.stays },
+    { id: "transfers", ...TAB_DATA.transfers },
+    { id: "experiences", ...TAB_DATA.experiences },
   ];
 
+  const currentImage = currentTab.images[currentSlide] || currentTab.images[0];
+
   return (
-    <section className="relative w-full bg-white overflow-hidden min-h-[100svh] lg:h-[100svh] lg:max-h-[960px] flex flex-col justify-between pt-20 sm:pt-24 lg:pt-22 pb-4 sm:pb-6 selection:bg-blue-600/10">
-      <style>{heroFloatStyles}</style>
-
+    <section className="relative z-30 w-full bg-white min-h-[100svh] lg:h-[100svh] lg:max-h-[960px] flex flex-col justify-between pt-20 sm:pt-22 lg:pt-20 pb-4 sm:pb-6 selection:bg-blue-600/10">
+      
       {/* ── Soft Ambient Glow Mesh in Background ── */}
-      <div className="absolute top-0 left-0 w-[480px] h-[480px] bg-gradient-to-br from-rose-100/50 via-pink-50/30 to-transparent rounded-full blur-3xl pointer-events-none -translate-x-1/4 -translate-y-1/4" />
-      <div className="absolute top-1/4 left-1/3 w-[400px] h-[400px] bg-gradient-to-tr from-blue-100/40 via-indigo-50/20 to-transparent rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-4 right-10 w-[450px] h-[450px] bg-gradient-to-tl from-cyan-100/30 via-sky-50/20 to-transparent rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-gradient-to-br from-rose-100/40 via-pink-50/20 to-transparent rounded-full blur-3xl pointer-events-none -translate-x-1/4 -translate-y-1/4" />
+      <div className="absolute top-1/4 left-1/3 w-[400px] h-[400px] bg-gradient-to-tr from-blue-100/30 via-indigo-50/15 to-transparent rounded-full blur-3xl pointer-events-none" />
 
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full flex-1 flex flex-col justify-between my-auto">
+      {/* ════ RIGHT SIDE SLIDING PICTURES WITH FADE-TO-ZERO GRADIENT ON THE LEFT ════ */}
+      <div className="hidden lg:block absolute top-0 right-0 bottom-0 w-[52%] xl:w-[50%] overflow-hidden pointer-events-none z-10">
         
-        {/* ── Top Half: Typography & Mosaic Grid ── */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-center my-auto pt-2 pb-4">
+        {/* Sliding Picture Canvas */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={`${activeTab}-${currentSlide}`}
+            initial={{ opacity: 0, scale: 1.05 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.98 }}
+            transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1] }}
+            className="absolute inset-0 w-full h-full"
+          >
+            <img
+              src={currentImage.url}
+              alt={currentImage.title}
+              className="w-full h-full object-cover object-center"
+              loading="eager"
+            />
+          </motion.div>
+        </AnimatePresence>
+
+        {/* ── FADE-TO-ZERO GRADIENTS: Melts seamlessly into the white text area on the left ── */}
+        {/* Left Edge Fade to Zero: 100% white on the left (center screen) smoothly transitioning to transparent */}
+        <div
+          className="absolute inset-0 pointer-events-none z-20"
+          style={{
+            background:
+              "linear-gradient(to right, #ffffff 0%, rgba(255,255,255,0.95) 8%, rgba(255,255,255,0.4) 26%, transparent 55%), " +
+              "linear-gradient(to top, rgba(255,255,255,0.85) 0%, transparent 16%), " +
+              "linear-gradient(to bottom, rgba(255,255,255,0.7) 0%, transparent 12%)"
+          }}
+        />
+
+        {/* Bottom-right photo caption pill + slide progress dots */}
+        <div className="absolute bottom-8 right-8 z-30 pointer-events-auto flex items-center gap-3">
+          <div className="px-3.5 py-1.5 rounded-full bg-slate-900/75 backdrop-blur-md text-white text-[11px] font-bold shadow-lg flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span>{currentImage.title} · {currentImage.location}</span>
+          </div>
+
+          {/* Interactive Slide Dots */}
+          <div className="flex items-center gap-1.5 bg-slate-900/50 backdrop-blur-md px-2.5 py-1.5 rounded-full">
+            {currentTab.images.map((_, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => setCurrentSlide(i)}
+                aria-label={`Slide ${i + 1}`}
+                className={`transition-all duration-300 rounded-full cursor-pointer ${
+                  i === currentSlide ? "w-5 h-1.5 bg-white" : "w-1.5 h-1.5 bg-white/40 hover:bg-white/80"
+                }`}
+              />
+            ))}
+          </div>
+        </div>
+
+      </div>
+
+      {/* ── Content Wrapper: Guaranteed to Fit on One Screen ── */}
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full flex-1 flex flex-col justify-between my-auto z-20">
+        
+        {/* ── Top Half: Dynamic Typography & CTA (Changes with Tab) ── */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center my-auto pt-2 pb-2">
           
-          {/* ════ LEFT COLUMN: Typography & CTA ════ */}
-          <div className="lg:col-span-7 flex flex-col items-start text-left z-20">
-            {/* Main Headline as per attached design */}
-            <motion.h1
-              initial={{ opacity: 0, y: 18 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-              className="text-3xl sm:text-4xl md:text-5xl lg:text-[54px] xl:text-[60px] font-extrabold text-slate-900 tracking-[-0.035em] leading-[1.06]"
-            >
-              Hotel, car,<br />
-              <span className="text-slate-900">experiences</span>
-            </motion.h1>
+          <div className="lg:col-span-7 flex flex-col items-start text-left z-20 max-w-xl">
+            
+            {/* Dynamic Headline & Subtext Transition */}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeTab}
+                initial={{ opacity: 0, y: 14 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                className="w-full"
+              >
+                {/* Main Headline */}
+                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-[54px] xl:text-[60px] font-extrabold text-slate-900 tracking-[-0.035em] leading-[1.06]">
+                  {currentTab.headlinePrimary}<br />
+                  <span className="text-slate-900">{currentTab.headlineSecondary}</span>
+                </h1>
 
-            {/* Subtitle */}
-            <motion.p
-              initial={{ opacity: 0, y: 14 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
-              className="text-sm sm:text-base text-slate-500 font-normal mt-2.5 sm:mt-3.5 mb-5 sm:mb-6 max-w-md leading-relaxed"
-            >
-              With us, your trip is filled with amazing experiences.
-            </motion.p>
+                {/* Subtitle */}
+                <p className="text-sm sm:text-base text-slate-500 font-normal mt-2.5 sm:mt-3.5 mb-5 sm:mb-6 max-w-md leading-relaxed">
+                  {currentTab.subtitle}
+                </p>
+              </motion.div>
+            </AnimatePresence>
 
-            {/* Dark "Start your search" pill button */}
+            {/* Dark Action Pill Button */}
             <motion.button
               type="button"
               onClick={handleStartSearchClick}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               className="inline-flex items-center justify-center px-6 py-2.5 sm:py-3 bg-slate-900 hover:bg-blue-600 text-white rounded-full font-semibold text-xs sm:text-sm transition-all duration-300 shadow-sm hover:shadow-lg cursor-pointer"
             >
-              Start your search
+              {currentTab.cta}
             </motion.button>
+
           </div>
 
-          {/* ════ RIGHT COLUMN: Asymmetric 3-Image Travel Mosaic ════ */}
-          <div className="lg:col-span-5 relative w-full flex justify-center lg:justify-end z-10">
-            <div className="grid grid-cols-12 gap-3 sm:gap-3.5 w-full max-w-[480px] lg:max-w-none items-center">
-              
-              {/* Left Sub-column: 2 Stacked Landscape Cards */}
-              <div className="col-span-7 flex flex-col gap-3 sm:gap-3.5">
-                {/* Top Image: Couple on pier over turquoise water towards water villas */}
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.96 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.6, delay: 0.15 }}
-                  className="relative group rounded-2xl sm:rounded-3xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-500 h-32 sm:h-40 lg:h-44 animate-hero-float-1 bg-slate-100"
-                >
-                  <img
-                    src="https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=800&auto=format&fit=crop&q=80"
-                    alt="Couple on pier over turquoise water"
-                    className="w-full h-full object-cover transform group-hover:scale-108 transition-transform duration-700 ease-out"
-                    loading="eager"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  <div className="absolute bottom-2.5 left-2.5 px-2.5 py-0.5 rounded-full bg-white/90 backdrop-blur-md text-[10px] font-bold text-slate-800 shadow-xs flex items-center gap-1.5 opacity-90 group-hover:opacity-100">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                    <span>Maldives · Overwater Villas</span>
-                  </div>
-                </motion.div>
-
-                {/* Bottom Image: Tropical Luxury Resort Swimming Pool */}
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.96 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.6, delay: 0.22 }}
-                  className="relative group rounded-2xl sm:rounded-3xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-500 h-32 sm:h-40 lg:h-44 animate-hero-float-2 bg-slate-100"
-                >
-                  <img
-                    src="https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800&auto=format&fit=crop&q=80"
-                    alt="Tropical resort pool with sun umbrellas"
-                    className="w-full h-full object-cover transform group-hover:scale-108 transition-transform duration-700 ease-out"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  <div className="absolute bottom-2.5 left-2.5 px-2.5 py-0.5 rounded-full bg-white/90 backdrop-blur-md text-[10px] font-bold text-slate-800 shadow-xs flex items-center gap-1.5 opacity-90 group-hover:opacity-100">
-                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
-                    <span>Bali · Luxury Pool Resorts</span>
-                  </div>
-                </motion.div>
-              </div>
-
-              {/* Right Sub-column: 1 Tall Portrait Card */}
-              <div className="col-span-5 h-full">
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.96 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.6, delay: 0.3 }}
-                  className="relative group rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-500 h-[268px] sm:h-[334px] lg:h-[370px] animate-hero-float-3 bg-slate-100"
-                >
-                  <img
-                    src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=800&auto=format&fit=crop&q=80"
-                    alt="Mountain landscape with resort villas"
-                    className="w-full h-full object-cover transform group-hover:scale-108 transition-transform duration-700 ease-out"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  <div className="absolute bottom-2.5 left-2.5 right-2.5 px-2.5 py-0.5 rounded-full bg-white/90 backdrop-blur-md text-[10px] font-bold text-slate-800 shadow-xs flex items-center gap-1.5 opacity-90 group-hover:opacity-100 truncate">
-                    <span className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse shrink-0" />
-                    <span className="truncate">Alpine Cabins & Peaks</span>
-                  </div>
-                </motion.div>
-              </div>
-
+          {/* Mobile picture preview card (Only on small screens where desktop slider is hidden) */}
+          <div className="lg:hidden w-full rounded-2xl overflow-hidden shadow-md h-44 relative bg-slate-100">
+            <img
+              src={currentImage.url}
+              alt={currentImage.title}
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+            <div className="absolute bottom-2.5 left-3 text-white text-[11px] font-bold">
+              {currentImage.title} · {currentImage.location}
             </div>
           </div>
+
         </div>
 
-        {/* ════ BOTTOM BAR: 3 TABS & FLOATING CAPSULE SEARCH BAR (FITS ON 1 SCREEN) ════ */}
-        <div ref={searchBarRef} className="mt-4 sm:mt-6 mb-2 max-w-5xl relative z-30 w-full">
+        {/* ════ BOTTOM BAR: 3 TABS & FLOATING CAPSULE SEARCH BAR (HIGH Z-INDEX) ════ */}
+        <div ref={searchBarRef} className="mt-4 sm:mt-6 mb-2 max-w-5xl relative z-40 w-full">
           
           {/* ── 3 Category Tabs (Stays, Transfers, Experiences) ── */}
           <div className="flex items-center gap-6 sm:gap-8 mb-2 px-3 sm:px-4">
@@ -311,8 +384,8 @@ export default function HeroSection() {
             })}
           </div>
 
-          {/* ── Floating Capsule Search Bar ── */}
-          <div className="bg-white rounded-3xl sm:rounded-full shadow-[0_12px_40px_rgba(0,0,0,0.08)] border border-slate-100 p-1.5 sm:p-2 transition-all">
+          {/* ── Floating Capsule Search Bar (z-50) ── */}
+          <div className="bg-white rounded-3xl sm:rounded-full shadow-[0_12px_45px_rgba(0,0,0,0.09)] border border-slate-100 p-1.5 sm:p-2 transition-all relative z-40">
             
             <form onSubmit={handleSearchSubmit} className="flex flex-col sm:flex-row sm:items-center w-full gap-2 sm:gap-0">
               
@@ -349,7 +422,7 @@ export default function HeroSection() {
                       />
                     </div>
 
-                    {/* Instant Suggestions Dropdown */}
+                    {/* Instant Suggestions Dropdown (Opens on top with z-[100]) */}
                     <AnimatePresence>
                       {isLocationOpen && (
                         <motion.div
@@ -357,7 +430,7 @@ export default function HeroSection() {
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, y: 6 }}
                           transition={{ duration: 0.15 }}
-                          className="absolute bottom-full sm:bottom-auto sm:top-full left-0 mb-3 sm:mb-0 sm:mt-2 w-80 sm:w-96 bg-white rounded-2xl shadow-2xl border border-slate-100 z-50 overflow-hidden divide-y divide-slate-50"
+                          className="absolute top-full left-0 mt-3 w-80 sm:w-96 bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.18)] border border-slate-100 z-[100] overflow-hidden divide-y divide-slate-50"
                         >
                           <div className="p-2.5 bg-slate-50/80 text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center justify-between">
                             <span>Top Destinations & Hotels</span>
@@ -448,7 +521,7 @@ export default function HeroSection() {
                       </span>
                     </div>
 
-                    {/* Dates Popover */}
+                    {/* Dates Popover (z-[100]) */}
                     <AnimatePresence>
                       {isDateOpen && (
                         <motion.div
@@ -456,7 +529,7 @@ export default function HeroSection() {
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, y: 6 }}
                           transition={{ duration: 0.15 }}
-                          className="absolute bottom-full sm:bottom-auto sm:top-full left-0 sm:-left-12 mb-3 sm:mb-0 sm:mt-2 w-76 bg-white rounded-2xl shadow-2xl border border-slate-100 p-4 z-50"
+                          className="absolute top-full left-0 sm:-left-12 mt-3 w-76 bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.18)] border border-slate-100 p-4 z-[100]"
                         >
                           <div className="flex items-center justify-between pb-2 border-b border-slate-100 mb-3">
                             <span className="text-xs font-extrabold text-slate-900">Select Dates</span>
@@ -544,7 +617,7 @@ export default function HeroSection() {
                       </span>
                     </div>
 
-                    {/* Guests Popover */}
+                    {/* Guests Popover (z-[100]) */}
                     <AnimatePresence>
                       {isGuestsOpen && (
                         <motion.div
@@ -552,7 +625,7 @@ export default function HeroSection() {
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, y: 6 }}
                           transition={{ duration: 0.15 }}
-                          className="absolute bottom-full sm:bottom-auto sm:top-full right-0 mb-3 sm:mb-0 sm:mt-2 w-72 bg-white rounded-2xl shadow-2xl border border-slate-100 p-3.5 z-50 space-y-3"
+                          className="absolute top-full right-0 mt-3 w-72 bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.18)] border border-slate-100 p-3.5 z-[100] space-y-3"
                         >
                           <div className="flex items-center justify-between pb-2 border-b border-slate-100">
                             <span className="text-xs font-extrabold text-slate-900">Rooms & Guests</span>

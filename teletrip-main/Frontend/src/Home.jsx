@@ -53,7 +53,9 @@ const Home = () => {
       <Helmet><title>Telitrip — Travel Smarter</title></Helmet>
       <Header />
       {/* Main Hero Section matching user design */}
-      <HeroSection />
+      <div className="relative z-20 bg-white">
+        <HeroSection />
+      </div>
 
       {/* Content slides over sticky hero */}
       <div className="relative z-10 bg-white">
