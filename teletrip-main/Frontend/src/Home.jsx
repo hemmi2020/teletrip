@@ -199,70 +199,12 @@ const Home = () => {
             />
             </div>
           </section>
-
-          {/* ── Why Telitrip — Interactive Full-Bleed Card-Expansion Slider ── */}
-          <div className="py-2">
-            <WhyTeliTripSlider />
-          </div>
-
-          {/* ── Testimonials ── */}
-          <section className="pb-8 px-4" style={{ background: '#f8fafc' }}>
-            <div className="pt-7 pb-3">
-              <h2 className="text-lg font-bold text-gray-900" style={{ letterSpacing: '-0.02em' }}>Loved by travellers</h2>
-            </div>
-            <div className="relative pt-10">
-            <Carousel
-              arrowPosition="top-right"
-              items={testimonials.map((t) => (
-                <div key={t.id} className="p-4 rounded-2xl bg-white border border-gray-100/80 shadow-sm h-full">
-                  <div className="flex items-center gap-0.5 mb-2.5">
-                    {[...Array(t.rating)].map((_, j) => <Star key={j} className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />)}
-                  </div>
-                  <p className="text-gray-700 text-[13px] mb-3.5 leading-relaxed">"{t.text}"</p>
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-bold" style={{ background: t.color }}>{t.avatar}</div>
-                    <span className="text-gray-500 text-[12px] font-medium">{t.name}</span>
-                  </div>
-                </div>
-              ))}
-              autoPlayInterval={5000}
-              itemsPerView={{ mobile: 1, tablet: 2, desktop: 3 }}
-            />
-            </div>
-          </section>
-
-          {/* ── CTA ── */}
-          <section className="px-4 py-10 text-center">
-            <div className="relative overflow-hidden rounded-3xl px-5 py-9 shadow-xl text-left" style={{ background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)' }}>
-              <h2 className="text-xl font-bold text-white mb-2 relative" style={{ letterSpacing: '-0.02em', lineHeight: 1.2 }}>
-                Ready to explore?
-              </h2>
-              <p className="text-white/45 text-[12px] mb-5 relative">Find your perfect stay, anywhere in the world.</p>
-              <div className="flex flex-wrap items-center gap-2.5">
-                <button
-                  onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                  className="relative px-5 py-2.5 rounded-full text-[11px] font-bold tracking-widest uppercase text-white active:scale-95 transition-transform cursor-pointer"
-                  style={{ background: 'linear-gradient(135deg, #3b82f6, #2563eb)', letterSpacing: '0.08em', minHeight: 'unset', boxShadow: '0 4px 16px rgba(37,99,235,0.35)' }}
-                >
-                  Start Searching
-                </button>
-                <Link
-                  to="/contact"
-                  className="relative px-5 py-2.5 rounded-full text-[11px] font-bold tracking-widest uppercase text-white/90 bg-white/10 border border-white/20 active:scale-95 transition-transform"
-                  style={{ minHeight: 'unset' }}
-                >
-                  Contact Us
-                </Link>
-              </div>
-            </div>
-          </section>
         </div>
 
         {/* ═══════════════════════════════════════════════════════════════════
-            DESKTOP HOMEPAGE
+            DESKTOP HOMEPAGE: Featured Destinations
         ═══════════════════════════════════════════════════════════════════ */}
         <div className="hidden md:block">
-
           {/* ── SECTION 1: Featured Destinations ── */}
           <section className="relative py-16 md:py-24 px-6 lg:px-8 overflow-hidden">
             <div className="max-w-7xl mx-auto relative">
@@ -334,11 +276,76 @@ const Home = () => {
               </div>
             </div>
           </section>
+        </div>
 
-          {/* ── SECTION 2: Why Telitrip — Interactive Full-Bleed Card-Expansion Slider ── */}
-          <section className="relative overflow-hidden">
-            <WhyTeliTripSlider />
+        {/* ═══════════════════════════════════════════════════════════════════
+            SECTION 2: Why Telitrip — Interactive Full-Bleed Slider (Single Shared Instance)
+        ═══════════════════════════════════════════════════════════════════ */}
+        <section className="relative overflow-hidden w-full">
+          <WhyTeliTripSlider />
+        </section>
+
+        {/* ═══════════════════════════════════════════════════════════════════
+            MOBILE HOMEPAGE: Testimonials & CTA
+        ═══════════════════════════════════════════════════════════════════ */}
+        <div className="md:hidden">
+          {/* ── Testimonials ── */}
+          <section className="pb-8 px-4" style={{ background: '#f8fafc' }}>
+            <div className="pt-7 pb-3">
+              <h2 className="text-lg font-bold text-gray-900" style={{ letterSpacing: '-0.02em' }}>Loved by travellers</h2>
+            </div>
+            <div className="relative pt-10">
+            <Carousel
+              arrowPosition="top-right"
+              items={testimonials.map((t) => (
+                <div key={t.id} className="p-4 rounded-2xl bg-white border border-gray-100/80 shadow-sm h-full">
+                  <div className="flex items-center gap-0.5 mb-2.5">
+                    {[...Array(t.rating)].map((_, j) => <Star key={j} className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />)}
+                  </div>
+                  <p className="text-gray-700 text-[13px] mb-3.5 leading-relaxed">"{t.text}"</p>
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-bold" style={{ background: t.color }}>{t.avatar}</div>
+                    <span className="text-gray-500 text-[12px] font-medium">{t.name}</span>
+                  </div>
+                </div>
+              ))}
+              autoPlayInterval={5000}
+              itemsPerView={{ mobile: 1, tablet: 2, desktop: 3 }}
+            />
+            </div>
           </section>
+
+          {/* ── CTA ── */}
+          <section className="px-4 py-10 text-center">
+            <div className="relative overflow-hidden rounded-3xl px-5 py-9 shadow-xl text-left" style={{ background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)' }}>
+              <h2 className="text-xl font-bold text-white mb-2 relative" style={{ letterSpacing: '-0.02em', lineHeight: 1.2 }}>
+                Ready to explore?
+              </h2>
+              <p className="text-white/45 text-[12px] mb-5 relative">Find your perfect stay, anywhere in the world.</p>
+              <div className="flex flex-wrap items-center gap-2.5">
+                <button
+                  onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                  className="relative px-5 py-2.5 rounded-full text-[11px] font-bold tracking-widest uppercase text-white active:scale-95 transition-transform cursor-pointer"
+                  style={{ background: 'linear-gradient(135deg, #3b82f6, #2563eb)', letterSpacing: '0.08em', minHeight: 'unset', boxShadow: '0 4px 16px rgba(37,99,235,0.35)' }}
+                >
+                  Start Searching
+                </button>
+                <Link
+                  to="/contact"
+                  className="relative px-5 py-2.5 rounded-full text-[11px] font-bold tracking-widest uppercase text-white/90 bg-white/10 border border-white/20 active:scale-95 transition-transform"
+                  style={{ minHeight: 'unset' }}
+                >
+                  Contact Us
+                </Link>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        {/* ═══════════════════════════════════════════════════════════════════
+            DESKTOP HOMEPAGE: Testimonials & CTA
+        ═══════════════════════════════════════════════════════════════════ */}
+        <div className="hidden md:block">
 
           {/* ── SECTION 3: Testimonials ── */}
           <section className="relative py-20 md:py-28 px-6 lg:px-8 overflow-hidden">
