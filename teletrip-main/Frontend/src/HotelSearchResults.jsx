@@ -1337,35 +1337,19 @@ const HotelSearchResults = () => {
           </div>
         )}
 
-        {/* ── MINIMAL LUXURY SEARCH BAR SUMMARY ── */}
-        <div className="bento-card bg-white p-3 sm:p-4 rounded-2xl border border-slate-100/80 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 font-bold shrink-0">
-              <MapPin className="w-5 h-5" />
-            </div>
-            <div className="min-w-0">
-              <div className="text-sm font-bold text-gray-900 truncate">
-                {searchParams.get("city") || "Dubai"}{searchParams.get("country") ? `, ${searchParams.get("country")}` : ''}
-                {searchParams.get("hotelName") ? ` · "${searchParams.get("hotelName")}"` : ''}
-              </div>
-              <div className="text-xs text-gray-500 truncate flex items-center gap-1.5 flex-wrap">
-                <span>{searchParams.get("checkIn")} → {searchParams.get("checkOut")}</span>
-                <span>·</span>
-                <span>{searchParams.get("adults") || 2} Adults{searchParams.get("children") && searchParams.get("children") !== "0" ? `, ${searchParams.get("children")} Children` : ''}</span>
-                <span>·</span>
-                <span>{searchParams.get("rooms") || 1} Room</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            {/* Mobile Filter Toggle */}
+        {/* ── TOP SEARCH CAPSULE (Latest Modern Design) ── */}
+        <div className="relative z-40 w-full mb-1">
+          {/* Mobile Filter & Results summary header */}
+          <div className="lg:hidden flex items-center justify-between gap-2 mb-2 px-1">
+            <span className="text-xs font-bold text-gray-700 truncate">
+              {sortedHotels.length} Properties in {searchParams.get("city") || "Destination"}
+            </span>
             <button
               type="button"
               onClick={() => setShowMobileFilters(true)}
-              className="lg:hidden px-3.5 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-xs rounded-xl flex items-center gap-1.5 shadow-xs cursor-pointer"
+              className="px-3.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-xs rounded-xl flex items-center gap-1.5 shadow-xs cursor-pointer shrink-0"
             >
-              <SlidersHorizontal className="w-4 h-4" />
+              <SlidersHorizontal className="w-3.5 h-3.5" />
               <span>Filters</span>
               {activeFilterCount > 0 && (
                 <span className="w-4 h-4 rounded-full bg-blue-600 text-white text-[10px] flex items-center justify-center font-bold">
@@ -1373,22 +1357,10 @@ const HotelSearchResults = () => {
                 </span>
               )}
             </button>
-            <button
-              type="button"
-              onClick={() => setShowModifySearch(s => !s)}
-              className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1.5"
-            >
-              <span>{showModifySearch ? 'Close' : 'Modify Search'}</span>
-            </button>
           </div>
-        </div>
 
-        {/* Expandable Modify Search form */}
-        {showModifySearch && (
-          <div className="p-4 sm:p-5 bg-white rounded-3xl shadow-lg border border-slate-100 animate-fadeIn">
-            <HotelSearchForm defaultTab="stays" variant="light" onSearch={() => setShowModifySearch(false)} />
-          </div>
-        )}
+          <HotelSearchForm defaultTab="stays" variant="light" />
+        </div>
 
         {/* ── MAIN 12-COLUMN RESPONSIVE GRID ── */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
