@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Helmet } from "react-helmet-async";
 import Header from "./components/Header";
 import HeroSection from "./components/HeroSection";
+import WhyTeliTripSlider from "./components/WhyTeliTripSlider";
 import Slider from "./components/Slider";
 import Footer from "./components/Footer";
 import Carousel from "./components/Carousel";
@@ -199,36 +200,10 @@ const Home = () => {
             </div>
           </section>
 
-          {/* ── Why Telitrip — Bento Grid ── */}
-          <section className="px-4 pb-8">
-            <h2 className="text-lg font-bold text-gray-900 mb-4" style={{ letterSpacing: '-0.02em' }}>Everything in one place</h2>
-            <div className="grid grid-cols-2 gap-2.5">
-              {[
-                { Icon: Hotel, title: 'Hotels', desc: '250K+ properties', color: '#2563eb', bg: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)' },
-                { Icon: Car, title: 'Transfers', desc: 'Airport & city', color: '#059669', bg: 'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)' },
-                { Icon: Compass, title: 'Experiences', desc: 'Tours & activities', color: '#7c3aed', bg: 'linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%)' },
-                { Icon: CreditCard, title: 'Best Prices', desc: 'Rate comparison', color: '#f59e0b', bg: 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)' },
-                { Icon: Shield, title: 'Secure', desc: 'Encrypted payments', color: '#ef4444', bg: 'linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)' },
-                { Icon: Globe, title: 'Global', desc: '190+ countries', color: '#0891b2', bg: 'linear-gradient(135deg, #ecfeff 0%, #cffafe 100%)' },
-              ].map((item, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 14 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.3, delay: i * 0.04 }}
-                  className="p-3.5 rounded-2xl"
-                  style={{ background: item.bg }}
-                >
-                  <div className="w-8 h-8 rounded-lg flex items-center justify-center mb-2" style={{ background: `${item.color}18` }}>
-                    <item.Icon style={{ width: 16, height: 16, color: item.color, strokeWidth: 2 }} />
-                  </div>
-                  <h3 className="text-gray-900 font-semibold text-[13px] mb-0.5">{item.title}</h3>
-                  <p className="text-gray-500 text-[11px]">{item.desc}</p>
-                </motion.div>
-              ))}
-            </div>
-          </section>
+          {/* ── Why Telitrip — Interactive Full-Bleed Card-Expansion Slider ── */}
+          <div className="py-2">
+            <WhyTeliTripSlider />
+          </div>
 
           {/* ── Testimonials ── */}
           <section className="pb-8 px-4" style={{ background: '#f8fafc' }}>
@@ -360,36 +335,9 @@ const Home = () => {
             </div>
           </section>
 
-          {/* ── SECTION 2: Why Telitrip ── */}
-          <section className="relative py-20 md:py-28 px-6 lg:px-8 bg-gray-50/60 overflow-hidden">
-            <div className="max-w-7xl mx-auto relative">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-8 h-px bg-purple-500" />
-                <span className="text-[11px] font-semibold tracking-widest uppercase text-purple-500" style={{ letterSpacing: '0.14em' }}>Why Telitrip</span>
-              </div>
-              <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-14" style={{ letterSpacing: '-0.03em', lineHeight: 1.1 }}>
-                Everything you need,<br /><span className="text-purple-600">in one place.</span>
-              </h2>
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                {[
-                  { Icon: Hotel, title: 'Hotels', desc: '250,000+ properties worldwide. Best rate guaranteed.', color: '#2563eb' },
-                  { Icon: Car, title: 'Transfers', desc: 'Airport pickups, private cars and shared shuttles.', color: '#1F6A5B' },
-                  { Icon: Compass, title: 'Experiences', desc: 'Tours, activities and local adventures curated by experts.', color: '#2563eb' },
-                  { Icon: CreditCard, title: 'Best Prices', desc: 'We compare rates across providers so you pay less.', color: '#9C621E' },
-                  { Icon: Shield, title: 'Secure Booking', desc: 'End-to-end encrypted payments. Your data stays private.', color: '#B3453D' },
-                  { Icon: Globe, title: 'Global Coverage', desc: 'Available in 190+ countries. Book anywhere, anytime.', color: '#0891b2' },
-                ].map((item, i) => (
-                  <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: i * 0.06 }}
-                    className="bento-card p-6 sm:p-7 rounded-3xl bg-white hover:shadow-xl transition-all duration-300">
-                    <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4 transition-transform group-hover:scale-110" style={{ background: `${item.color}15` }}>
-                      <item.Icon style={{ width: 22, height: 22, color: item.color, strokeWidth: 1.8 }} />
-                    </div>
-                    <h3 className="text-gray-900 font-semibold text-lg mb-2" style={{ letterSpacing: '-0.02em' }}>{item.title}</h3>
-                    <p className="text-gray-500 text-[13px] leading-relaxed">{item.desc}</p>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
+          {/* ── SECTION 2: Why Telitrip — Interactive Full-Bleed Card-Expansion Slider ── */}
+          <section className="relative overflow-hidden">
+            <WhyTeliTripSlider />
           </section>
 
           {/* ── SECTION 3: Testimonials ── */}
