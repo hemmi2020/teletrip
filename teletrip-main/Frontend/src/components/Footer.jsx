@@ -21,7 +21,7 @@ const Footer = () => {
     <footer className="bg-gray-50 relative overflow-hidden">
       {/* ── Mobile Footer — dark, minimal, centered ── */}
       <div className="md:hidden relative overflow-hidden" style={{ background: '#0f172a' }}>
-        <div className="relative px-6 pt-10 pb-24 text-center">
+        <div className="relative px-6 pt-8 pb-10 text-center">
           {/* Logo */}
           <Link to="/home" className="inline-block mb-3">
             <img src={logo} alt="Telitrip" className="h-14 w-auto mx-auto brightness-0 invert opacity-80" />

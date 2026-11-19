@@ -196,7 +196,7 @@ export default function WhyTeliTripSlider() {
     <section
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      className="relative w-full min-h-[720px] sm:min-h-[680px] lg:h-[85vh] lg:min-h-[640px] lg:max-h-[860px] overflow-hidden bg-slate-950 text-white select-none flex flex-col justify-between"
+      className="relative w-full min-h-0 sm:min-h-[600px] lg:h-[78vh] lg:min-h-[580px] lg:max-h-[760px] overflow-hidden bg-slate-950 text-white select-none flex flex-col justify-between py-6 sm:py-8 lg:py-10"
       aria-label="Why TeliTrip Interactive Slider"
     >
       {/* ═══════════════════════════════════════════════════════════════════════
@@ -231,10 +231,10 @@ export default function WhyTeliTripSlider() {
       {/* ═══════════════════════════════════════════════════════════════════════
           MAIN CONTENT CONTAINER (Independent Layer, Unwarped)
       ═══════════════════════════════════════════════════════════════════════ */}
-      <div className="relative z-20 max-w-7xl mx-auto px-6 lg:px-12 w-full h-full flex flex-col justify-between py-8 sm:py-10 lg:py-12 flex-1">
+      <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 w-full flex-1 flex flex-col justify-between">
         
         {/* ── TOP SECTION HEADER: Section Identity without Duplicate Text ── */}
-        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-4 lg:mb-2">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-3 mb-3 lg:mb-2">
           <div className="flex items-center gap-2.5">
             <div className="w-6 h-[2px] bg-[#2563EB]" />
             <span className="text-[11px] font-bold tracking-[0.2em] uppercase text-[#3b82f6]">
@@ -248,7 +248,7 @@ export default function WhyTeliTripSlider() {
         </div>
 
         {/* ── 2-COLUMN MAIN BODY: Masked Typography Left, Preview Strip Right ── */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 lg:gap-12 my-auto w-full py-4 sm:py-6">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 lg:gap-10 my-auto w-full py-2 sm:py-4">
           
           {/* ════ LEFT COLUMN: Masked Staggered Typography (~45% width) ════ */}
           <div className="w-full lg:w-[45%] max-w-xl">
@@ -261,7 +261,7 @@ export default function WhyTeliTripSlider() {
                 className="flex flex-col"
               >
                 {/* Bold Condensed Uppercase Headline (Clean, no upper eyebrow lines) */}
-                <div className="overflow-hidden mb-4">
+                <div className="overflow-hidden mb-3 sm:mb-4">
                   <motion.h3
                     variants={{
                       initial: { y: "100%", opacity: 0 },
@@ -270,14 +270,14 @@ export default function WhyTeliTripSlider() {
                     }}
                     transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
                     onClick={() => handleCtaClick(activeSlide)}
-                    className="text-4xl sm:text-5xl lg:text-7xl font-extrabold uppercase tracking-tight leading-[0.95] text-white cursor-pointer hover:text-blue-200 transition-colors"
+                    className="text-3xl sm:text-5xl lg:text-6xl font-extrabold uppercase tracking-tight leading-[0.98] text-white cursor-pointer hover:text-blue-200 transition-colors"
                   >
                     {activeSlide.title}
                   </motion.h3>
                 </div>
 
                 {/* 2-line Description */}
-                <div className="overflow-hidden mb-8">
+                <div className="overflow-hidden mb-5 sm:mb-6 lg:mb-8">
                   <motion.p
                     variants={{
                       initial: { y: "100%", opacity: 0 },
@@ -324,8 +324,8 @@ export default function WhyTeliTripSlider() {
           </div>
 
           {/* ════ RIGHT COLUMN: Horizontal Sliding Preview Cards (~55% width) ════ */}
-          <div className="w-full lg:w-[55%] overflow-visible py-2">
-            <div className="flex items-center gap-3.5 sm:gap-4 lg:gap-5 overflow-x-auto lg:overflow-visible scrollbar-none pb-4 pt-2 -mr-6 pr-6 lg:mr-0 lg:pr-0">
+          <div className="w-full lg:w-[55%] overflow-visible py-1">
+            <div className="flex items-center gap-3 sm:gap-4 lg:gap-5 overflow-x-auto lg:overflow-visible scrollbar-none pb-2 pt-1 -mr-4 pr-4 sm:mr-0 sm:pr-0 touch-pan-x">
               <AnimatePresence mode="popLayout" initial={false}>
                 {queue.slice(1).map((slide) => {
                   return (
@@ -342,7 +342,7 @@ export default function WhyTeliTripSlider() {
                       }}
                       onClick={() => handleCardClick(slide.id)}
                       whileHover={{ scale: 1.04, y: -4 }}
-                      className="group relative w-[160px] h-[240px] sm:w-[180px] sm:h-[270px] lg:w-[210px] lg:h-[310px] rounded-2xl overflow-hidden shadow-2xl shrink-0 cursor-pointer border border-white/10 hover:border-white/40 transition-colors bg-slate-900"
+                      className="group relative w-[145px] h-[210px] sm:w-[175px] sm:h-[260px] lg:w-[210px] lg:h-[310px] rounded-2xl overflow-hidden shadow-2xl shrink-0 cursor-pointer border border-white/10 hover:border-white/40 transition-colors bg-slate-900"
                     >
                       {/* Preview Card Image */}
                       <img
@@ -384,7 +384,7 @@ export default function WhyTeliTripSlider() {
         </div>
 
         {/* ════ BOTTOM CONTROLS: Nav Buttons, Progress Track, Slide Counter ════ */}
-        <div className="w-full flex items-center justify-between gap-4 sm:gap-6 pt-6 border-t border-white/10">
+        <div className="w-full flex items-center justify-between gap-3 sm:gap-6 pt-4 sm:pt-5 border-t border-white/10">
           
           {/* Previous / Next Circular Buttons */}
           <div className="flex items-center gap-3 shrink-0">

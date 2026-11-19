@@ -851,7 +851,7 @@ export default function HeroSection() {
   const currentImage = currentTab.images[currentSlide] || currentTab.images[0];
 
   return (
-    <section className="relative w-full h-[100svh] min-h-[620px] max-h-[1050px] overflow-visible bg-white flex flex-col justify-between pt-20 sm:pt-24 pb-8 sm:pb-12 select-none">
+    <section className="relative w-full min-h-0 sm:min-h-[540px] lg:min-h-[580px] overflow-visible bg-white flex flex-col justify-center pt-20 sm:pt-24 lg:pt-28 pb-6 sm:pb-8 lg:pb-10 select-none">
       
       {/* ════ BACKGROUND SLIDING IMAGES (Mid-to-Left Fade-to-Zero) ════ */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
@@ -885,15 +885,15 @@ export default function HeroSection() {
         </AnimatePresence>
 
         {/* Soft vignette overlays */}
-        <div className="absolute inset-0 bg-gradient-to-r from-white via-white/80 to-transparent w-full sm:w-[58%] z-10 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-r from-white via-white/85 to-white/40 sm:to-transparent w-full sm:w-[58%] z-10 pointer-events-none" />
         <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-white/40 pointer-events-none z-10" />
       </div>
 
       {/* ════ MAIN CONTAINER ════ */}
-      <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full flex-1 flex flex-col justify-center my-auto py-4 sm:py-6 lg:py-8">
+      <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full flex flex-col justify-center py-2 sm:py-3">
         
         {/* ── TOP SECTION: Dynamic Headline & Subtitle ── */}
-        <div className="max-w-3xl mb-8 sm:mb-10 lg:mb-12">
+        <div className="max-w-3xl mb-5 sm:mb-7 lg:mb-8">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}
@@ -903,7 +903,7 @@ export default function HeroSection() {
               transition={{ duration: 0.32, ease: "easeOut" }}
             >
               {/* Dynamic Tagline (Always 2 Balanced Lines) */}
-              <h1 className="text-3xl sm:text-5xl md:text-6xl font-black text-slate-900 tracking-tight leading-[1.12] mb-3.5 sm:mb-4 lg:mb-5">
+              <h1 className="text-2xl min-[360px]:text-3xl sm:text-5xl md:text-6xl font-black text-slate-900 tracking-tight leading-[1.12] mb-2 sm:mb-3 lg:mb-4">
                 <span className="block">{currentTab.headlinePrimary}</span>
                 <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-500">
                   {currentTab.headlineSecondary}
@@ -939,14 +939,14 @@ export default function HeroSection() {
 
           {/* ── 3 Category Tabs (Stays, Transfers, Experiences) + Trip Type Toggle ── */}
           <div
-            className="flex items-center justify-between mb-3.5 sm:mb-4 px-3 sm:px-4 transition-all duration-200"
+            className="flex items-center justify-between mb-2.5 sm:mb-3.5 px-2 sm:px-4 transition-all duration-200"
             style={{
               opacity: Math.max(0, 1 - collapseProgress * 1.5),
               transform: `translateY(${-collapseProgress * 8}px)`,
               pointerEvents: collapseProgress > 0.4 ? "none" : "auto"
             }}
           >
-            <div className="flex items-center gap-6 sm:gap-8">
+            <div className="flex items-center gap-4 min-[360px]:gap-6 sm:gap-8">
               {tabs.map((tab) => {
                 const isActive = activeTab === tab.id;
                 return (
@@ -1105,7 +1105,7 @@ export default function HeroSection() {
                       {/* Dropdown with Grouped Autocomplete Results */}
                       {showLocationDropdown && (
                         <div
-                          className="absolute top-full left-0 mt-2 sm:mt-3 w-80 sm:w-96 bg-white rounded-2xl shadow-[0_25px_60px_rgba(0,0,0,0.25)] border border-slate-200 z-[200] overflow-hidden divide-y divide-slate-100"
+                          className="absolute top-full left-0 mt-2 sm:mt-3 w-full sm:w-96 max-w-[calc(100vw-3rem)] sm:max-w-none bg-white rounded-2xl shadow-[0_25px_60px_rgba(0,0,0,0.25)] border border-slate-200 z-[200] overflow-hidden divide-y divide-slate-100"
                           style={{ scrollbarWidth: "thin" }}
                         >
                           <div className="p-2.5 bg-slate-50/90 text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center justify-between">
@@ -1222,6 +1222,7 @@ export default function HeroSection() {
 
                     {/* Vertical Divider */}
                     <div className="hidden sm:block h-7 w-px bg-slate-200/80 shrink-0" />
+                    <div className="sm:hidden h-px w-full bg-slate-100/90 my-0.5" />
 
                     {/* Segment 2: Dates */}
                     <div
@@ -1248,6 +1249,7 @@ export default function HeroSection() {
 
                     {/* Vertical Divider */}
                     <div className="hidden sm:block h-7 w-px bg-slate-200/80 shrink-0" />
+                    <div className="sm:hidden h-px w-full bg-slate-100/90 my-0.5" />
 
                     {/* Segment 3: Guests & Multi-Rooms */}
                     <div
@@ -1302,7 +1304,7 @@ export default function HeroSection() {
 
                       {showPickupDropdown && (filteredPickupLocations.length > 0 || groupedPickup.length > 0 || isLoadingPickup) && (
                         <div
-                          className="absolute top-full left-0 mt-2 sm:mt-3 w-80 sm:w-96 bg-white rounded-2xl shadow-[0_25px_60px_rgba(0,0,0,0.25)] border border-slate-200 z-[200] overflow-hidden divide-y divide-slate-100"
+                          className="absolute top-full left-0 mt-2 sm:mt-3 w-full sm:w-96 max-w-[calc(100vw-3rem)] sm:max-w-none bg-white rounded-2xl shadow-[0_25px_60px_rgba(0,0,0,0.25)] border border-slate-200 z-[200] overflow-hidden divide-y divide-slate-100"
                           style={{ scrollbarWidth: "thin" }}
                         >
                           <div className="p-2.5 bg-slate-50/90 text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center justify-between">
@@ -1381,7 +1383,7 @@ export default function HeroSection() {
 
                       {showDropoffDropdown && (filteredDropoffLocations.length > 0 || groupedDropoff.length > 0 || isLoadingDropoff) && (
                         <div
-                          className="absolute top-full left-0 sm:-left-20 mt-2 sm:mt-3 w-80 sm:w-96 bg-white rounded-2xl shadow-[0_25px_60px_rgba(0,0,0,0.25)] border border-slate-200 z-[200] overflow-hidden divide-y divide-slate-100"
+                          className="absolute top-full left-0 sm:-left-20 mt-2 sm:mt-3 w-full sm:w-96 max-w-[calc(100vw-3rem)] sm:max-w-none bg-white rounded-2xl shadow-[0_25px_60px_rgba(0,0,0,0.25)] border border-slate-200 z-[200] overflow-hidden divide-y divide-slate-100"
                           style={{ scrollbarWidth: "thin" }}
                         >
                           <div className="p-2.5 bg-slate-50/90 text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center justify-between">
@@ -1504,7 +1506,7 @@ export default function HeroSection() {
 
                       {showExperienceDropdown && (
                         <div
-                          className="absolute top-full left-0 mt-2 sm:mt-3 w-80 sm:w-96 bg-white rounded-2xl shadow-[0_25px_60px_rgba(0,0,0,0.25)] border border-slate-200 z-[200] overflow-hidden divide-y divide-slate-100"
+                          className="absolute top-full left-0 mt-2 sm:mt-3 w-full sm:w-96 max-w-[calc(100vw-3rem)] sm:max-w-none bg-white rounded-2xl shadow-[0_25px_60px_rgba(0,0,0,0.25)] border border-slate-200 z-[200] overflow-hidden divide-y divide-slate-100"
                           style={{ scrollbarWidth: "thin" }}
                         >
                           <div className="p-2.5 bg-slate-50/90 text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center justify-between">
@@ -1566,6 +1568,7 @@ export default function HeroSection() {
                     </div>
 
                     <div className="hidden sm:block h-7 w-px bg-slate-200/80 shrink-0" />
+                    <div className="sm:hidden h-px w-full bg-slate-100/90 my-0.5" />
 
                     {/* Travellers */}
                     <div
@@ -1588,8 +1591,8 @@ export default function HeroSection() {
                 )}
               </div>
 
-              {/* ── Circular Search Action Button (Transitions smoothly into header pill on reach) ── */}
-              <div className="p-1 sm:p-0 sm:pr-1 flex justify-end shrink-0">
+              {/* ── Search Action Button: Full-width tap target on mobile, circular on desktop ── */}
+              <div className="p-1 sm:p-0 sm:pr-1 flex w-full sm:w-auto justify-end shrink-0 mt-1 sm:mt-0">
                 <button
                   type="submit"
                   aria-label="Search"
@@ -1598,12 +1601,17 @@ export default function HeroSection() {
                     transform: reachedHeader ? "scale(0.85) translateY(-6px)" : "scale(1) translateY(0)",
                     transition: "opacity 0.15s ease, transform 0.15s ease"
                   }}
-                  className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-blue-600 hover:bg-blue-700 active:scale-95 text-white flex items-center justify-center shadow-md hover:shadow-lg cursor-pointer transition-colors"
+                  className="w-full sm:w-12 h-11 sm:h-12 rounded-xl sm:rounded-full bg-blue-600 hover:bg-blue-700 active:scale-98 text-white flex items-center justify-center gap-2 shadow-md hover:shadow-lg cursor-pointer transition-all"
                 >
                   {isSubmitting ? (
                     <Loader2 className="w-5 h-5 text-white animate-spin" />
                   ) : (
-                    <Search className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                    <>
+                      <Search className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                      <span className="sm:hidden text-xs font-black uppercase tracking-wider">
+                        {activeTab === "stays" ? "Search Stays" : activeTab === "transfers" ? "Search Transfers" : "Search Experiences"}
+                      </span>
+                    </>
                   )}
                 </button>
               </div>

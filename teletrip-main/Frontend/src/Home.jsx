@@ -305,22 +305,22 @@ const Home = () => {
         {/* ═══════════════════════════════════════════════════════════════════
             FEATURED DESTINATIONS — All 18 Cards, 5 On-Screen View, Smooth Scroll & Sliding Buttons
         ═══════════════════════════════════════════════════════════════════ */}
-        <section className="relative py-14 sm:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 overflow-hidden bg-white">
+        <section className="relative pt-6 sm:pt-10 lg:pt-12 pb-10 sm:pb-14 lg:pb-16 px-4 sm:px-6 lg:px-8 overflow-hidden bg-white">
           <div className="max-w-7xl mx-auto relative">
             
             {/* ── Top Header Row: Title & Subtitle Left, Sliding Buttons Right ── */}
-            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6 sm:mb-8">
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 sm:gap-4 mb-4 sm:mb-6">
               <div>
-                <div className="flex items-center gap-2.5 mb-2 sm:mb-2.5">
-                  <div className="w-7 h-[2px] bg-blue-600 rounded-full" />
-                  <span className="text-[11px] font-bold tracking-[0.16em] uppercase text-blue-600">
+                <div className="flex items-center gap-2 mb-1.5 sm:mb-2">
+                  <div className="w-6 h-[2px] bg-blue-600 rounded-full" />
+                  <span className="text-[10px] sm:text-[11px] font-bold tracking-[0.16em] uppercase text-blue-600">
                     Top Destinations
                   </span>
                 </div>
-                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-gray-900 tracking-tight leading-tight">
+                <h2 className="text-xl sm:text-3xl lg:text-4xl font-extrabold text-gray-900 tracking-tight leading-tight">
                   Popular destinations <span className="text-blue-600">worldwide</span>
                 </h2>
-                <p className="text-gray-500 text-xs sm:text-sm mt-1 sm:mt-1.5 max-w-lg leading-relaxed">
+                <p className="text-gray-500 text-xs sm:text-sm mt-1 max-w-lg leading-relaxed">
                   Browse live hotel availability and click any destination to auto-fill search.
                 </p>
               </div>
@@ -331,17 +331,17 @@ const Home = () => {
                   type="button"
                   onClick={scrollDestinationsPrev}
                   aria-label="Previous Destinations"
-                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white border border-gray-200 hover:border-blue-600 hover:bg-blue-50/60 active:scale-95 flex items-center justify-center text-gray-700 hover:text-blue-600 transition-all duration-200 cursor-pointer shadow-xs hover:shadow-md"
+                  className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white border border-gray-200 hover:border-blue-600 hover:bg-blue-50/60 active:scale-95 flex items-center justify-center text-gray-700 hover:text-blue-600 transition-all duration-200 cursor-pointer shadow-xs hover:shadow-md"
                 >
-                  <ChevronLeft className="w-5 h-5" />
+                  <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
                 </button>
                 <button
                   type="button"
                   onClick={scrollDestinationsNext}
                   aria-label="Next Destinations"
-                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white border border-gray-200 hover:border-blue-600 hover:bg-blue-50/60 active:scale-95 flex items-center justify-center text-gray-700 hover:text-blue-600 transition-all duration-200 cursor-pointer shadow-xs hover:shadow-md"
+                  className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white border border-gray-200 hover:border-blue-600 hover:bg-blue-50/60 active:scale-95 flex items-center justify-center text-gray-700 hover:text-blue-600 transition-all duration-200 cursor-pointer shadow-xs hover:shadow-md"
                 >
-                  <ChevronRight className="w-5 h-5" />
+                  <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
                 </button>
               </div>
             </div>
@@ -373,14 +373,14 @@ const Home = () => {
                 ref={destinationsScrollRef}
                 onMouseEnter={() => setIsDestinationsHovered(true)}
                 onMouseLeave={() => setIsDestinationsHovered(false)}
-                className="flex items-center gap-4 overflow-x-auto scroll-smooth scrollbar-none py-2 -mx-4 px-4 sm:mx-0 sm:px-0 snap-x snap-mandatory select-none"
+                className="flex items-center gap-3 sm:gap-4 overflow-x-auto scroll-smooth scrollbar-none py-1.5 -mx-4 px-4 sm:mx-0 sm:px-0 snap-x snap-mandatory select-none touch-pan-x"
                 style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
               >
                 {(destinations.length ? destinations : fallbackDestinations).map((dest) => (
                   <div
                     key={dest._id || dest.name}
                     onClick={() => handleDestinationClick(dest)}
-                    className="group/card relative flex-shrink-0 w-[240px] sm:w-[calc((100%-48px)/3)] lg:w-[calc((100%-64px)/5)] rounded-2xl overflow-hidden cursor-pointer bg-gray-100 shadow-xs hover:shadow-xl transition-all duration-300 snap-start active:scale-98"
+                    className="group/card relative flex-shrink-0 w-[190px] min-[380px]:w-[210px] sm:w-[calc((100%-48px)/3)] lg:w-[calc((100%-64px)/5)] rounded-2xl overflow-hidden cursor-pointer bg-gray-100 shadow-xs hover:shadow-xl transition-all duration-300 snap-start active:scale-98"
                     style={{ aspectRatio: "3/4" }}
                   >
                     {/* Card Photo */}
@@ -454,38 +454,46 @@ const Home = () => {
         ═══════════════════════════════════════════════════════════════════ */}
         <div className="md:hidden">
           {/* ── Testimonials ── */}
-          <section className="pb-8 px-4" style={{ background: '#f8fafc' }}>
-            <div className="pt-7 pb-3">
-              <h2 className="text-lg font-bold text-gray-900" style={{ letterSpacing: '-0.02em' }}>Loved by travellers</h2>
+          <section className="py-7 px-4" style={{ background: '#f8fafc' }}>
+            <div className="flex items-center gap-2 mb-1.5">
+              <div className="w-6 h-[2px] bg-emerald-500 rounded-full" />
+              <span className="text-[10px] font-bold tracking-[0.16em] uppercase text-emerald-600">
+                Traveller Stories
+              </span>
             </div>
-            <div className="relative pt-10">
-            <Carousel
-              arrowPosition="top-right"
-              items={testimonials.map((t) => (
-                <div key={t.id} className="p-4 rounded-2xl bg-white border border-gray-100/80 shadow-sm h-full">
-                  <div className="flex items-center gap-0.5 mb-2.5">
-                    {[...Array(t.rating)].map((_, j) => <Star key={j} className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />)}
+            <div className="mb-3">
+              <h2 className="text-xl font-extrabold text-gray-900 tracking-tight leading-tight">
+                Loved by travellers <span className="text-emerald-600">worldwide</span>
+              </h2>
+            </div>
+            <div className="relative pt-1">
+              <Carousel
+                arrowPosition="top-right"
+                items={testimonials.map((t) => (
+                  <div key={t.id} className="p-4 rounded-2xl bg-white border border-gray-100/80 shadow-sm h-full">
+                    <div className="flex items-center gap-0.5 mb-2.5">
+                      {[...Array(t.rating)].map((_, j) => <Star key={j} className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />)}
+                    </div>
+                    <p className="text-gray-700 text-[13px] mb-3.5 leading-relaxed">"{t.text}"</p>
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-bold" style={{ background: t.color }}>{t.avatar}</div>
+                      <span className="text-gray-500 text-[12px] font-medium">{t.name}</span>
+                    </div>
                   </div>
-                  <p className="text-gray-700 text-[13px] mb-3.5 leading-relaxed">"{t.text}"</p>
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-bold" style={{ background: t.color }}>{t.avatar}</div>
-                    <span className="text-gray-500 text-[12px] font-medium">{t.name}</span>
-                  </div>
-                </div>
-              ))}
-              autoPlayInterval={5000}
-              itemsPerView={{ mobile: 1, tablet: 2, desktop: 3 }}
-            />
+                ))}
+                autoPlayInterval={5000}
+                itemsPerView={{ mobile: 1, tablet: 2, desktop: 3 }}
+              />
             </div>
           </section>
 
           {/* ── CTA ── */}
-          <section className="px-4 py-10 text-center">
-            <div className="relative overflow-hidden rounded-3xl px-5 py-9 shadow-xl text-left" style={{ background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)' }}>
-              <h2 className="text-xl font-bold text-white mb-2 relative" style={{ letterSpacing: '-0.02em', lineHeight: 1.2 }}>
+          <section className="px-4 py-6 sm:py-8 text-center">
+            <div className="relative overflow-hidden rounded-3xl px-5 py-7 shadow-xl text-left" style={{ background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)' }}>
+              <h2 className="text-xl font-bold text-white mb-1.5 relative" style={{ letterSpacing: '-0.02em', lineHeight: 1.2 }}>
                 Ready to explore?
               </h2>
-              <p className="text-white/45 text-[12px] mb-5 relative">Find your perfect stay, anywhere in the world.</p>
+              <p className="text-white/45 text-[12px] mb-4 relative">Find your perfect stay, anywhere in the world.</p>
               <div className="flex flex-wrap items-center gap-2.5">
                 <button
                   onClick={scrollToSearchForm}
@@ -512,45 +520,45 @@ const Home = () => {
         <div className="hidden md:block">
 
           {/* ── SECTION 3: Testimonials ── */}
-          <section className="relative py-20 md:py-28 px-6 lg:px-8 overflow-hidden">
+          <section className="relative py-12 md:py-16 lg:py-20 px-6 lg:px-8 overflow-hidden">
             <div className="max-w-7xl mx-auto relative">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-8 h-px bg-emerald-500" />
-                <span className="text-[11px] font-semibold tracking-widest uppercase text-emerald-500" style={{ letterSpacing: '0.14em' }}>Traveller Stories</span>
+              <div className="flex items-center gap-2.5 mb-2">
+                <div className="w-7 h-[2px] bg-emerald-500 rounded-full" />
+                <span className="text-[11px] font-semibold tracking-widest uppercase text-emerald-600" style={{ letterSpacing: '0.14em' }}>Traveller Stories</span>
               </div>
-              <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-12" style={{ letterSpacing: '-0.03em', lineHeight: 1.1 }}>
+              <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-6 sm:mb-8" style={{ letterSpacing: '-0.03em', lineHeight: 1.15 }}>
                 Loved by travellers<br /><span className="text-emerald-600">around the world.</span>
               </h2>
-              <div className="relative pt-10">
-              <Carousel
-                arrowPosition="top-right"
-                items={testimonials.map((t) => (
-                  <div key={t.id} className="p-6 rounded-2xl bg-white border border-gray-100 hover:shadow-md transition-all h-full">
-                    <div className="flex items-center gap-1 mb-4">
-                      {[...Array(t.rating)].map((_, j) => <Star key={j} className="w-4 h-4 text-amber-400 fill-amber-400" />)}
+              <div className="relative pt-1">
+                <Carousel
+                  arrowPosition="top-right"
+                  items={testimonials.map((t) => (
+                    <div key={t.id} className="p-6 rounded-2xl bg-white border border-gray-100 hover:shadow-md transition-all h-full">
+                      <div className="flex items-center gap-1 mb-4">
+                        {[...Array(t.rating)].map((_, j) => <Star key={j} className="w-4 h-4 text-amber-400 fill-amber-400" />)}
+                      </div>
+                      <p className="text-gray-600 text-[14px] mb-5" style={{ lineHeight: 1.7 }}>"{t.text}"</p>
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-full flex items-center justify-center text-white text-[12px] font-bold" style={{ background: t.color }}>{t.avatar}</div>
+                        <span className="text-gray-500 text-[13px] font-medium">{t.name}</span>
+                      </div>
                     </div>
-                    <p className="text-gray-600 text-[14px] mb-5" style={{ lineHeight: 1.7 }}>"{t.text}"</p>
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-full flex items-center justify-center text-white text-[12px] font-bold" style={{ background: t.color }}>{t.avatar}</div>
-                      <span className="text-gray-500 text-[13px] font-medium">{t.name}</span>
-                    </div>
-                  </div>
-                ))}
-                autoPlayInterval={5000}
-                itemsPerView={{ mobile: 1, tablet: 2, desktop: 3 }}
-              />
+                  ))}
+                  autoPlayInterval={5000}
+                  itemsPerView={{ mobile: 1, tablet: 2, desktop: 3 }}
+                />
               </div>
             </div>
           </section>
 
           {/* ── SECTION 4: CTA ── */}
-          <section className="relative py-24 md:py-32 px-6 lg:px-8 bg-gray-50/50 overflow-hidden">
+          <section className="relative py-12 md:py-16 px-6 lg:px-8 bg-gray-50/50 overflow-hidden">
             <div className="max-w-4xl mx-auto text-center relative">
-              <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
-                <h2 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6" style={{ letterSpacing: '-0.04em', lineHeight: 1.05 }}>
+              <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }}>
+                <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4" style={{ letterSpacing: '-0.04em', lineHeight: 1.08 }}>
                   Ready to explore<br /><span className="text-blue-600">the world?</span>
                 </h2>
-                <p className="text-gray-500 text-lg mb-10 max-w-lg mx-auto">Join millions of travellers who book smarter with Telitrip.</p>
+                <p className="text-gray-500 text-base sm:text-lg mb-6 sm:mb-8 max-w-lg mx-auto">Join millions of travellers who book smarter with Telitrip.</p>
                 <div className="flex items-center justify-center gap-3">
                   <button onClick={scrollToSearchForm} className="px-8 py-3.5 rounded-full text-[13px] font-bold tracking-widest uppercase text-white bg-blue-600 hover:bg-blue-700 transition-all cursor-pointer shadow-md hover:shadow-lg" style={{ letterSpacing: '0.08em', minHeight: 'unset' }}>
                     Start Searching
