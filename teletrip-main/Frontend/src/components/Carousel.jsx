@@ -244,24 +244,24 @@ const Carousel = ({
 
       {/* Arrow navigation — top-right */}
       {showArrows && !hideNav && arrowPosition === "top-right" && (
-        <div className="absolute top-0 right-0 flex items-center gap-2 -mt-12">
+        <div className="absolute top-0 right-0 flex items-center gap-2 -mt-12 sm:-mt-14 z-10">
           <button
             onClick={goToPrev}
-            className="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-500 hover:text-gray-700 hover:border-gray-300 active:scale-90 transition-all"
-            style={{ minHeight: "unset", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}
+            className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white border border-gray-200 hover:border-blue-600 hover:bg-blue-50/50 flex items-center justify-center text-gray-600 hover:text-blue-600 active:scale-90 transition-all cursor-pointer shadow-xs"
+            style={{ minHeight: "unset" }}
             aria-label="Previous slide"
             data-testid="carousel-prev"
           >
-            <ChevronLeft className="w-4 h-4" />
+            <ChevronLeft className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
           </button>
           <button
             onClick={goToNext}
-            className="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center text-gray-500 hover:text-gray-700 hover:border-gray-300 active:scale-90 transition-all"
-            style={{ minHeight: "unset", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}
+            className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white border border-gray-200 hover:border-blue-600 hover:bg-blue-50/50 flex items-center justify-center text-gray-600 hover:text-blue-600 active:scale-90 transition-all cursor-pointer shadow-xs"
+            style={{ minHeight: "unset" }}
             aria-label="Next slide"
             data-testid="carousel-next"
           >
-            <ChevronRight className="w-4 h-4" />
+            <ChevronRight className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
           </button>
         </div>
       )}

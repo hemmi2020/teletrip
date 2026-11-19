@@ -533,6 +533,37 @@ export default function HeroSection() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Auto-fill and scroll to search form when a destination card is clicked anywhere on the page
+  useEffect(() => {
+    const handleSelectDestination = (e) => {
+      const dest = e.detail?.destination;
+      if (!dest) return;
+
+      setActiveTab("stays");
+      const label = dest.country ? `${dest.name}, ${dest.country}` : dest.name;
+      isSelectingRef.current = true;
+      setSearchQuery(label);
+      setSelectedLocation({
+        name: dest.name,
+        city: dest.name,
+        country: dest.country || "",
+        destinationCode: dest.destinationCode || dest.code || "",
+        type: "destination"
+      });
+      setSelectedHotelCode(null);
+      setShowLocationDropdown(false);
+
+      if (searchBarRef.current) {
+        searchBarRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+      } else {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    };
+
+    window.addEventListener("selectHeroDestination", handleSelectDestination);
+    return () => window.removeEventListener("selectHeroDestination", handleSelectDestination);
+  }, []);
+
   const handleStartSearchClick = () => {
     if (activeTab === "stays") {
       setShowLocationDropdown(true);
@@ -824,17 +855,17 @@ export default function HeroSection() {
       </div>
 
       {/* ════ MAIN CONTAINER ════ */}
-      <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full flex-1 flex flex-col justify-between">
+      <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full flex-1 flex flex-col justify-center py-6 sm:py-8 lg:py-12">
         
-        {/* ── TOP SECTION: Dynamic Headline & Subtitle (Optically balanced vertical alignment) ── */}
-        <div className="flex-1 flex flex-col justify-center max-w-2xl pt-2 sm:pt-4 pb-6 sm:pb-12 md:pb-16">
+        {/* ── TOP SECTION: Dynamic Headline & Subtitle ── */}
+        <div className="max-w-3xl mb-5 sm:mb-7">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}
-              initial={{ opacity: 0, y: 14 }}
+              initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -12 }}
-              transition={{ duration: 0.35, ease: "easeOut" }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.32, ease: "easeOut" }}
             >
               {/* Dynamic Tagline */}
               <h1 className="text-3xl sm:text-5xl md:text-6xl font-black text-slate-900 tracking-tight leading-[1.08] mb-2 sm:mb-3">
@@ -845,28 +876,17 @@ export default function HeroSection() {
               </h1>
 
               {/* Dynamic Subtext */}
-              <p className="text-xs sm:text-sm md:text-base text-slate-600 font-medium max-w-xl leading-relaxed mb-4">
+              <p className="text-xs sm:text-sm md:text-base text-slate-600 font-medium max-w-xl leading-relaxed">
                 {currentTab.subtitle}
               </p>
-
-              {/* Action CTA Button */}
-              <div className="pt-1">
-                <button
-                  type="button"
-                  onClick={handleStartSearchClick}
-                  className="inline-flex items-center justify-center px-6 py-2.5 sm:py-3 bg-slate-900 hover:bg-blue-600 text-white rounded-full font-semibold text-xs sm:text-sm transition-all duration-300 shadow-sm hover:shadow-lg cursor-pointer"
-                >
-                  {currentTab.cta}
-                </button>
-              </div>
             </motion.div>
           </AnimatePresence>
         </div>
 
-        {/* ════ BOTTOM BAR: 3 TABS & FLOATING CAPSULE SEARCH BAR ════ */}
+        {/* ════ 3 TABS & FLOATING CAPSULE SEARCH BAR (Moved up directly after subtext) ════ */}
         <div
           ref={searchBarRef}
-          className="pb-2 sm:pb-4 max-w-5xl relative z-50 w-full search-form-section"
+          className="max-w-5xl relative z-50 w-full search-form-section"
         >
           {/* Transfer Error Alert */}
           {activeTab === "transfers" && transferError && (

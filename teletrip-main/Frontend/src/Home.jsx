@@ -44,7 +44,15 @@ const Home = () => {
     Rome: "890+ hotels",
     Istanbul: "760+ hotels",
     Singapore: "630+ hotels",
-    Bangkok: "1,100+ hotels"
+    Bangkok: "1,100+ hotels",
+    Barcelona: "910+ hotels",
+    Maldives: "380+ luxury resorts",
+    Sydney: "740+ hotels",
+    Amsterdam: "670+ hotels",
+    Cairo: "520+ hotels",
+    Santorini: "430+ boutique stays",
+    "Rio de Janeiro": "610+ hotels",
+    "Abu Dhabi": "490+ hotels"
   };
 
   const fallbackDestinations = [
@@ -127,8 +135,82 @@ const Home = () => {
       image: "https://images.unsplash.com/photo-1508009603885-50cf7c579365?w=600&h=800&fit=crop&q=80",
       tag: "Vibrant",
       hotelCount: "1,100+ hotels"
+    },
+    {
+      _id: '11',
+      name: "Barcelona",
+      country: "Spain",
+      image: "https://images.unsplash.com/photo-1583422409516-2895a77efded?w=600&h=800&fit=crop&q=80",
+      tag: "Beach & Art",
+      hotelCount: "910+ hotels"
+    },
+    {
+      _id: '12',
+      name: "Maldives",
+      country: "Maldives",
+      image: "https://images.unsplash.com/photo-1514282401047-d79a71a590e8?w=600&h=800&fit=crop&q=80",
+      tag: "Luxury",
+      hotelCount: "380+ luxury resorts"
+    },
+    {
+      _id: '13',
+      name: "Sydney",
+      country: "Australia",
+      image: "https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?w=600&h=800&fit=crop&q=80",
+      tag: "Harbour",
+      hotelCount: "740+ hotels"
+    },
+    {
+      _id: '14',
+      name: "Amsterdam",
+      country: "Netherlands",
+      image: "https://images.unsplash.com/photo-1512470876302-972faa2aa9a4?w=600&h=800&fit=crop&q=80",
+      tag: "Canals",
+      hotelCount: "670+ hotels"
+    },
+    {
+      _id: '15',
+      name: "Cairo",
+      country: "Egypt",
+      image: "https://images.unsplash.com/photo-1572252009286-268acec5ca0a?w=600&h=800&fit=crop&q=80",
+      tag: "Wonders",
+      hotelCount: "520+ hotels"
+    },
+    {
+      _id: '16',
+      name: "Santorini",
+      country: "Greece",
+      image: "https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?w=600&h=800&fit=crop&q=80",
+      tag: "Island",
+      hotelCount: "430+ boutique stays"
+    },
+    {
+      _id: '17',
+      name: "Rio de Janeiro",
+      country: "Brazil",
+      image: "https://images.unsplash.com/photo-1483729558449-99ef09a8c325?w=600&h=800&fit=crop&q=80",
+      tag: "Carnival",
+      hotelCount: "610+ hotels"
+    },
+    {
+      _id: '18',
+      name: "Abu Dhabi",
+      country: "United Arab Emirates",
+      image: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=600&h=800&fit=crop&q=80",
+      tag: "Grand",
+      hotelCount: "490+ hotels"
     }
   ];
+
+  // Auto-fill and scroll to hero search form when destination card is clicked
+  const handleDestinationClick = (dest) => {
+    window.dispatchEvent(
+      new CustomEvent("selectHeroDestination", {
+        detail: { destination: dest }
+      })
+    );
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   const testimonials = [
     { id: 1, name: "Sarah J.", rating: 5, text: "The booking process was so easy and we found an amazing hotel at a great price!", avatar: "SJ", color: "#3b82f6" },
@@ -161,9 +243,6 @@ const Home = () => {
                 <h2 className="text-lg font-bold text-gray-900" style={{ letterSpacing: '-0.02em' }}>Popular Destinations</h2>
                 <p className="text-xs text-gray-500 mt-0.5">Explore hotel availability citywise</p>
               </div>
-              <Link to="/destinations" data-testid="view-all-destinations" className="flex items-center gap-1 text-[12px] font-semibold text-blue-600 hover:text-blue-700 transition-colors">
-                View All <ArrowRight style={{ width: 14, height: 14 }} />
-              </Link>
             </div>
             <div className="relative pt-6">
             <Carousel
@@ -171,8 +250,8 @@ const Home = () => {
               items={(destinations.length ? destinations : fallbackDestinations).map((dest) => (
                 <div
                   key={dest._id}
-                  onClick={() => navigate(`/hotel-search-results?city=${encodeURIComponent(dest.name)}&country=${encodeURIComponent(dest.country)}`)}
-                  className="relative overflow-hidden rounded-2xl cursor-pointer"
+                  onClick={() => handleDestinationClick(dest)}
+                  className="relative overflow-hidden rounded-2xl cursor-pointer active:scale-98 transition-transform"
                   style={{ aspectRatio: '3/4' }}
                 >
                   <img src={dest.image} alt={dest.name} className="w-full h-full object-cover" />
@@ -194,7 +273,7 @@ const Home = () => {
                   </div>
                 </div>
               ))}
-              autoPlayInterval={4000}
+              autoPlayInterval={3500}
               itemsPerView={{ mobile: 1.25, tablet: 2, desktop: 5 }}
             />
             </div>
@@ -213,15 +292,12 @@ const Home = () => {
                   <div className="w-8 h-px bg-blue-600" />
                   <span className="text-[11px] font-bold tracking-widest uppercase text-blue-600" style={{ letterSpacing: '0.14em' }}>Top Destinations</span>
                 </div>
-                <Link to="/destinations" data-testid="view-all-destinations" className="flex items-center gap-1.5 text-[13px] font-semibold text-blue-600 hover:text-blue-700 transition-colors">
-                  View All <ArrowRight style={{ width: 16, height: 16 }} />
-                </Link>
               </div>
               <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-2" style={{ letterSpacing: '-0.03em', lineHeight: 1.15 }}>
                 Popular destinations <span className="text-blue-600">worldwide</span>
               </h2>
               <p className="text-gray-500 text-sm max-w-lg mb-8" style={{ lineHeight: 1.6 }}>
-                Browse live hotel availability and compare direct wholesale rates across key cities.
+                Browse live hotel availability and click any destination to auto-fill search.
               </p>
 
               <div className="relative pt-6">
@@ -230,8 +306,8 @@ const Home = () => {
                 items={(destinations.length ? destinations : fallbackDestinations).map((dest) => (
                   <div
                     key={dest._id}
-                    onClick={() => navigate(`/hotel-search-results?city=${encodeURIComponent(dest.name)}&country=${encodeURIComponent(dest.country)}`)}
-                    className="group relative overflow-hidden rounded-2xl cursor-pointer bg-gray-100 shadow-xs hover:shadow-xl transition-all duration-300"
+                    onClick={() => handleDestinationClick(dest)}
+                    className="group relative overflow-hidden rounded-2xl cursor-pointer bg-gray-100 shadow-xs hover:shadow-xl transition-all duration-300 active:scale-98"
                     style={{ aspectRatio: '3/4' }}
                   >
                     <img
@@ -270,7 +346,7 @@ const Home = () => {
                     </div>
                   </div>
                 ))}
-                autoPlayInterval={4000}
+                autoPlayInterval={3500}
                 itemsPerView={{ mobile: 1.25, tablet: 3, desktop: 5 }}
               />
               </div>
