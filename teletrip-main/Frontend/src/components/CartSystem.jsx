@@ -639,6 +639,21 @@ export const SlideOutCart = ({ isOpen, onClose, onProceedToCheckout }) => {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [pkrRate, setPkrRate] = useState(null);
   const [pendingRemove, setPendingRemove] = useState(null);
+  const [timeLeft, setTimeLeft] = useState(899); // 14:59
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [isOpen]);
+
+  const formatTimer = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
 
   useEffect(() => {
     const fetchRate = async () => {
@@ -773,13 +788,15 @@ export const SlideOutCart = ({ isOpen, onClose, onProceedToCheckout }) => {
             ) : (
               <div className="p-4 space-y-3">
                 {/* 15-Minute Inventory Hold Timer Banner */}
-                <div className="p-2.5 bg-amber-50/90 bento-card border-0 rounded-xl flex items-center justify-between text-xs text-amber-900">
-                  <div className="flex items-center gap-1.5 font-bold">
-                    <AnimatedIcon name="time" animation="pulse" size="xs" className="text-amber-600" />
-                    <span>Inventory held for checkout</span>
+                <div className="p-2.5 bg-amber-50/90 bento-card border-0 rounded-xl flex items-center justify-between text-xs text-amber-900 gap-2">
+                  <div className="flex items-center gap-2 font-bold min-w-0">
+                    <div className="w-5 h-5 rounded-md bg-amber-200/60 flex items-center justify-center shrink-0">
+                      <AnimatedIcon name="time" animation="pulse" size={13} className="text-amber-700" />
+                    </div>
+                    <span className="truncate text-[12px]">Inventory held for checkout</span>
                   </div>
-                  <span className="font-mono font-black text-amber-800 bg-amber-100/90 px-2 py-0.5 rounded-md text-[11px]">
-                    14:59
+                  <span className="font-mono font-black text-amber-800 bg-amber-100/90 px-2 py-0.5 rounded-md text-[11px] shrink-0">
+                    {formatTimer(timeLeft)}
                   </span>
                 </div>
                 {items.map((item, index) => {

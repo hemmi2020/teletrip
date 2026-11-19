@@ -1281,7 +1281,7 @@ const handlePaymentSubmit = () => {
           <div className="mb-6 p-4 bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-amber-500/15 bento-card border-0 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3 shadow-2xs">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center font-black shadow-sm shrink-0">
-                <AnimatedIcon name="time" animation="pulse" size="sm" className="text-white" />
+                <AnimatedIcon name="time" animation="pulse" size={16} className="text-white" />
               </div>
               <div>
                 <div className="text-xs sm:text-sm font-extrabold text-amber-950 flex items-center gap-2">
@@ -1297,7 +1297,7 @@ const handlePaymentSubmit = () => {
             </div>
 
             <div className="flex items-center gap-1.5 text-[11px] text-emerald-800 bg-emerald-100/80 px-2.5 py-1 rounded-full font-bold shrink-0 border-0">
-              <AnimatedIcon name="shield" animation="pulse" size="xs" className="text-emerald-700" />
+              <AnimatedIcon name="shield" animation="pulse" size={13} className="text-emerald-700 shrink-0" />
               <span>Instant Confirmation</span>
             </div>
           </div>
