@@ -1338,9 +1338,9 @@ const HotelSearchResults = () => {
         )}
 
         {/* ── MINIMAL LUXURY SEARCH BAR SUMMARY ── */}
-        <div className="bg-white p-3 sm:p-4 rounded-2xl shadow-sm border-0 flex flex-wrap items-center justify-between gap-3">
+        <div className="bento-card bg-white p-3 sm:p-4 rounded-2xl border border-slate-100/80 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="w-10 h-10 rounded-xl bg-blue-50 border-0 flex items-center justify-center text-blue-600 font-bold shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 font-bold shrink-0">
               <MapPin className="w-5 h-5" />
             </div>
             <div className="min-w-0">
@@ -1363,7 +1363,7 @@ const HotelSearchResults = () => {
             <button
               type="button"
               onClick={() => setShowMobileFilters(true)}
-              className="lg:hidden px-3.5 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-xs rounded-xl flex items-center gap-1.5 border-0 shadow-xs cursor-pointer"
+              className="lg:hidden px-3.5 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-xs rounded-xl flex items-center gap-1.5 shadow-xs cursor-pointer"
             >
               <SlidersHorizontal className="w-4 h-4" />
               <span>Filters</span>
@@ -1385,8 +1385,8 @@ const HotelSearchResults = () => {
 
         {/* Expandable Modify Search form */}
         {showModifySearch && (
-          <div className="p-4 sm:p-5 bg-white rounded-2xl shadow-md border-0 animate-fadeIn">
-            <HotelSearchForm defaultTab="stays" variant="light" />
+          <div className="p-4 sm:p-5 bg-white rounded-3xl shadow-lg border border-slate-100 animate-fadeIn">
+            <HotelSearchForm defaultTab="stays" variant="light" onSearch={() => setShowModifySearch(false)} />
           </div>
         )}
 

@@ -1,920 +1,63 @@
 import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { createPortal } from 'react-dom';
-import { useSearchParams } from 'react-router-dom';
-import { MapPin, Calendar, Users, Search, ChevronDown, X, Plus, Minus, Loader2, Star, Clock, Tag, Plane, Building2, Hotel, Car, Compass, Trash2, ShieldCheck, CheckCircle, Crown } from 'lucide-react';
-import { addDays, format } from 'date-fns';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import {
+  MapPin, Calendar, Users, Search, ChevronDown, X, Plus, Minus,
+  Loader2, Star, Clock, Tag, Plane, Building2, Hotel, Car, Compass,
+  Trash2, ShieldCheck, CheckCircle, Crown, ArrowRight
+} from 'lucide-react';
+import { addDays, format, parseISO, isValid } from 'date-fns';
 import AnimatedIcon from './common/AnimatedIcon';
-import { getInstantSuggestions } from '../utils/instantSearchData';
+import { getInstantSuggestions, TOP_DESTINATIONS, FEATURED_HOTELS } from '../utils/instantSearchData';
 import { searchTransfers } from '../services/transfersApi';
 import axios from 'axios';
 import 'react-date-range/dist/styles.css';
 import 'react-date-range/dist/theme/default.css';
 
-// Lazy-load DateRange to avoid TDZ error with React 19
+// Lazy-load DateRange for React 19 compatibility
 const LazyDateRange = lazy(() =>
   import('react-date-range').then(mod => ({ default: mod.DateRange }))
 );
 
-// Transfers Tab Component
-const TransfersTab = ({ variant = 'dark' }) => {
-  const lbl = variant === 'light' ? 'text-gray-700' : 'text-white/80';
-  const [tripType, setTripType] = useState('one_way');
-  const [pickupQuery, setPickupQuery] = useState('');
-  const [dropoffQuery, setDropoffQuery] = useState('');
-  const [showPickupDropdown, setShowPickupDropdown] = useState(false);
-  const [showDropoffDropdown, setShowDropoffDropdown] = useState(false);
-  const [transferLocations, setTransferLocations] = useState([]);
-  const [isLoadingLocations, setIsLoadingLocations] = useState(false);
-  const [filteredPickupLocations, setFilteredPickupLocations] = useState([]);
-  const [filteredDropoffLocations, setFilteredDropoffLocations] = useState([]);
-  const [groupedPickup, setGroupedPickup] = useState([]);
-  const [groupedDropoff, setGroupedDropoff] = useState([]);
-  const [selectedPickup, setSelectedPickup] = useState(null);
-  const [selectedDropoff, setSelectedDropoff] = useState(null);
-  const [transferDate, setTransferDate] = useState('');
-  const [returnDate, setReturnDate] = useState('');
-  const [transferDateRange, setTransferDateRange] = useState([{ startDate: addDays(new Date(), 1), endDate: addDays(new Date(), 1), key: 'selection' }]);
-  const [showCalendar, setShowCalendar] = useState(false);
-  const [adults, setAdults] = useState(1);
-  const [children, setChildren] = useState(0);
-  const [infants, setInfants] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [showTravellerDropdown, setShowTravellerDropdown] = useState(false);
-  const pickupRef = useRef(null);
-  const dropoffRef = useRef(null);
-  const travellerRef = useRef(null);
-  const calendarRef = useRef(null);
+const TABS = [
+  { id: 'stays', label: 'Stays', icon: Building2 },
+  { id: 'transfers', label: 'Transfers', icon: Car },
+  { id: 'experiences', label: 'Experiences', icon: Compass },
+];
 
-  // Debounced search for pickup locations via API (airports + hotels)
-  useEffect(() => {
-    if (pickupQuery.trim().length < 2) {
-      setFilteredPickupLocations([]);
-      setGroupedPickup([]);
-      return;
-    }
-    setIsLoadingLocations(true);
-    const timer = setTimeout(async () => {
-      try {
-        const response = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/locations/transfers?search=${encodeURIComponent(pickupQuery.trim())}`);
-        if (response.data.success) {
-          setFilteredPickupLocations(response.data.data || []);
-          setGroupedPickup(response.data.grouped || []);
-        }
-      } catch (error) {
-        console.error('Error searching pickup locations:', error);
-      } finally {
-        setIsLoadingLocations(false);
-      }
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [pickupQuery]);
-
-  // Debounced search for dropoff locations via API (airports + hotels)
-  useEffect(() => {
-    if (dropoffQuery.trim().length < 2) {
-      setFilteredDropoffLocations([]);
-      setGroupedDropoff([]);
-      return;
-    }
-    setIsLoadingLocations(true);
-    const timer = setTimeout(async () => {
-      try {
-        const response = await axios.get(`${import.meta.env.VITE_BASE_URL}/api/locations/transfers?search=${encodeURIComponent(dropoffQuery.trim())}`);
-        if (response.data.success) {
-          setFilteredDropoffLocations(response.data.data || []);
-          setGroupedDropoff(response.data.grouped || []);
-        }
-      } catch (error) {
-        console.error('Error searching dropoff locations:', error);
-      } finally {
-        setIsLoadingLocations(false);
-      }
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [dropoffQuery]);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (pickupRef.current && !pickupRef.current.contains(event.target)) {
-        setShowPickupDropdown(false);
-      }
-      if (dropoffRef.current && !dropoffRef.current.contains(event.target)) {
-        setShowDropoffDropdown(false);
-      }
-      if (travellerRef.current && !travellerRef.current.contains(event.target)) {
-        if (event.target.closest('[data-traveller-portal]')) return;
-        setShowTravellerDropdown(false);
-      }
-      if (calendarRef.current && !calendarRef.current.contains(event.target)) {
-        // Don't close if clicking inside the portal calendar overlay
-        if (event.target.closest('[data-calendar-portal]')) return;
-        setShowCalendar(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!selectedPickup || !selectedDropoff) {
-      setError('Please select both pickup and dropoff locations');
-      return;
-    }
-    if (!transferDateRange[0].startDate) {
-      setError('Please select a travel date');
-      return;
-    }
-    if (tripType === 'round_trip' && transferDateRange[0].startDate >= transferDateRange[0].endDate) {
-      setError('Return date must be after outbound date');
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    try {
-      if (!selectedPickup?.code || !selectedDropoff?.code) {
-        setError('Please select valid pickup and dropoff locations from the dropdown');
-        setLoading(false);
-        return;
-      }
-      const outboundDate = format(transferDateRange[0].startDate, 'yyyy-MM-dd');
-      const returnDateStr = tripType === 'round_trip' ? format(transferDateRange[0].endDate, 'yyyy-MM-dd') : null;
-      const searchParams = {
-        language: 'en',
-        fromType: selectedPickup.type || 'ATLAS',
-        fromCode: selectedPickup.code,
-        toType: selectedDropoff.type || 'IATA',
-        toCode: selectedDropoff.code,
-        outbound: `${outboundDate}T10:00:00`,
-        adults,
-        children,
-        infants,
-        tripType,
-        ...(returnDateStr ? { inbound: `${returnDateStr}T10:00:00` } : {})
-      };
-
-      // Store search params for display on results page
-      sessionStorage.setItem('transferSearch', JSON.stringify({
-        ...searchParams,
-        pickupName: selectedPickup.name,
-        dropoffName: selectedDropoff.name
-      }));
-      sessionStorage.removeItem('transferError');
-
-      console.log('Calling searchTransfers API...');
-      const results = await searchTransfers(searchParams);
-      console.log('API Response:', results);
-
-      if (results.success) {
-        sessionStorage.setItem('transferResults', JSON.stringify(results.data));
-        const params = new URLSearchParams({
-          from: selectedPickup.name,
-          to: selectedDropoff.name,
-          fromCode: selectedPickup.code,
-          toCode: selectedDropoff.code,
-          fromType: selectedPickup.type || 'ATLAS',
-          toType: selectedDropoff.type || 'IATA',
-          date: outboundDate,
-          ...(returnDateStr ? { returnDate: returnDateStr } : {}),
-          tripType,
-          adults: String(adults),
-          ...(children > 0 ? { children: String(children) } : {}),
-          ...(infants > 0 ? { infants: String(infants) } : {})
-        });
-        window.location.href = `/transfers?${params.toString()}`;
-      } else {
-        sessionStorage.setItem('transferError', JSON.stringify({ message: results.message || 'No transfers found for this route.' }));
-        window.location.href = '/transfers';
-      }
-    } catch (err) {
-      console.error('Search error:', err);
-      const apiResponse = err.response?.data;
-      const errorMessage = apiResponse?.message || err.message || 'Transfer search failed. Please try again.';
-      sessionStorage.setItem('transferResults', JSON.stringify({ transfers: [] }));
-      sessionStorage.setItem('transferError', JSON.stringify({ message: errorMessage, error: apiResponse?.error }));
-      window.location.href = '/transfers';
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
-      {error && (
-        <div className="bg-red-500/20 border border-red-400/30 text-red-600 p-3 rounded-xl text-xs font-semibold">
-          {error}
-        </div>
-      )}
-
-      {/* Trip Type — modern pill toggle buttons */}
-      <div className="flex items-center gap-2">
-        <button
-          type="button"
-          onClick={() => setTripType('one_way')}
-          style={{ minHeight: 'unset' }}
-          className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all border cursor-pointer ${
-            tripType === 'one_way'
-              ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
-              : 'bg-gray-100 text-gray-600 border-gray-200 hover:border-gray-300'
-          }`}
-        >
-          One Way
-        </button>
-        <button
-          type="button"
-          onClick={() => setTripType('round_trip')}
-          style={{ minHeight: 'unset' }}
-          className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all border cursor-pointer ${
-            tripType === 'round_trip'
-              ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
-              : 'bg-gray-100 text-gray-600 border-gray-200 hover:border-gray-300'
-          }`}
-        >
-          Round Trip
-        </button>
-      </div>
-
-      {/* Option 1 Unified Single-Row Grid on Desktop */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-2.5 sm:gap-3 relative items-end">
-        {/* Field 1: Pickup Location (4 columns) */}
-        <div className="md:col-span-4 relative" ref={pickupRef}>
-          <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-gray-500 mb-1 text-left">
-            Pickup Location <span className="text-red-500">*</span>
-          </label>
-          <div className={`flex items-center w-full border bg-white rounded-xl focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent px-3 py-2.5 sm:py-3 gap-2 ${
-            selectedPickup ? 'border-blue-400 bg-blue-50/20' : 'border-gray-200 hover:border-gray-300'
-          }`}>
-            {selectedPickup?.type === 'IATA' ? (
-              <Plane className="flex-shrink-0 text-blue-600" size={18} />
-            ) : selectedPickup ? (
-              <Building2 className="flex-shrink-0 text-emerald-600" size={18} />
-            ) : (
-              <MapPin className="flex-shrink-0 text-gray-400" size={18} />
-            )}
-            <input
-              type="text"
-              value={pickupQuery}
-              onChange={(e) => {
-                setPickupQuery(e.target.value);
-                setShowPickupDropdown(true);
-                if (e.target.value.trim() === '') setSelectedPickup(null);
-              }}
-              onFocus={() => setShowPickupDropdown(true)}
-              placeholder="Airport, hotel or area, e.g. DXB"
-              required
-              className="flex-1 min-w-0 border-0 border-none outline-none focus:outline-none focus:ring-0 focus:border-0 shadow-none bg-transparent text-gray-800 text-xs sm:text-sm font-bold placeholder-gray-400"
-            />
-            {pickupQuery && (
-              <button
-                type="button"
-                onClick={() => { setPickupQuery(''); setSelectedPickup(null); setFilteredPickupLocations([]); }}
-                className="text-gray-400 hover:text-gray-600 flex-shrink-0 cursor-pointer"
-              >
-                <X size={16} />
-              </button>
-            )}
-          </div>
-          {showPickupDropdown && pickupQuery.trim() !== '' && (
-            <div className="absolute left-0 right-0 top-full mt-1 z-[210] bg-white border border-gray-200 rounded-2xl shadow-2xl max-h-[60vh] overflow-y-auto" style={{scrollbarWidth:'thin'}}>
-              {isLoadingLocations ? (
-                <div className="p-3 text-center text-gray-500 text-sm">Searching locations...</div>
-              ) : groupedPickup.length > 0 ? (
-                groupedPickup.map((group, gi) => (
-                  <div key={gi}>
-                    <div className="px-3 pt-2.5 pb-1 text-[11px] font-semibold text-gray-400 uppercase tracking-wider bg-gray-50 sticky top-0">
-                      {group.city}{group.country ? `, ${group.country}` : ''}
-                    </div>
-                    {group.airports.map((loc, i) => (
-                      <div key={`a-${gi}-${i}`} onClick={() => { setSelectedPickup(loc); setPickupQuery(loc.name); setShowPickupDropdown(false); }} className="px-3 py-2 hover:bg-blue-50 cursor-pointer flex items-center gap-2.5">
-                        <Plane size={15} className="text-blue-600 flex-shrink-0" />
-                        <div className="min-w-0 flex-1">
-                          <div className="text-[13px] font-medium text-gray-800 truncate">{loc.name}</div>
-                          <div className="text-[11px] text-gray-400">Airport · {loc.code}</div>
-                        </div>
-                      </div>
-                    ))}
-                    {group.hotels.map((loc, i) => (
-                      <div key={`h-${gi}-${i}`} onClick={() => { setSelectedPickup(loc); setPickupQuery(loc.name); setShowPickupDropdown(false); }} className="px-3 py-2 hover:bg-blue-50 cursor-pointer flex items-center gap-2.5">
-                        <Building2 size={15} className="text-green-600 flex-shrink-0" />
-                        <div className="min-w-0 flex-1">
-                          <div className="text-[13px] font-medium text-gray-800 truncate">{loc.name}</div>
-                          <div className="text-[11px] text-gray-400">Hotel · {loc.code}</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ))
-              ) : filteredPickupLocations.length > 0 ? (
-                filteredPickupLocations.map((loc, i) => (
-                  <div key={i} onClick={() => { setSelectedPickup(loc); setPickupQuery(loc.name); setShowPickupDropdown(false); }} className="px-3 py-2 hover:bg-blue-50 cursor-pointer flex items-center gap-2.5">
-                    {loc.type === 'IATA' ? <Plane size={15} className="text-blue-600 flex-shrink-0" /> : <Building2 size={15} className="text-green-600 flex-shrink-0" />}
-                    <div className="min-w-0 flex-1">
-                      <div className="text-[13px] font-medium text-gray-800 truncate">{loc.name}</div>
-                      <div className="text-[11px] text-gray-400">{loc.type === 'IATA' ? 'Airport' : 'Hotel'} · {loc.city}{loc.country ? `, ${loc.country}` : ''}</div>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="p-3 text-center text-gray-500 text-sm">No locations found</div>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Field 2: Dropoff Location (4 columns) */}
-        <div className="md:col-span-4 relative" ref={dropoffRef}>
-          <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-gray-500 mb-1 text-left">
-            Dropoff Location <span className="text-red-500">*</span>
-          </label>
-          <div className={`flex items-center w-full border bg-white rounded-xl focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent px-3 py-2.5 sm:py-3 gap-2 ${
-            selectedDropoff ? 'border-blue-400 bg-blue-50/20' : 'border-gray-200 hover:border-gray-300'
-          }`}>
-            {selectedDropoff?.type === 'IATA' ? (
-              <Plane className="flex-shrink-0 text-blue-600" size={18} />
-            ) : selectedDropoff ? (
-              <Building2 className="flex-shrink-0 text-emerald-600" size={18} />
-            ) : (
-              <MapPin className="flex-shrink-0 text-gray-400" size={18} />
-            )}
-            <input
-              type="text"
-              value={dropoffQuery}
-              onChange={(e) => {
-                setDropoffQuery(e.target.value);
-                setShowDropoffDropdown(true);
-                if (e.target.value.trim() === '') setSelectedDropoff(null);
-              }}
-              onFocus={() => setShowDropoffDropdown(true)}
-              placeholder="Airport, hotel or area, e.g. Marina"
-              required
-              className="flex-1 min-w-0 border-0 border-none outline-none focus:outline-none focus:ring-0 focus:border-0 shadow-none bg-transparent text-gray-800 text-xs sm:text-sm font-bold placeholder-gray-400"
-            />
-            {dropoffQuery && (
-              <button
-                type="button"
-                onClick={() => { setDropoffQuery(''); setSelectedDropoff(null); setFilteredDropoffLocations([]); }}
-                className="text-gray-400 hover:text-gray-600 flex-shrink-0 cursor-pointer"
-              >
-                <X size={16} />
-              </button>
-            )}
-          </div>
-          {showDropoffDropdown && dropoffQuery.trim() !== '' && (
-            <div className="absolute left-0 right-0 top-full mt-1 z-[210] bg-white border border-gray-200 rounded-2xl shadow-2xl max-h-[60vh] overflow-y-auto" style={{scrollbarWidth:'thin'}}>
-              {isLoadingLocations ? (
-                <div className="p-3 text-center text-gray-500 text-sm">Searching locations...</div>
-              ) : groupedDropoff.length > 0 ? (
-                groupedDropoff.map((group, gi) => (
-                  <div key={gi}>
-                    <div className="px-3 pt-2.5 pb-1 text-[11px] font-semibold text-gray-400 uppercase tracking-wider bg-gray-50 sticky top-0">
-                      {group.city}{group.country ? `, ${group.country}` : ''}
-                    </div>
-                    {group.airports.map((loc, i) => (
-                      <div key={`a-${gi}-${i}`} onClick={() => { setSelectedDropoff(loc); setDropoffQuery(loc.name); setShowDropoffDropdown(false); }} className="px-3 py-2 hover:bg-blue-50 cursor-pointer flex items-center gap-2.5">
-                        <Plane size={15} className="text-blue-600 flex-shrink-0" />
-                        <div className="min-w-0 flex-1">
-                          <div className="text-[13px] font-medium text-gray-800 truncate">{loc.name}</div>
-                          <div className="text-[11px] text-gray-400">Airport · {loc.code}</div>
-                        </div>
-                      </div>
-                    ))}
-                    {group.hotels.map((loc, i) => (
-                      <div key={`h-${gi}-${i}`} onClick={() => { setSelectedDropoff(loc); setDropoffQuery(loc.name); setShowDropoffDropdown(false); }} className="px-3 py-2 hover:bg-blue-50 cursor-pointer flex items-center gap-2.5">
-                        <Building2 size={15} className="text-green-600 flex-shrink-0" />
-                        <div className="min-w-0 flex-1">
-                          <div className="text-[13px] font-medium text-gray-800 truncate">{loc.name}</div>
-                          <div className="text-[11px] text-gray-400">Hotel · {loc.code}</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ))
-              ) : filteredDropoffLocations.length > 0 ? (
-                filteredDropoffLocations.map((loc, i) => (
-                  <div key={i} onClick={() => { setSelectedDropoff(loc); setDropoffQuery(loc.name); setShowDropoffDropdown(false); }} className="px-3 py-2 hover:bg-blue-50 cursor-pointer flex items-center gap-2.5">
-                    {loc.type === 'IATA' ? <Plane size={15} className="text-blue-600 flex-shrink-0" /> : <Building2 size={15} className="text-green-600 flex-shrink-0" />}
-                    <div className="min-w-0 flex-1">
-                      <div className="text-[13px] font-medium text-gray-800 truncate">{loc.name}</div>
-                      <div className="text-[11px] text-gray-400">{loc.type === 'IATA' ? 'Airport' : 'Hotel'} · {loc.city}{loc.country ? `, ${loc.country}` : ''}</div>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="p-3 text-center text-gray-500 text-sm">No dropoff locations found</div>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Field 3: Travel Dates (2 columns) */}
-        <div className="md:col-span-2 relative" ref={calendarRef}>
-          <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-gray-500 mb-1 text-left">
-            {tripType === 'round_trip' ? 'Dates' : 'Date'} <span className="text-red-500">*</span>
-          </label>
-          <div
-            onClick={() => setShowCalendar(!showCalendar)}
-            className="flex items-center w-full px-3 py-2.5 sm:py-3 border border-gray-200 hover:border-gray-300 bg-white rounded-xl cursor-pointer hover:border-blue-400 transition-all"
-          >
-            <Calendar className="text-blue-600 mr-2 flex-shrink-0" size={18} />
-            <span className="text-gray-800 font-bold flex-1 text-xs sm:text-sm truncate">
-              {tripType === 'round_trip'
-                ? `${format(transferDateRange[0].startDate, 'MMM dd')} – ${format(transferDateRange[0].endDate, 'MMM dd')}`
-                : format(transferDateRange[0].startDate, 'MMM dd, yyyy')}
-            </span>
-          </div>
-          {showCalendar && createPortal(
-            <div data-calendar-portal style={{position:"fixed",inset:0,zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.3)"}} onClick={(e) => { if (e.target === e.currentTarget) setShowCalendar(false); }}><div className="bg-white border border-gray-200 rounded-2xl shadow-2xl overflow-auto max-h-[80vh]" style={{maxWidth:"95vw",margin:"16px"}}>
-              <Suspense fallback={<div className="p-8 text-center text-gray-400">Loading calendar...</div>}>
-                <LazyDateRange
-                  ranges={transferDateRange}
-                  onChange={(item) => {
-                    setTransferDateRange([item.selection]);
-                    if (tripType === 'one_way') setShowCalendar(false);
-                  }}
-                  minDate={new Date()}
-                  moveRangeOnFirstSelection={false}
-                  preventSnapRefocus={true}
-                  months={tripType === 'round_trip' ? (window.innerWidth < 640 ? 1 : 2) : 1}
-                  direction="horizontal"
-                  rangeColors={['#2563eb']}
-                  showDateDisplay={false}
-                  selectsRange={tripType === 'round_trip'}
-                />
-              </Suspense>
-              <div className="px-4 pb-3 flex justify-end">
-                <button type="button" onClick={() => setShowCalendar(false)} className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm cursor-pointer">OK</button>
-              </div>
-            </div>
-            </div>
-          , document.body)}
-        </div>
-
-        {/* Field 4: Travellers (2 columns) */}
-        <div className="md:col-span-2 relative" ref={travellerRef}>
-          <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-gray-500 mb-1 text-left">
-            Passengers <span className="text-red-500">*</span>
-          </label>
-          <div
-            onClick={() => setShowTravellerDropdown(!showTravellerDropdown)}
-            className="flex items-center w-full px-3 py-2.5 sm:py-3 border border-gray-200 hover:border-gray-300 bg-white rounded-xl cursor-pointer hover:border-blue-400 transition-all"
-          >
-            <Users className="text-blue-600 mr-2 flex-shrink-0" size={18} />
-            <span className="text-gray-800 font-bold flex-1 text-xs sm:text-sm truncate">
-              {adults + children + infants} Guest{(adults + children + infants) > 1 ? 's' : ''}
-            </span>
-            <ChevronDown className="text-gray-400 flex-shrink-0" size={16} />
-          </div>
-          {showTravellerDropdown && createPortal(
-            <div data-traveller-portal style={{position:"fixed",inset:0,zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.3)"}} onClick={(e) => { if (e.target === e.currentTarget) setShowTravellerDropdown(false); }}>
-              <div className="bg-white border border-gray-200 rounded-2xl shadow-2xl p-4 max-h-[80vh] overflow-y-auto w-full" style={{maxWidth:420,margin:16}} onClick={(e) => e.stopPropagation()}>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-700 font-medium text-sm sm:text-base">Adults</span>
-                  <div className="flex items-center space-x-2 sm:space-x-3">
-                    <button type="button" onClick={() => setAdults(Math.max(1, adults - 1))} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Minus size={14} /></button>
-                    <span className="w-6 sm:w-8 text-center font-medium text-sm sm:text-base">{adults}</span>
-                    <button type="button" onClick={() => setAdults(Math.min(20, adults + 1))} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Plus size={14} /></button>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between mt-3">
-                  <span className="text-gray-700 font-medium text-sm sm:text-base">Children</span>
-                  <div className="flex items-center space-x-2 sm:space-x-3">
-                    <button type="button" onClick={() => setChildren(Math.max(0, children - 1))} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Minus size={14} /></button>
-                    <span className="w-6 sm:w-8 text-center font-medium text-sm sm:text-base">{children}</span>
-                    <button type="button" onClick={() => setChildren(Math.min(10, children + 1))} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Plus size={14} /></button>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between mt-3">
-                  <span className="text-gray-700 font-medium text-sm sm:text-base">Infants</span>
-                  <div className="flex items-center space-x-2 sm:space-x-3">
-                    <button type="button" onClick={() => setInfants(Math.max(0, infants - 1))} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Minus size={14} /></button>
-                    <span className="w-6 sm:w-8 text-center font-medium text-sm sm:text-base">{infants}</span>
-                    <button type="button" onClick={() => setInfants(Math.min(5, infants + 1))} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Plus size={14} /></button>
-                  </div>
-                </div>
-                <button type="button" onClick={() => setShowTravellerDropdown(false)} className="w-full mt-4 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm cursor-pointer" style={{minHeight:'unset'}}>Done</button>
-              </div>
-            </div>
-          , document.body)}
-        </div>
-      </div>
-
-      {/* Lower Action Row: Reassurances & Search Transfers CTA Button */}
-      <div className="mt-3.5 pt-3 border-t border-gray-100 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-2 text-xs">
-          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 font-bold border-0 text-[11px]">
-            <CheckCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-            <span>Flight Tracking Included</span>
-          </span>
-          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-800 font-bold border-0 text-[11px]">
-            <ShieldCheck className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-            <span>Free Cancellation 24h</span>
-          </span>
-          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-900 font-bold border-0 text-[11px]">
-            <AnimatedIcon name="smile" animation="bounce" size={14} className="text-amber-600 shrink-0" />
-            <span>Meet & Greet Available</span>
-          </span>
-        </div>
-
-        <button
-          type="submit"
-          disabled={loading}
-          style={{ cursor: 'pointer' }}
-          className="w-full md:w-auto px-6 sm:px-8 py-2.5 sm:py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-xl shadow-lg hover:shadow-xl transition-all font-bold flex items-center justify-center space-x-2 cursor-pointer text-sm sm:text-base shrink-0 active:scale-98"
-        >
-          <Search size={18} />
-          <span>{loading ? 'Searching...' : 'Search Transfers'}</span>
-        </button>
-      </div>
-    </form>
-  );
-};
-
-// Experiences Tab Component
-const ExperiencesTab = ({ variant = 'dark' }) => {
-  const lbl = variant === 'light' ? 'text-gray-700' : 'text-white/80';
-  const [searchQuery, setSearchQuery] = useState('');
-  const [showLocationDropdown, setShowLocationDropdown] = useState(false);
-  const [allLocations, setAllLocations] = useState([]);
-  const [filteredLocations, setFilteredLocations] = useState([]);
-  const [selectedLocation, setSelectedLocation] = useState(null);
-  const [isLoadingLocations, setIsLoadingLocations] = useState(false);
-  const [dateRange, setDateRange] = useState([{
-    startDate: addDays(new Date(), 1),
-    endDate: addDays(new Date(), 4),
-    key: 'selection'
-  }]);
-  const [showCalendar, setShowCalendar] = useState(false);
-  const [adults, setAdults] = useState(2);
-  const [children, setChildren] = useState(0);
-  const [infants, setInfants] = useState(0);
-  const [showTravellerDropdown, setShowTravellerDropdown] = useState(false);
-  const locationRef = useRef(null);
-  const calendarRef = useRef(null);
-  const travellerRef = useRef(null);
-
-  useEffect(() => {
-    const fetchLocations = async () => {
-      setIsLoadingLocations(true);
-      try {
-        const response = await fetch('https://countriesnow.space/api/v0.1/countries/');
-        const data = await response.json();
-        
-        if (!data.error) {
-          const locations = [];
-          data.data.forEach(country => {
-            if (country.cities && country.cities.length > 0) {
-              country.cities.forEach(city => {
-                locations.push({
-                  city: city,
-                  country: country.country,
-                  displayName: `${city}, ${country.country}`,
-                  searchText: `${city} ${country.country}`.toLowerCase()
-                });
-              });
-            }
-          });
-          setAllLocations(locations);
-        }
-      } catch (error) {
-        console.error('Error fetching locations:', error);
-      } finally {
-        setIsLoadingLocations(false);
-      }
-    };
-    fetchLocations();
-  }, []);
-
-  useEffect(() => {
-    if (searchQuery.trim() === '') {
-      setFilteredLocations([]);
-      return;
-    }
-    const query = searchQuery.toLowerCase().trim();
-    const filtered = allLocations
-      .filter(location => location.searchText.includes(query))
-      .slice(0, 50);
-    setFilteredLocations(filtered);
-  }, [searchQuery, allLocations]);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (calendarRef.current && !calendarRef.current.contains(event.target)) {
-        if (event.target.closest('[data-calendar-portal]')) return;
-        setShowCalendar(false);
-      }
-      if (locationRef.current && !locationRef.current.contains(event.target)) setShowLocationDropdown(false);
-      if (travellerRef.current && !travellerRef.current.contains(event.target)) {
-        if (event.target.closest('[data-traveller-portal]')) return;
-        setShowTravellerDropdown(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const handleLocationSelect = (location) => {
-    setSelectedLocation(location);
-    setSearchQuery(location.displayName);
-    setShowLocationDropdown(false);
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!selectedLocation) {
-      alert('Please select a destination');
-      return;
-    }
-
-    const from = format(dateRange[0].startDate, 'yyyy-MM-dd');
-    const to = format(dateRange[0].endDate, 'yyyy-MM-dd');
-
-    const url = `/activity-search-results?destination=${encodeURIComponent(selectedLocation.city)}&country=${encodeURIComponent(selectedLocation.country)}&from=${from}&to=${to}&adults=${adults}&children=${children}`;
-    window.location.href = url;
-  };
-
-  const calculateNights = () => {
-    const start = dateRange[0].startDate;
-    const end = dateRange[0].endDate;
-    const diffTime = Math.abs(end - start);
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
-      {/* Option 1 Unified Single-Row Grid on Desktop */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-2.5 sm:gap-3 relative items-end">
-        {/* Field 1: Destination or Activity Search (5 columns) */}
-        <div className="md:col-span-5 relative" ref={locationRef}>
-          <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-gray-500 mb-1 text-left">
-            Destination or Activity <span className="text-red-500">*</span>
-          </label>
-          <div className={`flex items-center w-full border bg-white rounded-xl focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent px-3 py-2.5 sm:py-3 gap-2 ${
-            selectedLocation ? 'border-blue-400 bg-blue-50/20' : 'border-gray-200 hover:border-gray-300'
-          }`}>
-            <Compass className={`flex-shrink-0 ${selectedLocation ? 'text-blue-600' : 'text-gray-400'}`} size={18} />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                setShowLocationDropdown(true);
-                if (e.target.value.trim() === '') setSelectedLocation(null);
-              }}
-              onFocus={() => setShowLocationDropdown(true)}
-              placeholder="Where are you going? e.g: Dubai, Paris"
-              className="flex-1 min-w-0 border-0 border-none outline-none focus:outline-none focus:ring-0 focus:border-0 shadow-none bg-transparent text-gray-800 text-xs sm:text-sm font-bold placeholder-gray-400"
-              required
-            />
-            {searchQuery && (
-              <button
-                type="button"
-                onClick={() => { setSearchQuery(''); setSelectedLocation(null); setFilteredLocations([]); }}
-                className="text-gray-400 hover:text-gray-600 flex-shrink-0 cursor-pointer"
-              >
-                <X size={16} />
-              </button>
-            )}
-          </div>
-
-          {showLocationDropdown && (searchQuery.trim() !== '' || isLoadingLocations) && (
-            <div className="absolute left-0 right-0 top-full mt-1 z-[210] bg-white border border-gray-200 rounded-2xl shadow-2xl max-h-[60vh] overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
-              {isLoadingLocations ? (
-                <div className="p-4 text-center text-gray-400 text-sm flex items-center justify-center gap-2">
-                  <span className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
-                  <span>Loading locations...</span>
-                </div>
-              ) : filteredLocations.length > 0 ? (
-                <div>
-                  <div className="px-3 pt-2.5 pb-1 text-[11px] font-bold text-gray-500 uppercase tracking-wider bg-gray-50/80 border-b border-gray-100 flex items-center gap-1.5">
-                    <MapPin size={13} className="text-blue-600" />
-                    <span>Popular Destinations</span>
-                  </div>
-                  <ul>
-                    {filteredLocations.map((location, index) => (
-                      <li
-                        key={index} 
-                        onClick={() => handleLocationSelect(location)}
-                        className="px-3.5 py-2.5 hover:bg-blue-50 cursor-pointer border-b border-gray-50 last:border-b-0 transition-colors flex items-center gap-2.5"
-                      >
-                        <MapPin size={16} className="text-blue-600 flex-shrink-0" />
-                        <div className="min-w-0 flex-1">
-                          <div className="font-semibold text-gray-800 text-xs sm:text-sm truncate">{location.city}</div>
-                          <div className="text-[11px] text-gray-400 truncate">City in {location.country}</div>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ) : (
-                <div className="p-4 text-center text-gray-400 text-sm">
-                  No locations found. Try a different search term.
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Field 2: Dates (4 columns) */}
-        <div className="md:col-span-4 relative" ref={calendarRef}>
-          <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-gray-500 mb-1 text-left">
-            Travel Dates <span className="text-red-500">*</span>
-          </label>
-          <div
-            onClick={() => setShowCalendar(!showCalendar)}
-            className="flex items-center w-full px-3 py-2.5 sm:py-3 border border-gray-200 hover:border-gray-300 bg-white rounded-xl cursor-pointer hover:border-blue-400 transition-all"
-          >
-            <Calendar className="text-blue-600 mr-2 flex-shrink-0" size={18} />
-            <span className="text-gray-800 font-bold flex-1 text-xs sm:text-sm truncate">
-              <span className="hidden sm:inline">{format(dateRange[0].startDate, 'MMM dd, yyyy')} - {format(dateRange[0].endDate, 'MMM dd, yyyy')}</span>
-              <span className="sm:hidden">{format(dateRange[0].startDate, 'MMM dd')} - {format(dateRange[0].endDate, 'MMM dd')}</span>
-            </span>
-            <span className="text-[11px] font-bold text-blue-600 ml-1.5 flex-shrink-0 bg-blue-50 px-1.5 py-0.5 rounded-md">
-              {calculateNights()}d
-            </span>
-          </div>
-          {showCalendar && createPortal(
-            <div data-calendar-portal style={{position:"fixed",inset:0,zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.3)"}} onClick={(e) => { if (e.target === e.currentTarget) setShowCalendar(false); }}><div className="bg-white border border-gray-200 rounded-2xl shadow-2xl overflow-auto max-h-[80vh]" style={{maxWidth:"95vw",margin:"16px"}}>
-                <Suspense fallback={<div className="p-8 text-center text-gray-400">Loading calendar...</div>}>
-                  <LazyDateRange
-                    ranges={dateRange}
-                    onChange={(item) => {
-                      const sel = item.selection;
-                      if (sel.startDate.getTime() === sel.endDate.getTime()) {
-                        setDateRange([{ ...sel, endDate: addDays(sel.startDate, 1) }]);
-                      } else {
-                        setDateRange([sel]);
-                      }
-                    }}
-                    minDate={new Date()}
-                    moveRangeOnFirstSelection={false}
-                    preventSnapRefocus={true}
-                    months={window.innerWidth < 640 ? 1 : 2}
-                    direction="horizontal"
-                    rangeColors={['#2563eb']}
-                    showDateDisplay={false}
-                  />
-                </Suspense>
-              <div className="px-4 pb-3 flex justify-end">
-                <button
-                  type="button"
-                  onClick={() => setShowCalendar(false)}
-                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm cursor-pointer"
-                >
-                  OK
-                </button>
-              </div>
-            </div>
-            </div>
-          , document.body)}
-        </div>
-
-        {/* Field 3: Travellers (3 columns) */}
-        <div className="md:col-span-3 relative" ref={travellerRef}>
-          <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-gray-500 mb-1 text-left">
-            Travellers <span className="text-red-500">*</span>
-          </label>
-          <div
-            onClick={() => setShowTravellerDropdown(!showTravellerDropdown)}
-            className="flex items-center w-full px-3 py-2.5 sm:py-3 border border-gray-200 hover:border-gray-300 bg-white rounded-xl cursor-pointer hover:border-blue-400 transition-all"
-          >
-            <Users className="text-blue-600 mr-2 flex-shrink-0" size={18} />
-            <span className="text-gray-800 font-bold flex-1 text-xs sm:text-sm truncate">
-              {adults} Adult{adults > 1 ? 's' : ''}{children > 0 ? `, ${children} Child${children > 1 ? 'ren' : ''}` : ''}{infants > 0 ? `, ${infants} Infant${infants > 1 ? 's' : ''}` : ''}
-            </span>
-            <ChevronDown className="text-gray-400 flex-shrink-0" size={16} />
-          </div>
-          {showTravellerDropdown && createPortal(
-            <div data-traveller-portal style={{position:"fixed",inset:0,zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.3)"}} onClick={(e) => { if (e.target === e.currentTarget) setShowTravellerDropdown(false); }}>
-              <div className="bg-white border border-gray-200 rounded-2xl shadow-2xl p-4 max-h-[80vh] overflow-y-auto w-full" style={{maxWidth:420,margin:16}} onClick={(e) => e.stopPropagation()}>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-700 font-medium text-sm sm:text-base">Adults</span>
-                  <div className="flex items-center space-x-2 sm:space-x-3">
-                    <button type="button" onClick={() => setAdults(Math.max(1, adults - 1))} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Minus size={14} /></button>
-                    <span className="w-6 sm:w-8 text-center font-medium text-sm sm:text-base">{adults}</span>
-                    <button type="button" onClick={() => setAdults(Math.min(20, adults + 1))} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Plus size={14} /></button>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between mt-3">
-                  <span className="text-gray-700 font-medium text-sm sm:text-base">Children</span>
-                  <div className="flex items-center space-x-2 sm:space-x-3">
-                    <button type="button" onClick={() => setChildren(Math.max(0, children - 1))} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Minus size={14} /></button>
-                    <span className="w-6 sm:w-8 text-center font-medium text-sm sm:text-base">{children}</span>
-                    <button type="button" onClick={() => setChildren(Math.min(10, children + 1))} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Plus size={14} /></button>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between mt-3">
-                  <span className="text-gray-700 font-medium text-sm sm:text-base">Infants</span>
-                  <div className="flex items-center space-x-2 sm:space-x-3">
-                    <button type="button" onClick={() => setInfants(Math.max(0, infants - 1))} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Minus size={14} /></button>
-                    <span className="w-6 sm:w-8 text-center font-medium text-sm sm:text-base">{infants}</span>
-                    <button type="button" onClick={() => setInfants(Math.min(5, infants + 1))} className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors"><Plus size={14} /></button>
-                  </div>
-                </div>
-                <button type="button" onClick={() => setShowTravellerDropdown(false)} className="w-full mt-4 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm cursor-pointer" style={{minHeight:'unset'}}>Done</button>
-              </div>
-            </div>
-          , document.body)}
-        </div>
-      </div>
-
-      {/* Lower Action Row: Reassurances & Search Experiences CTA Button */}
-      <div className="mt-3.5 pt-3 border-t border-gray-100 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-2 text-xs">
-          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 font-bold border-0 text-[11px]">
-            <CheckCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-            <span>Instant Mobile Voucher</span>
-          </span>
-          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-800 font-bold border-0 text-[11px]">
-            <ShieldCheck className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-            <span>Skip-the-Line Entry</span>
-          </span>
-          <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-900 font-bold border-0 text-[11px]">
-            <AnimatedIcon name="shield" animation="pulse" size={14} className="text-amber-600 shrink-0" />
-            <span>Best Rate Guarantee</span>
-          </span>
-        </div>
-
-        <button
-          type="submit"
-          style={{ cursor: 'pointer' }}
-          className="w-full md:w-auto px-6 sm:px-8 py-2.5 sm:py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-lg hover:shadow-xl transition-all font-bold flex items-center justify-center space-x-2 cursor-pointer text-sm sm:text-base shrink-0 active:scale-98"
-        >
-          <Search size={18} />
-          <span>Search Experiences</span>
-        </button>
-      </div>
-    </form>
-  );
-};
-
-const OldExperiencesResults = ({ experiences }) => {
-  return (
-    <>
-      {experiences.length > 0 && (
-        <div className="mt-6 space-y-4">
-          <h3 className="text-lg font-semibold text-gray-900">
-            {experiences.length} Experience{experiences.length !== 1 ? 's' : ''} Found
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {experiences.map((activity) => (
-              <div
-                key={activity.code}
-                className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow"
-              >
-                {activity.images?.[0] ? (
-                  <img
-                    src={activity.images[0]}
-                    alt={activity.name}
-                    className="w-full h-48 object-cover"
-                    onError={(e) => e.target.src = 'https://images.pexels.com/photos/1659438/pexels-photo-1659438.jpeg'}
-                  />
-                ) : (
-                  <div className="w-full h-48 bg-gray-100 flex items-center justify-center">
-                    <AnimatedIcon name="ticket" animation="bounce" size={36} className="text-blue-600" />
-                  </div>
-                )}
-                <div className="p-4">
-                  <h4 className="font-semibold text-gray-900 mb-2 line-clamp-2">
-                    {activity.name}
-                  </h4>
-                  {activity.description && (
-                    <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-                      {activity.description}
-                    </p>
-                  )}
-                  {activity.destination && (
-                    <p className="text-xs text-gray-500 mb-3 flex items-center gap-1">
-                      <MapPin size={12} />
-                      {activity.destination}
-                    </p>
-                  )}
-                  <div className="flex items-center justify-between">
-                    {activity.pricing?.amount ? (
-                      <span className="text-lg font-bold text-blue-600">
-                        {activity.pricing.currency} {activity.pricing.amount}
-                      </span>
-                    ) : (
-                      <span className="text-sm text-gray-500">Price on request</span>
-                    )}
-                    <button className="text-sm bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
-                      Book Now
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-    </>
-  );
-};
-
-const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark', initialValues }) => {
+export default function HotelSearchForm({
+  defaultTab = 'stays',
+  variant = 'light',
+  initialValues = null,
+  onSearch = null,
+  className = '',
+}) {
+  const navigate = useNavigate();
   const [urlSearchParams] = useSearchParams();
 
-  // Date range state
+  // Active Category Tab
+  const [activeTab, setActiveTab] = useState(defaultTab || 'stays');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 1. STAYS SEARCH STATE
+  // ═══════════════════════════════════════════════════════════════════════════
+  const [searchQuery, setSearchQuery] = useState('Dubai, United Arab Emirates');
+  const [selectedLocation, setSelectedLocation] = useState({
+    name: 'Dubai',
+    city: 'Dubai',
+    country: 'United Arab Emirates',
+    destinationCode: 'DXB',
+    type: 'destination'
+  });
+  const [selectedHotelCode, setSelectedHotelCode] = useState(null);
+  const [filteredLocations, setFilteredLocations] = useState([]);
+  const [hotelSuggestions, setHotelSuggestions] = useState([]);
+  const [isLoadingLocations, setIsLoadingLocations] = useState(false);
+  const [showLocationDropdown, setShowLocationDropdown] = useState(false);
+
+  // Stays Dates
   const [dateRange, setDateRange] = useState([
     {
       startDate: addDays(new Date(), 1),
@@ -923,105 +66,198 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark', i
     }
   ]);
   const [showCalendar, setShowCalendar] = useState(false);
-  const [showTravellerDropdown, setShowTravellerDropdown] = useState(false);
-  const calendarRef = useRef(null);
-  const travellerRef = useRef(null);
-  const isSelectingRef = useRef(false);
 
-  // Location search states
-  const [searchQuery, setSearchQuery] = useState('');
-  const [showLocationDropdown, setShowLocationDropdown] = useState(false);
-  const [filteredLocations, setFilteredLocations] = useState([]);
-  const [selectedLocation, setSelectedLocation] = useState(null);
-  const [isLoadingLocations, setIsLoadingLocations] = useState(false);
-  const [hotelNameQuery, setHotelNameQuery] = useState('');
-  const [hotelSuggestions, setHotelSuggestions] = useState([]);
-  const [showHotelDropdown, setShowHotelDropdown] = useState(false);
-  const [selectedHotelCode, setSelectedHotelCode] = useState(null);
-  const [isLoadingHotels, setIsLoadingHotels] = useState(false);
-  const hotelNameRef = useRef(null);
-  const locationRef = useRef(null);
-
-  // Per-room configuration (Bedsonline style)
+  // Stays Multi-Room & Travellers (Bedsonline standard)
   const [roomConfigs, setRoomConfigs] = useState([
     { adults: 2, children: 0, childAges: [] }
   ]);
-  const [activeTab, setActiveTab] = useState(initialTab);
+  const [showTravellerDropdown, setShowTravellerDropdown] = useState(false);
   const [luxuryOnly, setLuxuryOnly] = useState(false);
 
-  // Populate form with existing search details so modify search retains context
+  const isSelectingRef = useRef(false);
+  const locationRef = useRef(null);
+  const pickupRef = useRef(null);
+  const dropoffRef = useRef(null);
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 2. TRANSFERS SEARCH STATE
+  // ═══════════════════════════════════════════════════════════════════════════
+  const [tripType, setTripType] = useState('one_way');
+  const [pickupQuery, setPickupQuery] = useState('');
+  const [dropoffQuery, setDropoffQuery] = useState('');
+  const [selectedPickup, setSelectedPickup] = useState(null);
+  const [selectedDropoff, setSelectedDropoff] = useState(null);
+  const [showPickupDropdown, setShowPickupDropdown] = useState(false);
+  const [showDropoffDropdown, setShowDropoffDropdown] = useState(false);
+  const [filteredPickupLocations, setFilteredPickupLocations] = useState([]);
+  const [filteredDropoffLocations, setFilteredDropoffLocations] = useState([]);
+  const [groupedPickup, setGroupedPickup] = useState([]);
+  const [groupedDropoff, setGroupedDropoff] = useState([]);
+  const [isLoadingPickup, setIsLoadingPickup] = useState(false);
+  const [isLoadingDropoff, setIsLoadingDropoff] = useState(false);
+  const [transferDateRange, setTransferDateRange] = useState([
+    {
+      startDate: addDays(new Date(), 1),
+      endDate: addDays(new Date(), 1),
+      key: 'selection'
+    }
+  ]);
+  const [showTransferCalendar, setShowTransferCalendar] = useState(false);
+  const [transferTime, setTransferTime] = useState('10:00');
+  const [returnTime, setReturnTime] = useState('14:00');
+  const [transferAdults, setTransferAdults] = useState(2);
+  const [transferChildren, setTransferChildren] = useState(0);
+  const [transferInfants, setTransferInfants] = useState(0);
+  const [showTransferTravellers, setShowTransferTravellers] = useState(false);
+  const [transferError, setTransferError] = useState(null);
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 3. EXPERIENCES SEARCH STATE
+  // ═══════════════════════════════════════════════════════════════════════════
+  const [experienceQuery, setExperienceQuery] = useState('Dubai, United Arab Emirates');
+  const [selectedExperienceLocation, setSelectedExperienceLocation] = useState({
+    city: 'Dubai',
+    country: 'United Arab Emirates',
+    displayName: 'Dubai, United Arab Emirates'
+  });
+  const [filteredExperiences, setFilteredExperiences] = useState([]);
+  const [showExperienceDropdown, setShowExperienceDropdown] = useState(false);
+  const [experienceDateRange, setExperienceDateRange] = useState([
+    {
+      startDate: addDays(new Date(), 1),
+      endDate: addDays(new Date(), 4),
+      key: 'selection'
+    }
+  ]);
+  const [showExperienceCalendar, setShowExperienceCalendar] = useState(false);
+  const [experienceAdults, setExperienceAdults] = useState(2);
+  const [experienceChildren, setExperienceChildren] = useState(0);
+  const [showExperienceTravellers, setShowExperienceTravellers] = useState(false);
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // INITIALIZE FROM URL SEARCH PARAMS & PROPS
+  // ═══════════════════════════════════════════════════════════════════════════
   useEffect(() => {
-    isSelectingRef.current = true;
-    // 1. Destination / Hotel
+    if (defaultTab && ['stays', 'transfers', 'experiences'].includes(defaultTab)) {
+      setActiveTab(defaultTab);
+    }
+  }, [defaultTab]);
+
+  useEffect(() => {
+    // 1. Stays URL params
+    const city = initialValues?.city || urlSearchParams.get('city');
+    const country = initialValues?.country || urlSearchParams.get('country');
     const hotelName = initialValues?.hotelName || urlSearchParams.get('hotelName');
     const hotelCode = initialValues?.hotelCode || urlSearchParams.get('hotelCode');
-    const city = initialValues?.city || urlSearchParams.get('city');
-    const destinationCode = initialValues?.destinationCode || urlSearchParams.get('destinationCode');
-    const country = initialValues?.country || urlSearchParams.get('country');
+    const destCode = initialValues?.destinationCode || urlSearchParams.get('destinationCode');
 
-    if (hotelName || hotelCode) {
-      setSearchQuery(hotelName || '');
-      setHotelNameQuery(hotelName || '');
-      if (hotelCode) setSelectedHotelCode(hotelCode);
+    if (hotelName) {
+      setSearchQuery(hotelName);
+      setSelectedHotelCode(hotelCode || null);
       setSelectedLocation({
-        name: hotelName || 'Selected Hotel',
-        code: hotelCode,
-        type: 'hotel',
-        city,
-        country
+        name: hotelName,
+        city: city || '',
+        country: country || '',
+        destinationCode: destCode || '',
+        type: 'hotel'
       });
-    } else if (city || destinationCode) {
-      const destLabel = city || destinationCode;
-      const fullLabel = country ? `${destLabel}, ${country}` : destLabel;
-      setSearchQuery(fullLabel);
+    } else if (city) {
+      setSearchQuery(country ? `${city}, ${country}` : city);
+      setSelectedHotelCode(null);
       setSelectedLocation({
-        name: destLabel,
-        city: city || destLabel,
-        destinationCode,
-        country,
+        name: city,
+        city: city,
+        country: country || '',
+        destinationCode: destCode || '',
         type: 'destination'
       });
     }
 
-    // 2. Dates
-    const checkInParam = initialValues?.checkIn || urlSearchParams.get('checkIn');
-    const checkOutParam = initialValues?.checkOut || urlSearchParams.get('checkOut');
-    if (checkInParam && checkOutParam) {
-      const start = new Date(checkInParam);
-      const end = new Date(checkOutParam);
-      if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
-        setDateRange([{ startDate: start, endDate: end, key: 'selection' }]);
+    const checkInStr = initialValues?.checkIn || urlSearchParams.get('checkIn');
+    const checkOutStr = initialValues?.checkOut || urlSearchParams.get('checkOut');
+    if (checkInStr && checkOutStr) {
+      try {
+        const start = parseISO(checkInStr);
+        const end = parseISO(checkOutStr);
+        if (isValid(start) && isValid(end)) {
+          setDateRange([{ startDate: start, endDate: end, key: 'selection' }]);
+        }
+      } catch (err) {
+        console.error('Failed to parse search dates:', err);
       }
     }
 
-    // 3. Room Configuration
-    const roomConfigsParam = initialValues?.roomConfigs || urlSearchParams.get('roomConfigs');
-    if (roomConfigsParam) {
+    const roomConfigsStr = initialValues?.roomConfigs || urlSearchParams.get('roomConfigs');
+    if (roomConfigsStr) {
       try {
-        const parsed = typeof roomConfigsParam === 'string' ? JSON.parse(decodeURIComponent(roomConfigsParam)) : roomConfigsParam;
+        const parsed = JSON.parse(decodeURIComponent(roomConfigsStr));
         if (Array.isArray(parsed) && parsed.length > 0) {
           setRoomConfigs(parsed);
         }
-      } catch (e) {
-        console.warn('Failed to parse roomConfigs:', e);
+      } catch (err) {
+        console.error('Failed to parse roomConfigs:', err);
       }
-    } else if (urlSearchParams.get('adults')) {
-      const adults = parseInt(urlSearchParams.get('adults'), 10) || 2;
-      const children = parseInt(urlSearchParams.get('children'), 10) || 0;
-      const childAgesParam = urlSearchParams.get('childAges');
-      const childAges = childAgesParam ? childAgesParam.split(',').map(a => parseInt(a, 10)) : [];
-      setRoomConfigs([{ adults, children, childAges }]);
+    } else {
+      const adultsParam = parseInt(urlSearchParams.get('adults'), 10);
+      const childrenParam = parseInt(urlSearchParams.get('children'), 10);
+      if (adultsParam) {
+        const childAgesStr = urlSearchParams.get('childAges');
+        const childAges = childAgesStr ? childAgesStr.split(',').map(a => parseInt(a, 10)) : [];
+        setRoomConfigs([{ adults: adultsParam, children: childrenParam || 0, childAges }]);
+      }
     }
 
-    // 4. Luxury Collection Filter
-    if (initialValues?.luxury !== undefined) {
-      setLuxuryOnly(Boolean(initialValues.luxury));
-    } else if (urlSearchParams.get('luxury') === 'true') {
-      setLuxuryOnly(true);
+    // 2. Transfers URL params
+    const fromParam = initialValues?.from || urlSearchParams.get('from');
+    const toParam = initialValues?.to || urlSearchParams.get('to');
+    if (fromParam) {
+      setPickupQuery(fromParam);
+      setSelectedPickup({ name: fromParam, code: urlSearchParams.get('fromCode'), type: urlSearchParams.get('fromType') || 'ATLAS' });
+    }
+    if (toParam) {
+      setDropoffQuery(toParam);
+      setSelectedDropoff({ name: toParam, code: urlSearchParams.get('toCode'), type: urlSearchParams.get('toType') || 'IATA' });
+    }
+    const transferTripType = initialValues?.tripType || urlSearchParams.get('tripType');
+    if (transferTripType) {
+      setTripType(transferTripType);
+    }
+    const transferDateStr = initialValues?.date || urlSearchParams.get('date');
+    if (transferDateStr) {
+      try {
+        const d = parseISO(transferDateStr);
+        if (isValid(d)) {
+          setTransferDateRange([{ startDate: d, endDate: d, key: 'selection' }]);
+        }
+      } catch (err) {}
+    }
+
+    // 3. Experiences URL params
+    const expDest = initialValues?.destination || urlSearchParams.get('destination');
+    if (expDest) {
+      setExperienceQuery(expDest);
+      setSelectedExperienceLocation({ city: expDest, country: '', displayName: expDest });
     }
   }, [urlSearchParams, initialValues]);
 
-  // Room helper functions
+  // Outside click listener for dropdowns
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (locationRef.current && !locationRef.current.contains(e.target)) {
+        setShowLocationDropdown(false);
+      }
+      if (pickupRef.current && !pickupRef.current.contains(e.target)) {
+        setShowPickupDropdown(false);
+      }
+      if (dropoffRef.current && !dropoffRef.current.contains(e.target)) {
+        setShowDropoffDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Multi-room Helpers
   const addRoom = () => {
     if (roomConfigs.length < 6) {
       setRoomConfigs([...roomConfigs, { adults: 2, children: 0, childAges: [] }]);
@@ -1035,685 +271,1618 @@ const HotelSearchForm = ({ defaultTab: initialTab = 'stays', variant = 'dark', i
   };
 
   const updateRoom = (index, field, value) => {
-    setRoomConfigs(roomConfigs.map((room, i) => {
-      if (i !== index) return room;
-      const updated = { ...room, [field]: value };
-      if (field === 'children') {
-        const count = Math.max(0, Math.min(4, value));
-        updated.children = count;
-        if (count > room.childAges.length) {
-          updated.childAges = [...room.childAges, ...Array(count - room.childAges.length).fill(5)];
-        } else {
-          updated.childAges = room.childAges.slice(0, count);
+    setRoomConfigs(
+      roomConfigs.map((room, i) => {
+        if (i !== index) return room;
+        const updated = { ...room, [field]: value };
+        if (field === 'children') {
+          const count = Math.max(0, Math.min(4, value));
+          updated.children = count;
+          if (count > room.childAges.length) {
+            updated.childAges = [
+              ...room.childAges,
+              ...Array(count - room.childAges.length).fill(5)
+            ];
+          } else {
+            updated.childAges = room.childAges.slice(0, count);
+          }
         }
-      }
-      return updated;
-    }));
+        return updated;
+      })
+    );
   };
 
   const updateChildAge = (roomIndex, childIndex, age) => {
-    setRoomConfigs(roomConfigs.map((room, i) => {
-      if (i !== roomIndex) return room;
-      const newAges = [...room.childAges];
-      newAges[childIndex] = parseInt(age);
-      return { ...room, childAges: newAges };
-    }));
+    setRoomConfigs(
+      roomConfigs.map((room, i) => {
+        if (i !== roomIndex) return room;
+        const newAges = [...room.childAges];
+        newAges[childIndex] = parseInt(age, 10);
+        return { ...room, childAges: newAges };
+      })
+    );
   };
 
   const getTotalAdults = () => roomConfigs.reduce((sum, r) => sum + r.adults, 0);
   const getTotalChildren = () => roomConfigs.reduce((sum, r) => sum + r.children, 0);
   const getAllChildAges = () => roomConfigs.flatMap(r => r.childAges);
 
-  // Debounced unified search via API + Instant Autocomplete
-  useEffect(() => {
-    if (isSelectingRef.current) {
-      isSelectingRef.current = false;
-      return;
-    }
-    const queryTerm = searchQuery.trim();
-    if (queryTerm.length < 2) {
-      setFilteredLocations([]);
-      setHotelSuggestions([]);
-      return;
-    }
-    setIsLoadingLocations(true);
-    const timer = setTimeout(async () => {
-      try {
-        const API_BASE = import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
-
-        const [locRes, hotelRes] = await Promise.allSettled([
-          fetch(`${API_BASE}/api/locations/search?q=${encodeURIComponent(queryTerm)}`),
-          fetch(`${API_BASE}/api/hotels/search-by-name?q=${encodeURIComponent(queryTerm)}&limit=12`)
-        ]);
-
-        let apiLocs = [];
-        if (locRes.status === 'fulfilled' && locRes.value.ok) {
-          const data = await locRes.value.json();
-          if (data.success) apiLocs = data.data || [];
-        }
-
-        let apiHotels = [];
-        if (hotelRes.status === 'fulfilled' && hotelRes.value.ok) {
-          const hData = await hotelRes.value.json();
-          if (hData.success) apiHotels = hData.data || [];
-        }
-
-        // Merge instant local suggestions with API results (deduplicate)
-        const instant = getInstantSuggestions(queryTerm);
-
-        const seenLocs = new Set();
-        const mergedLocs = [];
-        for (const loc of [...instant.locations, ...apiLocs]) {
-          const key = (loc.destinationCode || loc.code || loc.city || loc.name || '').toLowerCase();
-          if (key && !seenLocs.has(key)) {
-            seenLocs.add(key);
-            mergedLocs.push(loc);
-          }
-        }
-
-        const seenHotels = new Set();
-        const mergedHotels = [];
-        for (const hotel of [...instant.hotels, ...apiHotels]) {
-          const key = (hotel.code ? `code-${hotel.code}` : (hotel.name || '')).toLowerCase();
-          if (key && !seenHotels.has(key)) {
-            seenHotels.add(key);
-            mergedHotels.push(hotel);
-          }
-        }
-
-        if (!isSelectingRef.current) {
-          setFilteredLocations(mergedLocs);
-          setHotelSuggestions(mergedHotels);
-          setShowLocationDropdown(true);
-        }
-      } catch (err) {
-        console.warn('Search error:', err.message);
-      } finally {
-        setIsLoadingLocations(false);
-      }
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
-
-  // Handle clicks outside dropdowns
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (calendarRef.current && !calendarRef.current.contains(event.target)) {
-        if (event.target.closest('[data-calendar-portal]')) return;
-        setShowCalendar(false);
-      }
-      if (travellerRef.current && !travellerRef.current.contains(event.target)) {
-        if (event.target.closest('[data-traveller-portal]')) return;
-        setShowTravellerDropdown(false);
-      }
-      if (locationRef.current && !locationRef.current.contains(event.target)) {
-        setShowLocationDropdown(false);
-      }
-      if (hotelNameRef.current && !hotelNameRef.current.contains(event.target)) {
-        setShowHotelDropdown(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const handleLocationSelect = (location) => {
-    isSelectingRef.current = true;
-    setSelectedLocation(location);
-    setSelectedHotelCode(null);
-    setHotelNameQuery('');
-    const label = location.displayName || (location.country ? `${location.name || location.city}, ${location.country}` : (location.name || location.city));
-    setSearchQuery(label);
-    setShowLocationDropdown(false);
-    setFilteredLocations([]);
-    setHotelSuggestions([]);
-  };
-
-  const handleHotelSelect = (hotel) => {
-    isSelectingRef.current = true;
-    setSelectedHotelCode(hotel.code);
-    setHotelNameQuery(hotel.name);
-    setSelectedLocation({
-      type: 'hotel',
-      code: hotel.code,
-      name: hotel.name,
-      city: hotel.zoneName || hotel.destinationName || hotel.city || '',
-      destinationCode: hotel.destinationCode || '',
-      country: hotel.countryCode || hotel.country || '',
-      countryCode: hotel.countryCode || ''
-    });
-    setSearchQuery(hotel.name);
-    setShowLocationDropdown(false);
-    setFilteredLocations([]);
-    setHotelSuggestions([]);
-  };
-
-  const handleSearchInputChange = (e) => {
-    const val = e.target.value;
-    isSelectingRef.current = false;
-    setSearchQuery(val);
-    // User is changing the search text! Clear old selection context so previous query doesn't persist
-    setSelectedLocation(null);
-    setSelectedHotelCode(null);
-    setHotelNameQuery('');
-
-    if (val.trim() === '') {
-      setFilteredLocations([]);
-      setHotelSuggestions([]);
-      setShowLocationDropdown(false);
-    } else {
-      const instant = getInstantSuggestions(val);
-      setFilteredLocations(instant.locations);
-      setHotelSuggestions(instant.hotels);
-      setShowLocationDropdown(true);
-    }
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
-    const trimmedQuery = searchQuery.trim();
-    if (!selectedLocation && !selectedHotelCode && !trimmedQuery) {
-      alert('Please enter a destination or hotel name');
-      return;
-    }
-
-    const checkIn = format(dateRange[0].startDate, 'yyyy-MM-dd');
-    const checkOut = format(dateRange[0].endDate, 'yyyy-MM-dd');
-
-    // Resolve location and hotel if user typed text but didn't click dropdown
-    let loc = selectedLocation;
-    let hCode = selectedHotelCode;
-    let hName = '';
-
-    if (loc?.type === 'hotel') {
-      hCode = loc.code || hCode;
-      hName = loc.name;
-    } else if (hCode) {
-      hName = loc?.name || hotelNameQuery || trimmedQuery;
-    } else if (!loc && trimmedQuery) {
-      const instant = getInstantSuggestions(trimmedQuery);
-      const exactHotel = instant.hotels?.find(h => h.name.toLowerCase() === trimmedQuery.toLowerCase());
-      if (exactHotel) {
-        hCode = exactHotel.code;
-        hName = exactHotel.name;
-        loc = {
-          type: 'hotel',
-          code: exactHotel.code,
-          name: exactHotel.name,
-          city: exactHotel.destinationName || exactHotel.zoneName || '',
-          destinationCode: exactHotel.destinationCode || '',
-          country: exactHotel.countryCode || ''
-        };
-      } else {
-        const exactLoc = instant.locations?.find(l => 
-          (l.city || l.name).toLowerCase() === trimmedQuery.toLowerCase() ||
-          l.displayName?.toLowerCase() === trimmedQuery.toLowerCase()
-        ) || (instant.locations && instant.locations.length > 0 ? instant.locations[0] : null);
-
-        if (exactLoc) {
-          loc = exactLoc;
-        } else {
-          const parts = trimmedQuery.split(',').map(s => s.trim());
-          loc = {
-            name: parts[0],
-            city: parts[0],
-            country: parts[1] || '',
-            destinationCode: '',
-            type: 'destination'
-          };
-        }
-      }
-    }
-
-    const city = loc?.type === 'hotel' ? (loc.city || '') : (loc?.city || loc?.name || (!hCode ? trimmedQuery : ''));
-    const country = loc?.country || loc?.countryCode || '';
-    const destinationCode = loc?.destinationCode || '';
-
-    const totalAdults = getTotalAdults();
-    const totalChildren = getTotalChildren();
-    const allChildAges = getAllChildAges();
-
-    const params = new URLSearchParams();
-    params.set('checkIn', checkIn);
-    params.set('checkOut', checkOut);
-    params.set('rooms', String(roomConfigs.length));
-    params.set('adults', String(totalAdults));
-    params.set('children', String(totalChildren));
-
-    if (city) params.set('city', city);
-    if (country) params.set('country', country);
-    if (destinationCode) params.set('destinationCode', destinationCode);
-    if (hCode) params.set('hotelCode', String(hCode));
-    if (hName) params.set('hotelName', hName);
-
-    if (loc?.lat || loc?.latitude) {
-      params.set('latitude', String(loc.lat || loc.latitude));
-      params.set('longitude', String(loc.lon || loc.longitude));
-    }
-
-    if (totalChildren > 0 && allChildAges.length > 0) {
-      params.set('childAges', allChildAges.join(','));
-    }
-
-    params.set('roomConfigs', JSON.stringify(roomConfigs));
-
-    if (luxuryOnly) {
-      params.set('luxury', 'true');
-    }
-
-    const url = `/hotel-search-results?${params.toString()}`;
-    window.location.href = url;
-  };
-
   const calculateNights = () => {
     const start = dateRange[0].startDate;
     const end = dateRange[0].endDate;
-    const diffTime = Math.abs(end - start);
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
+    return Math.max(1, Math.ceil(Math.abs(end - start) / (1000 * 60 * 60 * 24)));
   };
 
   const getTravellerSummary = () => {
     const totalAdults = getTotalAdults();
     const totalChildren = getTotalChildren();
-    let summary = `${totalAdults} Adult${totalAdults > 1 ? 's' : ''}`;
+    const rooms = roomConfigs.length;
+    let parts = [`${totalAdults} Adult${totalAdults > 1 ? 's' : ''}`];
     if (totalChildren > 0) {
-      summary += `, ${totalChildren} Child${totalChildren > 1 ? 'ren' : ''}`;
+      parts.push(`${totalChildren} Child${totalChildren > 1 ? 'ren' : ''}`);
     }
-    summary += ` · ${roomConfigs.length} Room${roomConfigs.length > 1 ? 's' : ''}`;
-    return summary;
+    return `${parts.join(', ')} · ${rooms} Room${rooms > 1 ? 's' : ''}`;
   };
 
-  const tabs = [
-    { id: 'stays', label: 'Stays', Icon: Hotel },
-    { id: 'transfers', label: 'Transfers', Icon: Car },
-    { id: 'experiences', label: 'Experiences', Icon: Compass }
-  ];
+  // Autocomplete: Stays instant & API search
+  useEffect(() => {
+    if (isSelectingRef.current) return;
+    if (!searchQuery || !searchQuery.trim()) {
+      setFilteredLocations([]);
+      setHotelSuggestions([]);
+      return;
+    }
 
-  // Label color based on context
-  const lbl = variant === 'light' ? 'text-gray-700' : 'text-white/80';
+    const instant = getInstantSuggestions(searchQuery);
+    setFilteredLocations(instant.locations);
+    setHotelSuggestions(instant.hotels);
+
+    if (searchQuery.trim().length >= 2) {
+      setIsLoadingLocations(true);
+      const timer = setTimeout(async () => {
+        try {
+          const resp = await axios.get(
+            `${import.meta.env.VITE_BASE_URL}/api/locations?search=${encodeURIComponent(searchQuery.trim())}`
+          );
+          if (resp.data && resp.data.success) {
+            const apiDests = resp.data.data.filter(l => l.type !== 'hotel');
+            const apiHotels = resp.data.data.filter(l => l.type === 'hotel');
+            setFilteredLocations(prev => {
+              const combined = [...apiDests, ...prev];
+              return combined.filter((v, i, a) => a.findIndex(t => (t.city || t.name) === (v.city || v.name)) === i);
+            });
+            if (apiHotels.length > 0) {
+              setHotelSuggestions(prev => {
+                const combined = [...apiHotels, ...prev];
+                return combined.filter((v, i, a) => a.findIndex(t => t.name === v.name) === i);
+              });
+            }
+          }
+        } catch (err) {
+          console.error('Autocomplete API error:', err);
+        } finally {
+          setIsLoadingLocations(false);
+        }
+      }, 250);
+      return () => clearTimeout(timer);
+    }
+  }, [searchQuery]);
+
+  // Autocomplete: Transfers pickup
+  useEffect(() => {
+    if (!pickupQuery || pickupQuery.trim().length < 2) {
+      setFilteredPickupLocations([]);
+      return;
+    }
+    setIsLoadingPickup(true);
+    const timer = setTimeout(async () => {
+      try {
+        const resp = await axios.get(
+          `${import.meta.env.VITE_BASE_URL}/api/locations/transfers?search=${encodeURIComponent(pickupQuery.trim())}`
+        );
+        if (resp.data && resp.data.success) {
+          setFilteredPickupLocations(resp.data.data || []);
+          setGroupedPickup(resp.data.grouped || []);
+        }
+      } catch (err) {
+        console.error('Transfers pickup search error:', err);
+      } finally {
+        setIsLoadingPickup(false);
+      }
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [pickupQuery]);
+
+  // Autocomplete: Transfers dropoff
+  useEffect(() => {
+    if (!dropoffQuery || dropoffQuery.trim().length < 2) {
+      setFilteredDropoffLocations([]);
+      return;
+    }
+    setIsLoadingDropoff(true);
+    const timer = setTimeout(async () => {
+      try {
+        const resp = await axios.get(
+          `${import.meta.env.VITE_BASE_URL}/api/locations/transfers?search=${encodeURIComponent(dropoffQuery.trim())}`
+        );
+        if (resp.data && resp.data.success) {
+          setFilteredDropoffLocations(resp.data.data || []);
+          setGroupedDropoff(resp.data.grouped || []);
+        }
+      } catch (err) {
+        console.error('Transfers dropoff search error:', err);
+      } finally {
+        setIsLoadingDropoff(false);
+      }
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [dropoffQuery]);
+
+  // Autocomplete: Experiences
+  useEffect(() => {
+    if (!experienceQuery.trim()) {
+      setFilteredExperiences(TOP_DESTINATIONS.slice(0, 6));
+      return;
+    }
+    const instant = getInstantSuggestions(experienceQuery);
+    setFilteredExperiences(instant.locations.slice(0, 8));
+  }, [experienceQuery]);
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // COMPREHENSIVE SEARCH SUBMISSION
+  // ═══════════════════════════════════════════════════════════════════════════
+  const handleSearchSubmit = async (e) => {
+    if (e) e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      if (activeTab === 'stays') {
+        const trimmedQuery = searchQuery.trim();
+        const checkIn = format(dateRange[0].startDate, 'yyyy-MM-dd');
+        const checkOut = format(dateRange[0].endDate, 'yyyy-MM-dd');
+
+        let loc = selectedLocation;
+        let hCode = selectedHotelCode;
+        let hName = '';
+
+        if (loc?.type === 'hotel') {
+          hCode = loc.code || hCode;
+          hName = loc.name;
+        } else if (hCode) {
+          hName = loc?.name || trimmedQuery;
+        } else if (!loc && trimmedQuery) {
+          const instant = getInstantSuggestions(trimmedQuery);
+          const exactHotel = instant.hotels?.find(
+            h => h.name.toLowerCase() === trimmedQuery.toLowerCase()
+          );
+          if (exactHotel) {
+            hCode = exactHotel.code;
+            hName = exactHotel.name;
+            loc = {
+              type: 'hotel',
+              code: exactHotel.code,
+              name: exactHotel.name,
+              city: exactHotel.destinationName || exactHotel.zoneName || '',
+              destinationCode: exactHotel.destinationCode || '',
+              country: exactHotel.countryCode || ''
+            };
+          } else {
+            const exactLoc =
+              instant.locations?.find(
+                l =>
+                  (l.city || l.name).toLowerCase() === trimmedQuery.toLowerCase() ||
+                  l.displayName?.toLowerCase() === trimmedQuery.toLowerCase()
+              ) || (instant.locations && instant.locations.length > 0 ? instant.locations[0] : null);
+            if (exactLoc) {
+              loc = exactLoc;
+            } else {
+              loc = {
+                city: trimmedQuery,
+                name: trimmedQuery,
+                destinationCode: '',
+                country: '',
+                type: 'destination'
+              };
+            }
+          }
+        }
+
+        const city = loc?.city || loc?.name || trimmedQuery || 'Dubai';
+        const country = loc?.country || '';
+        const destinationCode = loc?.destinationCode || '';
+
+        const params = new URLSearchParams();
+        params.set('city', city);
+        if (country) params.set('country', country);
+        if (destinationCode) params.set('destinationCode', destinationCode);
+        params.set('checkIn', checkIn);
+        params.set('checkOut', checkOut);
+        params.set('adults', String(getTotalAdults()));
+        params.set('children', String(getTotalChildren()));
+        params.set('rooms', String(roomConfigs.length));
+        params.set('roomConfigs', JSON.stringify(roomConfigs));
+
+        const allChildAges = getAllChildAges();
+        if (allChildAges.length > 0) {
+          params.set('childAges', allChildAges.join(','));
+        }
+        if (hCode) {
+          params.set('hotelCode', String(hCode));
+          params.set('hotelName', hName || trimmedQuery);
+        } else if (trimmedQuery && !loc) {
+          params.set('hotelName', trimmedQuery);
+        }
+        if (luxuryOnly) {
+          params.set('luxury', 'true');
+        }
+
+        if (onSearch) onSearch();
+        navigate(`/hotels?${params.toString()}`);
+      } else if (activeTab === 'transfers') {
+        const fromLoc = selectedPickup;
+        const toLoc = selectedDropoff;
+
+        if (!fromLoc || !toLoc) {
+          setTransferError('Please select both pickup and drop-off locations.');
+          return;
+        }
+
+        const searchParams = {
+          fromType: fromLoc.type || 'ATLAS',
+          fromCode: fromLoc.code || fromLoc.id,
+          toType: toLoc.type || 'IATA',
+          toCode: toLoc.code || toLoc.id,
+          outbound: `${format(transferDateRange[0].startDate, 'yyyy-MM-dd')}T${transferTime}:00`,
+          inbound: tripType === 'round_trip' ? `${format(transferDateRange[0].endDate, 'yyyy-MM-dd')}T${returnTime}:00` : null,
+          adults: transferAdults,
+          children: transferChildren,
+          infants: transferInfants,
+        };
+
+        const results = await searchTransfers(searchParams);
+        const params = new URLSearchParams({
+          from: fromLoc.name,
+          to: toLoc.name,
+          fromCode: fromLoc.code || fromLoc.id,
+          toCode: toLoc.code || toLoc.id,
+          fromType: fromLoc.type || 'ATLAS',
+          toType: toLoc.type || 'IATA',
+          date: format(transferDateRange[0].startDate, 'yyyy-MM-dd'),
+          returnDate: tripType === 'round_trip' ? format(transferDateRange[0].endDate, 'yyyy-MM-dd') : '',
+          tripType,
+          adults: String(transferAdults),
+          children: String(transferChildren),
+          infants: String(transferInfants),
+        });
+
+        if (onSearch) onSearch();
+        navigate(`/transfers?${params.toString()}`, { state: { transfers: results, searchParams } });
+      } else if (activeTab === 'experiences') {
+        const dest = selectedExperienceLocation?.city || experienceQuery.trim() || 'Dubai';
+        const params = new URLSearchParams({
+          destination: dest,
+          from: format(experienceDateRange[0].startDate, 'yyyy-MM-dd'),
+          to: format(experienceDateRange[0].endDate, 'yyyy-MM-dd'),
+          adults: String(experienceAdults),
+          children: String(experienceChildren),
+        });
+
+        if (onSearch) onSearch();
+        navigate(`/activities?${params.toString()}`);
+      }
+    } catch (err) {
+      console.error('Search submission error:', err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
-    <div className="w-full">
-      <div className="bento-card bg-white rounded-3xl shadow-2xl p-4 sm:p-5 md:p-6 text-left">
-        {/* ── Search Tabs ── */}
-        <div className="flex items-center bg-white rounded-full p-1 mb-3 sm:mb-6" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
-          {tabs.map((tab) => {
+    <div className={`w-full text-left ${className}`}>
+      {/* ── Top Tabs Row: Stays, Transfers, Experiences + Transfers Toggle ── */}
+      <div className="flex items-center justify-between gap-4 mb-3 sm:mb-4 flex-wrap">
+        <div className="flex items-center gap-1 sm:gap-2">
+          {TABS.map(tab => {
             const isActive = activeTab === tab.id;
+            const Icon = tab.icon;
             return (
               <button
                 key={tab.id}
+                type="button"
                 onClick={() => setActiveTab(tab.id)}
-                className="flex-1 flex items-center justify-center gap-1 sm:gap-2 py-2 sm:py-2.5 rounded-full transition-all duration-300 relative"
-                style={{
-                  minHeight: 'unset',
-                  background: isActive ? '#2563eb' : 'transparent',
-                  color: isActive ? '#fff' : '#6b7280',
-                  fontWeight: isActive ? 600 : 500,
-                  fontSize: window.innerWidth < 380 ? 11 : 13,
-                  boxShadow: isActive ? '0 4px 16px rgba(37,99,235,0.3)' : 'none',
-                }}
+                className={`relative px-3.5 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-bold rounded-full transition-all cursor-pointer flex items-center gap-1.5 sm:gap-2 ${
+                  isActive
+                    ? 'text-blue-600 font-extrabold'
+                    : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
+                }`}
               >
-                <tab.Icon style={{ width: 14, height: 14, strokeWidth: isActive ? 2 : 1.5 }} />
+                <Icon className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isActive ? 'text-blue-600' : 'text-slate-400'}`} />
                 <span>{tab.label}</span>
+                {isActive && (
+                  <motion.div
+                    layoutId="activeSearchFormTabUnderline"
+                    className="absolute bottom-0 left-2 right-2 h-0.5 bg-blue-600 rounded-full"
+                  />
+                )}
               </button>
             );
           })}
         </div>
 
-          {activeTab === 'stays' && (
-            <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
-              {/* Option 1 Unified 3-Column Single-Row Grid on Desktop */}
-              <div className="grid grid-cols-1 md:grid-cols-12 gap-2.5 sm:gap-3 relative items-start">
-                {/* Field 1: Unified Destination or Hotel Search Field (5 columns) */}
-                <div className="md:col-span-5 relative" ref={locationRef}>
-                  <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-gray-500 mb-1.5 text-left h-4 leading-4">
-                    Destination or Hotel Name <span className="text-red-500">*</span>
-                  </label>
-                  <div className={`flex items-center w-full h-[50px] sm:h-[52px] border bg-white rounded-xl focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent px-3 gap-2 transition-all ${
-                    selectedHotelCode
-                      ? 'border-emerald-400 bg-emerald-50/20'
-                      : selectedLocation
-                      ? 'border-blue-400 bg-blue-50/20'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}>
+        {/* If Transfers active: One Way / Round Trip pill toggle */}
+        {activeTab === 'transfers' && (
+          <div className="flex items-center bg-slate-100 p-0.5 rounded-full border border-slate-200 text-xs font-bold">
+            <button
+              type="button"
+              onClick={() => setTripType('one_way')}
+              className={`px-3 py-1 rounded-full text-xs transition-all cursor-pointer ${
+                tripType === 'one_way'
+                  ? 'bg-blue-600 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              One Way
+            </button>
+            <button
+              type="button"
+              onClick={() => setTripType('round_trip')}
+              className={`px-3 py-1 rounded-full text-xs transition-all cursor-pointer ${
+                tripType === 'round_trip'
+                  ? 'bg-blue-600 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              Round Trip
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Transfer Error Alert */}
+      {activeTab === 'transfers' && transferError && (
+        <div className="mb-2 p-2.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-semibold flex items-center justify-between">
+          <span>{transferError}</span>
+          <button
+            type="button"
+            onClick={() => setTransferError(null)}
+            className="text-red-500 hover:text-red-700 font-bold ml-2 cursor-pointer"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
+      {/* ── Floating Capsule Search Bar (Latest Modern Design) ── */}
+      <div className="rounded-3xl sm:rounded-full p-1.5 sm:p-2 transition-all relative z-40 bg-white border border-slate-200/90 shadow-sm hover:shadow-md">
+        <form
+          onSubmit={handleSearchSubmit}
+          className="flex flex-col sm:flex-row sm:items-center w-full gap-2 sm:gap-0 justify-between"
+        >
+          <div className="flex flex-col sm:flex-row sm:items-center flex-1">
+            {/* ═══════════════════════════════════════════════════════════════
+                TAB 1: STAYS INPUT VIEW
+            ═══════════════════════════════════════════════════════════════ */}
+            {activeTab === 'stays' && (
+              <>
+                {/* Segment 1: Location & Hotel */}
+                <div
+                  ref={locationRef}
+                  className="relative flex-1 px-4 py-1.5 sm:py-1 flex items-center gap-3 cursor-pointer group rounded-2xl sm:rounded-none hover:bg-slate-50/80 transition-colors"
+                >
+                  <div className="w-8 h-8 rounded-full bg-slate-50 group-hover:bg-blue-50 text-slate-400 group-hover:text-blue-600 flex items-center justify-center shrink-0 transition-colors">
                     {selectedHotelCode ? (
-                      <AnimatedIcon name="hotel" animation="pulse" size={18} className="text-emerald-600 shrink-0" />
+                      <AnimatedIcon name="hotel" animation="pulse" size={16} className="text-emerald-600" />
                     ) : (
-                      <MapPin className={`shrink-0 ${selectedLocation ? 'text-blue-600' : 'text-gray-400'}`} size={18} />
+                      <AnimatedIcon name="location" animation="bounce" size={16} />
                     )}
+                  </div>
+                  <div
+                    className="flex-1 min-w-0"
+                    onClick={() => setShowLocationDropdown(true)}
+                  >
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 leading-none">
+                        Location
+                      </span>
+                      {selectedHotelCode && (
+                        <span className="text-[9px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.2 rounded-full">
+                          Hotel
+                        </span>
+                      )}
+                      {!selectedHotelCode && selectedLocation && (
+                        <span className="text-[9px] bg-blue-100 text-blue-800 font-bold px-1.5 py-0.2 rounded-full">
+                          City
+                        </span>
+                      )}
+                    </div>
                     <input
                       type="text"
                       value={searchQuery}
-                      onChange={handleSearchInputChange}
-                      onFocus={() => {
-                        if (!selectedLocation && (filteredLocations.length > 0 || hotelSuggestions.length > 0)) {
-                          setShowLocationDropdown(true);
-                        } else if (!selectedLocation && searchQuery.trim().length >= 1) {
-                          const instant = getInstantSuggestions(searchQuery);
-                          setFilteredLocations(instant.locations);
-                          setHotelSuggestions(instant.hotels);
-                          setShowLocationDropdown(true);
-                        }
+                      onChange={(e) => {
+                        isSelectingRef.current = false;
+                        setSearchQuery(e.target.value);
+                        setSelectedLocation(null);
+                        setSelectedHotelCode(null);
+                        setShowLocationDropdown(true);
                       }}
-                      placeholder="e.g. Dubai, Atlantis The Palm..."
-                      className="flex-1 min-w-0 border-0 border-none outline-none focus:outline-none focus:ring-0 focus:border-0 shadow-none bg-transparent text-gray-800 text-xs sm:text-sm font-bold placeholder-gray-400"
+                      onFocus={() => setShowLocationDropdown(true)}
+                      placeholder="Where are you going? e.g. Dubai, Atlantis..."
+                      className="w-full text-xs sm:text-sm font-extrabold text-slate-900 bg-transparent focus:outline-none placeholder-slate-400 truncate border-none p-0 m-0"
                     />
-
-                    {/* Integrated Pill Badge Inside Field */}
-                    {selectedHotelCode && (
-                      <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full shrink-0 border-0">
-                        Hotel
-                      </span>
-                    )}
-                    {!selectedHotelCode && selectedLocation && (
-                      <span className="text-[10px] bg-blue-100 text-blue-800 font-bold px-2 py-0.5 rounded-full shrink-0 border-0">
-                        City
-                      </span>
-                    )}
-
-                    {searchQuery && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          isSelectingRef.current = false;
-                          setSearchQuery('');
-                          setSelectedLocation(null);
-                          setSelectedHotelCode(null);
-                          setFilteredLocations([]);
-                          setHotelSuggestions([]);
-                          setShowLocationDropdown(false);
-                        }}
-                        className="text-gray-400 hover:text-gray-600 shrink-0 cursor-pointer p-1"
-                        aria-label="Clear destination"
-                      >
-                        <X size={16} />
-                      </button>
-                    )}
                   </div>
 
-                  {/* Unified Dropdown with Grouped Results */}
-                  {showLocationDropdown && searchQuery.trim().length >= 1 && (
-                    <div className="absolute left-0 right-0 top-full mt-1.5 z-[220] bg-white border border-gray-200 rounded-2xl shadow-2xl max-h-[60vh] overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
-                      {isLoadingLocations && (filteredLocations.length === 0 && hotelSuggestions.length === 0) ? (
-                        <div className="p-4 text-center text-gray-400 text-sm flex items-center justify-center gap-2">
-                          <span className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
-                          <span>Searching destinations and hotels...</span>
-                        </div>
-                      ) : (filteredLocations.length > 0 || hotelSuggestions.length > 0) ? (
-                        <div>
-                          {/* Section 1: Destinations */}
-                          {filteredLocations.filter(l => l.type !== 'hotel').length > 0 && (
-                            <div>
-                              <div className="px-3.5 pt-2.5 pb-1 text-[11px] font-bold text-gray-500 uppercase tracking-wider bg-gray-50/90 border-b border-gray-100 flex items-center gap-1.5 sticky top-0 z-10">
-                                <MapPin size={13} className="text-blue-600" />
-                                <span>Destinations & Cities</span>
-                              </div>
-                              {filteredLocations.filter(l => l.type !== 'hotel').map((location, index) => (
-                                <div
-                                  key={`loc-${index}`}
-                                  onClick={() => handleLocationSelect(location)}
-                                  className="px-3.5 py-2.5 hover:bg-blue-50 cursor-pointer transition-colors flex items-center gap-2.5 border-b border-gray-50 last:border-0"
-                                >
-                                  <MapPin size={16} className="text-blue-500 shrink-0" />
-                                  <div className="min-w-0 flex-1">
-                                    <div className="text-[13px] font-semibold text-gray-800 truncate">{location.city || location.name}</div>
-                                    <div className="text-[11px] text-gray-400 truncate">
-                                      {location.type === 'country' ? 'Country' : `${location.country || ''}${location.destinationCode ? ` · ${location.destinationCode}` : ''}`}
-                                    </div>
-                                  </div>
-                                  <span className="text-[10px] bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full font-bold border-0">City</span>
-                                </div>
-                              ))}
-                            </div>
-                          )}
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        isSelectingRef.current = false;
+                        setSearchQuery('');
+                        setSelectedLocation(null);
+                        setSelectedHotelCode(null);
+                        setFilteredLocations([]);
+                        setHotelSuggestions([]);
+                        setShowLocationDropdown(false);
+                      }}
+                      className="text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
+                    >
+                      <X size={14} />
+                    </button>
+                  )}
 
-                          {/* Section 2: Hotels */}
-                          {(hotelSuggestions.length > 0 || filteredLocations.filter(l => l.type === 'hotel').length > 0) && (
-                            <div>
-                              <div className="px-3.5 pt-2.5 pb-1 text-[11px] font-bold text-gray-500 uppercase tracking-wider bg-gray-50/90 border-b border-gray-100 flex items-center gap-1.5 sticky top-0 z-10">
-                                <Building2 size={13} className="text-emerald-600" />
-                                <span>Hotels & Properties</span>
-                              </div>
-                              {/* MongoDB/Cache/Instant Hotels */}
-                              {hotelSuggestions.map((hotel, idx) => (
-                                <div
-                                  key={`h-${idx}`}
-                                  onClick={() => handleHotelSelect(hotel)}
-                                  className="px-3.5 py-2.5 hover:bg-emerald-50 cursor-pointer transition-colors flex items-center gap-2.5 border-b border-gray-50 last:border-0"
-                                >
-                                  <Building2 size={16} className="text-emerald-600 shrink-0" />
-                                  <div className="min-w-0 flex-1">
-                                    <div className="text-[13px] font-semibold text-gray-800 truncate">{hotel.name}</div>
-                                    <div className="text-[11px] text-gray-400 truncate">
-                                      {hotel.zoneName || hotel.destinationName || ''} {hotel.countryCode ? `· ${hotel.countryCode}` : ''}
+                  {/* Dropdown with Grouped Autocomplete Results */}
+                  {showLocationDropdown && (
+                    <div
+                      className="absolute top-full left-0 mt-2 sm:mt-3 w-80 sm:w-96 bg-white rounded-2xl shadow-[0_25px_60px_rgba(0,0,0,0.22)] border border-slate-200 z-[200] overflow-hidden divide-y divide-slate-100"
+                      style={{ scrollbarWidth: 'thin' }}
+                    >
+                      <div className="p-2.5 bg-slate-50/90 text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center justify-between">
+                        <span>Top Destinations & Hotels</span>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowLocationDropdown(false);
+                          }}
+                          className="hover:text-slate-700 cursor-pointer"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+
+                      <div className="max-h-64 overflow-y-auto">
+                        {isLoadingLocations && filteredLocations.length === 0 && hotelSuggestions.length === 0 ? (
+                          <div className="p-4 text-center text-slate-400 text-xs flex items-center justify-center gap-2">
+                            <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
+                            <span>Searching destinations and hotels...</span>
+                          </div>
+                        ) : (
+                          <>
+                            {/* Destinations */}
+                            {(() => {
+                              const dests = filteredLocations.filter(l => l.type !== 'hotel');
+                              const list = dests.length > 0 ? dests : TOP_DESTINATIONS.slice(0, 6);
+                              const isDefault = dests.length === 0;
+                              return (
+                                <div>
+                                  <div className="px-3 pt-2 pb-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-slate-50/70 flex items-center justify-between">
+                                    <div className="flex items-center gap-1.5">
+                                      <MapPin size={12} className="text-blue-600" />
+                                      <span>{isDefault ? 'Top Destinations' : 'Destinations & Cities'}</span>
                                     </div>
+                                    {isDefault && (
+                                      <span className="text-[9px] text-slate-400 font-medium">Popular</span>
+                                    )}
                                   </div>
-                                  <span className="text-[10px] bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full font-bold border-0">Hotel</span>
-                                </div>
-                              ))}
-                              {/* Locations API Hotels */}
-                              {filteredLocations.filter(l => l.type === 'hotel').map((hotel, idx) => (
-                                <div
-                                  key={`lh-${idx}`}
-                                  onClick={() => handleHotelSelect(hotel)}
-                                  className="px-3.5 py-2.5 hover:bg-emerald-50 cursor-pointer transition-colors flex items-center gap-2.5 border-b border-gray-50 last:border-0"
-                                >
-                                  <Building2 size={16} className="text-emerald-600 shrink-0" />
-                                  <div className="min-w-0 flex-1">
-                                    <div className="text-[13px] font-semibold text-gray-800 truncate">{hotel.name}</div>
-                                    <div className="text-[11px] text-gray-400 truncate">
-                                      {hotel.city || hotel.destinationCode || ''} {hotel.countryCode ? `· ${hotel.countryCode}` : ''}
+                                  {list.map((loc, i) => (
+                                    <div
+                                      key={`dest-${i}`}
+                                      onClick={() => {
+                                        isSelectingRef.current = true;
+                                        setSelectedLocation(loc);
+                                        setSelectedHotelCode(null);
+                                        setSearchQuery(loc.displayName || `${loc.city || loc.name}, ${loc.country}`);
+                                        setShowLocationDropdown(false);
+                                      }}
+                                      className="px-3 py-2 hover:bg-blue-50/70 cursor-pointer flex items-center justify-between gap-2 transition-colors border-b border-slate-50 last:border-0"
+                                    >
+                                      <div className="flex items-center gap-2 min-w-0">
+                                        <MapPin className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+                                        <div className="truncate">
+                                          <div className="font-extrabold text-xs text-slate-900 truncate">
+                                            {loc.city || loc.name}
+                                          </div>
+                                          <div className="text-[10px] text-slate-400 truncate">
+                                            {loc.country}{loc.destinationCode ? ` · ${loc.destinationCode}` : ''}
+                                          </div>
+                                        </div>
+                                      </div>
+                                      <span className="text-[9px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full shrink-0">
+                                        City
+                                      </span>
                                     </div>
-                                  </div>
-                                  <span className="text-[10px] bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full font-bold border-0">Hotel</span>
+                                  ))}
                                 </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        <div className="p-4 text-center text-gray-400 text-sm">
-                          No destinations or hotels found for "{searchQuery}"
-                        </div>
-                      )}
+                              );
+                            })()}
+
+                            {/* Hotels */}
+                            {(() => {
+                              const hotels = hotelSuggestions;
+                              const hList = hotels.length > 0 ? hotels : FEATURED_HOTELS.slice(0, 5);
+                              const isDefault = hotels.length === 0;
+                              return (
+                                <div>
+                                  <div className="px-3 pt-2 pb-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-slate-50/70 flex items-center justify-between">
+                                    <div className="flex items-center gap-1.5">
+                                      <Building2 size={12} className="text-emerald-600" />
+                                      <span>{isDefault ? 'Featured Hotels' : 'Hotels & Properties'}</span>
+                                    </div>
+                                    {isDefault && (
+                                      <span className="text-[9px] text-slate-400 font-medium">Iconic</span>
+                                    )}
+                                  </div>
+                                  {hList.map((hotel, idx) => (
+                                    <div
+                                      key={`h-${idx}`}
+                                      onClick={() => {
+                                        isSelectingRef.current = true;
+                                        setSelectedHotelCode(hotel.code || hotel.id);
+                                        setSelectedLocation({
+                                          type: 'hotel',
+                                          code: hotel.code || hotel.id,
+                                          name: hotel.name,
+                                          city: hotel.zoneName || hotel.destinationName || hotel.city || '',
+                                          destinationCode: hotel.destinationCode || '',
+                                          country: hotel.countryCode || ''
+                                        });
+                                        setSearchQuery(hotel.name);
+                                        setShowLocationDropdown(false);
+                                      }}
+                                      className="px-3 py-2 hover:bg-emerald-50/70 cursor-pointer flex items-center justify-between gap-2 transition-colors border-b border-slate-50 last:border-0"
+                                    >
+                                      <div className="flex items-center gap-2 min-w-0">
+                                        <Crown className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                                        <div className="truncate">
+                                          <div className="font-extrabold text-xs text-slate-900 truncate">
+                                            {hotel.name}
+                                          </div>
+                                          <div className="text-[10px] text-slate-400 truncate">
+                                            {hotel.zoneName || hotel.destinationName || hotel.city || ''}
+                                          </div>
+                                        </div>
+                                      </div>
+                                      <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full shrink-0">
+                                        Hotel
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                              );
+                            })()}
+                          </>
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>
 
-                {/* Field 2: Date Range Picker (4 columns) */}
-                <div className="md:col-span-4 relative" ref={calendarRef}>
-                  <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-gray-500 mb-1.5 text-left h-4 leading-4">
-                    Dates <span className="text-red-500">*</span>
-                  </label>
-                  <div
-                    onClick={() => setShowCalendar(!showCalendar)}
-                    className="flex items-center w-full h-[50px] sm:h-[52px] px-3 border border-gray-200 hover:border-gray-300 bg-white rounded-xl cursor-pointer hover:border-blue-400 transition-all"
-                  >
-                    <Calendar className="text-blue-600 mr-2 shrink-0" size={18} />
-                    <span className="text-gray-800 font-bold flex-1 text-xs sm:text-sm truncate">
-                      <span className="hidden sm:inline">{format(dateRange[0].startDate, 'MMM dd, yyyy')} - {format(dateRange[0].endDate, 'MMM dd, yyyy')}</span>
-                      <span className="sm:hidden">{format(dateRange[0].startDate, 'MMM dd')} - {format(dateRange[0].endDate, 'MMM dd')}</span>
-                    </span>
-                    <span className="text-[11px] font-bold text-blue-600 ml-1.5 shrink-0 bg-blue-50 px-1.5 py-0.5 rounded-md border-0">
-                      {calculateNights()}n
+                {/* Vertical Divider */}
+                <div className="hidden sm:block h-7 w-px bg-slate-200/80 shrink-0" />
+
+                {/* Segment 2: Dates */}
+                <div
+                  onClick={() => setShowCalendar(true)}
+                  className="relative flex-1 px-4 py-1.5 sm:py-1 flex items-center gap-3 cursor-pointer group rounded-2xl sm:rounded-none hover:bg-slate-50/80 transition-colors"
+                >
+                  <div className="w-8 h-8 rounded-full bg-slate-50 group-hover:bg-blue-50 text-slate-400 group-hover:text-blue-600 flex items-center justify-center shrink-0 transition-colors">
+                    <AnimatedIcon name="time" animation="pulse" size={16} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 leading-none">
+                        Dates
+                      </span>
+                      <span className="text-[9px] font-extrabold text-blue-600 bg-blue-50 px-1.5 py-0.2 rounded-full">
+                        {calculateNights()}n
+                      </span>
+                    </div>
+                    <span className="text-xs sm:text-sm font-extrabold text-slate-900 block leading-tight truncate">
+                      {format(dateRange[0].startDate, 'MMM d')} - {format(dateRange[0].endDate, 'MMM d, yyyy')}
                     </span>
                   </div>
+                </div>
 
-                  {showCalendar && createPortal(
-                    <div data-calendar-portal style={{position:"fixed",inset:0,zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.3)"}} onClick={(e) => { if (e.target === e.currentTarget) setShowCalendar(false); }}><div className="bg-white border border-gray-200 rounded-2xl shadow-2xl overflow-auto max-h-[80vh]" style={{maxWidth:"95vw",margin:"16px"}}>
-                        <Suspense fallback={<div className="p-8 text-center text-gray-400">Loading calendar...</div>}>
-                          <LazyDateRange
-                            ranges={dateRange}
-                            onChange={(item) => {
-                              const sel = item.selection;
-                              if (sel.startDate.getTime() === sel.endDate.getTime()) {
-                                setDateRange([{ ...sel, endDate: addDays(sel.startDate, 1) }]);
-                              } else {
-                                setDateRange([sel]);
-                              }
-                            }}
-                            minDate={new Date()}
-                            moveRangeOnFirstSelection={false}
-                            preventSnapRefocus={true}
-                            months={window.innerWidth < 640 ? 1 : 2}
-                            direction="horizontal"
-                            rangeColors={['#2563eb']}
-                            showDateDisplay={false}
-                          />
-                        </Suspense>
-                      <div className="px-4 pb-3 flex justify-end">
+                {/* Vertical Divider */}
+                <div className="hidden sm:block h-7 w-px bg-slate-200/80 shrink-0" />
+
+                {/* Segment 3: Guests & Multi-Rooms */}
+                <div
+                  onClick={() => setShowTravellerDropdown(true)}
+                  className="relative flex-1 px-4 py-1.5 sm:py-1 flex items-center gap-3 cursor-pointer group rounded-2xl sm:rounded-none hover:bg-slate-50/80 transition-colors"
+                >
+                  <div className="w-8 h-8 rounded-full bg-slate-50 group-hover:bg-blue-50 text-slate-400 group-hover:text-blue-600 flex items-center justify-center shrink-0 transition-colors">
+                    <AnimatedIcon name="users" animation="pulse" size={16} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block leading-none mb-0.5">
+                      Guests & Rooms
+                    </span>
+                    <span className="text-xs sm:text-sm font-extrabold text-slate-900 block leading-tight truncate">
+                      {getTravellerSummary()}
+                    </span>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* ═══════════════════════════════════════════════════════════════
+                TAB 2: TRANSFERS INPUT VIEW
+            ═══════════════════════════════════════════════════════════════ */}
+            {activeTab === 'transfers' && (
+              <>
+                {/* Pickup */}
+                <div
+                  ref={pickupRef}
+                  className="relative flex-1 px-4 py-1.5 sm:py-1 flex items-center gap-3 group rounded-2xl sm:rounded-none hover:bg-slate-50/80 transition-colors"
+                >
+                  <div className="w-8 h-8 rounded-full bg-slate-50 group-hover:bg-blue-50 text-slate-400 group-hover:text-blue-600 flex items-center justify-center shrink-0">
+                    <AnimatedIcon name="car" animation="glide" size={16} />
+                  </div>
+                  <div className="flex-1 min-w-0" onClick={() => setShowPickupDropdown(true)}>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block leading-none mb-0.5">
+                      Pickup Location
+                    </span>
+                    <input
+                      type="text"
+                      value={pickupQuery}
+                      onChange={(e) => {
+                        setPickupQuery(e.target.value);
+                        setSelectedPickup(null);
+                        setShowPickupDropdown(true);
+                      }}
+                      onFocus={() => setShowPickupDropdown(true)}
+                      placeholder="Airport, station or hotel..."
+                      className="w-full text-xs sm:text-sm font-extrabold text-slate-900 bg-transparent focus:outline-none placeholder-slate-400 truncate border-none p-0 m-0"
+                    />
+                  </div>
+
+                  {showPickupDropdown && (filteredPickupLocations.length > 0 || groupedPickup.length > 0 || isLoadingPickup) && (
+                    <div
+                      className="absolute top-full left-0 mt-2 sm:mt-3 w-80 sm:w-96 bg-white rounded-2xl shadow-[0_25px_60px_rgba(0,0,0,0.22)] border border-slate-200 z-[200] overflow-hidden divide-y divide-slate-100"
+                      style={{ scrollbarWidth: 'thin' }}
+                    >
+                      <div className="p-2.5 bg-slate-50/90 text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center justify-between">
+                        <span>Pickup Points</span>
                         <button
                           type="button"
-                          onClick={() => setShowCalendar(false)}
-                          className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm cursor-pointer"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowPickupDropdown(false);
+                          }}
+                          className="hover:text-slate-700 cursor-pointer"
                         >
-                          OK
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+
+                      <div className="max-h-60 overflow-y-auto">
+                        {isLoadingPickup ? (
+                          <div className="p-4 text-center text-slate-400 text-xs flex items-center justify-center gap-2">
+                            <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
+                            <span>Finding pickup locations...</span>
+                          </div>
+                        ) : (
+                          filteredPickupLocations.map((loc, i) => (
+                            <div
+                              key={`pick-${i}`}
+                              onClick={() => {
+                                setSelectedPickup(loc);
+                                setPickupQuery(loc.name);
+                                setShowPickupDropdown(false);
+                              }}
+                              className="px-3 py-2 hover:bg-blue-50/70 cursor-pointer flex items-center justify-between gap-2 border-b border-slate-50 last:border-0"
+                            >
+                              <div className="flex items-center gap-2 min-w-0">
+                                <Plane className="w-4 h-4 text-blue-600 shrink-0" />
+                                <div className="truncate">
+                                  <div className="font-extrabold text-xs text-slate-900 truncate">{loc.name}</div>
+                                  <div className="text-[10px] text-slate-400 truncate">{loc.type || 'Airport'}</div>
+                                </div>
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="hidden sm:block h-7 w-px bg-slate-200/80 shrink-0" />
+
+                {/* Dropoff */}
+                <div
+                  ref={dropoffRef}
+                  className="relative flex-1 px-4 py-1.5 sm:py-1 flex items-center gap-3 group rounded-2xl sm:rounded-none hover:bg-slate-50/80 transition-colors"
+                >
+                  <div className="w-8 h-8 rounded-full bg-slate-50 group-hover:bg-blue-50 text-slate-400 group-hover:text-blue-600 flex items-center justify-center shrink-0">
+                    <MapPin className="w-4 h-4 text-blue-600" />
+                  </div>
+                  <div className="flex-1 min-w-0" onClick={() => setShowDropoffDropdown(true)}>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block leading-none mb-0.5">
+                      Drop-off Location
+                    </span>
+                    <input
+                      type="text"
+                      value={dropoffQuery}
+                      onChange={(e) => {
+                        setDropoffQuery(e.target.value);
+                        setSelectedDropoff(null);
+                        setShowDropoffDropdown(true);
+                      }}
+                      onFocus={() => setShowDropoffDropdown(true)}
+                      placeholder="Hotel, resort or destination..."
+                      className="w-full text-xs sm:text-sm font-extrabold text-slate-900 bg-transparent focus:outline-none placeholder-slate-400 truncate border-none p-0 m-0"
+                    />
+                  </div>
+
+                  {showDropoffDropdown && (filteredDropoffLocations.length > 0 || groupedDropoff.length > 0 || isLoadingDropoff) && (
+                    <div
+                      className="absolute top-full left-0 mt-2 sm:mt-3 w-80 sm:w-96 bg-white rounded-2xl shadow-[0_25px_60px_rgba(0,0,0,0.22)] border border-slate-200 z-[200] overflow-hidden divide-y divide-slate-100"
+                      style={{ scrollbarWidth: 'thin' }}
+                    >
+                      <div className="p-2.5 bg-slate-50/90 text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center justify-between">
+                        <span>Drop-off Points</span>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowDropoffDropdown(false);
+                          }}
+                          className="hover:text-slate-700 cursor-pointer"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+
+                      <div className="max-h-60 overflow-y-auto">
+                        {isLoadingDropoff ? (
+                          <div className="p-4 text-center text-slate-400 text-xs flex items-center justify-center gap-2">
+                            <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
+                            <span>Finding drop-off locations...</span>
+                          </div>
+                        ) : (
+                          filteredDropoffLocations.map((loc, i) => (
+                            <div
+                              key={`drop-${i}`}
+                              onClick={() => {
+                                setSelectedDropoff(loc);
+                                setDropoffQuery(loc.name);
+                                setShowDropoffDropdown(false);
+                              }}
+                              className="px-3 py-2 hover:bg-blue-50/70 cursor-pointer flex items-center justify-between gap-2 border-b border-slate-50 last:border-0"
+                            >
+                              <div className="flex items-center gap-2 min-w-0">
+                                <Building2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                                <div className="truncate">
+                                  <div className="font-extrabold text-xs text-slate-900 truncate">{loc.name}</div>
+                                  <div className="text-[10px] text-slate-400 truncate">{loc.type || 'Hotel'}</div>
+                                </div>
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="hidden sm:block h-7 w-px bg-slate-200/80 shrink-0" />
+
+                {/* Transfer Date */}
+                <div
+                  onClick={() => setShowTransferCalendar(true)}
+                  className="relative flex-1 px-4 py-1.5 sm:py-1 flex items-center gap-3 cursor-pointer group rounded-2xl sm:rounded-none hover:bg-slate-50/80 transition-colors"
+                >
+                  <div className="w-8 h-8 rounded-full bg-slate-50 group-hover:bg-blue-50 text-slate-400 group-hover:text-blue-600 flex items-center justify-center shrink-0">
+                    <Calendar className="w-4 h-4 text-blue-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block leading-none mb-0.5">
+                      Date & Time
+                    </span>
+                    <span className="text-xs sm:text-sm font-extrabold text-slate-900 block leading-tight truncate">
+                      {format(transferDateRange[0].startDate, 'MMM d')} at {transferTime}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="hidden sm:block h-7 w-px bg-slate-200/80 shrink-0" />
+
+                {/* Passengers */}
+                <div
+                  onClick={() => setShowTransferTravellers(true)}
+                  className="relative flex-1 px-4 py-1.5 sm:py-1 flex items-center gap-3 cursor-pointer group rounded-2xl sm:rounded-none hover:bg-slate-50/80 transition-colors"
+                >
+                  <div className="w-8 h-8 rounded-full bg-slate-50 group-hover:bg-blue-50 text-slate-400 group-hover:text-blue-600 flex items-center justify-center shrink-0">
+                    <Users className="w-4 h-4 text-blue-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block leading-none mb-0.5">
+                      Passengers
+                    </span>
+                    <span className="text-xs sm:text-sm font-extrabold text-slate-900 block leading-tight truncate">
+                      {transferAdults + transferChildren + transferInfants} Pax
+                    </span>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* ═══════════════════════════════════════════════════════════════
+                TAB 3: EXPERIENCES INPUT VIEW
+            ═══════════════════════════════════════════════════════════════ */}
+            {activeTab === 'experiences' && (
+              <>
+                {/* Destination */}
+                <div className="relative flex-1 px-4 py-1.5 sm:py-1 flex items-center gap-3 group rounded-2xl sm:rounded-none hover:bg-slate-50/80 transition-colors">
+                  <div className="w-8 h-8 rounded-full bg-slate-50 group-hover:bg-purple-50 text-slate-400 group-hover:text-purple-600 flex items-center justify-center shrink-0">
+                    <AnimatedIcon name="experiences" animation="bounce" size={16} />
+                  </div>
+                  <div className="flex-1 min-w-0" onClick={() => setShowExperienceDropdown(true)}>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block leading-none mb-0.5">
+                      Destination or Activity
+                    </span>
+                    <input
+                      type="text"
+                      value={experienceQuery}
+                      onChange={(e) => {
+                        setExperienceQuery(e.target.value);
+                        setSelectedExperienceLocation(null);
+                        setShowExperienceDropdown(true);
+                      }}
+                      onFocus={() => setShowExperienceDropdown(true)}
+                      placeholder="Where are you going? e.g. Dubai, Paris..."
+                      className="w-full text-xs sm:text-sm font-extrabold text-slate-900 bg-transparent focus:outline-none placeholder-slate-400 truncate border-none p-0 m-0"
+                    />
+                  </div>
+
+                  {showExperienceDropdown && (
+                    <div
+                      className="absolute top-full left-0 mt-2 sm:mt-3 w-80 sm:w-96 bg-white rounded-2xl shadow-[0_25px_60px_rgba(0,0,0,0.22)] border border-slate-200 z-[200] overflow-hidden divide-y divide-slate-100"
+                      style={{ scrollbarWidth: 'thin' }}
+                    >
+                      <div className="p-2.5 bg-slate-50/90 text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center justify-between">
+                        <span>Popular Destinations</span>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowExperienceDropdown(false);
+                          }}
+                          className="hover:text-slate-700 cursor-pointer"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                      <div className="max-h-60 overflow-y-auto">
+                        {filteredExperiences.map((dest, i) => (
+                          <div
+                            key={`exp-${i}`}
+                            onClick={() => {
+                              setSelectedExperienceLocation(dest);
+                              setExperienceQuery(dest.displayName || `${dest.name}, ${dest.country}`);
+                              setShowExperienceDropdown(false);
+                            }}
+                            className="px-3 py-2 hover:bg-purple-50/70 cursor-pointer flex items-center justify-between gap-2 border-b border-slate-50 last:border-0"
+                          >
+                            <div className="flex items-center gap-2 min-w-0">
+                              <Compass className="w-4 h-4 text-purple-600 shrink-0" />
+                              <div className="truncate">
+                                <div className="font-extrabold text-xs text-slate-900 truncate">{dest.name}</div>
+                                <div className="text-[10px] text-slate-400 truncate">{dest.country}</div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="hidden sm:block h-7 w-px bg-slate-200/80 shrink-0" />
+
+                {/* Date */}
+                <div
+                  onClick={() => setShowExperienceCalendar(true)}
+                  className="relative flex-1 px-4 py-1.5 sm:py-1 flex items-center gap-3 cursor-pointer group rounded-2xl sm:rounded-none hover:bg-slate-50/80 transition-colors"
+                >
+                  <div className="w-8 h-8 rounded-full bg-slate-50 group-hover:bg-blue-50 text-slate-400 group-hover:text-blue-600 flex items-center justify-center shrink-0">
+                    <Calendar className="w-4 h-4 text-purple-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block leading-none mb-0.5">
+                      Dates
+                    </span>
+                    <span className="text-xs sm:text-sm font-extrabold text-slate-900 block leading-tight truncate">
+                      {format(experienceDateRange[0].startDate, 'MMM d')} - {format(experienceDateRange[0].endDate, 'MMM d, yyyy')}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="hidden sm:block h-7 w-px bg-slate-200/80 shrink-0" />
+
+                {/* Travelers */}
+                <div
+                  onClick={() => setShowExperienceTravellers(true)}
+                  className="relative flex-1 px-4 py-1.5 sm:py-1 flex items-center gap-3 cursor-pointer group rounded-2xl sm:rounded-none hover:bg-slate-50/80 transition-colors"
+                >
+                  <div className="w-8 h-8 rounded-full bg-slate-50 group-hover:bg-blue-50 text-slate-400 group-hover:text-blue-600 flex items-center justify-center shrink-0">
+                    <Users className="w-4 h-4 text-purple-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block leading-none mb-0.5">
+                      Travelers
+                    </span>
+                    <span className="text-xs sm:text-sm font-extrabold text-slate-900 block leading-tight truncate">
+                      {experienceAdults} Adults{experienceChildren > 0 ? `, ${experienceChildren} Children` : ''}
+                    </span>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* ── Circular Primary Search Button ── */}
+          <div className="p-1 sm:p-0 sm:pr-1 flex justify-end shrink-0">
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              aria-label="Search"
+              className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-blue-600 hover:bg-blue-700 active:scale-95 text-white flex items-center justify-center shadow-md hover:shadow-lg cursor-pointer transition-colors"
+            >
+              {isSubmitting ? (
+                <Loader2 className="w-5 h-5 text-white animate-spin" />
+              ) : (
+                <Search className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+              )}
+            </button>
+          </div>
+        </form>
+      </div>
+
+      {/* ═══════════════════════════════════════════════════════════════════════
+          MODAL PORTALS FOR CALENDARS & TRAVELLERS
+      ═══════════════════════════════════════════════════════════════════════ */}
+
+      {/* 1. Stays Calendar Modal Portal */}
+      {showCalendar &&
+        createPortal(
+          <div
+            data-calendar-portal
+            style={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 9999,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: 'rgba(0,0,0,0.4)',
+              backdropFilter: 'blur(2px)'
+            }}
+            onClick={(e) => {
+              if (e.target === e.currentTarget) setShowCalendar(false);
+            }}
+          >
+            <div
+              className="bg-white border border-gray-200 rounded-3xl shadow-2xl overflow-auto max-h-[85vh] p-4 sm:p-6"
+              style={{ maxWidth: '95vw', margin: 16 }}
+            >
+              <div className="flex items-center justify-between pb-3 mb-2 border-b border-gray-100">
+                <div>
+                  <h3 className="font-extrabold text-base text-gray-900">Select Dates</h3>
+                  <p className="text-xs text-gray-400">
+                    {calculateNights()} night stay ({format(dateRange[0].startDate, 'MMM d')} - {format(dateRange[0].endDate, 'MMM d, yyyy')})
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowCalendar(false)}
+                  className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 cursor-pointer"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+
+              <Suspense fallback={<div className="p-12 text-center text-gray-400">Loading calendar...</div>}>
+                <LazyDateRange
+                  ranges={dateRange}
+                  onChange={(item) => {
+                    const sel = item.selection;
+                    let end = sel.endDate;
+                    if (sel.startDate && sel.endDate && sel.startDate.getTime() === sel.endDate.getTime()) {
+                      end = addDays(sel.startDate, 1);
+                    }
+                    setDateRange([{ ...sel, endDate: end }]);
+                  }}
+                  minDate={addDays(new Date(), 1)}
+                  maxDate={addDays(new Date(), 365)}
+                  months={window.innerWidth < 640 ? 1 : 2}
+                  direction="horizontal"
+                  rangeColors={['#2563eb']}
+                  showDateDisplay={false}
+                />
+              </Suspense>
+
+              <div className="pt-4 border-t border-gray-100 flex items-center justify-between">
+                <span className="text-xs text-gray-500 font-semibold">
+                  {calculateNights()} {calculateNights() === 1 ? 'Night' : 'Nights'} Selected
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowCalendar(false)}
+                  className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full text-xs font-bold cursor-pointer"
+                >
+                  Apply Dates
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
+
+      {/* 2. Stays Guests & Multi-Room Modal Portal */}
+      {showTravellerDropdown &&
+        createPortal(
+          <div
+            style={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 9999,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: 'rgba(0,0,0,0.4)',
+              backdropFilter: 'blur(2px)'
+            }}
+            onClick={(e) => {
+              if (e.target === e.currentTarget) setShowTravellerDropdown(false);
+            }}
+          >
+            <div
+              className="bg-white border border-gray-200 rounded-3xl shadow-2xl p-4 sm:p-6 w-[420px] max-w-[95vw] max-h-[85vh] overflow-y-auto"
+              style={{ margin: 16 }}
+            >
+              <div className="flex items-center justify-between pb-3 mb-3 border-b border-gray-100">
+                <div>
+                  <h3 className="font-extrabold text-base text-gray-900">Rooms & Guests</h3>
+                  <p className="text-xs text-gray-400">{getTravellerSummary()}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowTravellerDropdown(false)}
+                  className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 cursor-pointer"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {roomConfigs.map((room, roomIdx) => (
+                  <div key={roomIdx} className="p-3 bg-slate-50/80 rounded-2xl border border-slate-200/80 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-black uppercase tracking-wider text-slate-700">
+                        Room {roomIdx + 1}
+                      </span>
+                      {roomConfigs.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeRoom(roomIdx)}
+                          className="text-red-500 hover:text-red-700 text-xs font-bold flex items-center gap-1 cursor-pointer"
+                        >
+                          <Trash2 size={12} />
+                          <span>Remove</span>
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Adults */}
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="text-xs font-bold text-slate-900 block">Adults</span>
+                        <span className="text-[10px] text-slate-400">Age 18+</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => updateRoom(roomIdx, 'adults', Math.max(1, room.adults - 1))}
+                          disabled={room.adults <= 1}
+                          className="w-7 h-7 rounded-full border border-slate-300 flex items-center justify-center disabled:opacity-30 hover:bg-white cursor-pointer"
+                        >
+                          <Minus size={12} />
+                        </button>
+                        <span className="w-5 text-center text-xs font-bold text-slate-900">{room.adults}</span>
+                        <button
+                          type="button"
+                          onClick={() => updateRoom(roomIdx, 'adults', Math.min(6, room.adults + 1))}
+                          disabled={room.adults >= 6}
+                          className="w-7 h-7 rounded-full border border-slate-300 flex items-center justify-center disabled:opacity-30 hover:bg-white cursor-pointer"
+                        >
+                          <Plus size={12} />
                         </button>
                       </div>
                     </div>
-                    </div>
-                  , document.body)}
-                </div>
 
-                {/* Field 3: Travellers Dropdown (3 columns) */}
-                <div className="md:col-span-3 relative" ref={travellerRef}>
-                  <label className="block text-[11px] sm:text-xs font-bold uppercase tracking-wider text-gray-500 mb-1.5 text-left h-4 leading-4">
-                    Travellers & Rooms <span className="text-red-500">*</span>
-                  </label>
-                  <div
-                    onClick={() => setShowTravellerDropdown(!showTravellerDropdown)}
-                    className="flex items-center w-full h-[50px] sm:h-[52px] px-3 border border-gray-200 hover:border-gray-300 bg-white rounded-xl cursor-pointer hover:border-blue-400 transition-all"
-                  >
-                    <Users className="text-blue-600 mr-2 shrink-0" size={18} />
-                    <span className="text-gray-800 font-bold flex-1 text-xs sm:text-sm truncate">
-                      {getTravellerSummary()}
-                    </span>
-                    <ChevronDown className="text-gray-400 shrink-0" size={16} />
-                  </div>
-
-                  {showTravellerDropdown && createPortal(
-                    <div data-traveller-portal style={{position:"fixed",inset:0,zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,0,0,0.3)"}} onClick={(e) => { if (e.target === e.currentTarget) setShowTravellerDropdown(false); }}>
-                    <div className="bg-white border border-gray-200 rounded-2xl shadow-2xl p-4 max-h-[80vh] overflow-y-auto w-full" style={{maxWidth:420,margin:16}} onClick={(e) => e.stopPropagation()}>
-                      {roomConfigs.map((room, roomIdx) => (
-                        <div key={roomIdx} className={`${roomIdx > 0 ? 'mt-4 pt-4 border-t border-gray-200' : ''}`}>
-                          {/* Room header */}
-                          <div className="flex items-center justify-between mb-3">
-                            <span className="text-sm font-semibold text-gray-900">Room {roomIdx + 1}</span>
-                            {roomConfigs.length > 1 && (
-                              <button type="button" onClick={() => removeRoom(roomIdx)} className="flex items-center gap-1 text-xs text-red-500 hover:text-red-700 transition-colors" style={{ minHeight: 'unset' }}>
-                                <Trash2 className="w-3 h-3" /> Remove
-                              </button>
-                            )}
-                          </div>
-
-                          {/* Adults */}
-                          <div className="flex items-center justify-between py-2">
-                            <span className="text-sm text-gray-700">Adults</span>
-                            <div className="flex items-center gap-3">
-                              <button type="button" onClick={() => updateRoom(roomIdx, 'adults', Math.max(1, room.adults - 1))} className="w-7 h-7 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors" style={{ minHeight: 'unset' }}><Minus size={14} /></button>
-                              <span className="w-6 text-center font-medium text-sm">{room.adults}</span>
-                              <button type="button" onClick={() => updateRoom(roomIdx, 'adults', Math.min(6, room.adults + 1))} className="w-7 h-7 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors" style={{ minHeight: 'unset' }}><Plus size={14} /></button>
-                            </div>
-                          </div>
-
-                          {/* Children */}
-                          <div className="flex items-center justify-between py-2">
-                            <span className="text-sm text-gray-700">Children</span>
-                            <div className="flex items-center gap-3">
-                              <button type="button" onClick={() => updateRoom(roomIdx, 'children', room.children - 1)} className="w-7 h-7 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors" style={{ minHeight: 'unset' }}><Minus size={14} /></button>
-                              <span className="w-6 text-center font-medium text-sm">{room.children}</span>
-                              <button type="button" onClick={() => updateRoom(roomIdx, 'children', room.children + 1)} className="w-7 h-7 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-100 transition-colors" style={{ minHeight: 'unset' }}><Plus size={14} /></button>
-                            </div>
-                          </div>
-
-                          {/* Child Ages */}
-                          {room.children > 0 && (
-                            <div className="mt-2 pt-2 border-t border-gray-100">
-                              <p className="text-xs text-gray-500 mb-2">Ages of children at check-out</p>
-                              <div className="grid grid-cols-2 gap-2">
-                                {room.childAges.map((age, childIdx) => (
-                                  <select key={childIdx} value={age} onChange={(e) => updateChildAge(roomIdx, childIdx, e.target.value)}
-                                    className="px-2 py-1.5 border border-gray-300 rounded-lg text-xs focus:ring-2 focus:ring-blue-500">
-                                    <option value={0}>Under 1</option>
-                                    {[...Array(17)].map((_, i) => (
-                                      <option key={i + 1} value={i + 1}>{i + 1} year{i + 1 > 1 ? 's' : ''}</option>
-                                    ))}
-                                  </select>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      ))}
-
-                      {/* Add Room button */}
-                      {roomConfigs.length < 6 && (
-                        <button type="button" onClick={addRoom} className="mt-4 flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors" style={{ minHeight: 'unset' }}>
-                          <Plus size={14} /> Add room
+                    {/* Children */}
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="text-xs font-bold text-slate-900 block">Children</span>
+                        <span className="text-[10px] text-slate-400">Age 0-17</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => updateRoom(roomIdx, 'children', Math.max(0, room.children - 1))}
+                          disabled={room.children <= 0}
+                          className="w-7 h-7 rounded-full border border-slate-300 flex items-center justify-center disabled:opacity-30 hover:bg-white cursor-pointer"
+                        >
+                          <Minus size={12} />
                         </button>
-                      )}
+                        <span className="w-5 text-center text-xs font-bold text-slate-900">{room.children}</span>
+                        <button
+                          type="button"
+                          onClick={() => updateRoom(roomIdx, 'children', Math.min(4, room.children + 1))}
+                          disabled={room.children >= 4}
+                          className="w-7 h-7 rounded-full border border-slate-300 flex items-center justify-center disabled:opacity-30 hover:bg-white cursor-pointer"
+                        >
+                          <Plus size={12} />
+                        </button>
+                      </div>
+                    </div>
 
-                      {/* Apply button */}
-                      <button type="button" onClick={() => setShowTravellerDropdown(false)}
-                        className="w-full mt-4 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm" style={{ minHeight: 'unset' }}>
-                        Done
-                      </button>
-                    </div>
-                    </div>
-                  , document.body)}
-                </div>
+                    {/* Child Ages */}
+                    {room.children > 0 && (
+                      <div className="pt-2 border-t border-slate-200/60">
+                        <span className="text-[10px] font-bold text-slate-500 block mb-1.5 uppercase tracking-wider">
+                          Child Ages (Required for exact rates)
+                        </span>
+                        <div className="grid grid-cols-4 gap-2">
+                          {room.childAges.map((age, childIdx) => (
+                            <div key={childIdx}>
+                              <label className="text-[9px] text-slate-400 block mb-0.5">Child {childIdx + 1}</label>
+                              <select
+                                value={age}
+                                onChange={(e) => updateChildAge(roomIdx, childIdx, e.target.value)}
+                                className="w-full text-xs font-bold p-1 bg-white border border-slate-300 rounded-lg"
+                              >
+                                {[...Array(18)].map((_, a) => (
+                                  <option key={a} value={a}>
+                                    {a} {a === 1 ? 'yr' : 'yrs'}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+
+                {roomConfigs.length < 6 && (
+                  <button
+                    type="button"
+                    onClick={addRoom}
+                    className="w-full py-2.5 rounded-xl border border-dashed border-blue-400 text-blue-600 hover:bg-blue-50/60 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                  >
+                    <Plus size={14} />
+                    <span>Add Another Room</span>
+                  </button>
+                )}
               </div>
 
-              {/* Lower Action Row: Reassurances & Search Button (Eliminates Left Negative Space) */}
-              <div className="mt-3.5 pt-3 border-t border-gray-100 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
-                <div className="flex flex-wrap items-center gap-2 text-xs">
-                  <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-800 font-bold border-0 text-[11px]">
-                    <CheckCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                    <span>Instant Confirmation</span>
-                  </span>
-                  <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 text-blue-800 font-bold border-0 text-[11px]">
-                    <ShieldCheck className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                    <span>Free Cancellation Available</span>
-                  </span>
-                  <label className="w-auto inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-50 text-amber-900 font-bold border-0 text-[11px] cursor-pointer hover:bg-amber-100/70 transition-colors">
-                    <input
-                      type="checkbox"
-                      checked={luxuryOnly}
-                      onChange={(e) => setLuxuryOnly(e.target.checked)}
-                      className="rounded text-amber-600 focus:ring-amber-500 w-3.5 h-3.5 cursor-pointer border-gray-300"
-                    />
-                    <AnimatedIcon name="crown" animation="pulse" size={13} className="text-amber-600 shrink-0" />
-                    <span className="inline-flex items-center gap-1">Luxury Collection 5<AnimatedIcon name="star" animation="pulse" size={11} className="text-amber-500" /></span>
-                  </label>
-                </div>
-
+              <div className="pt-4 mt-4 border-t border-gray-100 flex items-center justify-between">
                 <button
-                  type="submit"
-                  style={{ cursor: 'pointer' }}
-                  className="w-full md:w-auto px-6 sm:px-8 py-2.5 sm:py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-lg hover:shadow-xl transition-all font-bold flex items-center justify-center space-x-2 cursor-pointer text-sm sm:text-base shrink-0 active:scale-98"
+                  type="button"
+                  onClick={() => setLuxuryOnly(!luxuryOnly)}
+                  className={`text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 transition-colors cursor-pointer ${
+                    luxuryOnly ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'text-slate-500 hover:text-slate-800'
+                  }`}
                 >
-                  <Search size={18} />
-                  <span>Search Hotels</span>
+                  <Crown size={13} className={luxuryOnly ? 'text-amber-600' : 'text-slate-400'} />
+                  <span>5-Star Luxury Only</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowTravellerDropdown(false)}
+                  className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full text-xs font-bold cursor-pointer"
+                >
+                  Apply
                 </button>
               </div>
-            </form>
-          )}
-
-          {activeTab === 'transfers' && <TransfersTab variant={variant} />}
-          {activeTab === 'experiences' && <ExperiencesTab variant={variant} />}
-
-          {activeTab !== 'stays' && activeTab !== 'transfers' && activeTab !== 'experiences' && (
-            <div className="text-center py-8 text-white/40">
-              <p className="text-sm">{tabs.find(t => t.id === activeTab)?.label} feature coming soon!</p>
             </div>
-          )}
-        </div>
-      </div>
+          </div>,
+          document.body
+        )}
+
+      {/* 3. Transfers Calendar Modal Portal */}
+      {showTransferCalendar &&
+        createPortal(
+          <div
+            style={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 9999,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: 'rgba(0,0,0,0.4)',
+              backdropFilter: 'blur(2px)'
+            }}
+            onClick={(e) => {
+              if (e.target === e.currentTarget) setShowTransferCalendar(false);
+            }}
+          >
+            <div
+              className="bg-white border border-gray-200 rounded-3xl shadow-2xl p-4 sm:p-6 max-h-[85vh] overflow-auto"
+              style={{ maxWidth: '95vw', margin: 16 }}
+            >
+              <div className="flex items-center justify-between pb-3 mb-2 border-b border-gray-100">
+                <h3 className="font-extrabold text-base text-gray-900">Select Transfer Date & Time</h3>
+                <button
+                  type="button"
+                  onClick={() => setShowTransferCalendar(false)}
+                  className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 cursor-pointer"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+
+              <Suspense fallback={<div className="p-8 text-center text-gray-400">Loading calendar...</div>}>
+                <LazyDateRange
+                  ranges={transferDateRange}
+                  onChange={(item) => {
+                    const sel = item.selection;
+                    if (tripType === 'one_way') {
+                      setTransferDateRange([{ startDate: sel.startDate, endDate: sel.startDate, key: 'selection' }]);
+                    } else {
+                      setTransferDateRange([sel]);
+                    }
+                  }}
+                  minDate={addDays(new Date(), 1)}
+                  maxDate={addDays(new Date(), 365)}
+                  months={window.innerWidth < 640 ? 1 : 2}
+                  direction="horizontal"
+                  rangeColors={['#2563eb']}
+                  showDateDisplay={false}
+                />
+              </Suspense>
+
+              {/* Time Pickers */}
+              <div className="grid grid-cols-2 gap-3 pt-3 border-t border-gray-100">
+                <div>
+                  <label className="text-[10px] font-bold text-gray-500 uppercase block mb-1">Pickup Time</label>
+                  <input
+                    type="time"
+                    value={transferTime}
+                    onChange={(e) => setTransferTime(e.target.value)}
+                    className="w-full text-xs font-bold p-2 bg-slate-50 border border-slate-200 rounded-xl"
+                  />
+                </div>
+                {tripType === 'round_trip' && (
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-500 uppercase block mb-1">Return Time</label>
+                    <input
+                      type="time"
+                      value={returnTime}
+                      onChange={(e) => setReturnTime(e.target.value)}
+                      className="w-full text-xs font-bold p-2 bg-slate-50 border border-slate-200 rounded-xl"
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div className="pt-4 mt-2 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setShowTransferCalendar(false)}
+                  className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full text-xs font-bold cursor-pointer"
+                >
+                  Apply Date & Time
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
+
+      {/* 4. Transfers Passengers Modal Portal */}
+      {showTransferTravellers &&
+        createPortal(
+          <div
+            style={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 9999,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: 'rgba(0,0,0,0.4)',
+              backdropFilter: 'blur(2px)'
+            }}
+            onClick={(e) => {
+              if (e.target === e.currentTarget) setShowTransferTravellers(false);
+            }}
+          >
+            <div
+              className="bg-white border border-gray-200 rounded-3xl shadow-2xl p-4 sm:p-6 w-[360px] max-w-[95vw]"
+              style={{ margin: 16 }}
+            >
+              <div className="flex items-center justify-between pb-3 mb-3 border-b border-gray-100">
+                <h3 className="font-extrabold text-base text-gray-900">Transfer Passengers</h3>
+                <button
+                  type="button"
+                  onClick={() => setShowTransferTravellers(false)}
+                  className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 cursor-pointer"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-xs font-bold text-slate-900 block">Adults</span>
+                    <span className="text-[10px] text-slate-400">Age 12+</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setTransferAdults(Math.max(1, transferAdults - 1))}
+                      disabled={transferAdults <= 1}
+                      className="w-7 h-7 rounded-full border border-slate-300 flex items-center justify-center disabled:opacity-30 hover:bg-white cursor-pointer"
+                    >
+                      <Minus size={12} />
+                    </button>
+                    <span className="w-5 text-center text-xs font-bold">{transferAdults}</span>
+                    <button
+                      type="button"
+                      onClick={() => setTransferAdults(Math.min(10, transferAdults + 1))}
+                      disabled={transferAdults >= 10}
+                      className="w-7 h-7 rounded-full border border-slate-300 flex items-center justify-center disabled:opacity-30 hover:bg-white cursor-pointer"
+                    >
+                      <Plus size={12} />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-xs font-bold text-slate-900 block">Children</span>
+                    <span className="text-[10px] text-slate-400">Age 2-11</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setTransferChildren(Math.max(0, transferChildren - 1))}
+                      disabled={transferChildren <= 0}
+                      className="w-7 h-7 rounded-full border border-slate-300 flex items-center justify-center disabled:opacity-30 hover:bg-white cursor-pointer"
+                    >
+                      <Minus size={12} />
+                    </button>
+                    <span className="w-5 text-center text-xs font-bold">{transferChildren}</span>
+                    <button
+                      type="button"
+                      onClick={() => setTransferChildren(Math.min(6, transferChildren + 1))}
+                      disabled={transferChildren >= 6}
+                      className="w-7 h-7 rounded-full border border-slate-300 flex items-center justify-center disabled:opacity-30 hover:bg-white cursor-pointer"
+                    >
+                      <Plus size={12} />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-xs font-bold text-slate-900 block">Infants</span>
+                    <span className="text-[10px] text-slate-400">Under 2</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setTransferInfants(Math.max(0, transferInfants - 1))}
+                      disabled={transferInfants <= 0}
+                      className="w-7 h-7 rounded-full border border-slate-300 flex items-center justify-center disabled:opacity-30 hover:bg-white cursor-pointer"
+                    >
+                      <Minus size={12} />
+                    </button>
+                    <span className="w-5 text-center text-xs font-bold">{transferInfants}</span>
+                    <button
+                      type="button"
+                      onClick={() => setTransferInfants(Math.min(4, transferInfants + 1))}
+                      disabled={transferInfants >= 4}
+                      className="w-7 h-7 rounded-full border border-slate-300 flex items-center justify-center disabled:opacity-30 hover:bg-white cursor-pointer"
+                    >
+                      <Plus size={12} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-4 mt-3 border-t border-gray-100 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setShowTransferTravellers(false)}
+                  className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full text-xs font-bold cursor-pointer"
+                >
+                  Apply
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
+
+      {/* 5. Experiences Calendar Modal Portal */}
+      {showExperienceCalendar &&
+        createPortal(
+          <div
+            style={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 9999,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: 'rgba(0,0,0,0.4)',
+              backdropFilter: 'blur(2px)'
+            }}
+            onClick={(e) => {
+              if (e.target === e.currentTarget) setShowExperienceCalendar(false);
+            }}
+          >
+            <div
+              className="bg-white border border-gray-200 rounded-3xl shadow-2xl p-4 sm:p-6 max-h-[85vh] overflow-auto"
+              style={{ maxWidth: '95vw', margin: 16 }}
+            >
+              <div className="flex items-center justify-between pb-3 mb-2 border-b border-gray-100">
+                <h3 className="font-extrabold text-base text-gray-900">Select Activity Dates</h3>
+                <button
+                  type="button"
+                  onClick={() => setShowExperienceCalendar(false)}
+                  className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 cursor-pointer"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+
+              <Suspense fallback={<div className="p-8 text-center text-gray-400">Loading calendar...</div>}>
+                <LazyDateRange
+                  ranges={experienceDateRange}
+                  onChange={(item) => setExperienceDateRange([item.selection])}
+                  minDate={addDays(new Date(), 1)}
+                  maxDate={addDays(new Date(), 365)}
+                  months={window.innerWidth < 640 ? 1 : 2}
+                  direction="horizontal"
+                  rangeColors={['#2563eb']}
+                  showDateDisplay={false}
+                />
+              </Suspense>
+
+              <div className="pt-4 mt-2 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setShowExperienceCalendar(false)}
+                  className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full text-xs font-bold cursor-pointer"
+                >
+                  Apply Dates
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
+
+      {/* 6. Experiences Travelers Modal Portal */}
+      {showExperienceTravellers &&
+        createPortal(
+          <div
+            style={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 9999,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: 'rgba(0,0,0,0.4)',
+              backdropFilter: 'blur(2px)'
+            }}
+            onClick={(e) => {
+              if (e.target === e.currentTarget) setShowExperienceTravellers(false);
+            }}
+          >
+            <div
+              className="bg-white border border-gray-200 rounded-3xl shadow-2xl p-4 sm:p-6 w-[360px] max-w-[95vw]"
+              style={{ margin: 16 }}
+            >
+              <div className="flex items-center justify-between pb-3 mb-3 border-b border-gray-100">
+                <h3 className="font-extrabold text-base text-gray-900">Experience Travelers</h3>
+                <button
+                  type="button"
+                  onClick={() => setShowExperienceTravellers(false)}
+                  className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 cursor-pointer"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-xs font-bold text-slate-900 block">Adults</span>
+                    <span className="text-[10px] text-slate-400">Age 18+</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setExperienceAdults(Math.max(1, experienceAdults - 1))}
+                      disabled={experienceAdults <= 1}
+                      className="w-7 h-7 rounded-full border border-slate-300 flex items-center justify-center disabled:opacity-30 hover:bg-white cursor-pointer"
+                    >
+                      <Minus size={12} />
+                    </button>
+                    <span className="w-5 text-center text-xs font-bold">{experienceAdults}</span>
+                    <button
+                      type="button"
+                      onClick={() => setExperienceAdults(Math.min(10, experienceAdults + 1))}
+                      disabled={experienceAdults >= 10}
+                      className="w-7 h-7 rounded-full border border-slate-300 flex items-center justify-center disabled:opacity-30 hover:bg-white cursor-pointer"
+                    >
+                      <Plus size={12} />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-xs font-bold text-slate-900 block">Children</span>
+                    <span className="text-[10px] text-slate-400">Age 0-17</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setExperienceChildren(Math.max(0, experienceChildren - 1))}
+                      disabled={experienceChildren <= 0}
+                      className="w-7 h-7 rounded-full border border-slate-300 flex items-center justify-center disabled:opacity-30 hover:bg-white cursor-pointer"
+                    >
+                      <Minus size={12} />
+                    </button>
+                    <span className="w-5 text-center text-xs font-bold">{experienceChildren}</span>
+                    <button
+                      type="button"
+                      onClick={() => setExperienceChildren(Math.min(6, experienceChildren + 1))}
+                      disabled={experienceChildren >= 6}
+                      className="w-7 h-7 rounded-full border border-slate-300 flex items-center justify-center disabled:opacity-30 hover:bg-white cursor-pointer"
+                    >
+                      <Plus size={12} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-4 mt-3 border-t border-gray-100 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setShowExperienceTravellers(false)}
+                  className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full text-xs font-bold cursor-pointer"
+                >
+                  Apply
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
+    </div>
   );
-};
-
-export default HotelSearchForm;
-
+}

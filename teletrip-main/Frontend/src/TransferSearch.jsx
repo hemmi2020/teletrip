@@ -287,7 +287,7 @@ const TransferSearch = () => {
             </div>
             {showModifySearch && (
               <div className="px-4 sm:px-5 pb-3 pt-2 border-t border-gray-100/50">
-                <HotelSearchForm defaultTab="transfers" variant="light" />
+                <HotelSearchForm defaultTab="transfers" variant="light" onSearch={() => setShowModifySearch(false)} />
               </div>
             )}
             </div>

@@ -675,7 +675,7 @@ const ActivitySearchResults = () => {
             </div>
             {showModifySearch && (
               <div className="px-4 sm:px-5 pb-3 pt-2 border-t border-gray-100/50">
-                <HotelSearchForm defaultTab="experiences" variant="light" />
+                <HotelSearchForm defaultTab="experiences" variant="light" onSearch={() => setShowModifySearch(false)} />
               </div>
             )}
             </div>

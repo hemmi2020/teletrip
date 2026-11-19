@@ -24,7 +24,7 @@ import {
   Loader2,
   Hotel
 } from "lucide-react";
-import { format, addDays } from "date-fns";
+import { format, addDays, parseISO, isValid } from "date-fns";
 import axios from "axios";
 import AnimatedIcon from "./common/AnimatedIcon";
 import {
@@ -382,6 +382,95 @@ export default function HeaderSearchModal({ isOpen, onClose }) {
     }
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, onClose]);
+
+  // Sync state with current URL params when opened
+  useEffect(() => {
+    if (!isOpen) return;
+    const params = new URLSearchParams(window.location.search);
+    const path = window.location.pathname;
+
+    if (path.includes("/transfers") || params.get("from")) {
+      setActiveTab("transfers");
+      const fromParam = params.get("from");
+      const toParam = params.get("to");
+      if (fromParam) {
+        setPickupQuery(fromParam);
+        setSelectedPickup({ name: fromParam, code: params.get("fromCode"), type: params.get("fromType") || "ATLAS" });
+      }
+      if (toParam) {
+        setDropoffQuery(toParam);
+        setSelectedDropoff({ name: toParam, code: params.get("toCode"), type: params.get("toType") || "IATA" });
+      }
+      const tripTypeParam = params.get("tripType");
+      if (tripTypeParam) setTripType(tripTypeParam);
+    } else if (path.includes("/activities") || params.get("destination")) {
+      setActiveTab("experiences");
+      const destParam = params.get("destination");
+      if (destParam) {
+        setExperienceQuery(destParam);
+        setSelectedExperienceLocation({ city: destParam, country: "", displayName: destParam });
+      }
+    } else {
+      setActiveTab("stays");
+      const city = params.get("city");
+      const country = params.get("country");
+      const hotelName = params.get("hotelName");
+      const hotelCode = params.get("hotelCode");
+      const destCode = params.get("destinationCode");
+
+      if (hotelName) {
+        setSearchQuery(hotelName);
+        setSelectedHotelCode(hotelCode || null);
+        setSelectedLocation({
+          name: hotelName,
+          city: city || "",
+          country: country || "",
+          destinationCode: destCode || "",
+          type: "hotel"
+        });
+      } else if (city) {
+        setSearchQuery(country ? `${city}, ${country}` : city);
+        setSelectedHotelCode(null);
+        setSelectedLocation({
+          name: city,
+          city: city,
+          country: country || "",
+          destinationCode: destCode || "",
+          type: "destination"
+        });
+      }
+
+      const checkInStr = params.get("checkIn");
+      const checkOutStr = params.get("checkOut");
+      if (checkInStr && checkOutStr) {
+        try {
+          const s = parseISO(checkInStr);
+          const e = parseISO(checkOutStr);
+          if (isValid(s) && isValid(e)) {
+            setDateRange([{ startDate: s, endDate: e, key: "selection" }]);
+          }
+        } catch (err) {}
+      }
+
+      const roomConfigsStr = params.get("roomConfigs");
+      if (roomConfigsStr) {
+        try {
+          const parsed = JSON.parse(decodeURIComponent(roomConfigsStr));
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setRoomConfigs(parsed);
+          }
+        } catch (err) {}
+      } else {
+        const adultsParam = parseInt(params.get("adults"), 10);
+        const childrenParam = parseInt(params.get("children"), 10);
+        if (adultsParam) {
+          const childAgesStr = params.get("childAges");
+          const childAges = childAgesStr ? childAgesStr.split(",").map((a) => parseInt(a, 10)) : [];
+          setRoomConfigs([{ adults: adultsParam, children: childrenParam || 0, childAges }]);
+        }
+      }
+    }
+  }, [isOpen]);
 
   // Outside click listener
   useEffect(() => {
