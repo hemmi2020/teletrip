@@ -52,7 +52,7 @@ const TAB_DATA = {
     animation: "pulse",
     headlinePrimary: "Hotel, resorts,",
     headlineSecondary: "luxury stays",
-    subtitle: "Compare 250,000+ handpicked hotels & 5-star resorts with guaranteed direct B2B net rates.",
+    subtitle: "Compare 250,000+ handpicked hotels & 5-star resorts with guaranteed best rates.",
     cta: "Start your search",
     images: [
       {
@@ -826,8 +826,8 @@ export default function HeroSection() {
       {/* ════ MAIN CONTAINER ════ */}
       <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full flex-1 flex flex-col justify-between">
         
-        {/* ── TOP SECTION: Dynamic Headline & Subtitle ── */}
-        <div className="pt-2 sm:pt-4 md:pt-6 max-w-2xl">
+        {/* ── TOP SECTION: Dynamic Headline & Subtitle (Optically balanced vertical alignment) ── */}
+        <div className="flex-1 flex flex-col justify-center max-w-2xl pt-2 sm:pt-4 pb-6 sm:pb-12 md:pb-16">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}
@@ -866,7 +866,7 @@ export default function HeroSection() {
         {/* ════ BOTTOM BAR: 3 TABS & FLOATING CAPSULE SEARCH BAR ════ */}
         <div
           ref={searchBarRef}
-          className="mt-4 sm:mt-6 mb-2 max-w-5xl relative z-50 w-full search-form-section"
+          className="pb-2 sm:pb-4 max-w-5xl relative z-50 w-full search-form-section"
         >
           {/* Transfer Error Alert */}
           {activeTab === "transfers" && transferError && (
@@ -1075,16 +1075,23 @@ export default function HeroSection() {
                               </div>
                             ) : (
                               <>
-                                {/* Section 1: Destinations */}
-                                {filteredLocations.filter((l) => l.type !== "hotel").length > 0 && (
-                                  <div>
-                                    <div className="px-3 pt-2 pb-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-slate-50/70 flex items-center gap-1.5">
-                                      <MapPin size={12} className="text-blue-600" />
-                                      <span>Destinations & Cities</span>
-                                    </div>
-                                    {filteredLocations
-                                      .filter((l) => l.type !== "hotel")
-                                      .map((loc, i) => (
+                                {/* Section 1: Destinations (Filtered or Fallback to Top Destinations) */}
+                                {(() => {
+                                  const dests = filteredLocations.filter((l) => l.type !== "hotel");
+                                  const list = dests.length > 0 ? dests : TOP_DESTINATIONS.slice(0, 6);
+                                  const isDefault = dests.length === 0;
+                                  return (
+                                    <div>
+                                      <div className="px-3 pt-2 pb-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-slate-50/70 flex items-center justify-between">
+                                        <div className="flex items-center gap-1.5">
+                                          <MapPin size={12} className="text-blue-600" />
+                                          <span>{isDefault ? "Top Destinations" : "Destinations & Cities"}</span>
+                                        </div>
+                                        {isDefault && (
+                                          <span className="text-[9px] text-slate-400 font-medium">Popular</span>
+                                        )}
+                                      </div>
+                                      {list.map((loc, i) => (
                                         <div
                                           key={`loc-${i}`}
                                           onClick={() => handleLocationSelect(loc)}
@@ -1107,40 +1114,50 @@ export default function HeroSection() {
                                           </span>
                                         </div>
                                       ))}
-                                  </div>
-                                )}
-
-                                {/* Section 2: Hotels */}
-                                {hotelSuggestions.length > 0 && (
-                                  <div>
-                                    <div className="px-3 pt-2 pb-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-slate-50/70 flex items-center gap-1.5">
-                                      <Building2 size={12} className="text-emerald-600" />
-                                      <span>Hotels & Properties</span>
                                     </div>
-                                    {hotelSuggestions.map((hotel, idx) => (
-                                      <div
-                                        key={`h-${idx}`}
-                                        onClick={() => handleHotelSelect(hotel)}
-                                        className="px-3 py-2 hover:bg-emerald-50/70 cursor-pointer flex items-center justify-between gap-2 transition-colors border-b border-slate-50 last:border-0"
-                                      >
-                                        <div className="flex items-center gap-2 min-w-0">
-                                          <Crown className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                                          <div className="truncate">
-                                            <div className="font-extrabold text-xs text-slate-900 truncate">
-                                              {hotel.name}
-                                            </div>
-                                            <div className="text-[10px] text-slate-400 truncate">
-                                              {hotel.zoneName || hotel.destinationName || hotel.city || ""}
+                                  );
+                                })()}
+
+                                {/* Section 2: Hotels (Filtered or Fallback to Top Hotels) */}
+                                {(() => {
+                                  const hList = hotelSuggestions.length > 0 ? hotelSuggestions : TOP_HOTELS.slice(0, 4);
+                                  const isDefault = hotelSuggestions.length === 0;
+                                  return (
+                                    <div>
+                                      <div className="px-3 pt-2 pb-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-slate-50/70 flex items-center justify-between">
+                                        <div className="flex items-center gap-1.5">
+                                          <Building2 size={12} className="text-emerald-600" />
+                                          <span>{isDefault ? "Featured Hotels" : "Hotels & Properties"}</span>
+                                        </div>
+                                        {isDefault && (
+                                          <span className="text-[9px] text-slate-400 font-medium">Iconic</span>
+                                        )}
+                                      </div>
+                                      {hList.map((hotel, idx) => (
+                                        <div
+                                          key={`h-${idx}`}
+                                          onClick={() => handleHotelSelect(hotel)}
+                                          className="px-3 py-2 hover:bg-emerald-50/70 cursor-pointer flex items-center justify-between gap-2 transition-colors border-b border-slate-50 last:border-0"
+                                        >
+                                          <div className="flex items-center gap-2 min-w-0">
+                                            <Crown className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                                            <div className="truncate">
+                                              <div className="font-extrabold text-xs text-slate-900 truncate">
+                                                {hotel.name}
+                                              </div>
+                                              <div className="text-[10px] text-slate-400 truncate">
+                                                {hotel.zoneName || hotel.destinationName || hotel.city || ""}
+                                              </div>
                                             </div>
                                           </div>
+                                          <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full shrink-0">
+                                            Hotel
+                                          </span>
                                         </div>
-                                        <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full shrink-0">
-                                          Hotel
-                                        </span>
-                                      </div>
-                                    ))}
-                                  </div>
-                                )}
+                                      ))}
+                                    </div>
+                                  );
+                                })()}
                               </>
                             )}
                           </div>
