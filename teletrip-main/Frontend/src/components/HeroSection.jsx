@@ -50,7 +50,7 @@ const TAB_DATA = {
     label: "Stays",
     icon: "hotel",
     animation: "pulse",
-    headlinePrimary: "Hotel, resorts,",
+    headlinePrimary: "Hotels, resorts,",
     headlineSecondary: "luxury stays",
     subtitle: "Compare 250,000+ handpicked hotels & 5-star resorts with guaranteed best rates.",
     cta: "Start your search",
@@ -851,7 +851,7 @@ export default function HeroSection() {
   const currentImage = currentTab.images[currentSlide] || currentTab.images[0];
 
   return (
-    <section className="relative w-full h-[100svh] min-h-[580px] max-h-[1050px] overflow-visible bg-white flex flex-col justify-between pt-16 sm:pt-20 pb-4 sm:pb-6 select-none">
+    <section className="relative w-full h-[100svh] min-h-[620px] max-h-[1050px] overflow-visible bg-white flex flex-col justify-between pt-20 sm:pt-24 pb-8 sm:pb-12 select-none">
       
       {/* ════ BACKGROUND SLIDING IMAGES (Mid-to-Left Fade-to-Zero) ════ */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
@@ -890,10 +890,10 @@ export default function HeroSection() {
       </div>
 
       {/* ════ MAIN CONTAINER ════ */}
-      <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full flex-1 flex flex-col justify-center py-6 sm:py-8 lg:py-12">
+      <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full flex-1 flex flex-col justify-center my-auto py-4 sm:py-6 lg:py-8">
         
         {/* ── TOP SECTION: Dynamic Headline & Subtitle ── */}
-        <div className="max-w-3xl mb-5 sm:mb-7">
+        <div className="max-w-3xl mb-8 sm:mb-10 lg:mb-12">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}
@@ -902,10 +902,10 @@ export default function HeroSection() {
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.32, ease: "easeOut" }}
             >
-              {/* Dynamic Tagline */}
-              <h1 className="text-3xl sm:text-5xl md:text-6xl font-black text-slate-900 tracking-tight leading-[1.08] mb-2 sm:mb-3">
-                {currentTab.headlinePrimary}{" "}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-500">
+              {/* Dynamic Tagline (Always 2 Balanced Lines) */}
+              <h1 className="text-3xl sm:text-5xl md:text-6xl font-black text-slate-900 tracking-tight leading-[1.12] mb-3.5 sm:mb-4 lg:mb-5">
+                <span className="block">{currentTab.headlinePrimary}</span>
+                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-500">
                   {currentTab.headlineSecondary}
                 </span>
               </h1>
@@ -939,7 +939,7 @@ export default function HeroSection() {
 
           {/* ── 3 Category Tabs (Stays, Transfers, Experiences) + Trip Type Toggle ── */}
           <div
-            className="flex items-center justify-between mb-2 px-3 sm:px-4 transition-all duration-200"
+            className="flex items-center justify-between mb-3.5 sm:mb-4 px-3 sm:px-4 transition-all duration-200"
             style={{
               opacity: Math.max(0, 1 - collapseProgress * 1.5),
               transform: `translateY(${-collapseProgress * 8}px)`,
