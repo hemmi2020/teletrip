@@ -131,35 +131,30 @@ const Header = () => {
             <img src={logo} alt="Telitrip" className="h-10 sm:h-12 w-auto object-contain" />
           </NavLink>
 
-          {/* ── Center: Minimized Search Button (Appears on scroll) ── */}
-          <AnimatePresence>
-            {scrolled && (
-              <motion.button
-                type="button"
-                onClick={() => setIsSearchModalOpen(true)}
-                initial={{ opacity: 0, scale: 0.88, y: -4 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.88, y: -4 }}
-                transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-                className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-1.5 rounded-full bg-white hover:bg-slate-50 border border-slate-200/90 shadow-[0_2px_12px_rgba(0,0,0,0.06)] hover:shadow-md transition-all cursor-pointer group mx-auto"
-                title="Search stays, transfers & experiences"
-              >
-                <div className="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-                  <Search className="w-3.5 h-3.5 text-white" />
-                </div>
-                <div className="flex items-center gap-1.5 sm:gap-2 text-xs">
-                  <span className="font-extrabold text-slate-800">Where to?</span>
-                  <span className="w-1 h-1 rounded-full bg-slate-300 hidden sm:inline" />
-                  <span className="font-semibold text-slate-600 hidden sm:inline">Any week</span>
-                  <span className="w-1 h-1 rounded-full bg-slate-300 hidden md:inline" />
-                  <span className="font-medium text-slate-400 hidden md:inline">Add guests</span>
-                </div>
-              </motion.button>
-            )}
-          </AnimatePresence>
-
           {/* Desktop Right */}
           <div className="hidden md:flex items-center gap-2 flex-shrink-0">
+            {/* Search Icon Button with Blue Background (Animatedly appears on scroll adjacent to icons) */}
+            <AnimatePresence>
+              {scrolled && (
+                <motion.button
+                  type="button"
+                  onClick={() => setIsSearchModalOpen(true)}
+                  initial={{ opacity: 0, scale: 0.3, y: 10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.3, y: 10 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                  whileHover={{ scale: 1.08 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="flex items-center justify-center rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow-md transition-colors cursor-pointer shrink-0"
+                  style={{ width: 36, height: 36, minHeight: 'unset' }}
+                  title="Search Stays, Transfers & Experiences"
+                  aria-label="Search"
+                >
+                  <Search className="w-4 h-4 text-white" />
+                </motion.button>
+              )}
+            </AnimatePresence>
+
             {/* Contact — phone icon with tooltip */}
             <NavLink
               to="/contact"
@@ -204,6 +199,27 @@ const Header = () => {
 
           {/* Mobile */}
           <div className="flex md:hidden items-center gap-2 flex-shrink-0">
+            {/* Mobile Search Icon Button with Blue Background (Animatedly appears on scroll adjacent to icons) */}
+            <AnimatePresence>
+              {scrolled && (
+                <motion.button
+                  type="button"
+                  onClick={() => setIsSearchModalOpen(true)}
+                  initial={{ opacity: 0, scale: 0.3, y: 8 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.3, y: 8 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="flex items-center justify-center rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition-colors cursor-pointer shrink-0"
+                  style={{ width: 38, height: 38, minHeight: 'unset' }}
+                  title="Search"
+                  aria-label="Search"
+                >
+                  <Search className="w-4 h-4 text-white" />
+                </motion.button>
+              )}
+            </AnimatePresence>
+
             <button onClick={() => setIsCartOpen(true)} className="relative flex items-center justify-center rounded-full bg-gray-100" style={{ width: 38, height: 38, minHeight: 'unset' }}>
               <ShoppingCart className="w-4 h-4 text-gray-700" />
               {getTotalItems() > 0 && (
