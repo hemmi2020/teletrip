@@ -13,8 +13,16 @@ const Header = () => {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [isSearchSticky, setIsSearchSticky] = useState(false);
   const { user, setUser } = useContext(UserDataContext);
   const { getTotalItems, items: cartItems, getTotalPrice } = useCart();
+
+  // Listen for search form becoming sticky on the page (replacing header pill)
+  useEffect(() => {
+    const handler = (e) => setIsSearchSticky(Boolean(e.detail?.isSticky));
+    window.addEventListener('heroSearchSticky', handler);
+    return () => window.removeEventListener('heroSearchSticky', handler);
+  }, []);
 
   // Track scroll — pill becomes frosted glass after 60px
   useEffect(() => {
@@ -110,11 +118,24 @@ const Header = () => {
           animation: headerPillBounceIn 800ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
         }
       `}</style>
-      <header className={headerClass} style={{ transition: 'padding 0.3s ease' }}>
+      <header
+        className={headerClass}
+        style={{
+          transition: 'padding 0.3s ease, opacity 0.3s ease, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+          opacity: isSearchSticky ? 0 : 1,
+          pointerEvents: isSearchSticky ? 'none' : undefined,
+          transform: isSearchSticky ? 'translateY(-28px) scale(0.96)' : 'translateY(0) scale(1)',
+        }}
+      >
         <div
           data-testid="header-pill"
           className="header-pill-bounce pointer-events-auto w-full max-w-5xl flex items-center justify-between gap-3 py-2"
-          style={{ ...pillStyle, paddingLeft: '20px', paddingRight: '12px' }}
+          style={{
+            ...pillStyle,
+            paddingLeft: '20px',
+            paddingRight: '12px',
+            pointerEvents: isSearchSticky ? 'none' : 'auto',
+          }}
         >
           {/* Logo — with left padding, full color */}
           <NavLink to="/home" className="flex-shrink-0 flex items-center pl-1">

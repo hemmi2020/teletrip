@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search,
@@ -12,10 +12,13 @@ import {
   X,
   Building2,
   Navigation,
-  Sparkles
+  Sparkles,
+  ShoppingCart
 } from "lucide-react";
 import { format, addDays } from "date-fns";
 import AnimatedIcon from "./common/AnimatedIcon";
+import logo from "../images/Telitrip-Logo.png";
+import { useCart } from "./CartSystem";
 import {
   TOP_DESTINATIONS,
   TOP_HOTELS,
@@ -97,6 +100,38 @@ const TAB_DATA = {
 
 export default function HeroSection() {
   const navigate = useNavigate();
+  const { getTotalItems } = useCart();
+  const cartCount = getTotalItems ? getTotalItems() : 0;
+
+  // Sticky search form state & sentinel ref
+  const searchSentinelRef = useRef(null);
+  const [isSticky, setIsSticky] = useState(false);
+
+  // Monitor scroll: make search form sticky when scroll down reaches it (replacing header pill)
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!searchSentinelRef.current) return;
+      const rect = searchSentinelRef.current.getBoundingClientRect();
+      // When the search block reaches near the top (<= 24px), make it sticky
+      const shouldStick = rect.top <= 24;
+      setIsSticky(shouldStick);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    window.addEventListener("resize", handleScroll, { passive: true });
+    handleScroll();
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", handleScroll);
+      window.dispatchEvent(new CustomEvent("heroSearchSticky", { detail: { isSticky: false } }));
+    };
+  }, []);
+
+  // Broadcast sticky state to Header.jsx
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent("heroSearchSticky", { detail: { isSticky } }));
+  }, [isSticky]);
 
   // Active Category Tab: 'stays' | 'transfers' | 'experiences'
   const [activeTab, setActiveTab] = useState("stays");
@@ -370,48 +405,113 @@ export default function HeroSection() {
 
         </div>
 
-        {/* ════ BOTTOM BAR: 3 TABS & FLOATING CAPSULE SEARCH BAR (HIGH Z-INDEX) ════ */}
-        <div ref={searchBarRef} className="mt-4 sm:mt-6 mb-2 max-w-5xl relative z-40 w-full">
-          
-          {/* ── 3 Category Tabs (Stays, Transfers, Experiences) ── */}
-          <div className="flex items-center gap-6 sm:gap-8 mb-2 px-3 sm:px-4">
-            {tabs.map((tab) => {
-              const isActive = activeTab === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  type="button"
-                  onClick={() => {
-                    if (activeTab !== tab.id) {
-                      setSlideDirection(1);
-                      setActiveTab(tab.id);
-                      setCurrentSlide(0);
-                    }
-                  }}
-                  className={`inline-flex items-center gap-2 py-1.5 text-xs sm:text-sm transition-all duration-200 cursor-pointer ${
-                    isActive
-                      ? "text-slate-900 font-extrabold"
-                      : "text-slate-500 hover:text-slate-900 font-medium"
+        {/* ════ BOTTOM BAR SENTINEL (HOLDS POSITION IN HERO SECTION) ════ */}
+        <div
+          ref={searchSentinelRef}
+          className="mt-4 sm:mt-6 mb-2 max-w-5xl relative z-40 w-full"
+          style={{
+            minHeight: isSticky ? "88px" : "auto",
+          }}
+        >
+          {/* The Search Block: switches from in-flow to fixed top-0 when sticky (replacing header pill) */}
+          <div
+            ref={searchBarRef}
+            className={
+              isSticky
+                ? "fixed top-0 left-0 right-0 z-[100] flex justify-center px-3 sm:px-6 pt-2 sm:pt-3 pointer-events-none transition-all duration-300"
+                : "relative w-full transition-all duration-300"
+            }
+          >
+            <div className="pointer-events-auto w-full max-w-5xl">
+
+              {/* ── Top Row: 3 Category Tabs + (when sticky) Logo & Cart Button ── */}
+              <div
+                className={`flex items-center mb-2 px-3 sm:px-4 transition-all duration-300 ${
+                  isSticky ? "justify-between" : "justify-start gap-6 sm:gap-8"
+                }`}
+              >
+                {/* Left: Logo (visible when sticky replacing header pill) */}
+                {isSticky && (
+                  <Link
+                    to="/home"
+                    onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+                    className="flex items-center gap-2 shrink-0 py-0.5"
+                    title="Telitrip Home"
+                  >
+                    <img src={logo} alt="Telitrip" className="h-8 sm:h-9 w-auto object-contain" />
+                  </Link>
+                )}
+
+                {/* 3 Category Tabs (Stays, Transfers, Experiences) */}
+                <div
+                  className={`flex items-center gap-4 sm:gap-6 ${
+                    isSticky
+                      ? "bg-white/90 backdrop-blur-md px-3.5 py-1 rounded-full shadow-sm border border-slate-200/60"
+                      : ""
                   }`}
                 >
-                  {/* Dot indicator matching attached screenshot */}
-                  {isActive && (
-                    <span className="w-2 h-2 rounded-full bg-slate-900 shrink-0" />
-                  )}
-                  <AnimatedIcon
-                    name={tab.icon}
-                    animation={tab.animation}
-                    size={14}
-                    className={isActive ? "text-blue-600" : "text-slate-400"}
-                  />
-                  <span>{tab.label}</span>
-                </button>
-              );
-            })}
-          </div>
+                  {tabs.map((tab) => {
+                    const isActive = activeTab === tab.id;
+                    return (
+                      <button
+                        key={tab.id}
+                        type="button"
+                        onClick={() => {
+                          if (activeTab !== tab.id) {
+                            setSlideDirection(1);
+                            setActiveTab(tab.id);
+                            setCurrentSlide(0);
+                          }
+                        }}
+                        className={`inline-flex items-center gap-1.5 py-1 text-xs sm:text-sm transition-all duration-200 cursor-pointer ${
+                          isActive
+                            ? "text-slate-900 font-extrabold"
+                            : "text-slate-500 hover:text-slate-900 font-medium"
+                        }`}
+                      >
+                        {isActive && (
+                          <span className="w-1.5 h-1.5 rounded-full bg-slate-900 shrink-0" />
+                        )}
+                        <AnimatedIcon
+                          name={tab.icon}
+                          animation={tab.animation}
+                          size={14}
+                          className={isActive ? "text-blue-600" : "text-slate-400"}
+                        />
+                        <span>{tab.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
 
-          {/* ── Floating Capsule Search Bar (z-50) ── */}
-          <div className="bg-white rounded-3xl sm:rounded-full shadow-[0_12px_45px_rgba(0,0,0,0.09)] border border-slate-100 p-1.5 sm:p-2 transition-all relative z-40">
+                {/* Right: Cart Button (visible when sticky replacing header pill) */}
+                {isSticky && (
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => window.dispatchEvent(new CustomEvent("openCart"))}
+                      className="relative flex items-center justify-center rounded-full bg-white/90 hover:bg-slate-100 border border-slate-200/80 w-8 h-8 transition-all shadow-xs cursor-pointer"
+                      title="View Cart"
+                    >
+                      <ShoppingCart className="w-4 h-4 text-slate-700" />
+                      {cartCount > 0 && (
+                        <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center leading-none">
+                          {cartCount}
+                        </span>
+                      )}
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* ── Floating Capsule Search Bar (With Frosted Glass & Shadow in Sticky Mode) ── */}
+              <div
+                className={`rounded-3xl sm:rounded-full transition-all relative z-40 p-1.5 sm:p-2 ${
+                  isSticky
+                    ? "bg-white/95 backdrop-blur-md shadow-[0_16px_40px_rgba(0,0,0,0.12)] border border-slate-200/90"
+                    : "bg-white shadow-[0_12px_45px_rgba(0,0,0,0.09)] border border-slate-100"
+                }`}
+              >
             
             <form onSubmit={handleSearchSubmit} className="flex flex-col sm:flex-row sm:items-center w-full gap-2 sm:gap-0">
               
@@ -871,8 +971,10 @@ export default function HeroSection() {
           </div>
 
         </div>
-
       </div>
-    </section>
+    </div>
+
+  </div>
+</section>
   );
 }
