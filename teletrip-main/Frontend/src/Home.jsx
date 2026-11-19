@@ -202,6 +202,19 @@ const Home = () => {
     }
   ];
 
+  // Scroll smoothly to the search form section
+  const scrollToSearchForm = () => {
+    const el = document.querySelector(".search-form-section") || document.getElementById("search-form");
+    if (el) {
+      const rect = el.getBoundingClientRect();
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      const targetY = scrollTop + rect.top - 120;
+      window.scrollTo({ top: Math.max(0, targetY), behavior: "smooth" });
+    } else {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
   // Auto-fill and scroll to hero search form when destination card is clicked
   const handleDestinationClick = (dest) => {
     window.dispatchEvent(
@@ -209,7 +222,7 @@ const Home = () => {
         detail: { destination: dest }
       })
     );
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    scrollToSearchForm();
   };
 
   const testimonials = [
@@ -400,7 +413,7 @@ const Home = () => {
               <p className="text-white/45 text-[12px] mb-5 relative">Find your perfect stay, anywhere in the world.</p>
               <div className="flex flex-wrap items-center gap-2.5">
                 <button
-                  onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                  onClick={scrollToSearchForm}
                   className="relative px-5 py-2.5 rounded-full text-[11px] font-bold tracking-widest uppercase text-white active:scale-95 transition-transform cursor-pointer"
                   style={{ background: 'linear-gradient(135deg, #3b82f6, #2563eb)', letterSpacing: '0.08em', minHeight: 'unset', boxShadow: '0 4px 16px rgba(37,99,235,0.35)' }}
                 >
@@ -464,7 +477,7 @@ const Home = () => {
                 </h2>
                 <p className="text-gray-500 text-lg mb-10 max-w-lg mx-auto">Join millions of travellers who book smarter with Telitrip.</p>
                 <div className="flex items-center justify-center gap-3">
-                  <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="px-8 py-3.5 rounded-full text-[13px] font-bold tracking-widest uppercase text-white bg-blue-600 hover:bg-blue-700 transition-all cursor-pointer shadow-md hover:shadow-lg" style={{ letterSpacing: '0.08em', minHeight: 'unset' }}>
+                  <button onClick={scrollToSearchForm} className="px-8 py-3.5 rounded-full text-[13px] font-bold tracking-widest uppercase text-white bg-blue-600 hover:bg-blue-700 transition-all cursor-pointer shadow-md hover:shadow-lg" style={{ letterSpacing: '0.08em', minHeight: 'unset' }}>
                     Start Searching
                   </button>
                   <Link to="/contact" className="px-8 py-3.5 rounded-full text-[13px] font-bold tracking-widest uppercase text-gray-700 bg-white border border-gray-300 hover:border-gray-400 hover:text-gray-900 transition-all cursor-pointer shadow-xs hover:shadow-sm" style={{ letterSpacing: '0.08em', minHeight: 'unset' }}>

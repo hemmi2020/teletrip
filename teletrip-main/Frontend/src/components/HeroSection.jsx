@@ -554,7 +554,10 @@ export default function HeroSection() {
       setShowLocationDropdown(false);
 
       if (searchBarRef.current) {
-        searchBarRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+        const rect = searchBarRef.current.getBoundingClientRect();
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        const targetY = scrollTop + rect.top - 120;
+        window.scrollTo({ top: Math.max(0, targetY), behavior: "smooth" });
       } else {
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
@@ -562,6 +565,38 @@ export default function HeroSection() {
 
     window.addEventListener("selectHeroDestination", handleSelectDestination);
     return () => window.removeEventListener("selectHeroDestination", handleSelectDestination);
+  }, []);
+
+  // Listen for tab switch events from external components (e.g. WhyTeliTripSlider)
+  useEffect(() => {
+    const handleSwitchTab = (e) => {
+      const targetTab = e.detail?.tab;
+      if (targetTab && TAB_DATA[targetTab]) {
+        setActiveTab(targetTab);
+      }
+      setTimeout(() => {
+        if (searchBarRef.current) {
+          const rect = searchBarRef.current.getBoundingClientRect();
+          const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+          const targetY = scrollTop + rect.top - 120;
+          window.scrollTo({ top: Math.max(0, targetY), behavior: "smooth" });
+        } else {
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }
+      }, 50);
+    };
+
+    window.addEventListener("switchHeroTab", handleSwitchTab);
+    return () => window.removeEventListener("switchHeroTab", handleSwitchTab);
+  }, []);
+
+  // Check URL query parameters on mount (e.g. /?tab=transfers)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tabParam = params.get("tab");
+    if (tabParam && TAB_DATA[tabParam]) {
+      setActiveTab(tabParam);
+    }
   }, []);
 
   const handleStartSearchClick = () => {

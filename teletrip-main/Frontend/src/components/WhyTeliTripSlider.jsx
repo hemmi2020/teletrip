@@ -17,69 +17,57 @@ import {
 const SLIDES = [
   {
     id: "hotels",
-    eyebrow: "01 • HANDPICKED RESORTS & STAYS",
-    cardBadge: "01",
+    serviceTab: "stays",
     title: "HOTELS",
     description: "250,000+ properties worldwide with direct member rates and guaranteed booking.",
     cta: "Explore Hotels",
     icon: Building2,
-    image: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=1920&auto=format&fit=crop&q=85",
-    href: "/hotel-search-results?city=Dubai&country=United%20Arab%20Emirates"
+    image: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=1920&auto=format&fit=crop&q=85"
   },
   {
     id: "transfers",
-    eyebrow: "02 • AIRPORT & CITY MOBILITY",
-    cardBadge: "02",
+    serviceTab: "transfers",
     title: "TRANSFERS",
     description: "Reliable airport pickups, private executive cars, and premium group shuttles.",
     cta: "Book a Transfer",
     icon: Car,
-    image: "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?w=1920&auto=format&fit=crop&q=85",
-    href: "/transfers"
+    image: "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?w=1920&auto=format&fit=crop&q=85"
   },
   {
     id: "experiences",
-    eyebrow: "03 • CURATED LOCAL ADVENTURES",
-    cardBadge: "03",
+    serviceTab: "experiences",
     title: "EXPERIENCES",
     description: "Handpicked tours, desert safaris, yacht cruises, and bucket-list cultural excursions.",
     cta: "Discover Experiences",
     icon: Compass,
-    image: "https://images.unsplash.com/photo-1534447677768-be436bb09401?w=1920&auto=format&fit=crop&q=85",
-    href: "/activity-search-results"
+    image: "https://images.unsplash.com/photo-1534447677768-be436bb09401?w=1920&auto=format&fit=crop&q=85"
   },
   {
     id: "best-prices",
-    eyebrow: "04 • TRANSPARENT VALUE",
-    cardBadge: "04",
+    serviceTab: "stays",
     title: "BEST PRICES",
     description: "We compare rates across global inventory so you never overpay for your journey.",
     cta: "Compare Deals",
     icon: CreditCard,
-    image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&auto=format&fit=crop&q=85",
-    href: "/destinations"
+    image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&auto=format&fit=crop&q=85"
   },
   {
     id: "secure-booking",
-    eyebrow: "05 • DATA PRIVACY & SAFETY",
-    cardBadge: "05",
+    serviceTab: "stays",
     title: "SECURE BOOKING",
     description: "End-to-end encrypted payments with instant vouchers and 24/7 dedicated support.",
     cta: "Learn More",
     icon: ShieldCheck,
-    image: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=1920&auto=format&fit=crop&q=85",
-    href: "/about"
+    image: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=1920&auto=format&fit=crop&q=85"
   },
   {
     id: "global-coverage",
-    eyebrow: "06 • WORLDWIDE DESTINATIONS",
-    cardBadge: "06",
+    serviceTab: "stays",
     title: "GLOBAL COVERAGE",
     description: "Available in 190+ countries across 6 continents. Book anywhere, travel everywhere.",
     cta: "View Destinations",
     icon: Globe,
-    image: "https://images.unsplash.com/photo-1519501025264-65ba15a82390?w=1920&auto=format&fit=crop&q=85",
-    href: "/destinations"
+    image: "https://images.unsplash.com/photo-1519501025264-65ba15a82390?w=1920&auto=format&fit=crop&q=85"
   }
 ];
 
@@ -175,14 +163,32 @@ export default function WhyTeliTripSlider() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [handleNext, handlePrev]);
 
-  // CTA navigation handler
+  // CTA navigation handler: Switch hero search form to corresponding service tab and scroll to it
   const handleCtaClick = (slide) => {
-    if (slide.href) {
-      if (slide.href.startsWith("/")) {
-        navigate(slide.href);
-      } else {
-        window.location.href = slide.href;
-      }
+    const tab = slide.serviceTab || "stays";
+
+    if (window.location.pathname !== "/" && window.location.pathname !== "") {
+      navigate(`/?tab=${tab}`);
+      return;
+    }
+
+    window.dispatchEvent(
+      new CustomEvent("switchHeroTab", {
+        detail: { tab }
+      })
+    );
+
+    const searchFormEl =
+      document.querySelector(".search-form-section") ||
+      document.getElementById("search-form");
+
+    if (searchFormEl) {
+      const rect = searchFormEl.getBoundingClientRect();
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      const targetY = scrollTop + rect.top - 120;
+      window.scrollTo({ top: Math.max(0, targetY), behavior: "smooth" });
+    } else {
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
 
@@ -254,25 +260,7 @@ export default function WhyTeliTripSlider() {
                 exit="exit"
                 className="flex flex-col"
               >
-                {/* Accent bar & Feature Eyebrow (No duplicate "WHY TELITRIP") */}
-                <div className="overflow-hidden mb-3">
-                  <motion.div
-                    variants={{
-                      initial: { y: "100%", opacity: 0 },
-                      animate: { y: "0%", opacity: 1 },
-                      exit: { y: "-100%", opacity: 0 }
-                    }}
-                    transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-                    className="flex items-center gap-3"
-                  >
-                    <div className="w-8 h-[2px] bg-[#2563EB]" />
-                    <span className="text-xs sm:text-sm uppercase tracking-widest text-[#60a5fa] font-bold">
-                      {activeSlide.eyebrow}
-                    </span>
-                  </motion.div>
-                </div>
-
-                {/* Bold Condensed Uppercase Headline */}
+                {/* Bold Condensed Uppercase Headline (Clean, no upper eyebrow lines) */}
                 <div className="overflow-hidden mb-4">
                   <motion.h3
                     variants={{
@@ -280,8 +268,9 @@ export default function WhyTeliTripSlider() {
                       animate: { y: "0%", opacity: 1 },
                       exit: { y: "-100%", opacity: 0 }
                     }}
-                    transition={{ duration: 0.5, delay: 0.05, ease: [0.16, 1, 0.3, 1] }}
-                    className="text-4xl sm:text-5xl lg:text-7xl font-extrabold uppercase tracking-tight leading-[0.95] text-white"
+                    transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                    onClick={() => handleCtaClick(activeSlide)}
+                    className="text-4xl sm:text-5xl lg:text-7xl font-extrabold uppercase tracking-tight leading-[0.95] text-white cursor-pointer hover:text-blue-200 transition-colors"
                   >
                     {activeSlide.title}
                   </motion.h3>
@@ -366,18 +355,23 @@ export default function WhyTeliTripSlider() {
                       {/* Card Gradient Overlay */}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/45 to-transparent pointer-events-none" />
 
-                      {/* Top-Right Category Icon */}
-                      <div className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/45 backdrop-blur-md border border-white/20 flex items-center justify-center text-white/90 group-hover:bg-[#2563EB] group-hover:border-transparent transition-colors duration-300">
+                      {/* Top-Right Category Icon (One-click jump to service search) */}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleCtaClick(slide);
+                        }}
+                        title={`Search ${slide.title}`}
+                        aria-label={`Search ${slide.title}`}
+                        className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/45 backdrop-blur-md border border-white/20 flex items-center justify-center text-white/90 hover:bg-[#2563EB] hover:border-transparent transition-colors duration-300 z-10 cursor-pointer"
+                      >
                         <slide.icon className="w-4 h-4" />
-                      </div>
+                      </button>
 
-                      {/* Card Info at bottom-left */}
+                      {/* Card Info at bottom-left: Clean uppercase title without upper heading lines or badges */}
                       <div className="absolute bottom-4 left-4 right-4 z-10 pointer-events-none">
-                        <div className="w-4 h-[2px] bg-white/60 mb-2 group-hover:w-8 group-hover:bg-[#2563EB] transition-all duration-300" />
-                        <div className="text-[10px] uppercase tracking-wider text-[#60a5fa] font-bold mb-0.5">
-                          {slide.cardBadge}
-                        </div>
-                        <div className="text-sm lg:text-base font-extrabold text-white tracking-wide uppercase leading-tight truncate">
+                        <div className="text-sm lg:text-base font-extrabold text-white tracking-wide uppercase leading-tight truncate drop-shadow-md">
                           {slide.title}
                         </div>
                       </div>
