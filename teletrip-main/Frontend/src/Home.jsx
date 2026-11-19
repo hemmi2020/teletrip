@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Helmet } from "react-helmet-async";
@@ -8,12 +8,195 @@ import WhyTeliTripSlider from "./components/WhyTeliTripSlider";
 import Slider from "./components/Slider";
 import Footer from "./components/Footer";
 import Carousel from "./components/Carousel";
-import { Hotel, Car, Compass, CreditCard, Shield, Globe, ArrowRight, Star, TrendingUp, MapPin } from "lucide-react";
+import {
+  Hotel,
+  Car,
+  Compass,
+  CreditCard,
+  Shield,
+  Globe,
+  ArrowRight,
+  Star,
+  TrendingUp,
+  MapPin,
+  ChevronLeft,
+  ChevronRight
+} from "lucide-react";
+
+const CITY_HOTEL_COUNTS = {
+  Dubai: "1,420+ hotels",
+  Paris: "1,280+ hotels",
+  London: "1,650+ hotels",
+  Tokyo: "940+ hotels",
+  Bali: "820+ hotels",
+  "New York": "1,150+ hotels",
+  Rome: "890+ hotels",
+  Istanbul: "760+ hotels",
+  Singapore: "630+ hotels",
+  Bangkok: "1,100+ hotels",
+  Barcelona: "910+ hotels",
+  Maldives: "380+ luxury resorts",
+  Sydney: "740+ hotels",
+  Amsterdam: "670+ hotels",
+  Cairo: "520+ hotels",
+  Santorini: "430+ boutique stays",
+  "Rio de Janeiro": "610+ hotels",
+  "Abu Dhabi": "490+ hotels"
+};
+
+const fallbackDestinations = [
+  {
+    _id: '1',
+    name: "Dubai",
+    country: "United Arab Emirates",
+    image: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=600&h=800&fit=crop&q=80",
+    tag: "Trending",
+    hotelCount: "1,420+ hotels"
+  },
+  {
+    _id: '2',
+    name: "Paris",
+    country: "France",
+    image: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=600&h=800&fit=crop&q=80",
+    tag: "Popular",
+    hotelCount: "1,280+ hotels"
+  },
+  {
+    _id: '3',
+    name: "London",
+    country: "United Kingdom",
+    image: "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=600&h=800&fit=crop&q=80",
+    tag: "Top Choice",
+    hotelCount: "1,650+ hotels"
+  },
+  {
+    _id: '4',
+    name: "Tokyo",
+    country: "Japan",
+    image: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=600&h=800&fit=crop&q=80",
+    tag: "Culture",
+    hotelCount: "940+ hotels"
+  },
+  {
+    _id: '5',
+    name: "Bali",
+    country: "Indonesia",
+    image: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=600&h=800&fit=crop&q=80",
+    tag: "Resort",
+    hotelCount: "820+ hotels"
+  },
+  {
+    _id: '6',
+    name: "New York",
+    country: "United States",
+    image: "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=600&h=800&fit=crop&q=80",
+    tag: "City Break",
+    hotelCount: "1,150+ hotels"
+  },
+  {
+    _id: '7',
+    name: "Rome",
+    country: "Italy",
+    image: "https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=600&h=800&fit=crop&q=80",
+    tag: "Historic",
+    hotelCount: "890+ hotels"
+  },
+  {
+    _id: '8',
+    name: "Istanbul",
+    country: "Turkey",
+    image: "https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?w=600&h=800&fit=crop&q=80",
+    tag: "Heritage",
+    hotelCount: "760+ hotels"
+  },
+  {
+    _id: '9',
+    name: "Singapore",
+    country: "Singapore",
+    image: "https://images.unsplash.com/photo-1525625293386-3f8f99389edd?w=600&h=800&fit=crop&q=80",
+    tag: "Modern",
+    hotelCount: "630+ hotels"
+  },
+  {
+    _id: '10',
+    name: "Bangkok",
+    country: "Thailand",
+    image: "https://images.unsplash.com/photo-1508009603885-50cf7c579365?w=600&h=800&fit=crop&q=80",
+    tag: "Vibrant",
+    hotelCount: "1,100+ hotels"
+  },
+  {
+    _id: '11',
+    name: "Barcelona",
+    country: "Spain",
+    image: "https://images.unsplash.com/photo-1583422409516-2895a77efded?w=600&h=800&fit=crop&q=80",
+    tag: "Beach & Art",
+    hotelCount: "910+ hotels"
+  },
+  {
+    _id: '12',
+    name: "Maldives",
+    country: "Maldives",
+    image: "https://images.unsplash.com/photo-1514282401047-d79a71a590e8?w=600&h=800&fit=crop&q=80",
+    tag: "Luxury",
+    hotelCount: "380+ luxury resorts"
+  },
+  {
+    _id: '13',
+    name: "Sydney",
+    country: "Australia",
+    image: "https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?w=600&h=800&fit=crop&q=80",
+    tag: "Harbour",
+    hotelCount: "740+ hotels"
+  },
+  {
+    _id: '14',
+    name: "Amsterdam",
+    country: "Netherlands",
+    image: "https://images.unsplash.com/photo-1512470876302-972faa2aa9a4?w=600&h=800&fit=crop&q=80",
+    tag: "Canals",
+    hotelCount: "670+ hotels"
+  },
+  {
+    _id: '15',
+    name: "Cairo",
+    country: "Egypt",
+    image: "https://images.unsplash.com/photo-1572252009286-268acec5ca0a?w=600&h=800&fit=crop&q=80",
+    tag: "Wonders",
+    hotelCount: "520+ hotels"
+  },
+  {
+    _id: '16',
+    name: "Santorini",
+    country: "Greece",
+    image: "https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?w=600&h=800&fit=crop&q=80",
+    tag: "Island",
+    hotelCount: "430+ boutique stays"
+  },
+  {
+    _id: '17',
+    name: "Rio de Janeiro",
+    country: "Brazil",
+    image: "https://images.unsplash.com/photo-1483729558449-99ef09a8c325?w=600&h=800&fit=crop&q=80",
+    tag: "Carnival",
+    hotelCount: "610+ hotels"
+  },
+  {
+    _id: '18',
+    name: "Abu Dhabi",
+    country: "United Arab Emirates",
+    image: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=600&h=800&fit=crop&q=80",
+    tag: "Grand",
+    hotelCount: "490+ hotels"
+  }
+];
 
 const Home = () => {
   const navigate = useNavigate();
   const [isMobile, setIsMobile] = useState(false);
-  const [destinations, setDestinations] = useState([]);
+  const [destinations, setDestinations] = useState(fallbackDestinations);
+  const destinationsScrollRef = useRef(null);
+  const [isDestinationsHovered, setIsDestinationsHovered] = useState(false);
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -22,185 +205,60 @@ const Home = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Fetch destinations from backend
+  // Fetch destinations from backend and merge with fallback data
   const API_BASE = (import.meta.env.VITE_BASE_URL || 'http://localhost:3000') + '/api';
   useEffect(() => {
     fetch(`${API_BASE}/destinations`)
       .then(r => r.json())
       .then(data => {
-        if (data.success && data.data?.length) setDestinations(data.data);
-        else setDestinations(fallbackDestinations);
+        if (data.success && data.data?.length) {
+          setDestinations(prev => {
+            const merged = [...data.data];
+            fallbackDestinations.forEach(fb => {
+              if (!merged.some(d => d.name?.toLowerCase() === fb.name?.toLowerCase())) {
+                merged.push(fb);
+              }
+            });
+            return merged.length >= fallbackDestinations.length ? merged : fallbackDestinations;
+          });
+        }
       })
-      .catch(() => setDestinations(fallbackDestinations));
+      .catch(() => {
+        // Fallback already initialized
+      });
   }, []);
 
-  const CITY_HOTEL_COUNTS = {
-    Dubai: "1,420+ hotels",
-    Paris: "1,280+ hotels",
-    London: "1,650+ hotels",
-    Tokyo: "940+ hotels",
-    Bali: "820+ hotels",
-    "New York": "1,150+ hotels",
-    Rome: "890+ hotels",
-    Istanbul: "760+ hotels",
-    Singapore: "630+ hotels",
-    Bangkok: "1,100+ hotels",
-    Barcelona: "910+ hotels",
-    Maldives: "380+ luxury resorts",
-    Sydney: "740+ hotels",
-    Amsterdam: "670+ hotels",
-    Cairo: "520+ hotels",
-    Santorini: "430+ boutique stays",
-    "Rio de Janeiro": "610+ hotels",
-    "Abu Dhabi": "490+ hotels"
-  };
-
-  const fallbackDestinations = [
-    {
-      _id: '1',
-      name: "Dubai",
-      country: "United Arab Emirates",
-      image: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=600&h=800&fit=crop&q=80",
-      tag: "Trending",
-      hotelCount: "1,420+ hotels"
-    },
-    {
-      _id: '2',
-      name: "Paris",
-      country: "France",
-      image: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=600&h=800&fit=crop&q=80",
-      tag: "Popular",
-      hotelCount: "1,280+ hotels"
-    },
-    {
-      _id: '3',
-      name: "London",
-      country: "United Kingdom",
-      image: "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=600&h=800&fit=crop&q=80",
-      tag: "Top Choice",
-      hotelCount: "1,650+ hotels"
-    },
-    {
-      _id: '4',
-      name: "Tokyo",
-      country: "Japan",
-      image: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=600&h=800&fit=crop&q=80",
-      tag: "Culture",
-      hotelCount: "940+ hotels"
-    },
-    {
-      _id: '5',
-      name: "Bali",
-      country: "Indonesia",
-      image: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=600&h=800&fit=crop&q=80",
-      tag: "Resort",
-      hotelCount: "820+ hotels"
-    },
-    {
-      _id: '6',
-      name: "New York",
-      country: "United States",
-      image: "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=600&h=800&fit=crop&q=80",
-      tag: "City Break",
-      hotelCount: "1,150+ hotels"
-    },
-    {
-      _id: '7',
-      name: "Rome",
-      country: "Italy",
-      image: "https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=600&h=800&fit=crop&q=80",
-      tag: "Historic",
-      hotelCount: "890+ hotels"
-    },
-    {
-      _id: '8',
-      name: "Istanbul",
-      country: "Turkey",
-      image: "https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?w=600&h=800&fit=crop&q=80",
-      tag: "Heritage",
-      hotelCount: "760+ hotels"
-    },
-    {
-      _id: '9',
-      name: "Singapore",
-      country: "Singapore",
-      image: "https://images.unsplash.com/photo-1525625293386-3f8f99389edd?w=600&h=800&fit=crop&q=80",
-      tag: "Modern",
-      hotelCount: "630+ hotels"
-    },
-    {
-      _id: '10',
-      name: "Bangkok",
-      country: "Thailand",
-      image: "https://images.unsplash.com/photo-1508009603885-50cf7c579365?w=600&h=800&fit=crop&q=80",
-      tag: "Vibrant",
-      hotelCount: "1,100+ hotels"
-    },
-    {
-      _id: '11',
-      name: "Barcelona",
-      country: "Spain",
-      image: "https://images.unsplash.com/photo-1583422409516-2895a77efded?w=600&h=800&fit=crop&q=80",
-      tag: "Beach & Art",
-      hotelCount: "910+ hotels"
-    },
-    {
-      _id: '12',
-      name: "Maldives",
-      country: "Maldives",
-      image: "https://images.unsplash.com/photo-1514282401047-d79a71a590e8?w=600&h=800&fit=crop&q=80",
-      tag: "Luxury",
-      hotelCount: "380+ luxury resorts"
-    },
-    {
-      _id: '13',
-      name: "Sydney",
-      country: "Australia",
-      image: "https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?w=600&h=800&fit=crop&q=80",
-      tag: "Harbour",
-      hotelCount: "740+ hotels"
-    },
-    {
-      _id: '14',
-      name: "Amsterdam",
-      country: "Netherlands",
-      image: "https://images.unsplash.com/photo-1512470876302-972faa2aa9a4?w=600&h=800&fit=crop&q=80",
-      tag: "Canals",
-      hotelCount: "670+ hotels"
-    },
-    {
-      _id: '15',
-      name: "Cairo",
-      country: "Egypt",
-      image: "https://images.unsplash.com/photo-1572252009286-268acec5ca0a?w=600&h=800&fit=crop&q=80",
-      tag: "Wonders",
-      hotelCount: "520+ hotels"
-    },
-    {
-      _id: '16',
-      name: "Santorini",
-      country: "Greece",
-      image: "https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?w=600&h=800&fit=crop&q=80",
-      tag: "Island",
-      hotelCount: "430+ boutique stays"
-    },
-    {
-      _id: '17',
-      name: "Rio de Janeiro",
-      country: "Brazil",
-      image: "https://images.unsplash.com/photo-1483729558449-99ef09a8c325?w=600&h=800&fit=crop&q=80",
-      tag: "Carnival",
-      hotelCount: "610+ hotels"
-    },
-    {
-      _id: '18',
-      name: "Abu Dhabi",
-      country: "United Arab Emirates",
-      image: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=600&h=800&fit=crop&q=80",
-      tag: "Grand",
-      hotelCount: "490+ hotels"
+  // Smooth scroll sliding controls for destinations carousel
+  const scrollDestinationsNext = useCallback(() => {
+    if (!destinationsScrollRef.current) return;
+    const { scrollLeft, clientWidth, scrollWidth } = destinationsScrollRef.current;
+    const scrollAmount = clientWidth * 0.82;
+    if (scrollLeft + clientWidth >= scrollWidth - 16) {
+      destinationsScrollRef.current.scrollTo({ left: 0, behavior: "smooth" });
+    } else {
+      destinationsScrollRef.current.scrollBy({ left: scrollAmount, behavior: "smooth" });
     }
-  ];
+  }, []);
+
+  const scrollDestinationsPrev = useCallback(() => {
+    if (!destinationsScrollRef.current) return;
+    const { scrollLeft, clientWidth, scrollWidth } = destinationsScrollRef.current;
+    const scrollAmount = clientWidth * 0.82;
+    if (scrollLeft <= 16) {
+      destinationsScrollRef.current.scrollTo({ left: scrollWidth, behavior: "smooth" });
+    } else {
+      destinationsScrollRef.current.scrollBy({ left: -scrollAmount, behavior: "smooth" });
+    }
+  }, []);
+
+  // Auto-advance destinations carousel smoothly every 4.5 seconds
+  useEffect(() => {
+    if (isDestinationsHovered) return;
+    const interval = setInterval(() => {
+      scrollDestinationsNext();
+    }, 4500);
+    return () => clearInterval(interval);
+  }, [isDestinationsHovered, scrollDestinationsNext]);
 
   // Scroll smoothly to the search form section
   const scrollToSearchForm = () => {
@@ -245,127 +303,144 @@ const Home = () => {
       <div className="relative z-10 bg-white">
 
         {/* ═══════════════════════════════════════════════════════════════════
-            MOBILE HOMEPAGE — full-width, no side padding on sections
+            FEATURED DESTINATIONS — All 18 Cards, 5 On-Screen View, Smooth Scroll & Sliding Buttons
         ═══════════════════════════════════════════════════════════════════ */}
-        <div className="md:hidden">
-
-          {/* ── Featured Destinations ── */}
-          <section className="pt-8 pb-8 px-4">
-            <div className="mb-3 flex items-center justify-between">
+        <section className="relative py-14 sm:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 overflow-hidden bg-white">
+          <div className="max-w-7xl mx-auto relative">
+            
+            {/* ── Top Header Row: Title & Subtitle Left, Sliding Buttons Right ── */}
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6 sm:mb-8">
               <div>
-                <h2 className="text-lg font-bold text-gray-900" style={{ letterSpacing: '-0.02em' }}>Popular Destinations</h2>
-                <p className="text-xs text-gray-500 mt-0.5">Explore hotel availability citywise</p>
+                <div className="flex items-center gap-2.5 mb-2 sm:mb-2.5">
+                  <div className="w-7 h-[2px] bg-blue-600 rounded-full" />
+                  <span className="text-[11px] font-bold tracking-[0.16em] uppercase text-blue-600">
+                    Top Destinations
+                  </span>
+                </div>
+                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-gray-900 tracking-tight leading-tight">
+                  Popular destinations <span className="text-blue-600">worldwide</span>
+                </h2>
+                <p className="text-gray-500 text-xs sm:text-sm mt-1 sm:mt-1.5 max-w-lg leading-relaxed">
+                  Browse live hotel availability and click any destination to auto-fill search.
+                </p>
               </div>
-            </div>
-            <div className="relative pt-6">
-            <Carousel
-              arrowPosition="top-right"
-              items={(destinations.length ? destinations : fallbackDestinations).map((dest) => (
-                <div
-                  key={dest._id}
-                  onClick={() => handleDestinationClick(dest)}
-                  className="relative overflow-hidden rounded-2xl cursor-pointer active:scale-98 transition-transform"
-                  style={{ aspectRatio: '3/4' }}
+
+              {/* ── Sliding Navigation Buttons (Always visible in Header) ── */}
+              <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
+                <button
+                  type="button"
+                  onClick={scrollDestinationsPrev}
+                  aria-label="Previous Destinations"
+                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white border border-gray-200 hover:border-blue-600 hover:bg-blue-50/60 active:scale-95 flex items-center justify-center text-gray-700 hover:text-blue-600 transition-all duration-200 cursor-pointer shadow-xs hover:shadow-md"
                 >
-                  <img src={dest.image} alt={dest.name} className="w-full h-full object-cover" />
-                  <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.2) 45%, transparent 70%)' }} />
-                  {dest.tag && (
-                    <div className="absolute top-3 left-3">
-                      <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full" style={{ background: 'rgba(255,255,255,0.22)', backdropFilter: 'blur(8px)', color: '#fff', border: '1px solid rgba(255,255,255,0.3)' }}>
-                        {dest.tag}
-                      </span>
-                    </div>
-                  )}
-                  <div className="absolute bottom-0 left-0 right-0 p-3.5">
-                    <h3 className="text-white font-bold text-[15px] leading-tight">{dest.name}</h3>
-                    <p className="text-white/70 text-[11px] mt-0.5">{dest.country}</p>
-                    <div className="mt-2 pt-1.5 border-t border-white/15 flex items-center gap-1 text-white/90 text-[10px] font-medium">
-                      <Hotel className="w-3 h-3 text-blue-400 shrink-0" />
-                      <span>{dest.hotelCount || CITY_HOTEL_COUNTS[dest.name] || '850+ hotels'}</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-              autoPlayInterval={3500}
-              itemsPerView={{ mobile: 1.25, tablet: 2, desktop: 5 }}
-            />
-            </div>
-          </section>
-        </div>
-
-        {/* ═══════════════════════════════════════════════════════════════════
-            DESKTOP HOMEPAGE: Featured Destinations
-        ═══════════════════════════════════════════════════════════════════ */}
-        <div className="hidden md:block">
-          {/* ── SECTION 1: Featured Destinations ── */}
-          <section className="relative py-16 md:py-24 px-6 lg:px-8 overflow-hidden">
-            <div className="max-w-7xl mx-auto relative">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-px bg-blue-600" />
-                  <span className="text-[11px] font-bold tracking-widest uppercase text-blue-600" style={{ letterSpacing: '0.14em' }}>Top Destinations</span>
-                </div>
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={scrollDestinationsNext}
+                  aria-label="Next Destinations"
+                  className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white border border-gray-200 hover:border-blue-600 hover:bg-blue-50/60 active:scale-95 flex items-center justify-center text-gray-700 hover:text-blue-600 transition-all duration-200 cursor-pointer shadow-xs hover:shadow-md"
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </button>
               </div>
-              <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-2" style={{ letterSpacing: '-0.03em', lineHeight: 1.15 }}>
-                Popular destinations <span className="text-blue-600">worldwide</span>
-              </h2>
-              <p className="text-gray-500 text-sm max-w-lg mb-8" style={{ lineHeight: 1.6 }}>
-                Browse live hotel availability and click any destination to auto-fill search.
-              </p>
+            </div>
 
-              <div className="relative pt-6">
-              <Carousel
-                arrowPosition="top-right"
-                items={(destinations.length ? destinations : fallbackDestinations).map((dest) => (
+            {/* ── Scrollable Horizontal Cards Strip (5 on-screen on desktop) ── */}
+            <div className="relative group">
+              {/* Floating Side Left Arrow on Desktop Hover */}
+              <button
+                type="button"
+                onClick={scrollDestinationsPrev}
+                aria-label="Scroll Left"
+                className="hidden lg:flex absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 w-10 h-10 rounded-full bg-white/95 backdrop-blur-md border border-gray-200 shadow-xl items-center justify-center text-gray-700 hover:text-blue-600 hover:border-blue-600 z-20 opacity-0 group-hover:opacity-100 transition-all duration-200 cursor-pointer active:scale-90"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+
+              {/* Floating Side Right Arrow on Desktop Hover */}
+              <button
+                type="button"
+                onClick={scrollDestinationsNext}
+                aria-label="Scroll Right"
+                className="hidden lg:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 w-10 h-10 rounded-full bg-white/95 backdrop-blur-md border border-gray-200 shadow-xl items-center justify-center text-gray-700 hover:text-blue-600 hover:border-blue-600 z-20 opacity-0 group-hover:opacity-100 transition-all duration-200 cursor-pointer active:scale-90"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
+
+              {/* Scroll Track with all 18 destination cards */}
+              <div
+                ref={destinationsScrollRef}
+                onMouseEnter={() => setIsDestinationsHovered(true)}
+                onMouseLeave={() => setIsDestinationsHovered(false)}
+                className="flex items-center gap-4 overflow-x-auto scroll-smooth scrollbar-none py-2 -mx-4 px-4 sm:mx-0 sm:px-0 snap-x snap-mandatory select-none"
+                style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+              >
+                {(destinations.length ? destinations : fallbackDestinations).map((dest) => (
                   <div
-                    key={dest._id}
+                    key={dest._id || dest.name}
                     onClick={() => handleDestinationClick(dest)}
-                    className="group relative overflow-hidden rounded-2xl cursor-pointer bg-gray-100 shadow-xs hover:shadow-xl transition-all duration-300 active:scale-98"
-                    style={{ aspectRatio: '3/4' }}
+                    className="group/card relative flex-shrink-0 w-[240px] sm:w-[calc((100%-48px)/3)] lg:w-[calc((100%-64px)/5)] rounded-2xl overflow-hidden cursor-pointer bg-gray-100 shadow-xs hover:shadow-xl transition-all duration-300 snap-start active:scale-98"
+                    style={{ aspectRatio: "3/4" }}
                   >
+                    {/* Card Photo */}
                     <img
                       src={dest.image}
                       alt={dest.name}
-                      className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-700 ease-out"
+                      className="w-full h-full object-cover group-hover/card:scale-108 transition-transform duration-700 ease-out pointer-events-none"
+                      loading="lazy"
                     />
+
+                    {/* Dark gradient overlay */}
                     <div
-                      className="absolute inset-0"
-                      style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.25) 45%, transparent 70%)' }}
+                      className="absolute inset-0 pointer-events-none"
+                      style={{
+                        background:
+                          "linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.3) 45%, transparent 70%)"
+                      }}
                     />
+
+                    {/* Tag badge */}
                     {dest.tag && (
-                      <div className="absolute top-3 left-3">
+                      <div className="absolute top-3 left-3 pointer-events-none">
                         <span
                           className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full shadow-xs"
                           style={{
-                            background: 'rgba(255,255,255,0.22)',
-                            backdropFilter: 'blur(8px)',
-                            color: '#fff',
-                            border: '1px solid rgba(255,255,255,0.3)'
+                            background: "rgba(255,255,255,0.22)",
+                            backdropFilter: "blur(8px)",
+                            color: "#fff",
+                            border: "1px solid rgba(255,255,255,0.3)"
                           }}
                         >
                           {dest.tag}
                         </span>
                       </div>
                     )}
-                    <div className="absolute bottom-0 left-0 right-0 p-4 text-left">
-                      <h3 className="text-white font-bold text-base sm:text-lg leading-tight group-hover:text-blue-200 transition-colors">
+
+                    {/* Card Info at Bottom */}
+                    <div className="absolute bottom-0 left-0 right-0 p-4 text-left pointer-events-none">
+                      <h3 className="text-white font-extrabold text-base sm:text-lg leading-tight group-hover/card:text-blue-200 transition-colors">
                         {dest.name}
                       </h3>
-                      <p className="text-white/70 text-xs mt-0.5 font-medium truncate">{dest.country}</p>
-                      <div className="mt-2.5 pt-2 border-t border-white/15 flex items-center gap-1.5 text-white/90 text-[11px] font-semibold">
+                      <p className="text-white/75 text-xs mt-0.5 font-medium truncate">
+                        {dest.country}
+                      </p>
+                      <div className="mt-2.5 pt-2 border-t border-white/15 flex items-center gap-1.5 text-white/95 text-[11px] font-semibold">
                         <Hotel className="w-3.5 h-3.5 text-blue-400 shrink-0" />
-                        <span>{dest.hotelCount || CITY_HOTEL_COUNTS[dest.name] || '850+ hotels available'}</span>
+                        <span>
+                          {dest.hotelCount ||
+                            CITY_HOTEL_COUNTS[dest.name] ||
+                            "850+ hotels available"}
+                        </span>
                       </div>
                     </div>
                   </div>
                 ))}
-                autoPlayInterval={3500}
-                itemsPerView={{ mobile: 1.25, tablet: 3, desktop: 5 }}
-              />
               </div>
             </div>
-          </section>
-        </div>
+
+          </div>
+        </section>
 
         {/* ═══════════════════════════════════════════════════════════════════
             SECTION 2: Why Telitrip — Interactive Full-Bleed Slider (Single Shared Instance)
