@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Helmet } from "react-helmet-async";
 import Header from "./components/Header";
+import HeroSection from "./components/HeroSection";
 import Slider from "./components/Slider";
 import Footer from "./components/Footer";
 import Carousel from "./components/Carousel";
@@ -51,10 +52,8 @@ const Home = () => {
     <div className="bg-white" style={{ margin: 0, padding: 0 }}>
       <Helmet><title>Telitrip — Travel Smarter</title></Helmet>
       <Header />
-      {/* Wrapper matches hero bg so no white flash/border */}
-      <div style={{ background: '#111827', margin: 0, padding: 0 }}>
-        <Slider />
-      </div>
+      {/* Main Hero Section matching user design */}
+      <HeroSection />
 
       {/* Content slides over sticky hero */}
       <div className="relative z-10 bg-white">
