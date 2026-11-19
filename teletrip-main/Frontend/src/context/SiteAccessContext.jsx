@@ -137,6 +137,18 @@ export const SiteAccessProvider = ({ children }) => {
   // Initial check on mount
   useEffect(() => {
     const checkInitialAccess = async () => {
+      // In local development or on localhost, automatically unlock the site so developers and previewers don't get blocked
+      if (
+        import.meta.env.DEV ||
+        window.location.hostname === 'localhost' ||
+        window.location.hostname === '127.0.0.1' ||
+        window.location.hostname.includes('192.168.')
+      ) {
+        setIsUnlocked(true);
+        setIsLoading(false);
+        return;
+      }
+
       setIsLoading(true);
 
       // 1. Check for 1-click preview link in URL (e.g. ?preview=PASSCODE or ?access=PASSCODE)
