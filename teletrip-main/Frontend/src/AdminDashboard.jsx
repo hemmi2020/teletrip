@@ -79,6 +79,8 @@ import BookingDetailSheet from './components/admin/BookingDetailSheet';
 import FullWidthBookingsTable from './components/admin/FullWidthBookingsTable';
 import FullWidthUsersTable from './components/admin/FullWidthUsersTable';
 import FullWidthHotelsTable from './components/admin/FullWidthHotelsTable';
+import FullWidthPaymentsTable from './components/admin/FullWidthPaymentsTable';
+import FullWidthSupportTable from './components/admin/FullWidthSupportTable';
 import './styles/admin-responsive.css';
 
 // Toast Component
@@ -1262,6 +1264,29 @@ const AdminDashboard = () => {
           onRefresh={() => loadData()}
           onToggleStatus={handleHotelToggleStatus}
           onSelectHotel={(h) => handleViewDetails(h)}
+        />
+      );
+    }
+
+    if (activeTab === 'payments') {
+      return (
+        <FullWidthPaymentsTable
+          payments={data.docs || []}
+          loading={loading}
+          onRefresh={() => loadData()}
+          onSelectPayment={(p) => handleViewDetails(p)}
+          onProcessRefund={(p) => handlePaymentAction(p._id, 'refund')}
+        />
+      );
+    }
+
+    if (activeTab === 'support') {
+      return (
+        <FullWidthSupportTable
+          tickets={data.docs || []}
+          loading={loading}
+          onRefresh={() => loadData()}
+          onSelectTicket={(t) => handleViewDetails(t)}
         />
       );
     }
