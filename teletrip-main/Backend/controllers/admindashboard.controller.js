@@ -19,6 +19,8 @@ const {
 const { runReconciliation, fetchHotelbedsBookingDetail } = require('../services/hotelbeds.reconciliation.service');
 const SystemSettings = require('../models/systemsetting.model');
 const moment = require('moment');
+const { transitionBookingState, canTransitionBooking } = require('../services/stateMachines/bookingStateMachine');
+const { transitionPaymentState } = require('../services/stateMachines/paymentStateMachine');
 
 const user = userModel; 
 const Booking = bookingModel;
@@ -545,16 +547,7 @@ const updateBookingStatus = asyncErrorHandler(async (req, res) => {
   const { bookingId } = req.params;
   const { status, notes } = req.body;
 
-  const booking = await Booking.findByIdAndUpdate(
-    bookingId,
-    { 
-      status,
-      ...(notes && { adminNotes: notes }),
-      statusUpdatedAt: new Date(),
-      statusUpdatedBy: req.user.id
-    },
-    { new: true }
-  ).populate([
+  const booking = await Booking.findById(bookingId).populate([
     { path: 'user', select: 'fullname email' },
     { path: 'hotel', select: 'name location' }
   ]);
@@ -563,8 +556,36 @@ const updateBookingStatus = asyncErrorHandler(async (req, res) => {
     return ApiResponse.error(res, 'Booking not found', 404);
   }
 
-  // Send notification to user
-  await notificationService.sendBookingStatusUpdate(booking.userId.email, booking);
+  // Enforce explicit Finite State Machine
+  try {
+    await transitionBookingState(booking, status, {
+      reason: notes || 'Admin status override',
+      actorId: req.user._id || req.user.id,
+      ipAddress: req.ip,
+      userAgent: req.get('user-agent'),
+      metadata: { notes }
+    });
+  } catch (err) {
+    if (err.status === 409) {
+      return ApiResponse.error(res, err.message, 409);
+    }
+    throw err;
+  }
+
+  if (notes) {
+    booking.adminNotes = notes;
+    await booking.save();
+  }
+
+  // Send notification to user if email exists
+  const userEmail = booking.user?.email || booking.userId?.email;
+  if (userEmail) {
+    try {
+      await notificationService.sendBookingStatusUpdate(userEmail, booking);
+    } catch (notifErr) {
+      console.warn('[Notification] Failed to send status email:', notifErr.message);
+    }
+  }
 
   return ApiResponse.success(res, booking, 'Booking status updated successfully');
 });
@@ -837,14 +858,15 @@ const processRefund = asyncErrorHandler(async (req, res) => {
   });
 
   payment.refundedAmount = (payment.refundedAmount || 0) + refundAmount;
-  
-  if (payment.refundedAmount >= payment.amount) {
-    payment.status = 'refunded';
-  } else {
-    payment.status = 'partially_refunded';
-  }
+  const targetState = payment.refundedAmount >= payment.amount ? 'refunded' : 'partially_refunded';
 
-  await payment.save();
+  await transitionPaymentState(payment, targetState, {
+    reason,
+    actorId: req.user._id || req.user.id,
+    ipAddress: req.ip,
+    userAgent: req.get('user-agent'),
+    refundAmount
+  });
 
   return ApiResponse.success(res, payment, 'Refund processed successfully');
 });

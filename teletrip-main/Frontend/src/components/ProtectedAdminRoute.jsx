@@ -15,14 +15,14 @@ const ProtectedAdminRoute = ({ children }) => {
     if (admin.role !== 'admin' && admin.role !== 'super_admin') {
       localStorage.removeItem('adminToken');
       localStorage.removeItem('adminData');
-      return ;
+      return <Navigate to="/admin/login" replace />;
     }
 
     return children;
   } catch {
     localStorage.removeItem('adminToken');
     localStorage.removeItem('adminData');
-    return ;
+    return <Navigate to="/admin/login" replace />;
   }
 };
 

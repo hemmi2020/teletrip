@@ -1,7 +1,7 @@
 // FIXED: AdminDashboard.jsx with ALL working button handlers
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { 
   LayoutDashboard, Users, Hotel, CreditCard, Package, MessageSquare, 
   Settings, TrendingUp, TrendingDown, DollarSign, Calendar, Search,
@@ -75,6 +75,9 @@ import { Badge } from './components/ui/badge';
 import { Button } from './components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from './components/ui/sheet';
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from './components/ui/table';
+import BookingDetailSheet from './components/admin/BookingDetailSheet';
+import FullWidthBookingsTable from './components/admin/FullWidthBookingsTable';
+import FullWidthUsersTable from './components/admin/FullWidthUsersTable';
 import './styles/admin-responsive.css';
 
 // Toast Component
@@ -133,8 +136,19 @@ const StatCard = ({ title, value, change, icon: Icon, trend, loading }) => (
 // Main Admin Dashboard Component
 const AdminDashboard = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { formatPKR, convert } = useCurrency();
-  const [activeTab, setActiveTab] = useState('overview');
+  const activeTab = searchParams.get('tab') || 'overview';
+  const setActiveTab = useCallback((newTab) => {
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      next.set('tab', newTab);
+      return next;
+    }, { replace: true });
+  }, [setSearchParams]);
+  const [inspectBooking, setInspectBooking] = useState(null);
+  const [inspectSheetOpen, setInspectSheetOpen] = useState(false);
+  const [subFilter, setSubFilter] = useState('all');
   const [loading, setLoading] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [toast, setToast] = useState(null);
@@ -915,6 +929,39 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleBookingTransition = async (bookingId, targetStatus, notes) => {
+    const res = await AdminDashboardAPI.updateBookingStatus(bookingId, { status: targetStatus, notes });
+    if (!res.success) {
+      throw new Error(res.error || 'Failed to update booking status');
+    }
+    await loadData();
+    if (inspectBooking && inspectBooking._id === bookingId) {
+      setInspectBooking(prev => ({ ...prev, status: targetStatus }));
+    }
+    return res.data;
+  };
+
+  const handleToggleUserStatus = async (userId, newStatus) => {
+    const res = await AdminDashboardAPI.updateUserStatus(userId, { isActive: newStatus });
+    if (res.success) {
+      showToast(`User status updated to ${newStatus ? 'Active' : 'Inactive'}`, 'success');
+      loadData();
+    } else {
+      showToast(res.error || 'Failed to update user status', 'error');
+    }
+  };
+
+  const handleDeleteUser = async (userId) => {
+    if (!window.confirm('Are you sure you want to delete this user account?')) return;
+    const res = await AdminDashboardAPI.deleteUser(userId, 'Admin initiated deletion');
+    if (res.success) {
+      showToast('User deleted successfully', 'success');
+      loadData();
+    } else {
+      showToast(res.error || 'Failed to delete user', 'error');
+    }
+  };
+
   const renderContent = () => {
     if (loading) {
       return (
@@ -936,7 +983,7 @@ const AdminDashboard = () => {
           </div>
           <QuickReports 
             showToast={showToast}
-            bookings={activeTab === 'bookings' ? data.docs : []}
+            bookings={data.docs || []}
           />
         </div>
       );
@@ -1138,6 +1185,31 @@ const AdminDashboard = () => {
 
     if (activeTab === 'pay-on-site') {
       return <PayOnSiteManagement showToast={showToast} />;
+    }
+
+    if (activeTab === 'bookings') {
+      return (
+        <FullWidthBookingsTable
+          bookings={data.docs || []}
+          loading={loading}
+          onSelectBooking={(b) => setInspectBooking(b)}
+          onViewVoucher={(b) => setVoucherBooking(b)}
+          onTransitionStatus={handleBookingTransition}
+          onRefresh={() => loadData()}
+        />
+      );
+    }
+
+    if (activeTab === 'users') {
+      return (
+        <FullWidthUsersTable
+          users={data.docs || []}
+          loading={loading}
+          onToggleStatus={handleToggleUserStatus}
+          onDeleteUser={handleDeleteUser}
+          onRefresh={() => loadData()}
+        />
+      );
     }
 
     // Render data tables for other tabs
@@ -1645,6 +1717,15 @@ const AdminDashboard = () => {
         />
       )}
 
+      {/* Booking Detail Slide-over Sheet (State Machine Powered) */}
+      <BookingDetailSheet
+        booking={inspectBooking}
+        isOpen={Boolean(inspectBooking)}
+        onClose={() => setInspectBooking(null)}
+        onTransition={handleBookingTransition}
+        onViewVoucher={(b) => setVoucherBooking(b)}
+      />
+
       {/* Header */}
       <header className="admin-header bg-white border-b border-gray-200 sticky top-0 z-40">
         <div className="px-4 sm:px-6 py-3 sm:py-4">
@@ -1717,8 +1798,8 @@ const AdminDashboard = () => {
           </nav>
         </aside>
 
-        {/* Main Content */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8">
+        {/* Main Content - Full Available Workspace Width */}
+        <main className="flex-1 min-w-0 p-4 sm:p-6 lg:p-8 w-full max-w-none">
           {renderContent()}
         </main>
       </div>

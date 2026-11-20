@@ -450,26 +450,26 @@ const DestinationManagement = ({ showToast }) => {
       {/* Add/Edit Modal */}
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/50 overflow-y-auto py-8">
-          <div className="bg-white rounded-xl w-full max-w-2xl mx-4 shadow-xl">
+          <div className="bg-white rounded-xl w-full max-w-4xl mx-4 shadow-2xl border border-slate-200">
             {/* Modal Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-slate-50/70 rounded-t-xl">
+              <h3 className="text-lg font-bold text-gray-900">
                 {editingId ? 'Edit Destination' : 'Add Destination'}
               </h3>
               <button
                 onClick={() => setModalOpen(false)}
-                className="p-1.5 hover:bg-gray-100 rounded-lg transition"
+                className="p-1.5 hover:bg-gray-200/80 rounded-lg transition"
               >
                 <X className="w-5 h-5 text-gray-500" />
               </button>
             </div>
 
             {/* Modal Body */}
-            <form onSubmit={handleSubmit} className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+            <form onSubmit={handleSubmit} className="p-6 space-y-5 max-h-[78vh] overflow-y-auto">
               {/* Basic Info */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">Name *</label>
                   <input
                     type="text"
                     value={form.name}
@@ -480,7 +480,7 @@ const DestinationManagement = ({ showToast }) => {
                   {errors.name && <p className="mt-1 text-xs text-red-600">{errors.name}</p>}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Country *</label>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">Country *</label>
                   <input
                     type="text"
                     value={form.country}
@@ -492,43 +492,33 @@ const DestinationManagement = ({ showToast }) => {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Image URL *</label>
-                <input
-                  type="text"
-                  value={form.image}
-                  onChange={(e) => setForm({ ...form, image: e.target.value })}
-                  className={`w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.image ? 'border-red-300' : 'border-gray-300'}`}
-                  placeholder="https://..."
-                />
-                {errors.image && <p className="mt-1 text-xs text-red-600">{errors.image}</p>}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Hero Image URL</label>
-                <input
-                  type="text"
-                  value={form.heroImage}
-                  onChange={(e) => setForm({ ...form, heroImage: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="https://..."
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Gallery URLs (comma-separated)</label>
-                <input
-                  type="text"
-                  value={form.gallery}
-                  onChange={(e) => setForm({ ...form, gallery: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="url1, url2, url3"
-                />
-              </div>
-
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Tag</label>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">Thumbnail Image URL *</label>
+                  <input
+                    type="text"
+                    value={form.image}
+                    onChange={(e) => setForm({ ...form, image: e.target.value })}
+                    className={`w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.image ? 'border-red-300' : 'border-gray-300'}`}
+                    placeholder="https://..."
+                  />
+                  {errors.image && <p className="mt-1 text-xs text-red-600">{errors.image}</p>}
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">Hero Image URL</label>
+                  <input
+                    type="text"
+                    value={form.heroImage}
+                    onChange={(e) => setForm({ ...form, heroImage: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="https://..."
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">Tag</label>
                   <input
                     type="text"
                     value={form.tag}
@@ -538,7 +528,7 @@ const DestinationManagement = ({ showToast }) => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Continent</label>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">Continent</label>
                   <select
                     value={form.continent}
                     onChange={(e) => setForm({ ...form, continent: e.target.value })}
@@ -548,73 +538,95 @@ const DestinationManagement = ({ showToast }) => {
                     {CONTINENTS.map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">Display Order</label>
+                  <input
+                    type="number"
+                    value={form.order}
+                    onChange={(e) => setForm({ ...form, order: parseInt(e.target.value) || 0 })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    min="0"
+                  />
+                </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                <textarea
-                  value={form.description}
-                  onChange={(e) => setForm({ ...form, description: e.target.value })}
-                  rows={2}
+                <label className="block text-xs font-bold text-gray-700 mb-1">Gallery URLs (comma-separated)</label>
+                <input
+                  type="text"
+                  value={form.gallery}
+                  onChange={(e) => setForm({ ...form, gallery: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Short description..."
+                  placeholder="https://image1.jpg, https://image2.jpg"
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Long Description</label>
-                <textarea
-                  value={form.longDescription}
-                  onChange={(e) => setForm({ ...form, longDescription: e.target.value })}
-                  rows={4}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Detailed description..."
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">Short Description</label>
+                  <textarea
+                    value={form.description}
+                    onChange={(e) => setForm({ ...form, description: e.target.value })}
+                    rows={3}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Short summary for cards..."
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">Long Description</label>
+                  <textarea
+                    value={form.longDescription}
+                    onChange={(e) => setForm({ ...form, longDescription: e.target.value })}
+                    rows={3}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Detailed overview for landing page..."
+                  />
+                </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Highlights (comma-separated)</label>
+                <label className="block text-xs font-bold text-gray-700 mb-1">Highlights (comma-separated)</label>
                 <input
                   type="text"
                   value={form.highlights}
                   onChange={(e) => setForm({ ...form, highlights: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Eiffel Tower, Louvre Museum, ..."
+                  placeholder="Eiffel Tower, Louvre Museum, Notre-Dame"
                 />
               </div>
 
               {/* SEO Metadata */}
-              <div className="border-t border-gray-200 pt-4">
-                <h4 className="text-sm font-semibold text-gray-700 mb-3">SEO Metadata</h4>
-                <div className="space-y-3">
+              <div className="border-t border-gray-200 pt-4 bg-slate-50/50 p-4 rounded-xl border">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 mb-3">SEO & Social Sharing Metadata</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Meta Title</label>
+                    <label className="block text-xs font-bold text-gray-700 mb-1">Meta Title</label>
                     <input
                       type="text"
                       value={form.seo.metaTitle}
                       onChange={(e) => setForm({ ...form, seo: { ...form.seo, metaTitle: e.target.value } })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
                       placeholder="Page title for search engines"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Meta Description</label>
-                    <textarea
-                      value={form.seo.metaDescription}
-                      onChange={(e) => setForm({ ...form, seo: { ...form.seo, metaDescription: e.target.value } })}
-                      rows={2}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="Description for search engines"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">OG Image URL</label>
+                    <label className="block text-xs font-bold text-gray-700 mb-1">OG Share Image URL</label>
                     <input
                       type="text"
                       value={form.seo.ogImage}
                       onChange={(e) => setForm({ ...form, seo: { ...form.seo, ogImage: e.target.value } })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
                       placeholder="https://..."
+                    />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-bold text-gray-700 mb-1">Meta Description</label>
+                    <textarea
+                      value={form.seo.metaDescription}
+                      onChange={(e) => setForm({ ...form, seo: { ...form.seo, metaDescription: e.target.value } })}
+                      rows={2}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                      placeholder="Description snippet for search engines and social links..."
                     />
                   </div>
                 </div>

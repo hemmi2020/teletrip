@@ -10,18 +10,12 @@ const authUser = async (req, res, next) => {
                       (req.headers.authorization?.startsWith('Bearer ') ?
                        req.headers.authorization.split(' ')[1] : null);
 
-        console.log('Raw token:', token);
-        console.log('Token type:', typeof token);
-        console.log('Cookies:', req.cookies);
-        console.log('Authorization header:', req.headers.authorization);
-
         if (!token) {
             return res.status(401).json({ message: 'No token provided' });
         }
 
         // Validate token format
         if (typeof token !== 'string' || token.split('.').length !== 3) {
-            console.log('Token parts:', token?.split('.').length);
             return res.status(401).json({ message: 'Invalid token format' });
         }
 
@@ -127,8 +121,8 @@ const authenticateAdmin = async (req, res, next) => {
             return res.status(401).json({ message: 'User not found' });
         }
 
-        if (user.role !== 'admin') {
-            return res.status(403).json({ message: 'Access denied. Admin only.' });
+        if (user.role !== 'admin' && user.role !== 'super_admin') {
+            return res.status(403).json({ message: 'Access denied. Admin or super_admin required.' });
         }
 
         req.user = user;
@@ -139,4 +133,7 @@ const authenticateAdmin = async (req, res, next) => {
     }
 };
 
-module.exports = { authUser, requireRole, optionalAuth, authenticateAdmin };
+// Standardized middleware array for admin routes
+const requireAdmin = [authUser, requireRole(['admin', 'super_admin'])];
+
+module.exports = { authUser, requireRole, optionalAuth, authenticateAdmin, requireAdmin };

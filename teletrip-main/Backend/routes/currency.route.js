@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { body } = require('express-validator');
 const { validateRequest } = require('../middlewares/validation.middleware');
-const { authUser } = require('../middlewares/auth.middleware');
+const { authUser, requireAdmin } = require('../middlewares/auth.middleware');
 const currencyService = require('../services/currency.service');
 const ApiResponse = require('../utils/response.util');
 
@@ -46,7 +46,7 @@ router.get('/rate', async (req, res) => {
  * @desc    Get currency and commission settings
  * @access  Private (Admin)
  */
-router.get('/settings', authUser, async (req, res) => {
+router.get('/settings', ...requireAdmin, async (req, res) => {
   try {
     const settings = await currencyService.getCurrencySettings();
     return ApiResponse.success(res, settings, 'Currency settings retrieved successfully');
@@ -61,12 +61,8 @@ router.get('/settings', authUser, async (req, res) => {
  * @desc    Update unified pricing, commission, and currency settings (Admin only)
  * @access  Private (Admin)
  */
-router.put('/settings', authUser, async (req, res) => {
+router.put('/settings', ...requireAdmin, async (req, res) => {
   try {
-    if (req.user.role !== 'admin') {
-      return ApiResponse.error(res, 'Unauthorized. Admin access required.', 403);
-    }
-
     const {
       commissionPercentage,
       serviceChargePercentage,
@@ -98,14 +94,10 @@ router.put('/settings', authUser, async (req, res) => {
  * @access  Private (Admin)
  */
 router.put('/settings/markup', [
-  authUser,
+  ...requireAdmin,
   body('markupPerEuro').isFloat({ min: 0, max: 100 }).withMessage('Markup must be between 0 and 100')
 ], validateRequest, async (req, res) => {
   try {
-    if (req.user.role !== 'admin') {
-      return ApiResponse.error(res, 'Unauthorized. Admin access required.', 403);
-    }
-
     const { markupPerEuro } = req.body;
     const settings = await currencyService.updateMarkup(markupPerEuro, req.user._id);
     return ApiResponse.success(res, settings, 'Markup updated successfully');
@@ -121,14 +113,10 @@ router.put('/settings/markup', [
  * @access  Private (Admin)
  */
 router.put('/settings/transaction-fee', [
-  authUser,
+  ...requireAdmin,
   body('transactionFeePercentage').isFloat({ min: 0, max: 20 }).withMessage('Transaction fee must be between 0 and 20%')
 ], validateRequest, async (req, res) => {
   try {
-    if (req.user.role !== 'admin') {
-      return ApiResponse.error(res, 'Unauthorized. Admin access required.', 403);
-    }
-
     const { transactionFeePercentage } = req.body;
     const settings = await currencyService.updateTransactionFee(transactionFeePercentage, req.user._id);
     return ApiResponse.success(res, settings, 'Transaction fee updated successfully');
@@ -144,14 +132,10 @@ router.put('/settings/transaction-fee', [
  * @access  Private (Admin)
  */
 router.put('/settings/exchange-rate', [
-  authUser,
+  ...requireAdmin,
   body('exchangeRate').optional({ nullable: true }).isFloat({ min: 0 }).withMessage('Exchange rate must be a positive number or null')
 ], validateRequest, async (req, res) => {
   try {
-    if (req.user.role !== 'admin') {
-      return ApiResponse.error(res, 'Unauthorized. Admin access required.', 403);
-    }
-
     const { exchangeRate } = req.body;
     const settings = await currencyService.updateExchangeRate(exchangeRate || null, req.user._id);
     return ApiResponse.success(res, settings, 'Exchange rate updated successfully');

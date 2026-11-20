@@ -7,9 +7,10 @@ const { addLog } = require('../services/certificationLogger');
 const { getHotelContent } = require('../services/hotelbeds.content.service');
 const { getMTLSAgent } = require('../config/mtls.config');
 const HotelIndex = require('../models/hotelIndex.model');
+const bookingModel = require('../models/booking.model');
 // Hotelbeds API configuration  
-const HOTELBEDS_API_KEY = process.env.HOTELBEDS_API_KEY || '106700a0f2f1e2aa1d4c2b16daae70b2';
-const HOTELBEDS_SECRET = process.env.HOTELBEDS_SECRET || '018e478aa6';
+const HOTELBEDS_API_KEY = process.env.HOTELBEDS_API_KEY;
+const HOTELBEDS_SECRET = process.env.HOTELBEDS_SECRET;
 // Use MTLS endpoint when certificate is configured (mandatory for production)
 const HOTELBEDS_ENV = (process.env.HOTELBEDS_ENV || 'test').toLowerCase();
 const HOTELBEDS_BASE_URL = process.env.HOTELBEDS_BASE_URL || (
@@ -1009,9 +1010,21 @@ router.get('/hotels/bookings', authUser, async (req, res) => {
 // Booking Detail - Get specific booking by reference
 router.get('/hotels/bookings/:bookingId', authUser, async (req, res) => {
     try {
+        const { bookingId } = req.params;
+        // RBAC & IDOR Verification: Ensure user is admin OR owns this booking in MongoDB
+        const isAdmin = req.user.role === 'admin' || req.user.role === 'super_admin';
+        if (!isAdmin) {
+            const userBooking = await bookingModel.findOne({
+                $or: [{ bookingReference: bookingId }, { bookingId: bookingId }, { 'hotelBooking.reference': bookingId }],
+                user: req.user._id
+            });
+            if (!userBooking) {
+                return res.status(403).json({ success: false, error: 'Access denied. You do not own this booking.' });
+            }
+        }
+
         const timestamp = Math.floor(Date.now() / 1000);
         const signature = generateHotelbedsSignature(HOTELBEDS_API_KEY, HOTELBEDS_SECRET, timestamp);
-        const { bookingId } = req.params;
         const { language } = req.query;
 
         const url = `${HOTELBEDS_BASE_URL}/hotel-api/1.0/bookings/${bookingId}${language ? `?language=${language}` : ''}`;
@@ -1043,9 +1056,20 @@ router.get('/hotels/bookings/:bookingId', authUser, async (req, res) => {
 // Booking Change/Modification
 router.put('/hotels/bookings/:bookingId', authUser, async (req, res) => {
     try {
+        const { bookingId } = req.params;
+        const isAdmin = req.user.role === 'admin' || req.user.role === 'super_admin';
+        if (!isAdmin) {
+            const userBooking = await bookingModel.findOne({
+                $or: [{ bookingReference: bookingId }, { bookingId: bookingId }, { 'hotelBooking.reference': bookingId }],
+                user: req.user._id
+            });
+            if (!userBooking) {
+                return res.status(403).json({ success: false, error: 'Access denied. You do not own this booking.' });
+            }
+        }
+
         const timestamp = Math.floor(Date.now() / 1000);
         const signature = generateHotelbedsSignature(HOTELBEDS_API_KEY, HOTELBEDS_SECRET, timestamp);
-        const { bookingId } = req.params;
 
         const agent = getMTLSAgent();
         const response = await fetch(`${HOTELBEDS_BASE_URL}/hotel-api/1.0/bookings/${bookingId}`, {
@@ -1076,9 +1100,20 @@ router.put('/hotels/bookings/:bookingId', authUser, async (req, res) => {
 // Booking Cancellation
 router.delete('/hotels/bookings/:bookingId', authUser, async (req, res) => {
     try {
+        const { bookingId } = req.params;
+        const isAdmin = req.user.role === 'admin' || req.user.role === 'super_admin';
+        if (!isAdmin) {
+            const userBooking = await bookingModel.findOne({
+                $or: [{ bookingReference: bookingId }, { bookingId: bookingId }, { 'hotelBooking.reference': bookingId }],
+                user: req.user._id
+            });
+            if (!userBooking) {
+                return res.status(403).json({ success: false, error: 'Access denied. You do not own this booking.' });
+            }
+        }
+
         const timestamp = Math.floor(Date.now() / 1000);
         const signature = generateHotelbedsSignature(HOTELBEDS_API_KEY, HOTELBEDS_SECRET, timestamp);
-        const { bookingId } = req.params;
         const { cancellationFlag, language } = req.query;
 
         const params = new URLSearchParams();
