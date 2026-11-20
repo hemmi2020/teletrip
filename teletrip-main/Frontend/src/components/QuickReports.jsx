@@ -102,42 +102,49 @@ const QuickReports = ({ showToast, bookings }) => {
         Quick Reports
       </h3>
 
-      <div className="grid grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
         {quickReports.map((report, index) => (
           <button
             key={index}
             onClick={report.action}
             disabled={loading}
-            className="p-4 border rounded-lg hover:shadow-md transition-shadow text-left disabled:opacity-50"
+            className="p-4 bg-slate-50/50 hover:bg-slate-50 border border-slate-200/90 rounded-xl hover:shadow-sm transition-all text-left disabled:opacity-50 cursor-pointer group"
           >
-            <div className={`w-10 h-10 rounded-lg ${report.color} flex items-center justify-center mb-3`}>
+            <div className={`w-10 h-10 rounded-xl ${report.color} flex items-center justify-center mb-3 shadow-2xs group-hover:scale-105 transition-transform`}>
               <report.icon size={20} />
             </div>
-            <h4 className="font-medium mb-1">{report.title}</h4>
-            <p className="text-sm text-gray-600">{report.description}</p>
+            <h4 className="font-extrabold text-sm text-slate-900 mb-1">{report.title}</h4>
+            <p className="text-xs text-slate-500">{report.description}</p>
           </button>
         ))}
       </div>
 
       {bookings && bookings.length > 0 && (
-        <div>
-          <h4 className="font-medium mb-3">Generate Invoices</h4>
-          <div className="max-h-60 overflow-y-auto space-y-2">
-            {bookings.slice(0, 10).map((booking) => (
-              <div key={booking.id} className="flex justify-between items-center p-3 border rounded">
-                <div>
-                  <p className="font-medium">Booking #{booking.id}</p>
-                  <p className="text-sm text-gray-600">{booking.userName} - ${booking.amount}</p>
+        <div className="pt-4 border-t border-slate-100">
+          <h4 className="font-bold text-xs uppercase tracking-wider text-slate-500 mb-3">Download Booking Invoices</h4>
+          <div className="max-h-60 overflow-y-auto space-y-2 pr-1">
+            {bookings.slice(0, 10).map((booking) => {
+              const bRef = booking.bookingReference || booking._id?.slice(-8) || booking.id || 'N/A';
+              const guest = booking.guestName || (booking.user?.fullname ? `${booking.user.fullname.firstname || ''} ${booking.user.fullname.lastname || ''}`.trim() : (booking.user?.email || 'Guest'));
+              const amount = booking.totalPrice || booking.amount || booking.finalAmount || 0;
+              const currency = booking.currency || 'AED';
+
+              return (
+                <div key={booking._id || booking.id} className="flex justify-between items-center p-3 bg-slate-50/60 border border-slate-200/80 rounded-xl hover:bg-slate-50 transition-colors">
+                  <div>
+                    <p className="font-mono text-xs font-bold text-slate-900">PNR: {bRef}</p>
+                    <p className="text-xs text-slate-500">{guest} · {currency} {Number(amount).toLocaleString()}</p>
+                  </div>
+                  <button
+                    onClick={() => handleInvoiceGeneration(booking)}
+                    className="flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
+                  >
+                    <Download size={14} />
+                    Invoice
+                  </button>
                 </div>
-                <button
-                  onClick={() => handleInvoiceGeneration(booking)}
-                  className="flex items-center gap-2 text-blue-600 hover:bg-blue-50 px-3 py-1 rounded"
-                >
-                  <Download size={16} />
-                  Invoice
-                </button>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
