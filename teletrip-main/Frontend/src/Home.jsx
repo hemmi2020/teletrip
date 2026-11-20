@@ -211,16 +211,18 @@ const Home = () => {
     fetch(`${API_BASE}/destinations`)
       .then(r => r.json())
       .then(data => {
-        if (data.success && data.data?.length) {
-          setDestinations(prev => {
-            const merged = [...data.data];
+        if (data.success && Array.isArray(data.data) && data.data.length > 0) {
+          // Prioritize active database destinations configured in Admin CMS
+          const dbDestinations = data.data.filter(d => d.isActive !== false && d.status !== 'archived');
+          if (dbDestinations.length > 0) {
+            const combined = [...dbDestinations];
             fallbackDestinations.forEach(fb => {
-              if (!merged.some(d => d.name?.toLowerCase() === fb.name?.toLowerCase())) {
-                merged.push(fb);
+              if (!combined.some(d => d.name?.toLowerCase() === fb.name?.toLowerCase())) {
+                combined.push(fb);
               }
             });
-            return merged.length >= fallbackDestinations.length ? merged : fallbackDestinations;
-          });
+            setDestinations(combined);
+          }
         }
       })
       .catch(() => {

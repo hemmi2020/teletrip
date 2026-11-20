@@ -78,6 +78,7 @@ import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '.
 import BookingDetailSheet from './components/admin/BookingDetailSheet';
 import FullWidthBookingsTable from './components/admin/FullWidthBookingsTable';
 import FullWidthUsersTable from './components/admin/FullWidthUsersTable';
+import FullWidthHotelsTable from './components/admin/FullWidthHotelsTable';
 import './styles/admin-responsive.css';
 
 // Toast Component
@@ -962,6 +963,16 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleHotelToggleStatus = async (hotelId, newStatus) => {
+    const res = await AdminDashboardAPI.updateHotelStatus(hotelId, { status: newStatus ? 'active' : 'inactive' });
+    if (res.success) {
+      showToast(`Hotel status updated to ${newStatus ? 'Active' : 'Inactive'}`, 'success');
+      loadData();
+    } else {
+      showToast(res.error || 'Failed to update hotel status', 'error');
+    }
+  };
+
   const renderContent = () => {
     if (loading) {
       return (
@@ -1007,23 +1018,53 @@ const AdminDashboard = () => {
     }
 
     if (activeTab === 'hotel-management') {
+      const activeHotel = selectedItem || (data.docs && data.docs.length > 0 ? data.docs[0] : null);
       return (
         <div className="space-y-4 sm:space-y-6">
+          {/* Active Property Selector Banner */}
+          {data.docs && data.docs.length > 0 && (
+            <div className="bg-white p-3.5 sm:p-4 rounded-xl border border-slate-200/90 shadow-2xs flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-bold shrink-0">
+                  <Hotel className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Managing Property</div>
+                  <div className="text-xs sm:text-sm font-extrabold text-slate-900">{activeHotel?.name || 'Select a Hotel'}</div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <label className="text-xs text-slate-500 font-medium">Switch Hotel:</label>
+                <select
+                  value={activeHotel?._id || ''}
+                  onChange={(e) => {
+                    const found = data.docs.find(h => h._id === e.target.value);
+                    if (found) setSelectedItem(found);
+                  }}
+                  className="text-xs font-bold bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
+                >
+                  {data.docs.map(h => (
+                    <option key={h._id} value={h._id}>{h.name} ({h.location?.city || h.city || 'Dubai'})</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          )}
           <HotelApprovalWorkflow showToast={showToast} />
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             <RoomInventoryManager 
-              hotelId={selectedItem?._id}
-              rooms={selectedItem?.rooms || []}
+              hotelId={activeHotel?._id}
+              rooms={activeHotel?.rooms || []}
               onUpdate={() => loadData()}
               showToast={showToast}
             />
             <PricingCalendar 
-              hotelId={selectedItem?._id}
+              hotelId={activeHotel?._id}
               onUpdatePricing={() => loadData()}
               showToast={showToast}
             />
           </div>
-          <HotelPerformanceMetrics hotelId={selectedItem?._id} showToast={showToast} />
+          <HotelPerformanceMetrics hotelId={activeHotel?._id} showToast={showToast} />
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <ReviewModeration showToast={showToast} />
             <FeaturedHotelManager showToast={showToast} />
@@ -1033,24 +1074,25 @@ const AdminDashboard = () => {
     }
 
     if (activeTab === 'booking-management') {
+      const activeBooking = selectedItem || inspectBooking || (data.docs && data.docs.length > 0 ? data.docs[0] : null);
       return (
         <div className="space-y-4 sm:space-y-6">
           <BookingReconfirmation showToast={showToast} />
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-            <CancellationPolicyCalculator booking={selectedItem} />
+            <CancellationPolicyCalculator booking={activeBooking} />
             <RefundAmountPreview 
-              booking={selectedItem}
+              booking={activeBooking}
               onConfirm={(amount) => {
                 showToast(`Refund of PKR ${Math.round(amount).toLocaleString()} processed`, 'success');
               }}
             />
           </div>
-          <GuestCommunicationHistory bookingId={selectedItem?._id} />
+          <GuestCommunicationHistory bookingId={activeBooking?._id} />
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <BookingNotesComments bookingId={selectedItem?._id} />
-            <SpecialRequestHandling bookingId={selectedItem?._id} />
+            <BookingNotesComments bookingId={activeBooking?._id} />
+            <SpecialRequestHandling bookingId={activeBooking?._id} />
           </div>
-          <BookingTimelineView bookingId={selectedItem?._id} />
+          <BookingTimelineView bookingId={activeBooking?._id} />
         </div>
       );
     }
@@ -1208,6 +1250,18 @@ const AdminDashboard = () => {
           onToggleStatus={handleToggleUserStatus}
           onDeleteUser={handleDeleteUser}
           onRefresh={() => loadData()}
+        />
+      );
+    }
+
+    if (activeTab === 'hotels') {
+      return (
+        <FullWidthHotelsTable
+          hotels={data.docs || []}
+          loading={loading}
+          onRefresh={() => loadData()}
+          onToggleStatus={handleHotelToggleStatus}
+          onSelectHotel={(h) => handleViewDetails(h)}
         />
       );
     }
