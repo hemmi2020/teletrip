@@ -9,9 +9,12 @@ import {
 } from 'lucide-react';
 import { addDays, format, parseISO, isValid } from 'date-fns';
 import AnimatedIcon from './common/AnimatedIcon';
-import { getInstantSuggestions, TOP_DESTINATIONS, FEATURED_HOTELS } from '../utils/instantSearchData';
+import { getInstantSuggestions, TOP_DESTINATIONS, TOP_HOTELS } from '../utils/instantSearchData';
 import { searchTransfers } from '../services/transfersApi';
 import axios from 'axios';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from './ui/sheet';
+import { Button } from './ui/button';
+import { Tabs, TabsList, TabsTrigger } from './ui/tabs';
 import 'react-date-range/dist/styles.css';
 import 'react-date-range/dist/theme/default.css';
 
@@ -39,6 +42,7 @@ export default function HotelSearchForm({
   // Active Category Tab
   const [activeTab, setActiveTab] = useState(defaultTab || 'stays');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
 
   // ═══════════════════════════════════════════════════════════════════════════
   // 1. STAYS SEARCH STATE
@@ -517,7 +521,7 @@ export default function HotelSearchForm({
         }
 
         if (onSearch) onSearch();
-        navigate(`/hotels?${params.toString()}`);
+        navigate(`/hotel-search-results?${params.toString()}`);
       } else if (activeTab === 'transfers') {
         const fromLoc = selectedPickup;
         const toLoc = selectedDropoff;
@@ -568,7 +572,7 @@ export default function HotelSearchForm({
         });
 
         if (onSearch) onSearch();
-        navigate(`/activities?${params.toString()}`);
+        navigate(`/activity-search-results?${params.toString()}`);
       }
     } catch (err) {
       console.error('Search submission error:', err);
@@ -577,10 +581,47 @@ export default function HotelSearchForm({
     }
   };
 
+  const totalGuests = roomConfigs.reduce((acc, r) => acc + (r.adults || 0) + (r.children || 0), 0);
+  const totalRooms = roomConfigs.length;
+
   return (
     <div className={`w-full text-left ${className}`}>
-      {/* ── Top Tabs Row: Stays, Transfers, Experiences + Transfers Toggle ── */}
-      <div className="flex items-center justify-between gap-4 mb-3 sm:mb-4 flex-wrap">
+      {/* ── Compact Mobile Search Trigger Bar (< 768px) ── */}
+      <div className="block md:hidden mb-2.5">
+        <button
+          type="button"
+          onClick={() => setIsMobileDrawerOpen(true)}
+          className="w-full bg-white border border-slate-200/90 rounded-2xl p-3 shadow-2xs flex items-center justify-between gap-3 text-left transition-all hover:border-slate-300 active:scale-[0.99] cursor-pointer"
+        >
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-9 h-9 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 font-bold shrink-0">
+              {activeTab === 'stays' ? <Building2 className="w-4 h-4" /> : activeTab === 'transfers' ? <Car className="w-4 h-4" /> : <Compass className="w-4 h-4" />}
+            </div>
+            <div className="min-w-0">
+              <div className="text-xs font-extrabold text-gray-900 truncate">
+                {activeTab === 'stays'
+                  ? (searchQuery || 'Where are you going?')
+                  : activeTab === 'transfers'
+                    ? (pickupQuery ? `${pickupQuery} → ${dropoffQuery || 'Drop-off'}` : 'Book a Transfer')
+                    : (experienceQuery || 'Explore Activities')}
+              </div>
+              <div className="text-[11px] text-gray-500 truncate flex items-center gap-1.5">
+                <span>{format(dateRange[0].startDate, 'MMM d')} – {format(dateRange[0].endDate, 'MMM d')}</span>
+                <span>·</span>
+                <span>{totalGuests} Guests</span>
+                <span>·</span>
+                <span>{totalRooms} {totalRooms === 1 ? 'Room' : 'Rooms'}</span>
+              </div>
+            </div>
+          </div>
+          <div className="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-2xs">
+            <Search className="w-3.5 h-3.5" />
+          </div>
+        </button>
+      </div>
+
+      {/* ── Desktop & Expanded View: Top Tabs Row: Stays, Transfers, Experiences + Transfers Toggle ── */}
+      <div className="hidden md:flex items-center justify-between gap-4 mb-3 sm:mb-4 flex-wrap">
         <div className="flex items-center gap-1 sm:gap-2">
           {TABS.map(tab => {
             const isActive = activeTab === tab.id;
@@ -650,7 +691,7 @@ export default function HotelSearchForm({
       )}
 
       {/* ── Floating Capsule Search Bar (Latest Modern Design) ── */}
-      <div className="rounded-3xl sm:rounded-full p-1.5 sm:p-2 transition-all relative z-40 bg-white border border-slate-200/90 shadow-sm hover:shadow-md">
+      <div className="hidden md:block rounded-3xl sm:rounded-full p-1.5 sm:p-2 transition-all relative z-40 bg-white border border-slate-200/90 shadow-sm hover:shadow-md">
         <form
           onSubmit={handleSearchSubmit}
           className="flex flex-col sm:flex-row sm:items-center w-full gap-2 sm:gap-0 justify-between"
@@ -806,7 +847,7 @@ export default function HotelSearchForm({
                             {/* Hotels */}
                             {(() => {
                               const hotels = hotelSuggestions;
-                              const hList = hotels.length > 0 ? hotels : FEATURED_HOTELS.slice(0, 5);
+                              const hList = hotels.length > 0 ? hotels : TOP_HOTELS.slice(0, 5);
                               const isDefault = hotels.length === 0;
                               return (
                                 <div>
@@ -1887,6 +1928,124 @@ export default function HotelSearchForm({
           </div>,
           document.body
         )}
+
+      {/* ── Mobile Full-Screen Search Drawer (Sheet) ── */}
+      <Sheet open={isMobileDrawerOpen} onOpenChange={setIsMobileDrawerOpen}>
+        <SheetContent side="bottom" className="h-[92vh] max-h-[92vh] rounded-t-3xl overflow-y-auto p-4 sm:p-6" onClose={() => setIsMobileDrawerOpen(false)}>
+          <SheetHeader className="pb-3 border-b border-slate-100">
+            <SheetTitle className="text-base font-extrabold text-slate-900">
+              {activeTab === 'stays' ? 'Search Hotels & Stays' : activeTab === 'transfers' ? 'Search Transfers' : 'Search Experiences'}
+            </SheetTitle>
+          </SheetHeader>
+          <div className="py-4 space-y-4">
+            {/* Tab Switcher */}
+            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
+              {TABS.map(tab => {
+                const isActive = activeTab === tab.id;
+                const Icon = tab.icon;
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex-1 py-2 text-xs font-bold rounded-lg flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                      isActive ? 'bg-white text-blue-600 shadow-2xs font-extrabold' : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    <Icon className="w-3.5 h-3.5" />
+                    <span>{tab.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Destination or Hotel */}
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+                Destination or Hotel
+              </label>
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3 flex items-center gap-2">
+                <MapPin className="w-4 h-4 text-blue-600 shrink-0" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setSelectedLocation(null);
+                    setSelectedHotelCode(null);
+                    setShowLocationDropdown(true);
+                  }}
+                  onFocus={() => setShowLocationDropdown(true)}
+                  placeholder="Where are you going?"
+                  className="w-full text-xs font-bold text-slate-900 bg-transparent focus:outline-none"
+                />
+              </div>
+            </div>
+
+            {/* Dates */}
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+                Check-in / Check-out Dates
+              </label>
+              <div
+                onClick={() => setShowCalendar(true)}
+                className="bg-slate-50 border border-slate-200 rounded-2xl p-3 flex items-center justify-between cursor-pointer"
+              >
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-4 h-4 text-blue-600 shrink-0" />
+                  <span className="text-xs font-bold text-slate-900">
+                    {format(dateRange[0].startDate, 'MMM d, yyyy')} → {format(dateRange[0].endDate, 'MMM d, yyyy')}
+                  </span>
+                </div>
+                <span className="text-[10px] font-extrabold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
+                  Change
+                </span>
+              </div>
+            </div>
+
+            {/* Guests & Rooms */}
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+                Guests & Rooms
+              </label>
+              <div
+                onClick={() => setShowTravellerDropdown(true)}
+                className="bg-slate-50 border border-slate-200 rounded-2xl p-3 flex items-center justify-between cursor-pointer"
+              >
+                <div className="flex items-center gap-2">
+                  <Users className="w-4 h-4 text-blue-600 shrink-0" />
+                  <span className="text-xs font-bold text-slate-900">
+                    {totalGuests} Guests · {totalRooms} {totalRooms === 1 ? 'Room' : 'Rooms'}
+                  </span>
+                </div>
+                <span className="text-[10px] font-extrabold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
+                  Edit
+                </span>
+              </div>
+            </div>
+
+            {/* Submit Action */}
+            <button
+              type="button"
+              onClick={(e) => {
+                setIsMobileDrawerOpen(false);
+                handleSearchSubmit(e);
+              }}
+              disabled={isSubmitting}
+              className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 active:scale-[0.99] text-white rounded-2xl font-extrabold text-xs uppercase tracking-wider shadow-md flex items-center justify-center gap-2 cursor-pointer transition-all"
+            >
+              {isSubmitting ? (
+                <Loader2 className="w-4 h-4 animate-spin text-white" />
+              ) : (
+                <>
+                  <Search className="w-4 h-4 text-white" />
+                  <span>Search Properties</span>
+                </>
+              )}
+            </button>
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

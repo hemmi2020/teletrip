@@ -70,6 +70,11 @@ import HotelContentSyncTab from './components/HotelContentSyncTab';
 import HotelbedsToolsTab from './components/HotelbedsToolsTab';
 import PayOnSiteManagement from './components/PayOnSiteManagement';
 import BookingVoucher from './components/BookingVoucher';
+import { Card, CardHeader, CardTitle, CardContent } from './components/ui/card';
+import { Badge } from './components/ui/badge';
+import { Button } from './components/ui/button';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from './components/ui/sheet';
+import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from './components/ui/table';
 import './styles/admin-responsive.css';
 
 // Toast Component
@@ -95,36 +100,34 @@ const Toast = ({ message, type, onClose }) => {
   );
 };
 
-// Stat Card Component
+// Stat Card Component (Tremor-styled Analytics KPI Card with shadcn Card & Badge)
 const StatCard = ({ title, value, change, icon: Icon, trend, loading }) => (
-  <div className="stat-card bg-white rounded-xl shadow-sm p-4 sm:p-6 border border-gray-100 hover:shadow-md transition-shadow">
-    <div className="flex items-center justify-between">
-      <div className="flex-1">
-        <p className="text-sm text-gray-600 mb-1">{title}</p>
-        {loading ? (
-          <div className="h-8 bg-gray-200 animate-pulse rounded w-24"></div>
-        ) : (
-          <h3 className="text-2xl font-bold text-gray-900">{value}</h3>
-        )}
-        {change && !loading && (
-          <div className="flex items-center mt-2">
-            {trend === 'up' ? (
-              <ArrowUpRight className="w-4 h-4 text-green-500" />
-            ) : (
-              <ArrowDownRight className="w-4 h-4 text-red-500" />
-            )}
-            <span className={`text-sm ml-1 font-medium ${trend === 'up' ? 'text-green-600' : 'text-red-600'}`}>
-              {change}%
-            </span>
-            <span className="text-xs text-gray-500 ml-2">vs last month</span>
-          </div>
-        )}
-      </div>
-      <div className={`p-4 rounded-xl ${trend === 'up' ? 'bg-green-50' : 'bg-blue-50'}`}>
-        <Icon className={`w-8 h-8 ${trend === 'up' ? 'text-green-600' : 'text-blue-600'}`} />
+  <Card className="p-4 sm:p-5 shadow-2xs hover:shadow-xs transition-all border-slate-200/90 bg-white">
+    <div className="flex items-center justify-between gap-3 mb-2">
+      <span className="text-xs font-bold uppercase tracking-wider text-slate-500">{title}</span>
+      <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+        trend === 'up' ? 'bg-emerald-50 text-[#1F6A5B]' : 'bg-blue-50 text-blue-600'
+      }`}>
+        <Icon className="w-4 h-4" />
       </div>
     </div>
-  </div>
+    {loading ? (
+      <div className="h-8 bg-slate-100 animate-pulse rounded-lg w-28 my-1"></div>
+    ) : (
+      <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight my-1">
+        {value}
+      </div>
+    )}
+    {change !== undefined && change !== null && !loading && (
+      <div className="flex items-center gap-2 mt-2">
+        <Badge variant={trend === 'up' ? 'emerald' : 'destructive'} className="px-1.5 py-0.2">
+          {trend === 'up' ? <ArrowUpRight className="w-3 h-3 mr-0.5" /> : <ArrowDownRight className="w-3 h-3 mr-0.5" />}
+          <span>{Math.abs(change)}%</span>
+        </Badge>
+        <span className="text-[11px] text-slate-400">vs last period</span>
+      </div>
+    )}
+  </Card>
 );
 
 // Main Admin Dashboard Component
@@ -1227,12 +1230,12 @@ const AdminDashboard = () => {
             />
           </div>
         ) : (
-        <div className="overflow-x-auto">
-  <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-    <thead className="bg-gray-50 dark:bg-gray-700 sticky top-0">
-      <tr>
+        <div className="overflow-x-auto rounded-xl border border-slate-200/90 shadow-2xs">
+  <Table className="min-w-full">
+    <TableHeader className="bg-slate-50/90 sticky top-0">
+      <TableRow>
         {visibleColumns.includes('checkbox') !== false && (
-        <th className="px-6 py-3 text-left w-12">
+        <TableHead className="px-4 py-3 text-left w-12">
           <input
             type="checkbox"
             checked={selectAll}
@@ -1244,28 +1247,28 @@ const AdminDashboard = () => {
                 bulkHandlers.handleDeselectAll();
               }
             }}
-            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500 cursor-pointer"
           />
-        </th>
+        </TableHead>
         )}
         {visibleColumns.includes('id') && (
-        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider w-32">ID</th>
+        <TableHead className="px-4 py-3 text-left text-xs font-bold text-slate-600 uppercase tracking-wider w-32">ID</TableHead>
         )}
         {visibleColumns.includes('details') && (
-        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Details</th>
+        <TableHead className="px-4 py-3 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">Details</TableHead>
         )}
         {visibleColumns.includes('status') && (
-        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider w-32">Status</th>
+        <TableHead className="px-4 py-3 text-left text-xs font-bold text-slate-600 uppercase tracking-wider w-32">Status</TableHead>
         )}
         {visibleColumns.includes('date') && (
-        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider w-40">Date</th>
+        <TableHead className="px-4 py-3 text-left text-xs font-bold text-slate-600 uppercase tracking-wider w-40">Date</TableHead>
         )}
         {visibleColumns.includes('actions') && (
-        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider w-32">Actions</th>
+        <TableHead className="px-4 py-3 text-right text-xs font-bold text-slate-600 uppercase tracking-wider w-32">Actions</TableHead>
         )}
-      </tr>
-    </thead>
-    <tbody className="bg-white divide-y divide-gray-200">
+      </TableRow>
+    </TableHeader>
+    <TableBody className="bg-white divide-y divide-slate-100">
       {data.docs && data.docs.length > 0 ? (
         data.docs.map((item, index) => {
           // Different display logic based on activeTab
@@ -1428,49 +1431,52 @@ const AdminDashboard = () => {
             displayDate = 'N/A';
           }
 
+          const statusLower = String(displayStatus || '').toLowerCase();
+          const badgeVariant = ['active', 'confirmed', 'completed', 'paid'].includes(statusLower)
+            ? 'emerald'
+            : ['pending', 'pay-on-site'].includes(statusLower)
+              ? 'amber'
+              : ['cancelled', 'failed', 'inactive'].includes(statusLower)
+                ? 'destructive'
+                : 'outline';
+
           return (
-            <tr key={item._id || index} className={`hover:bg-gray-50 ${selectedIds.includes(item._id) ? 'bg-blue-50' : ''}`}>
-              <td className="px-6 py-4 whitespace-nowrap">
+            <TableRow key={item._id || index} className={selectedIds.includes(item._id) ? 'bg-blue-50/70' : ''}>
+              <TableCell className="px-4 py-3 whitespace-nowrap">
                 <input
                   type="checkbox"
                   checked={selectedIds.includes(item._id)}
                   onChange={() => bulkHandlers.handleSelectItem(item._id)}
-                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500 cursor-pointer"
                 />
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-mono">
+              </TableCell>
+              <TableCell className="px-4 py-3 whitespace-nowrap text-xs font-mono font-bold text-slate-900">
                 {displayId}
-              </td>
-              <td className="px-6 py-4 text-sm text-gray-900 max-w-xs">
+              </TableCell>
+              <TableCell className="px-4 py-3 text-xs sm:text-sm text-slate-800 max-w-xs">
                 {displayDetails}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                  displayStatus === 'Active' || displayStatus === 'active' || displayStatus === 'confirmed' || displayStatus === 'completed' ? 
-                    'bg-green-100 text-green-800' : 
-                  displayStatus === 'pending' ? 
-                    'bg-yellow-100 text-yellow-800' : 
-                    'bg-red-100 text-red-800'
-                }`}>
+              </TableCell>
+              <TableCell className="px-4 py-3 whitespace-nowrap">
+                <Badge variant={badgeVariant}>
                   {displayStatus}
-                </span>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                </Badge>
+              </TableCell>
+              <TableCell className="px-4 py-3 whitespace-nowrap text-xs text-slate-500">
                 {displayDate}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                <div className="flex items-center justify-end gap-2">
+              </TableCell>
+              <TableCell className="px-4 py-3 whitespace-nowrap text-right text-xs font-medium">
+                <div className="flex items-center justify-end gap-1.5">
                   <button 
                     onClick={() => handleViewDetails(item, activeTab)}
-                    className="text-blue-600 hover:text-blue-800"
-                    title="View"
+                    className="p-1.5 rounded-lg text-blue-600 hover:text-blue-800 hover:bg-blue-50 transition-colors cursor-pointer"
+                    title="View Details"
                   >
                     <Eye className="w-4 h-4" />
                   </button>
                   {activeTab === 'payments' && (item.paymentMethod === 'pay-on-site' || item.paymentMethod === 'pay_on_site') && item.status === 'pending' && (
                     <button 
                       onClick={() => handlePaymentAction(item._id, 'markPaid')}
-                      className="text-green-600 hover:text-green-800"
+                      className="p-1.5 rounded-lg text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50 transition-colors cursor-pointer"
                       title="Mark as Paid"
                     >
                       <Check className="w-4 h-4" />
@@ -1483,21 +1489,21 @@ const AdminDashboard = () => {
                           setSelectedItem(item);
                           setBookingManagementModal('modify');
                         }}
-                        className="text-blue-600 hover:text-blue-800"
+                        className="p-1.5 rounded-lg text-blue-600 hover:text-blue-800 hover:bg-blue-50 transition-colors cursor-pointer"
                         title="Modify Booking"
                       >
                         <Edit className="w-4 h-4" />
                       </button>
                       <button 
                         onClick={() => handleBookingAction(item._id, 'voucher')}
-                        className="text-purple-600 hover:text-purple-800"
+                        className="p-1.5 rounded-lg text-slate-700 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer"
                         title="Download Voucher"
                       >
                         <Download className="w-4 h-4" />
                       </button>
                       <button 
                         onClick={() => handleBookingAction(item._id, 'cancel')}
-                        className="text-red-600 hover:text-red-800"
+                        className="p-1.5 rounded-lg text-red-600 hover:text-red-800 hover:bg-red-50 transition-colors cursor-pointer"
                         title="Cancel Booking"
                       >
                         <XCircle className="w-4 h-4" />
@@ -1506,7 +1512,7 @@ const AdminDashboard = () => {
                   )}
                   {activeTab !== 'support' && activeTab !== 'payments' && activeTab !== 'bookings' && (
                     <button 
-                      className="text-green-600 hover:text-green-800"
+                      className="p-1.5 rounded-lg text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50 transition-colors cursor-pointer"
                       title="Approve"
                     >
                       <Check className="w-4 h-4" />
@@ -1514,26 +1520,26 @@ const AdminDashboard = () => {
                   )}
                   {activeTab !== 'bookings' && (
                     <button 
-                      className="text-red-600 hover:text-red-800"
+                      className="p-1.5 rounded-lg text-red-600 hover:text-red-800 hover:bg-red-50 transition-colors cursor-pointer"
                       title="Delete"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
                   )}
                 </div>
-              </td>
-            </tr>
+              </TableCell>
+            </TableRow>
           );
         })
       ) : (
-        <tr>
-          <td colSpan="6" className="px-6 py-12 text-center text-gray-500">
+        <TableRow>
+          <TableCell colSpan={6} className="px-6 py-12 text-center text-slate-400 text-xs sm:text-sm">
             No data available
-          </td>
-        </tr>
+          </TableCell>
+        </TableRow>
       )}
-    </tbody>
-  </table>
+    </TableBody>
+  </Table>
 </div>
         )}
 
@@ -1680,11 +1686,16 @@ const AdminDashboard = () => {
       </header>
 
       <div className="flex">
-        {/* Sidebar */}
-        <aside className={`${mobileMenuOpen ? 'block' : 'hidden'} lg:block fixed lg:sticky top-[73px] left-0 h-[calc(100vh-73px)] w-64 bg-white border-r border-gray-200 overflow-y-auto z-30`}>
-          <nav className="p-4 space-y-2">
+        {/* Modern Collapsible Sidebar */}
+        <aside className={`${mobileMenuOpen ? 'block' : 'hidden'} lg:block fixed lg:sticky top-[73px] left-0 h-[calc(100vh-73px)] w-64 bg-white border-r border-slate-200/90 overflow-y-auto z-30 transition-all shadow-2xs`}>
+          <div className="p-3 border-b border-slate-100 flex items-center justify-between">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Navigation</span>
+            <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Admin Suite</Badge>
+          </div>
+          <nav className="p-3 space-y-1">
             {menuItems.map((item) => {
               const Icon = item.icon;
+              const isActive = activeTab === item.id;
               return (
                 <button
                   key={item.id}
@@ -1692,14 +1703,14 @@ const AdminDashboard = () => {
                     setActiveTab(item.id);
                     setMobileMenuOpen(false);
                   }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition ${
-                    activeTab === item.id
-                      ? 'bg-blue-50 text-blue-600 font-medium'
-                      : 'text-gray-600 hover:bg-gray-50'
+                  className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer select-none ${
+                    isActive
+                      ? 'bg-blue-50 text-blue-700 shadow-2xs font-extrabold border-l-4 border-blue-600'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
                   }`}
                 >
-                  <Icon className="w-5 h-5" />
-                  {item.label}
+                  <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-blue-600' : 'text-slate-400'}`} />
+                  <span className="truncate">{item.label}</span>
                 </button>
               );
             })}
