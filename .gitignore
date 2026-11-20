@@ -8,6 +8,7 @@ node_modules/
 dist/
 build/
 coverage/
+graphify-out/
 
 # Scratch & diagnostic test scripts
 teletrip-main/Backend/check_*.js
