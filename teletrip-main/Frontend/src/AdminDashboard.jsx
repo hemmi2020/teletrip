@@ -770,8 +770,8 @@ const AdminDashboard = () => {
           }
         }
       } else if (action === 'view') {
-        // Navigate to user details or open modal
-        console.log('View user:', userId);
+        const userItem = (data.docs || []).find(u => u._id === userId) || { _id: userId };
+        handleViewDetails(userItem, 'users');
       }
     } catch (error) {
       showToast('Action failed', 'error');
@@ -842,7 +842,8 @@ const AdminDashboard = () => {
           }
         }
       } else if (action === 'view') {
-        console.log('View hotel:', hotelId);
+        const hotelItem = (data.docs || []).find(h => h._id === hotelId) || { _id: hotelId };
+        handleViewDetails(hotelItem, 'hotels');
       }
     } catch (error) {
       showToast('Hotel action failed', 'error');
@@ -881,7 +882,8 @@ const AdminDashboard = () => {
           }
         }
       } else if (action === 'view') {
-        console.log('View payment:', paymentId);
+        const paymentItem = (data.docs || []).find(p => p._id === paymentId) || { _id: paymentId };
+        handleViewDetails(paymentItem, 'payments');
       }
     } catch (error) {
       showToast('Payment action failed', 'error');

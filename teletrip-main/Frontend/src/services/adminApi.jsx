@@ -47,16 +47,16 @@ adminApi.interceptors.response.use(
 
 // ========== ADMIN DASHBOARD API ==========
 export const AdminDashboardAPI = {
-  
+
   // ========== DASHBOARD OVERVIEW ==========
   getDashboardOverview: async (period = '30d') => {
     try {
       const response = await adminApi.get(`/api/admin/dashboard?period=${period}`);
       return { success: true, data: response.data.data };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.message || 'Failed to load dashboard' 
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to load dashboard'
       };
     }
   },
@@ -68,9 +68,9 @@ export const AdminDashboardAPI = {
       const response = await adminApi.get(`/api/admin/users?${params}`);
       return { success: true, data: response.data.data };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.message || 'Failed to load users' 
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to load users'
       };
     }
   },
@@ -80,9 +80,9 @@ export const AdminDashboardAPI = {
       const response = await adminApi.get(`/api/admin/users/${userId}`);
       return { success: true, data: response.data.data };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.message || 'Failed to load user details' 
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to load user details'
       };
     }
   },
@@ -92,9 +92,9 @@ export const AdminDashboardAPI = {
       const response = await adminApi.put(`/api/admin/users/${userId}/status`, statusData);
       return { success: true, data: response.data.data };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.message || 'Failed to update user status' 
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to update user status'
       };
     }
   },
@@ -104,9 +104,9 @@ export const AdminDashboardAPI = {
       const response = await adminApi.put(`/api/admin/users/${userId}`, userData);
       return { success: true, data: response.data.data };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.message || 'Failed to update user' 
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to update user'
       };
     }
   },
@@ -118,9 +118,9 @@ export const AdminDashboardAPI = {
       });
       return { success: true, data: response.data.data };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.message || 'Failed to delete user' 
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to delete user'
       };
     }
   },
@@ -132,9 +132,9 @@ export const AdminDashboardAPI = {
       const response = await adminApi.get(`/api/admin/bookings?${params}`);
       return { success: true, data: response.data.data };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.message || 'Failed to load bookings' 
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to load bookings'
       };
     }
   },
@@ -144,9 +144,9 @@ export const AdminDashboardAPI = {
       const response = await adminApi.get(`/api/admin/bookings/${bookingId}`);
       return { success: true, data: response.data.data };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.message || 'Failed to load booking details' 
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to load booking details'
       };
     }
   },
@@ -156,9 +156,9 @@ export const AdminDashboardAPI = {
       const response = await adminApi.put(`/api/admin/bookings/${bookingId}/status`, statusData);
       return { success: true, data: response.data.data };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.message || 'Failed to update booking status' 
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to update booking status'
       };
     }
   },
@@ -168,9 +168,9 @@ export const AdminDashboardAPI = {
       const response = await adminApi.put(`/api/admin/bookings/${bookingId}/cancel`);
       return { success: true, data: response.data.data };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.message || 'Failed to cancel booking' 
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to cancel booking'
       };
     }
   },
@@ -187,14 +187,26 @@ export const AdminDashboardAPI = {
     }
   },
 
+  getApitudeStatus: async () => {
+    try {
+      const response = await adminApi.get('/api/hotels/apitude-status');
+      return { success: true, data: response.data };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.response?.data?.error || error.message || 'Failed to check Bedsonline APITUDE status'
+      };
+    }
+  },
+
   generateVoucher: async (bookingId) => {
     try {
       const response = await adminApi.get(`/api/admin/bookings/${bookingId}/voucher`);
       return { success: true, data: response.data.data };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.message || 'Failed to generate voucher' 
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to generate voucher'
       };
     }
   },
@@ -206,9 +218,9 @@ export const AdminDashboardAPI = {
       const response = await adminApi.get(`/api/admin/hotels?${params}`);
       return { success: true, data: response.data.data };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.message || 'Failed to load hotels' 
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to load hotels'
       };
     }
   },
@@ -218,9 +230,9 @@ export const AdminDashboardAPI = {
       const response = await adminApi.get(`/api/admin/hotels/${hotelId}`);
       return { success: true, data: response.data.data };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.message || 'Failed to load hotel details' 
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to load hotel details'
       };
     }
   },
@@ -230,9 +242,9 @@ export const AdminDashboardAPI = {
       const response = await adminApi.post(`/api/admin/hotels`, hotelData);
       return { success: true, data: response.data.data };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.message || 'Failed to create hotel' 
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to create hotel'
       };
     }
   },
@@ -242,9 +254,9 @@ export const AdminDashboardAPI = {
       const response = await adminApi.put(`/api/admin/hotels/${hotelId}`, hotelData);
       return { success: true, data: response.data.data };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.message || 'Failed to update hotel' 
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to update hotel'
       };
     }
   },
@@ -254,9 +266,9 @@ export const AdminDashboardAPI = {
       const response = await adminApi.put(`/api/admin/hotels/${hotelId}/status`, statusData);
       return { success: true, data: response.data.data };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.message || 'Failed to update hotel status' 
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to update hotel status'
       };
     }
   },
@@ -268,9 +280,9 @@ export const AdminDashboardAPI = {
       const response = await adminApi.get(`/api/admin/payments?${params}`);
       return { success: true, data: response.data.data };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.message || 'Failed to load payments' 
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to load payments'
       };
     }
   },
@@ -280,9 +292,9 @@ export const AdminDashboardAPI = {
       const response = await adminApi.get(`/api/admin/payments/${paymentId}`);
       return { success: true, data: response.data.data };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.message || 'Failed to load payment details' 
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to load payment details'
       };
     }
   },
@@ -292,9 +304,9 @@ export const AdminDashboardAPI = {
       const response = await adminApi.post(`/api/admin/payments/${paymentId}/refund`, refundData);
       return { success: true, data: response.data.data };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.message || 'Failed to process refund' 
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to process refund'
       };
     }
   },
@@ -309,9 +321,9 @@ export const AdminDashboardAPI = {
       const response = await adminApi.get(`/api/admin/payments/pay-on-site${params ? `?${params}` : ''}`);
       return { success: true, data: response.data.data };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.message || 'Failed to load pay-on-site bookings' 
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to load pay-on-site bookings'
       };
     }
   },
@@ -321,9 +333,9 @@ export const AdminDashboardAPI = {
       const response = await adminApi.put(`/api/admin/payments/${paymentId}/mark-paid`, body);
       return { success: true, data: response.data.data };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.message || 'Failed to mark payment as paid' 
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to mark payment as paid'
       };
     }
   },
@@ -335,9 +347,9 @@ export const AdminDashboardAPI = {
       const response = await adminApi.get(`/api/admin/support/tickets?${params}`);
       return { success: true, data: response.data.data };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.message || 'Failed to load support tickets' 
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to load support tickets'
       };
     }
   },
@@ -347,9 +359,9 @@ export const AdminDashboardAPI = {
       const response = await adminApi.get(`/api/admin/support/tickets/${ticketId}`);
       return { success: true, data: response.data.data };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.message || 'Failed to load ticket details' 
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to load ticket details'
       };
     }
   },
@@ -359,9 +371,9 @@ export const AdminDashboardAPI = {
       const response = await adminApi.put(`/api/admin/support/tickets/${ticketId}`, updateData);
       return { success: true, data: response.data.data };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.message || 'Failed to update ticket' 
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to update ticket'
       };
     }
   },
@@ -371,9 +383,9 @@ export const AdminDashboardAPI = {
       const response = await adminApi.post(`/api/admin/support/tickets/${ticketId}/responses`, responseData);
       return { success: true, data: response.data.data };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.message || 'Failed to add response' 
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to add response'
       };
     }
   },
@@ -385,9 +397,9 @@ export const AdminDashboardAPI = {
       const response = await adminApi.get(`/api/admin/analytics?${params}`);
       return { success: true, data: response.data.data };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.message || 'Failed to load analytics' 
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to load analytics'
       };
     }
   },
@@ -399,9 +411,9 @@ export const AdminDashboardAPI = {
       });
       return { success: true, data: response.data };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.message || 'Failed to export data' 
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to export data'
       };
     }
   },
@@ -412,9 +424,9 @@ export const AdminDashboardAPI = {
       const response = await adminApi.get(`/api/admin/settings`);
       return { success: true, data: response.data.data };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.message || 'Failed to load settings' 
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to load settings'
       };
     }
   },
@@ -424,9 +436,9 @@ export const AdminDashboardAPI = {
       const response = await adminApi.put(`/api/admin/settings`, settingsData);
       return { success: true, data: response.data.data };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.message || 'Failed to update settings' 
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to update settings'
       };
     }
   },
@@ -438,9 +450,9 @@ export const AdminDashboardAPI = {
       const response = await adminApi.get(`/api/admin/logs/activity?${params}`);
       return { success: true, data: response.data.data };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.message || 'Failed to load activity logs' 
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to load activity logs'
       };
     }
   },
@@ -451,9 +463,9 @@ export const AdminDashboardAPI = {
       const response = await adminApi.post('/api/admin/sync-hotels', { batchSize, force });
       return { success: true, data: response.data.data };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.message || 'Failed to start sync' 
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to start sync'
       };
     }
   },
@@ -463,9 +475,9 @@ export const AdminDashboardAPI = {
       const response = await adminApi.post('/api/admin/sync-hotels/reset');
       return { success: true, data: response.data.data };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.message || 'Failed to reset sync' 
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to reset sync'
       };
     }
   },
@@ -475,9 +487,9 @@ export const AdminDashboardAPI = {
       const response = await adminApi.get('/api/admin/sync-hotels/status');
       return { success: true, data: response.data.data };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.message || 'Failed to get sync status' 
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to get sync status'
       };
     }
   },
@@ -487,9 +499,9 @@ export const AdminDashboardAPI = {
       const response = await adminApi.get(`/api/admin/sync-hotels/history?limit=${limit}`);
       return { success: true, data: response.data.data };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.message || 'Failed to get sync history' 
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to get sync history'
       };
     }
   },
@@ -500,9 +512,9 @@ export const AdminDashboardAPI = {
       const response = await adminApi.post('/api/admin/reconcile-bookings', params);
       return { success: true, data: response.data.data };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.message || 'Failed to run reconciliation' 
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to run reconciliation'
       };
     }
   },
@@ -512,9 +524,9 @@ export const AdminDashboardAPI = {
       const response = await adminApi.post('/api/admin/poll-hcn', params);
       return { success: true, data: response.data.data };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.message || 'Failed to poll HCN' 
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to poll HCN'
       };
     }
   },
@@ -524,9 +536,9 @@ export const AdminDashboardAPI = {
       const response = await adminApi.get('/api/admin/hcn-summary');
       return { success: true, data: response.data.data };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.message || 'Failed to get HCN summary' 
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to get HCN summary'
       };
     }
   },
@@ -537,9 +549,9 @@ export const AdminDashboardAPI = {
       const response = await adminApi.get('/api/admin/sync-settings');
       return { success: true, data: response.data.data };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.message || 'Failed to get sync settings' 
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to get sync settings'
       };
     }
   },
@@ -549,9 +561,9 @@ export const AdminDashboardAPI = {
       const response = await adminApi.put('/api/admin/sync-settings', settings);
       return { success: true, data: response.data.data };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.message || 'Failed to update sync settings' 
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to update sync settings'
       };
     }
   },
@@ -564,9 +576,9 @@ export const AdminDashboardAPI = {
       });
       return { success: true, data: response.data.data };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.message || 'Failed to perform bulk action' 
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to perform bulk action'
       };
     }
   },
@@ -579,9 +591,9 @@ export const AdminDashboardAPI = {
       });
       return { success: true, data: response.data.data };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.message || 'Failed to perform bulk action' 
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to perform bulk action'
       };
     }
   },
@@ -594,9 +606,9 @@ export const AdminDashboardAPI = {
       });
       return { success: true, data: response.data.data };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.message || 'Failed to perform bulk action' 
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to perform bulk action'
       };
     }
   },
@@ -609,9 +621,9 @@ export const AdminDashboardAPI = {
       });
       return { success: true, data: response.data.data };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.message || 'Failed to perform bulk action' 
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to perform bulk action'
       };
     }
   },
@@ -626,9 +638,9 @@ export const AdminDashboardAPI = {
       });
       return { success: true, data: response.data };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.message || 'Failed to export data' 
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to export data'
       };
     }
   },
@@ -643,9 +655,9 @@ export const AdminDashboardAPI = {
       });
       return { success: true, data: response.data.data };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.message || 'Failed to send bulk email' 
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to send bulk email'
       };
     }
   },
@@ -656,9 +668,9 @@ export const AdminDashboardAPI = {
       const response = await adminApi.get('/api/admin/audit-logs', { params });
       return { success: true, data: response.data.data };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.message || 'Failed to fetch audit logs' 
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to fetch audit logs'
       };
     }
   },
@@ -669,9 +681,9 @@ export const AdminDashboardAPI = {
       const response = await adminApi.get('/api/markups', { params });
       return { success: true, data: response.data.data };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.message || 'Failed to fetch markup rules' 
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to fetch markup rules'
       };
     }
   },
@@ -681,9 +693,9 @@ export const AdminDashboardAPI = {
       const response = await adminApi.post('/api/markups', data);
       return { success: true, data: response.data.data };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.message || 'Failed to create markup rule' 
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to create markup rule'
       };
     }
   },
@@ -693,9 +705,9 @@ export const AdminDashboardAPI = {
       const response = await adminApi.put(`/api/markups/${id}`, data);
       return { success: true, data: response.data.data };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.message || 'Failed to update markup rule' 
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to update markup rule'
       };
     }
   },
@@ -705,9 +717,9 @@ export const AdminDashboardAPI = {
       const response = await adminApi.delete(`/api/markups/${id}`);
       return { success: true, data: response.data.data };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.message || 'Failed to delete markup rule' 
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to delete markup rule'
       };
     }
   },
@@ -717,9 +729,9 @@ export const AdminDashboardAPI = {
       const response = await adminApi.patch(`/api/markups/${id}/toggle`);
       return { success: true, data: response.data.data };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.message || 'Failed to toggle markup rule' 
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to toggle markup rule'
       };
     }
   },
@@ -730,9 +742,9 @@ export const AdminDashboardAPI = {
       const response = await adminApi.get('/api/coupons', { params });
       return { success: true, data: response.data.data };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.message || 'Failed to fetch coupons' 
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to fetch coupons'
       };
     }
   },
@@ -742,9 +754,9 @@ export const AdminDashboardAPI = {
       const response = await adminApi.post('/api/coupons', data);
       return { success: true, data: response.data.data };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.message || 'Failed to create coupon' 
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to create coupon'
       };
     }
   },
@@ -754,9 +766,9 @@ export const AdminDashboardAPI = {
       const response = await adminApi.put(`/api/coupons/${id}`, data);
       return { success: true, data: response.data.data };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.message || 'Failed to update coupon' 
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to update coupon'
       };
     }
   },
@@ -766,9 +778,9 @@ export const AdminDashboardAPI = {
       const response = await adminApi.delete(`/api/coupons/${id}`);
       return { success: true, data: response.data.data };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.message || 'Failed to delete coupon' 
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to delete coupon'
       };
     }
   },
@@ -778,9 +790,9 @@ export const AdminDashboardAPI = {
       const response = await adminApi.patch(`/api/coupons/${id}/toggle`);
       return { success: true, data: response.data.data };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.message || 'Failed to toggle coupon' 
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to toggle coupon'
       };
     }
   },
@@ -794,9 +806,9 @@ export const AdminDashboardAPI = {
       });
       return { success: true, data: response.data.data };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error.response?.data?.message || 'Invalid coupon' 
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Invalid coupon'
       };
     }
   }

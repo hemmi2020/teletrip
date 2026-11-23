@@ -33,7 +33,7 @@ export const FullWidthBookingsTable = ({
 
   const filteredBookings = bookings.filter(b => {
     if (activeSubFilter === 'confirmed' && b.status !== 'confirmed') return false;
-    if (activeSubFilter === 'pending' && b.status !== 'pending' && b.status !== 'on_hold') return false;
+    if (activeSubFilter === 'pending' && !['pending', 'on_hold', 'failed'].includes(b.status)) return false;
     if (activeSubFilter === 'cancelled' && b.status !== 'cancelled' && b.status !== 'refund_pending' && b.status !== 'refunded') return false;
     if (activeSubFilter === 'completed' && b.status !== 'completed' && b.status !== 'expired') return false;
 
@@ -57,7 +57,7 @@ export const FullWidthBookingsTable = ({
           {[
             { id: 'all', label: 'All Bookings', count: bookings.length },
             { id: 'confirmed', label: 'Confirmed', count: bookings.filter(b => b.status === 'confirmed').length },
-            { id: 'pending', label: 'Pending / Action Req.', count: bookings.filter(b => b.status === 'pending' || b.status === 'on_hold').length },
+            { id: 'pending', label: 'Pending / Action Req.', count: bookings.filter(b => ['pending', 'on_hold', 'failed'].includes(b.status)).length },
             { id: 'cancelled', label: 'Cancellations & Refunds', count: bookings.filter(b => ['cancelled', 'refund_pending', 'refunded'].includes(b.status)).length },
             { id: 'completed', label: 'Completed', count: bookings.filter(b => ['completed', 'expired'].includes(b.status)).length },
           ].map(tab => (
