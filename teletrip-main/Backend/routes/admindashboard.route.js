@@ -823,4 +823,15 @@ router.put('/sync-settings',
   adminDashboardController.updateSyncSettings
 );
 
+// ========== AUDIT TRAIL ==========
+/**
+ * GET /api/admin/audit-logs
+ * Get system audit trail and state machine transitions
+ * @access Private (Admin only)
+ */
+router.get('/audit-logs',
+  ...requireAdmin,
+  adminDashboardController.getAuditLogs
+);
+
 module.exports = router;

@@ -91,12 +91,16 @@ module.exports.loginUser = asyncErrorHandler(async (req, res) => {
     }
 
     const token = user.generateAuthToken();
-    res.cookie('token', token, {
+    const cookieOptions = {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        maxAge: 24 * 60 * 60 * 1000,
-        sameSite: 'strict'
-    });
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+    };
+    res.cookie('token', token, cookieOptions);
+    if (['admin', 'super_admin'].includes(user.role)) {
+        res.cookie('adminToken', token, cookieOptions);
+    }
 
     const userResponse = user.toJSON ? user.toJSON() : user;
     

@@ -8,6 +8,8 @@ const { getHotelContent } = require('../services/hotelbeds.content.service');
 const { getMTLSAgent } = require('../config/mtls.config');
 const HotelIndex = require('../models/hotelIndex.model');
 const bookingModel = require('../models/booking.model');
+const Review = require('../models/review.model');
+const MarkupEngine = require('../services/markupEngine.service');
 // Hotelbeds API configuration  
 const HOTELBEDS_API_KEY = process.env.HOTELBEDS_API_KEY;
 const HOTELBEDS_SECRET = process.env.HOTELBEDS_SECRET;
@@ -417,6 +419,11 @@ router.post('/hotels/search', async (req, res) => {
 
         if (data.hotels && data.hotels.hotels) {
             data.hotels.hotels = await enhanceHotelsWithContent(data.hotels.hotels);
+            await MarkupEngine.applyToHotelsList(data.hotels.hotels, req.body.destination?.code || req.body.destination?.name || '');
+        }
+
+        if (data && data.hotel) {
+            await MarkupEngine.applyToCheckRate(data);
         }
 
         res.json({
@@ -504,6 +511,11 @@ router.post('/hotels/search-auth', async (req, res) => {
 
         if (data.hotels && data.hotels.hotels) {
             data.hotels.hotels = await enhanceHotelsWithContent(data.hotels.hotels);
+            await MarkupEngine.applyToHotelsList(data.hotels.hotels, req.body.destination?.code || req.body.destination?.name || '');
+        }
+
+        if (data && data.hotel) {
+            await MarkupEngine.applyToCheckRate(data);
         }
 
         res.json({
@@ -622,6 +634,10 @@ router.post('/hotels/book', authUser, async (req, res) => {
             }
         });
 
+        if (data && data.hotel) {
+            await MarkupEngine.applyToCheckRate(data);
+        }
+
         res.json({
             success: true,
             data: data
@@ -695,6 +711,10 @@ router.post('/hotels/checkrate', async (req, res) => {
                 body: data
             }
         });
+
+        if (data && data.hotel) {
+            await MarkupEngine.applyToCheckRate(data);
+        }
 
         res.json({
             success: true,
@@ -775,74 +795,56 @@ async function getTripAdvisorReviews(locationId) {
     }
 }
 
-// Deterministic fallback guest reviews generator when TripAdvisor API key is expired or denied
-function generateFallbackReviews(hotelName, city, hotelCode) {
-    let hash = 0;
-    const str = `${hotelName}-${city}-${hotelCode || '101'}`;
-    for (let i = 0; i < str.length; i++) {
-        hash = (hash << 5) - hash + str.charCodeAt(i);
-        hash |= 0;
+// Verified hotel reviews helper - queries genuine platform reviews from database
+async function getVerifiedHotelReviews(hotelCode) {
+    try {
+        const reviews = await Review.find({ 
+            $or: [{ hotelId: hotelCode }, { hotel: hotelCode }],
+            status: 'approved' 
+        }).limit(10).lean();
+
+        const total = reviews.length;
+        const avgRating = total > 0 
+            ? Math.round((reviews.reduce((acc, r) => acc + (Number(r.rating) || 0), 0) / total) * 10) / 10 
+            : 0;
+
+        return {
+            locationId: null,
+            rating: avgRating,
+            numReviews: total,
+            rankingData: null,
+            ratingImageUrl: null,
+            reviews: reviews.map(r => ({
+                title: r.title || 'Guest Review',
+                text: r.comment || r.text || '',
+                rating: r.rating || 5,
+                published_date: r.createdAt ? new Date(r.createdAt).toISOString() : new Date().toISOString(),
+                trip_type: 'Traveler',
+                user: { username: r.userName || 'Verified Guest' }
+            })),
+            isFallback: false
+        };
+    } catch (e) {
+        return {
+            locationId: null,
+            rating: 0,
+            numReviews: 0,
+            rankingData: null,
+            ratingImageUrl: null,
+            reviews: [],
+            isFallback: false
+        };
     }
-    const absHash = Math.abs(hash);
-
-    // Rating between 4.0 and 4.8
-    const baseRating = 4.0 + ((absHash % 9) / 10);
-    const rating = Math.round(baseRating * 10) / 10;
-    const numReviews = 220 + (absHash % 980);
-    const rankingNumber = 8 + (absHash % 60);
-    const totalInCity = 320 + (absHash % 350);
-
-    const sampleReviews = [
-        {
-            title: `Exceptional stay at ${hotelName}`,
-            text: `We spent several nights here while visiting ${city}. The rooms were beautifully appointed, spotless, and the service was genuinely warm and professional throughout.`,
-            rating: Math.min(5, Math.floor(rating + 0.5)),
-            published_date: new Date(Date.now() - (absHash % 20 + 3) * 86400000).toISOString(),
-            trip_type: 'Couples',
-            user: { username: 'Traveler_' + (absHash % 900 + 100) }
-        },
-        {
-            title: 'Great hospitality and unbeatable location',
-            text: `Superb value for money. Very central, delicious dining choices, and the front desk team went above and beyond to accommodate our requests.`,
-            rating: Math.floor(rating),
-            published_date: new Date(Date.now() - (absHash % 45 + 25) * 86400000).toISOString(),
-            trip_type: 'Family',
-            user: { username: 'GlobalVoyager' }
-        },
-        {
-            title: 'Modern, comfortable, and peaceful',
-            text: `The facilities were clean, beds very comfortable, and soundproofing was excellent. Would definitely stay again when returning to ${city}.`,
-            rating: Math.max(4, Math.floor(rating)),
-            published_date: new Date(Date.now() - (absHash % 70 + 50) * 86400000).toISOString(),
-            trip_type: 'Business',
-            user: { username: 'FrequentFlyer' }
-        }
-    ];
-
-    return {
-        locationId: `verified_${hotelCode || absHash}`,
-        rating: rating,
-        numReviews: numReviews,
-        rankingData: {
-            ranking_string: `${rankingNumber} of ${totalInCity} Hotels in ${city}`,
-            geo_location_name: city,
-            ranking_out_of: totalInCity,
-            ranking: rankingNumber
-        },
-        ratingImageUrl: null,
-        reviews: sampleReviews,
-        isFallback: true
-    };
 }
 
-// ROUTE: Get hotel reviews from TripAdvisor (with resilient fallback when key is expired/denied)
+// ROUTE: Get hotel reviews from TripAdvisor (or verified platform reviews if unavailable)
 router.get('/hotels/:hotelCode/reviews', async (req, res) => {
     try {
         const { hotelCode } = req.params;
         const hotelName = req.query.name || 'Hotel';
         const city = req.query.city || 'Dubai';
 
-        // Step 1: Attempt search on TripAdvisor
+        // Step 1: Attempt search on TripAdvisor if key is present
         let locationId = null;
         try {
             if (TRIPADVISOR_API_KEY) {
@@ -862,8 +864,8 @@ router.get('/hotels/:hotelCode/reviews', async (req, res) => {
                         success: true,
                         data: {
                             locationId: locationId,
-                            rating: details?.rating ? Number(details.rating) : 4.3,
-                            numReviews: details?.num_reviews ? Number(details.num_reviews) : 350,
+                            rating: details?.rating ? Number(details.rating) : 0,
+                            numReviews: details?.num_reviews ? Number(details.num_reviews) : 0,
                             rankingData: details?.ranking_data || null,
                             ratingImageUrl: details?.rating_image_url || null,
                             reviews: reviewsData?.data || []
@@ -875,19 +877,19 @@ router.get('/hotels/:hotelCode/reviews', async (req, res) => {
             }
         }
 
-        // Resilient Fallback: If TripAdvisor API key is blocked/expired or hotel is not indexed, return verified guest review data
-        const fallbackData = generateFallbackReviews(hotelName, city, hotelCode);
+        // Genuine Platform Reviews Fallback
+        const platformData = await getVerifiedHotelReviews(hotelCode);
         return res.json({
             success: true,
-            data: fallbackData
+            data: platformData
         });
 
     } catch (error) {
-        console.error('Error fetching TripAdvisor data:', error);
-        const fallbackData = generateFallbackReviews(req.query.name || 'Hotel', req.query.city || 'City', req.params.hotelCode);
+        console.error('Error fetching hotel reviews:', error);
+        const emptyData = await getVerifiedHotelReviews(req.params.hotelCode);
         res.json({
             success: true,
-            data: fallbackData
+            data: emptyData
         });
     }
 });
@@ -1154,6 +1156,25 @@ router.delete('/hotels/bookings/:bookingId', authUser, async (req, res) => {
             return res.status(response.status).json({ success: false, error: 'Failed to cancel booking', details: responseText });
         }
 
+        // If this was an actual execution (not simulation), update the local booking status and cancellation records
+        if (cancellationFlag !== 'SIMULATION') {
+            try {
+                const query = bookingId.match(/^[0-9a-fA-F]{24}$/) 
+                    ? { $or: [{ _id: bookingId }, { bookingReference: bookingId }] } 
+                    : { bookingReference: bookingId };
+                await bookingModel.findOneAndUpdate(query, {
+                    $set: {
+                        status: 'cancelled',
+                        'cancellationDetails.cancelledAt': new Date(),
+                        'cancellationDetails.supplierResponse': responseData,
+                        'cancellationDetails.cancelledBy': req.user._id
+                    }
+                });
+            } catch (dbErr) {
+                console.error('[Cancellation] Failed to update local booking status:', dbErr.message);
+            }
+        }
+
         res.json({ success: true, data: responseData });
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
@@ -1264,6 +1285,7 @@ router.post('/hotels/search-by-hotels', async (req, res) => {
         // Enhance with content images
         if (data.hotels && data.hotels.hotels) {
             data.hotels.hotels = await enhanceHotelsWithContent(data.hotels.hotels);
+            await MarkupEngine.applyToHotelsList(data.hotels.hotels, req.body.destination?.code || req.body.destination?.name || '');
         }
 
         res.json({ success: true, data });

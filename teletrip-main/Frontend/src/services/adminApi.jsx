@@ -9,6 +9,7 @@ const API_BASE_URL = import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
 const adminApi = axios.create({
   baseURL: API_BASE_URL,
   timeout: 30000,
+  withCredentials: true,
 });
 
 // Request interceptor
@@ -170,6 +171,18 @@ export const AdminDashboardAPI = {
       return { 
         success: false, 
         error: error.response?.data?.message || 'Failed to cancel booking' 
+      };
+    }
+  },
+
+  simulateBookingCancellation: async (bookingReference) => {
+    try {
+      const response = await adminApi.delete(`/api/hotels/bookings/${bookingReference}?cancellationFlag=SIMULATION`);
+      return { success: true, data: response.data.data };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.response?.data?.details || error.response?.data?.error || error.message || 'Failed to simulate cancellation with Bedsonline' 
       };
     }
   },
@@ -636,6 +649,157 @@ export const AdminDashboardAPI = {
       };
     }
   },
+
+  // ========== AUDIT TRAIL ==========
+  getAuditLogs: async (params = {}) => {
+    try {
+      const response = await adminApi.get('/api/admin/audit-logs', { params });
+      return { success: true, data: response.data.data };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.response?.data?.message || 'Failed to fetch audit logs' 
+      };
+    }
+  },
+
+  // ========== MARKUP & COMMISSION RULES ==========
+  getMarkups: async (params = {}) => {
+    try {
+      const response = await adminApi.get('/api/markups', { params });
+      return { success: true, data: response.data.data };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.response?.data?.message || 'Failed to fetch markup rules' 
+      };
+    }
+  },
+
+  createMarkup: async (data) => {
+    try {
+      const response = await adminApi.post('/api/markups', data);
+      return { success: true, data: response.data.data };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.response?.data?.message || 'Failed to create markup rule' 
+      };
+    }
+  },
+
+  updateMarkup: async (id, data) => {
+    try {
+      const response = await adminApi.put(`/api/markups/${id}`, data);
+      return { success: true, data: response.data.data };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.response?.data?.message || 'Failed to update markup rule' 
+      };
+    }
+  },
+
+  deleteMarkup: async (id) => {
+    try {
+      const response = await adminApi.delete(`/api/markups/${id}`);
+      return { success: true, data: response.data.data };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.response?.data?.message || 'Failed to delete markup rule' 
+      };
+    }
+  },
+
+  toggleMarkup: async (id) => {
+    try {
+      const response = await adminApi.patch(`/api/markups/${id}/toggle`);
+      return { success: true, data: response.data.data };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.response?.data?.message || 'Failed to toggle markup rule' 
+      };
+    }
+  },
+
+  // ========== PROMO CODES & COUPONS ==========
+  getCoupons: async (params = {}) => {
+    try {
+      const response = await adminApi.get('/api/coupons', { params });
+      return { success: true, data: response.data.data };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.response?.data?.message || 'Failed to fetch coupons' 
+      };
+    }
+  },
+
+  createCoupon: async (data) => {
+    try {
+      const response = await adminApi.post('/api/coupons', data);
+      return { success: true, data: response.data.data };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.response?.data?.message || 'Failed to create coupon' 
+      };
+    }
+  },
+
+  updateCoupon: async (id, data) => {
+    try {
+      const response = await adminApi.put(`/api/coupons/${id}`, data);
+      return { success: true, data: response.data.data };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.response?.data?.message || 'Failed to update coupon' 
+      };
+    }
+  },
+
+  deleteCoupon: async (id) => {
+    try {
+      const response = await adminApi.delete(`/api/coupons/${id}`);
+      return { success: true, data: response.data.data };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.response?.data?.message || 'Failed to delete coupon' 
+      };
+    }
+  },
+
+  toggleCoupon: async (id) => {
+    try {
+      const response = await adminApi.patch(`/api/coupons/${id}/toggle`);
+      return { success: true, data: response.data.data };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.response?.data?.message || 'Failed to toggle coupon' 
+      };
+    }
+  },
+
+  validateCoupon: async (code, bookingAmount, destination) => {
+    try {
+      const response = await adminApi.post('/api/coupons/validate', {
+        code,
+        bookingAmount,
+        destination
+      });
+      return { success: true, data: response.data.data };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.response?.data?.message || 'Invalid coupon' 
+      };
+    }
+  }
 };
 
 // ========== UTILITY FUNCTIONS ==========

@@ -11,23 +11,17 @@ const adminActivitySchema = new mongoose.Schema({
   admin: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true
+    required: false
   },
   action: {
     type: String,
     required: true,
-    enum: [
-      'user_created', 'user_updated', 'user_deleted', 'user_blocked', 'user_unblocked',
-      'booking_viewed', 'booking_updated', 'booking_cancelled', 'booking_refunded',
-      'payment_viewed', 'payment_refunded', 'payment_investigated',
-      'hotel_added', 'hotel_updated', 'hotel_deleted',
-      'system_settings_updated', 'admin_login', 'admin_logout',
-      'report_generated', 'export_data'
-    ]
+    trim: true
   },
   target: {
-    type: String, // 'user', 'booking', 'payment', 'hotel', 'system'
-    required: true
+    type: String, // 'user', 'booking', 'payment', 'hotel', 'markup', 'coupon', 'cms', 'system'
+    required: true,
+    trim: true
   },
   targetId: mongoose.Schema.Types.ObjectId,
   details: mongoose.Schema.Types.Mixed,
@@ -41,6 +35,10 @@ const adminActivitySchema = new mongoose.Schema({
 }, {
   timestamps: true
 });
+
+adminActivitySchema.index({ createdAt: -1 });
+adminActivitySchema.index({ target: 1, createdAt: -1 });
+adminActivitySchema.index({ admin: 1, createdAt: -1 });
 
 const AdminActivity = mongoose.model('AdminActivity', adminActivitySchema);
 

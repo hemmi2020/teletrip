@@ -6,9 +6,12 @@ const fetch = require('node-fetch');
 const { addLog } = require('./certificationLogger');
 const { getMTLSAgent } = require('../config/mtls.config');
 
-// Hotelbeds API configuration
-const HOTELBEDS_API_KEY = process.env.HOTELBEDS_API_KEY || '106700a0f2f1e2aa1d4c2b16daae70b2';
-const HOTELBEDS_SECRET = process.env.HOTELBEDS_SECRET || '018e478aa6';
+// Hotelbeds API configuration - Strictly read from environment
+const HOTELBEDS_API_KEY = process.env.HOTELBEDS_API_KEY;
+const HOTELBEDS_SECRET = process.env.HOTELBEDS_SECRET;
+if (!HOTELBEDS_API_KEY || !HOTELBEDS_SECRET) {
+  console.warn('[HOTELBEDS] ⚠️ HOTELBEDS_API_KEY or HOTELBEDS_SECRET is not configured in process.env!');
+}
 // Use MTLS endpoint when certificate is configured (mandatory for production)
 // Test: api-mtls.test.hotelbeds.com | Production: api-mtls.hotelbeds.com
 const HOTELBEDS_ENV = (process.env.HOTELBEDS_ENV || 'test').toLowerCase();

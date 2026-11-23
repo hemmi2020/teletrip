@@ -5,8 +5,8 @@ const blacklistTokenModel = require('../models/blacklistToken.model');
 
 const authUser = async (req, res, next) => {
     try {
-        // Get token from cookie or Authorization header
-        const token = (req.cookies?.token) || 
+        // Get token from cookie (adminToken or token) or Authorization header
+        const token = (req.cookies?.adminToken) || (req.cookies?.token) || 
                       (req.headers.authorization?.startsWith('Bearer ') ?
                        req.headers.authorization.split(' ')[1] : null);
 
@@ -101,7 +101,7 @@ const optionalAuth = async (req, res, next) => {
 // Admin authentication middleware
 const authenticateAdmin = async (req, res, next) => {
     try {
-        const token = req.cookies?.token || 
+        const token = req.cookies?.adminToken || req.cookies?.token || 
                       (req.headers.authorization?.startsWith('Bearer ') ?
                        req.headers.authorization.split(' ')[1] : null);
 

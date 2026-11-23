@@ -5,6 +5,7 @@ import {
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { getBookingStatusConfig, getPaymentStatusConfig } from '../../lib/stateMachines';
+import { AdminDashboardAPI } from '../../services/adminApi';
 import { 
   Building2, User, Calendar, DollarSign, Clock, ShieldCheck, 
   AlertTriangle, FileText, ChevronDown, ChevronRight, CheckCircle2,
@@ -22,8 +23,33 @@ export const BookingDetailSheet = ({
   const [showRawJson, setShowRawJson] = useState(false);
   const [transitioning, setTransitioning] = useState(false);
   const [adminNote, setAdminNote] = useState('');
+  const [simulatingCancellation, setSimulatingCancellation] = useState(false);
+  const [simulationResult, setSimulationResult] = useState(null);
 
   if (!booking) return null;
+
+  const handleSimulateCancellation = async () => {
+    const ref = booking.bookingReference || booking.reference || booking._id;
+    if (!ref) {
+      showToast?.('No booking reference found to simulate', 'error');
+      return;
+    }
+    setSimulatingCancellation(true);
+    setSimulationResult(null);
+    try {
+      const res = await AdminDashboardAPI.simulateBookingCancellation(ref);
+      if (res.success && res.data) {
+        setSimulationResult(res.data);
+        showToast?.('Bedsonline cancellation simulation retrieved successfully', 'success');
+      } else {
+        showToast?.(res.error || 'Failed to simulate cancellation', 'error');
+      }
+    } catch (err) {
+      showToast?.(err.message || 'Simulation error', 'error');
+    } finally {
+      setSimulatingCancellation(false);
+    }
+  };
 
   const statusConfig = getBookingStatusConfig(booking.status);
   const paymentConfig = getPaymentStatusConfig(booking.paymentDetails?.status || booking.paymentStatus);
@@ -220,6 +246,58 @@ export const BookingDetailSheet = ({
                   </div>
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* Bedsonline APITUDE Cancellation Simulation Engine */}
+          {(booking.status === 'confirmed' || booking.bookingReference) && (
+            <div className="rounded-xl border border-indigo-200 bg-indigo-50/40 p-4">
+              <div className="flex items-center justify-between gap-2">
+                <div>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-indigo-900 flex items-center gap-1.5">
+                    <ShieldCheck className="w-4 h-4 text-indigo-600" />
+                    Bedsonline APITUDE Cancellation Simulator
+                  </h4>
+                  <p className="text-[11px] text-indigo-700 mt-0.5">
+                    Simulate real-time penalty charges and cancellation reference directly from Bedsonline without cancelling.
+                  </p>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={simulatingCancellation}
+                  onClick={handleSimulateCancellation}
+                  className="bg-white border-indigo-300 text-indigo-700 hover:bg-indigo-100 text-xs font-semibold shrink-0 cursor-pointer"
+                >
+                  {simulatingCancellation ? 'Simulating...' : 'Simulate Penalty'}
+                </Button>
+              </div>
+
+              {simulationResult && (
+                <div className="mt-3 p-3 bg-white rounded-lg border border-indigo-200 text-xs text-slate-800 space-y-1.5">
+                  <div className="flex justify-between items-center font-bold text-slate-900 border-b pb-1.5">
+                    <span>Simulation Status:</span>
+                    <Badge variant="emerald">{simulationResult.booking?.status || 'SIMULATED'}</Badge>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">Supplier Penalty Amount:</span>
+                    <span className="font-bold text-red-600">
+                      {simulationResult.booking?.cancellationAmount != null 
+                        ? `${simulationResult.booking?.currency || 'EUR'} ${simulationResult.booking?.cancellationAmount}` 
+                        : '0.00 (Free Cancellation)'}
+                    </span>
+                  </div>
+                  {simulationResult.booking?.cancellationReference && (
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">Simulation Reference:</span>
+                      <span className="font-mono text-slate-700">{simulationResult.booking.cancellationReference}</span>
+                    </div>
+                  )}
+                  <p className="text-[10px] text-slate-500 pt-1 italic">
+                    Simulation completed against Bedsonline live APITUDE. The booking remains ACTIVE until you trigger cancellation.
+                  </p>
+                </div>
+              )}
             </div>
           )}
 

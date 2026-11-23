@@ -1,19 +1,28 @@
 const express = require('express'); 
 const router = express.Router(); 
 const {body} = require('express-validator');
+const rateLimit = require('express-rate-limit');
 const userController = require('../controllers/user.controller'); 
 const authMiddleware = require('../middlewares/auth.middleware');   
 const { validateRequest } = require('../middlewares/validation.middleware');
 const userModel = require('../models/user.model');
+
+// Strict brute-force protection on authentication
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 10,
+    message: { success: false, message: 'Too many authentication attempts. Please try again after 15 minutes.' },
+    standardHeaders: true,
+    legacyHeaders: false
+});
  
- 
-router.post('/register',[ 
+router.post('/register', authLimiter, [ 
     body('fullname.firstname').isLength({min: 3}).withMessage('First name must be atleast 3 characters long'),
     body('email').isEmail().withMessage('Invalid Email'),
     body('password').isLength({min: 6}).withMessage('Password must be atleast 6 characters long') 
 ],validateRequest,userController.registerUser)
 
-router.post('/login',[
+router.post('/login', authLimiter, [
     body('email').isEmail().withMessage('Invalid Email'), 
     body('password').isLength({min: 6}).withMessage('Password must be atleast 6 characters long')
 ],validateRequest, userController.loginUser);

@@ -10,11 +10,19 @@ exports.modifyBooking = async (req, res) => {
       return res.status(404).json({ success: false, error: 'Booking not found' });
     }
 
-    booking.checkIn = checkIn || booking.checkIn;
-    booking.checkOut = checkOut || booking.checkOut;
-    booking.guests = guests || booking.guests;
-    booking.rooms = rooms || booking.rooms;
-    booking.specialRequests = specialRequests || booking.specialRequests;
+    // Safety guard for live supplier bookings
+    if (booking.bookingReference && booking.status === 'confirmed' && (checkIn || checkOut || rooms)) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Direct date or room modification is not allowed for confirmed supplier bookings. Please contact Bedsonline support or process a re-booking / cancellation to prevent supplier discrepancy.' 
+      });
+    }
+
+    if (checkIn) booking.checkIn = checkIn;
+    if (checkOut) booking.checkOut = checkOut;
+    if (guests) booking.guests = guests;
+    if (rooms) booking.rooms = rooms;
+    if (specialRequests) booking.specialRequests = specialRequests;
 
     await booking.save();
 
@@ -160,7 +168,20 @@ exports.getSpecialRequests = async (req, res) => {
       return res.status(404).json({ success: false, error: 'Booking not found' });
     }
 
-    res.json(booking.specialRequests || []);
+    let requests = [];
+    if (Array.isArray(booking.specialRequests)) {
+      requests = booking.specialRequests;
+    } else if (booking.specialRequests && typeof booking.specialRequests === 'object') {
+      requests = Object.entries(booking.specialRequests).map(([key, val], idx) => ({
+        id: idx + 1,
+        request: `${key}: ${val}`,
+        status: 'pending'
+      }));
+    } else if (typeof booking.specialRequests === 'string' && booking.specialRequests.trim()) {
+      requests = [{ id: 1, request: booking.specialRequests, status: 'pending' }];
+    }
+
+    res.json(requests);
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
@@ -176,10 +197,13 @@ exports.updateRequestStatus = async (req, res) => {
       return res.status(404).json({ success: false, error: 'Booking not found' });
     }
 
-    const request = booking.specialRequests.find(r => r.id == requestId);
-    if (request) {
-      request.status = status;
-      await booking.save();
+    let request = null;
+    if (Array.isArray(booking.specialRequests)) {
+      request = booking.specialRequests.find(r => r.id == requestId);
+      if (request) {
+        request.status = status;
+        await booking.save();
+      }
     }
 
     res.json({ success: true, data: request });

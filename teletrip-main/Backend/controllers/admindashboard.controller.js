@@ -18,6 +18,7 @@ const {
 } = require('../services/hotelbeds.staticcontent.service');
 const { runReconciliation, fetchHotelbedsBookingDetail } = require('../services/hotelbeds.reconciliation.service');
 const SystemSettings = require('../models/systemsetting.model');
+const AdminActivity = require('../models/adminactivity.model');
 const moment = require('moment');
 const { transitionBookingState, canTransitionBooking } = require('../services/stateMachines/bookingStateMachine');
 const { transitionPaymentState } = require('../services/stateMachines/paymentStateMachine');
@@ -78,7 +79,9 @@ const getDashboardOverview = asyncErrorHandler(async (req, res) => {
     revenueByMonth,
     bookingsByStatus,
     userRegistrations,
-    paymentMethods
+    paymentMethods,
+    revenueDaily,
+    bookingDaily
   ] = await Promise.all([
     // ✅ FIXED: Count all users (no isActive field exists)
     user.countDocuments(),
@@ -190,9 +193,46 @@ const getDashboardOverview = asyncErrorHandler(async (req, res) => {
       { $sort: { '_id.year': 1, '_id.month': 1 } }
     ]),
     
-    // Payment Methods Distribution
+    // Payment Methods Distribution (support either paymentMethod or method)
     Payment.aggregate([
-      { $group: { _id: '$method', count: { $sum: 1 }, amount: { $sum: '$amount' } } }
+      { $group: { _id: { $ifNull: ['$paymentMethod', '$method'] }, count: { $sum: 1 }, amount: { $sum: '$amount' } } }
+    ]),
+    
+    // Revenue daily trends
+    Payment.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: startDate },
+          status: { $in: ['completed', 'refunded', 'partially_refunded'] }
+        }
+      },
+      {
+        $group: {
+          _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+          revenue: { $sum: '$amount' },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { _id: 1 } }
+    ]),
+
+    // Booking daily trends
+    Booking.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: startDate }
+        }
+      },
+      {
+        $group: {
+          _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+          bookings: { $sum: 1 },
+          cancelled: {
+            $sum: { $cond: [{ $eq: ['$status', 'cancelled'] }, 1, 0] }
+          }
+        }
+      },
+      { $sort: { _id: 1 } }
     ])
   ]);
 
@@ -247,7 +287,9 @@ const getDashboardOverview = asyncErrorHandler(async (req, res) => {
       revenueByMonth,
       bookingsByStatus,
       userRegistrations,
-      paymentMethods
+      paymentMethods,
+      revenueDaily,
+      bookingDaily
     },
     topPerformers: {
       hotels: topHotels
@@ -1840,6 +1882,53 @@ const updateSyncSettings = asyncErrorHandler(async (req, res) => {
   return ApiResponse.success(res, { updated: true }, 'Sync settings updated');
 });
 
+// ========== AUDIT TRAIL / SYSTEM ACTIVITIES ==========
+const getAuditLogs = asyncErrorHandler(async (req, res) => {
+  const page = Math.max(1, parseInt(req.query.page) || 1);
+  const limit = Math.min(Math.max(1, parseInt(req.query.limit) || 20), 100);
+  const skip = (page - 1) * limit;
+
+  const query = {};
+  if (req.query.target && req.query.target !== 'all') {
+    query.target = req.query.target;
+  }
+  if (req.query.action && req.query.action !== 'all') {
+    query.action = req.query.action;
+  }
+  if (req.query.search) {
+    const searchRegex = new RegExp(req.query.search, 'i');
+    query.$or = [
+      { action: searchRegex },
+      { target: searchRegex },
+      { 'metadata.reason': searchRegex }
+    ];
+  }
+  if (req.query.startDate || req.query.endDate) {
+    query.createdAt = {};
+    if (req.query.startDate) query.createdAt.$gte = new Date(req.query.startDate);
+    if (req.query.endDate) query.createdAt.$lte = new Date(req.query.endDate);
+  }
+
+  const [logs, total] = await Promise.all([
+    AdminActivity.find(query)
+      .populate('admin', 'name email role')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean(),
+    AdminActivity.countDocuments(query)
+  ]);
+
+  return ApiResponse.success(res, {
+    logs,
+    pagination: {
+      page,
+      limit,
+      total,
+      pages: Math.ceil(total / limit) || 1
+    }
+  }, 'Audit logs retrieved successfully');
+});
 
 // Bulk Actions
 const bulkActions = require('./bulkActions.controller');
@@ -1888,5 +1977,6 @@ module.exports = {
   pollHCN,
   getHCNSummary,
   getSyncSettings,
-  updateSyncSettings
+  updateSyncSettings,
+  getAuditLogs
 };

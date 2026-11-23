@@ -19,8 +19,11 @@
 const crypto = require('crypto');
 const SyncJob = require('../models/syncJob.model');
 
-const HOTELBEDS_API_KEY = process.env.HOTELBEDS_API_KEY || '106700a0f2f1e2aa1d4c2b16daae70b2';
-const HOTELBEDS_SECRET = process.env.HOTELBEDS_SECRET || '018e478aa6';
+const HOTELBEDS_API_KEY = process.env.HOTELBEDS_API_KEY;
+const HOTELBEDS_SECRET = process.env.HOTELBEDS_SECRET;
+if (!HOTELBEDS_API_KEY || !HOTELBEDS_SECRET) {
+  console.warn('[HOTELBEDS] ⚠️ StaticContent: HOTELBEDS_API_KEY or HOTELBEDS_SECRET is not configured in process.env!');
+}
 // Content API uses standard endpoint (Hotelbeds hosts only booking flow /hotel-api on api-mtls)
 const HOTELBEDS_ENV = (process.env.HOTELBEDS_ENV || 'test').toLowerCase();
 function getNormalizedContentUrl(rawUrl, isLive) {

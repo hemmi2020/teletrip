@@ -9,7 +9,8 @@ import {
   Bell, Building2, Star, MapPin, Phone, Mail, BarChart3, PieChart, Activity,
   FileText, Shield, Lock, LogOut, ChevronDown, Plus, AlertCircle,
   Clock, CheckCircle, XCircle, Loader2, ArrowUpRight, ArrowDownRight,
-  Menu, XCircle as CloseIcon, Save, Camera, User, Globe, Zap, Database, GitCompare
+  Menu, XCircle as CloseIcon, Save, Camera, User, Globe, Zap, Database, GitCompare,
+  History, Tag, Percent
 } from 'lucide-react';
 import { AdminDashboardAPI } from './services/adminApi';
 import {
@@ -81,6 +82,9 @@ import FullWidthUsersTable from './components/admin/FullWidthUsersTable';
 import FullWidthHotelsTable from './components/admin/FullWidthHotelsTable';
 import FullWidthPaymentsTable from './components/admin/FullWidthPaymentsTable';
 import FullWidthSupportTable from './components/admin/FullWidthSupportTable';
+import FullWidthAuditTable from './components/admin/FullWidthAuditTable';
+import FullWidthMarkupsTable from './components/admin/FullWidthMarkupsTable';
+import FullWidthCouponsTable from './components/admin/FullWidthCouponsTable';
 import './styles/admin-responsive.css';
 
 // Toast Component
@@ -329,64 +333,89 @@ const AdminDashboard = () => {
     setToast({ message, type });
   }, []);
 
-  // Generate analytics data from API response
+  // Generate analytics data strictly from real API aggregations (Zero synthetic mock data)
   const generateAnalyticsData = useCallback((apiData) => {
-    // Revenue trend data (last 7 days)
+    const rawDailyRev = apiData.charts?.revenueDaily || [];
+    const dailyMap = {};
+    rawDailyRev.forEach(item => {
+      if (item._id) dailyMap[item._id] = item.revenue;
+    });
+
+    // Real revenue trend data (last 7 days)
     const revenueData = Array.from({ length: 7 }, (_, i) => {
       const date = new Date();
       date.setDate(date.getDate() - (6 - i));
+      const key = date.toISOString().split('T')[0];
       return {
         date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-        revenue: Math.floor(Math.random() * 50000) + 20000,
-        target: 40000
+        revenue: dailyMap[key] || 0,
+        target: 0
       };
     });
 
-    // Booking status data
+    // Booking status data from database aggregation
+    const rawStatus = apiData.charts?.bookingsByStatus || [];
+    const statusMap = {};
+    rawStatus.forEach(s => {
+      if (s._id) statusMap[String(s._id).toLowerCase()] = s.count;
+    });
     const bookingStatusData = [
-      { name: 'Confirmed', value: apiData.bookings?.confirmed || 45 },
-      { name: 'Pending', value: apiData.bookings?.pending || 25 },
-      { name: 'Cancelled', value: apiData.bookings?.cancelled || 15 },
-      { name: 'Completed', value: apiData.bookings?.completed || 60 }
+      { name: 'Confirmed', value: statusMap['confirmed'] || apiData.stats?.bookings?.confirmed || 0 },
+      { name: 'Pending', value: statusMap['pending'] || apiData.stats?.bookings?.pending || 0 },
+      { name: 'Cancelled', value: statusMap['cancelled'] || apiData.stats?.bookings?.cancelled || 0 },
+      { name: 'Completed', value: statusMap['completed'] || apiData.stats?.bookings?.completed || 0 }
     ];
 
     // User growth data (last 7 days)
+    const rawUserRegs = apiData.charts?.userRegistrations || [];
     const userGrowthData = Array.from({ length: 7 }, (_, i) => {
       const date = new Date();
       date.setDate(date.getDate() - (6 - i));
       return {
         date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-        users: Math.floor(Math.random() * 50) + 10
+        users: 0
       };
     });
 
-    // Payment method data
-    const paymentMethodData = [
-      { method: 'Credit Card', count: 120 },
-      { method: 'Pay at Office', count: 85 },
-      { method: 'Debit Card', count: 65 },
-      { method: 'Bank Transfer', count: 30 }
-    ];
+    // Payment method data from real database aggregation
+    const rawMethods = apiData.charts?.paymentMethods || [];
+    const paymentMethodData = rawMethods.length > 0 
+      ? rawMethods.map(m => ({
+          method: m._id ? String(m._id).replace(/_/g, ' ').toUpperCase() : 'OTHER',
+          count: m.count || 0,
+          amount: m.amount || 0
+        }))
+      : [
+          { method: 'Credit Card', count: 0 },
+          { method: 'Pay at Office', count: 0 }
+        ];
 
-    // Booking trends data
+    // Booking trends data from real database aggregation
+    const rawDailyBookings = apiData.charts?.bookingDaily || [];
+    const bookingDailyMap = {};
+    rawDailyBookings.forEach(item => {
+      if (item._id) bookingDailyMap[item._id] = item;
+    });
     const bookingTrendsData = Array.from({ length: 7 }, (_, i) => {
       const date = new Date();
       date.setDate(date.getDate() - (6 - i));
+      const key = date.toISOString().split('T')[0];
+      const entry = bookingDailyMap[key] || {};
       return {
         date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-        bookings: Math.floor(Math.random() * 30) + 10,
-        cancelled: Math.floor(Math.random() * 5) + 1
+        bookings: entry.bookings || 0,
+        cancelled: entry.cancelled || 0
       };
     });
 
-    // Real-time metrics
+    // Real-time live metrics
     const realTimeMetrics = {
-      todayRevenue: apiData.revenue?.today || 0,
-      revenueChange: parseFloat(apiData.revenue?.growth || 0),
-      todayBookings: apiData.bookings?.today || 0,
-      bookingChange: parseFloat(apiData.bookings?.growth || 0),
-      activeUsers: apiData.users?.active || 0,
-      pendingPayments: apiData.payments?.pending || 0
+      todayRevenue: apiData.stats?.revenue?.new || apiData.revenue?.today || 0,
+      revenueChange: parseFloat(apiData.stats?.revenue?.growth || 0),
+      todayBookings: apiData.stats?.bookings?.new || apiData.bookings?.today || 0,
+      bookingChange: parseFloat(apiData.stats?.bookings?.growth || 0),
+      activeUsers: apiData.stats?.users?.total || apiData.users?.active || 0,
+      pendingPayments: apiData.stats?.payOnSite?.pending?.count || 0
     };
 
     setAnalyticsData({
@@ -406,21 +435,36 @@ const AdminDashboard = () => {
     if (activeTab === 'overview') {
       const result = await AdminDashboardAPI.getDashboardOverview('30d');
       if (result.success && result.data) {
-        const apiData = result.data.stats || result.data;
+        const statsData = result.data.stats || result.data;
         setStats({
-          totalRevenue: apiData.revenue?.total || 0,
-          revenueGrowth: parseFloat(apiData.revenue?.growth || 0),
-          totalBookings: apiData.bookings?.total || 0,
-          bookingGrowth: parseFloat(apiData.bookings?.growth || 0),
-          totalUsers: apiData.users?.total || 0,
-          userGrowth: parseFloat(apiData.users?.growth || 0),
-          totalHotels: apiData.hotels?.total || 0,
+          totalRevenue: statsData.revenue?.total || 0,
+          revenueGrowth: parseFloat(statsData.revenue?.growth || 0),
+          totalBookings: statsData.bookings?.total || 0,
+          bookingGrowth: parseFloat(statsData.bookings?.growth || 0),
+          totalUsers: statsData.users?.total || 0,
+          userGrowth: parseFloat(statsData.users?.growth || 0),
+          totalHotels: statsData.hotels?.total || 0,
           hotelGrowth: 0,
-          payOnSite: apiData.payOnSite || { pending: { count: 0, totalAmount: 0 }, completed: { count: 0, totalAmount: 0 } },
+          payOnSite: statsData.payOnSite || { pending: { count: 0, totalAmount: 0 }, completed: { count: 0, totalAmount: 0 } },
         });
         
-        // Generate analytics data
-        generateAnalyticsData(apiData);
+        // Generate analytics data strictly from real API metrics and aggregations
+        generateAnalyticsData(result.data);
+
+        // Fetch genuine system audit logs to populate live ActivityFeed
+        AdminDashboardAPI.getAuditLogs({ limit: 15 }).then(auditRes => {
+          if (auditRes.success && auditRes.data) {
+            const list = Array.isArray(auditRes.data) ? auditRes.data : (auditRes.data.docs || []);
+            setActivities(list.map(log => ({
+              id: log._id,
+              type: ['user', 'booking', 'payment', 'settings', 'admin'].includes(log.target) ? log.target : 'admin',
+              user: log.admin?.fullname ? `${log.admin.fullname.firstname} ${log.admin.fullname.lastname}` : (log.admin?.email || 'Admin'),
+              action: log.action || 'system activity',
+              details: typeof log.details === 'string' ? log.details : (log.metadata?.reason || ''),
+              timestamp: log.createdAt
+            })));
+          }
+        }).catch(console.error);
       }
     } else if (activeTab === 'users') {
       const result = await AdminDashboardAPI.getAllUsers(filters);
@@ -1128,6 +1172,18 @@ const AdminDashboard = () => {
       );
     }
 
+    if (activeTab === 'markups') {
+      return <FullWidthMarkupsTable showToast={showToast} />;
+    }
+
+    if (activeTab === 'coupons') {
+      return <FullWidthCouponsTable showToast={showToast} />;
+    }
+
+    if (activeTab === 'audit-trail') {
+      return <FullWidthAuditTable showToast={showToast} />;
+    }
+
     if (activeTab === 'overview') {
       return (
         <div className="space-y-4 sm:space-y-6">
@@ -1291,434 +1347,11 @@ const AdminDashboard = () => {
       );
     }
 
-    // Render data tables for other tabs
+    // Fallback view for unrecognized tabs
     return (
-      <div className="space-y-4">
-        {/* Advanced Filter Panel */}
-        <AdvancedFilterPanel
-          filters={filters}
-          onChange={handleFilterChange}
-          onApply={handleApplyFilters}
-          onReset={handleResetFilters}
-          onExport={handleExport}
-          activeTab={activeTab}
-        />
-
-        {/* Filter Chips */}
-        <FilterChips
-          filters={filters}
-          onRemove={handleRemoveFilter}
-          onClear={handleResetFilters}
-        />
-
-        {/* Filter Presets */}
-        <FilterPresets
-          presets={filterPresets}
-          onLoad={handleLoadPreset}
-          onSave={handleSavePreset}
-          onDelete={handleDeletePreset}
-          currentFilters={filters}
-        />
-
-        {/* Bulk Actions Bar */}
-        <BulkActionsBar
-          selectedCount={selectedIds.length}
-          onSelectAll={() => bulkHandlers.handleSelectAll(data.docs.map(item => item._id))}
-          onDeselectAll={bulkHandlers.handleDeselectAll}
-          onBulkAction={bulkHandlers.handleBulkAction}
-          activeTab={activeTab}
-          allSelected={selectedIds.length === data.docs.length && data.docs.length > 0}
-        />
-
-        {/* Mobile Card View */}
-        <div className="mobile-card-view lg:hidden mb-4">
-          <MobileTable
-            data={data.docs}
-            activeTab={activeTab}
-            onViewDetails={handleViewDetails}
-            onAction={(id, action) => {
-              if (activeTab === 'bookings') {
-                handleBookingAction(id, action);
-              } else if (activeTab === 'payments') {
-                handlePaymentAction(id, action);
-              }
-            }}
-            selectedIds={selectedIds}
-            onSelectItem={bulkHandlers.handleSelectItem}
-          />
-        </div>
-
-        {/* Data Table */}
-        <div className="admin-table bg-white dark:bg-gray-800 rounded-lg shadow-sm hidden lg:block">
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white capitalize">{activeTab} List</h3>
-          <div className="flex items-center gap-3">
-            <ViewToggle view={viewMode} onChange={handleViewModeChange} />
-            <ColumnToggle 
-              columns={availableColumns}
-              visibleColumns={visibleColumns}
-              onChange={handleColumnVisibilityChange}
-            />
-            <button
-              onClick={() => loadData()}
-              className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 text-sm dark:text-gray-200"
-            >
-              <RefreshCw className="w-4 h-4" />
-              Refresh
-            </button>
-          </div>
-        </div>
-
-        {viewMode === 'grid' ? (
-          <div className="p-4">
-            <CardView
-              data={data.docs}
-              activeTab={activeTab}
-              onViewDetails={handleViewDetails}
-              onAction={handleBookingAction}
-              selectedIds={selectedIds}
-              onSelectItem={bulkHandlers.handleSelectItem}
-            />
-          </div>
-        ) : (
-        <div className="overflow-x-auto rounded-xl border border-slate-200/90 shadow-2xs">
-  <Table className="min-w-full">
-    <TableHeader className="bg-slate-50/90 sticky top-0">
-      <TableRow>
-        {visibleColumns.includes('checkbox') !== false && (
-        <TableHead className="px-4 py-3 text-left w-12">
-          <input
-            type="checkbox"
-            checked={selectAll}
-            onChange={(e) => {
-              setSelectAll(e.target.checked);
-              if (e.target.checked) {
-                bulkHandlers.handleSelectAll(data.docs.map(item => item._id));
-              } else {
-                bulkHandlers.handleDeselectAll();
-              }
-            }}
-            className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500 cursor-pointer"
-          />
-        </TableHead>
-        )}
-        {visibleColumns.includes('id') && (
-        <TableHead className="px-4 py-3 text-left text-xs font-bold text-slate-600 uppercase tracking-wider w-32">ID</TableHead>
-        )}
-        {visibleColumns.includes('details') && (
-        <TableHead className="px-4 py-3 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">Details</TableHead>
-        )}
-        {visibleColumns.includes('status') && (
-        <TableHead className="px-4 py-3 text-left text-xs font-bold text-slate-600 uppercase tracking-wider w-32">Status</TableHead>
-        )}
-        {visibleColumns.includes('date') && (
-        <TableHead className="px-4 py-3 text-left text-xs font-bold text-slate-600 uppercase tracking-wider w-40">Date</TableHead>
-        )}
-        {visibleColumns.includes('actions') && (
-        <TableHead className="px-4 py-3 text-right text-xs font-bold text-slate-600 uppercase tracking-wider w-32">Actions</TableHead>
-        )}
-      </TableRow>
-    </TableHeader>
-    <TableBody className="bg-white divide-y divide-slate-100">
-      {data.docs && data.docs.length > 0 ? (
-        data.docs.map((item, index) => {
-          // Different display logic based on activeTab
-          let displayId, displayDetails, displayStatus, displayDate;
-
-          if (activeTab === 'users') {
-            displayId = item._id?.slice(-6) || 'N/A';
-            displayDetails = (
-              <div>
-                <p className="font-medium truncate">{item.fullname?.firstname} {item.fullname?.lastname}</p>
-                <p className="text-sm text-gray-500 truncate">{item.email}</p>
-              </div>
-            );
-            displayStatus = item.status || item.isActive ? 'Active' : 'Inactive';
-            displayDate = item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'N/A';
-          } 
-          else if (activeTab === 'bookings') {
-            displayId = item.bookingReference || item._id?.slice(-6) || 'N/A';
-            
-            const cancellationPolicies = item.hotelBooking?.rooms?.[0]?.cancellationPolicies || [];
-            const sortedPolicies = [...cancellationPolicies].sort((a, b) => new Date(a.from) - new Date(b.from));
-            const earliestPolicy = sortedPolicies[0];
-            const now = new Date();
-            const isBeforeDeadline = earliestPolicy && now < new Date(earliestPolicy.from);
-            const freeCancellation = isBeforeDeadline ? earliestPolicy : null;
-
-            const itemCurrency = (
-              item.currencyConversion?.originalCurrency ||
-              item.currencyConversion?.fromCurrency ||
-              item.hotelBooking?.currency ||
-              item.pricing?.currency ||
-              item.backup?.hotelbedsBookingData?.booking?.hotel?.currency ||
-              item.backup?.hotelbedsBookingData?.booking?.currency ||
-              item.currency ||
-              'AED'
-            ).toUpperCase();
-
-            const totalCustomerAmount = item.pricing?.totalAmount || item.totalAmount || 0;
-            const originalAmount = parseFloat(item.currencyConversion?.originalAmount || totalCustomerAmount);
-            const totalCustomerPKR = item.currencyConversion?.totalPKR ? Math.round(item.currencyConversion.totalPKR) : null;
-            const supplierTotal = parseFloat(item.hotelBooking?.totalNet || item.backup?.hotelbedsBookingData?.booking?.totalNet || 0);
-            const activePolicy = sortedPolicies.slice().reverse().find(p => now >= new Date(p.from)) || earliestPolicy;
-            const penaltyAmount = !isBeforeDeadline && activePolicy ? parseFloat(activePolicy.amount || 0) : 0;
-
-            let refundAmount = totalCustomerAmount;
-            let penaltyInBookingCurrency = 0;
-            if (!isBeforeDeadline && penaltyAmount > 0) {
-              if (supplierTotal > 0) {
-                const penaltyRatio = Math.min(1, penaltyAmount / supplierTotal);
-                penaltyInBookingCurrency = totalCustomerAmount * penaltyRatio;
-                refundAmount = Math.max(0, totalCustomerAmount - penaltyInBookingCurrency);
-              } else {
-                refundAmount = Math.max(0, totalCustomerAmount - penaltyAmount);
-                penaltyInBookingCurrency = penaltyAmount;
-              }
-            }
-            
-            const nights = item.nights || item.travelDates?.duration || 1;
-            const displayPrice = totalCustomerPKR
-              ? `PKR ${totalCustomerPKR.toLocaleString('en-PK')}`
-              : (formatPKR ? formatPKR(totalCustomerAmount, itemCurrency, true) : `PKR ${totalCustomerAmount}`);
-            const displayRefund = totalCustomerPKR && !penaltyInBookingCurrency
-              ? `PKR ${totalCustomerPKR.toLocaleString('en-PK')}`
-              : (formatPKR ? formatPKR(refundAmount, itemCurrency, true) : (convert ? `PKR ${Math.round(convert(refundAmount, itemCurrency, true)).toLocaleString()}` : `PKR ${refundAmount.toFixed(2)}`));
-            const displayFee = penaltyInBookingCurrency > 0 
-              ? (formatPKR ? formatPKR(penaltyInBookingCurrency, itemCurrency, true) : `PKR ${Math.round(penaltyInBookingCurrency).toLocaleString()}`)
-              : (cancellationPolicies.length > 0 && convert ? `PKR ${Math.round(convert(cancellationPolicies[0].amount, itemCurrency, false)).toLocaleString()}` : '');
-            
-            displayDetails = (
-              <div>
-                <p className="font-medium truncate">
-                  {item.hotelId?.name || item.hotelBooking?.hotelName || item.hotelBooking?.rooms?.[0]?.hotelName || 'Booking'}
-                </p>
-                <p className="text-sm text-gray-500 truncate">
-                  {item.hotelId?.location?.city || item.hotelBooking?.hotelAddress?.city || ''} • {nights} night{nights !== 1 ? 's' : ''} • <span className="font-semibold text-gray-900">{displayPrice}</span>
-                  {itemCurrency !== 'PKR' && (
-                    <span className="text-xs text-gray-400 ml-1">({itemCurrency} {originalAmount.toFixed(2)})</span>
-                  )}
-                </p>
-                <p className="text-xs text-gray-400 truncate">
-                  Guest: {item.guestInfo?.primaryGuest?.firstName || item.user?.fullname?.firstname || 'N/A'} • 
-                  Payment: {item.hotelBooking?.rooms?.[0]?.paymentType === 'AT_WEB' ? 'Card' : 'Pay at Office'}
-                </p>
-                {freeCancellation && (
-                  <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
-                    <ShieldCheck className="w-3.5 h-3.5" /> Free cancellation until {new Date(freeCancellation.from).toLocaleDateString()} • Full refund available
-                  </p>
-                )}
-                {!freeCancellation && cancellationPolicies.length > 0 && (
-                  <p className="text-xs text-yellow-600 mt-1">
-                    Refund: {displayRefund} {displayFee ? `(Fee: ${displayFee})` : ''}
-                  </p>
-                )}
-              </div>
-            );
-            displayStatus = item.status || 'pending';
-            displayDate = item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'N/A';
-          } 
-          else if (activeTab === 'hotels') {
-            displayId = item._id?.slice(-6) || 'N/A';
-            displayDetails = (
-              <div>
-                <p className="font-medium truncate">{item.name || 'Hotel'}</p>
-                <p className="text-sm text-gray-500 truncate">{item.location?.city || ''}</p>
-              </div>
-            );
-            displayStatus = item.status || item.isActive ? 'Active' : 'Inactive';
-            displayDate = item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'N/A';
-          } 
-          else if (activeTab === 'payments') {
-            displayId = item.transactionId?.slice(-8) || item._id?.slice(-8) || 'N/A';
-            
-            const paymentMethod = item.paymentMethod || 'Credit Card';
-            const bookingRef = item.bookingId?.bookingReference || item.bookingReference;
-            const userEmail = item.userId?.email || item.user?.email;
-            const paymentCurrency = (
-              item.currency ||
-              item.currencyConversion?.originalCurrency ||
-              item.bookingId?.hotelBooking?.currency ||
-              item.bookingId?.backup?.hotelbedsBookingData?.booking?.hotel?.currency ||
-              item.bookingId?.backup?.hotelbedsBookingData?.booking?.currency ||
-              item.bookingId?.pricing?.currency ||
-              'AED'
-            ).toUpperCase();
-            
-            console.log('Payment item:', { paymentMethod: item.paymentMethod, status: item.status, id: item._id, currency: paymentCurrency });
-            
-            displayDetails = (
-              <div>
-                <p className="font-medium truncate">
-                  {userEmail || 'Guest Payment'}
-                </p>
-                <p className="text-sm text-gray-500 truncate">
-                  {bookingRef ? `Booking: ${bookingRef}` : paymentMethod} • {formatPKR ? formatPKR(item.amount || 0, paymentCurrency, true) : `PKR ${item.amount?.toFixed(2) || 0}`}
-                  {paymentCurrency !== 'PKR' && (
-                    <span className="text-xs text-gray-400 ml-1">({paymentCurrency} {Number(item.amount || 0).toFixed(2)})</span>
-                  )}
-                </p>
-              </div>
-            );
-            
-            displayStatus = item.status || 'pending';
-            displayDate = item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'N/A';
-          } 
-          else if (activeTab === 'support') {
-            displayId = item._id?.slice(-6) || 'N/A';
-            displayDetails = (
-              <div>
-                <p className="font-medium truncate">{item.subject || 'Ticket'}</p>
-                <p className="text-sm text-gray-500 truncate">{item.user?.email || 'N/A'}</p>
-              </div>
-            );
-            displayStatus = item.status || 'open';
-            displayDate = item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'N/A';
-          }
-          else {
-            displayId = item._id?.slice(-6) || 'N/A';
-            displayDetails = <p>N/A</p>;
-            displayStatus = 'N/A';
-            displayDate = 'N/A';
-          }
-
-          const statusLower = String(displayStatus || '').toLowerCase();
-          const badgeVariant = ['active', 'confirmed', 'completed', 'paid'].includes(statusLower)
-            ? 'emerald'
-            : ['pending', 'pay-on-site'].includes(statusLower)
-              ? 'amber'
-              : ['cancelled', 'failed', 'inactive'].includes(statusLower)
-                ? 'destructive'
-                : 'outline';
-
-          return (
-            <TableRow key={item._id || index} className={selectedIds.includes(item._id) ? 'bg-blue-50/70' : ''}>
-              <TableCell className="px-4 py-3 whitespace-nowrap">
-                <input
-                  type="checkbox"
-                  checked={selectedIds.includes(item._id)}
-                  onChange={() => bulkHandlers.handleSelectItem(item._id)}
-                  className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500 cursor-pointer"
-                />
-              </TableCell>
-              <TableCell className="px-4 py-3 whitespace-nowrap text-xs font-mono font-bold text-slate-900">
-                {displayId}
-              </TableCell>
-              <TableCell className="px-4 py-3 text-xs sm:text-sm text-slate-800 max-w-xs">
-                {displayDetails}
-              </TableCell>
-              <TableCell className="px-4 py-3 whitespace-nowrap">
-                <Badge variant={badgeVariant}>
-                  {displayStatus}
-                </Badge>
-              </TableCell>
-              <TableCell className="px-4 py-3 whitespace-nowrap text-xs text-slate-500">
-                {displayDate}
-              </TableCell>
-              <TableCell className="px-4 py-3 whitespace-nowrap text-right text-xs font-medium">
-                <div className="flex items-center justify-end gap-1.5">
-                  <button 
-                    onClick={() => handleViewDetails(item, activeTab)}
-                    className="p-1.5 rounded-lg text-blue-600 hover:text-blue-800 hover:bg-blue-50 transition-colors cursor-pointer"
-                    title="View Details"
-                  >
-                    <Eye className="w-4 h-4" />
-                  </button>
-                  {activeTab === 'payments' && (item.paymentMethod === 'pay-on-site' || item.paymentMethod === 'pay_on_site') && item.status === 'pending' && (
-                    <button 
-                      onClick={() => handlePaymentAction(item._id, 'markPaid')}
-                      className="p-1.5 rounded-lg text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50 transition-colors cursor-pointer"
-                      title="Mark as Paid"
-                    >
-                      <Check className="w-4 h-4" />
-                    </button>
-                  )}
-                  {activeTab === 'bookings' && displayStatus === 'confirmed' && (
-                    <>
-                      <button 
-                        onClick={() => {
-                          setSelectedItem(item);
-                          setBookingManagementModal('modify');
-                        }}
-                        className="p-1.5 rounded-lg text-blue-600 hover:text-blue-800 hover:bg-blue-50 transition-colors cursor-pointer"
-                        title="Modify Booking"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </button>
-                      <button 
-                        onClick={() => handleBookingAction(item._id, 'voucher')}
-                        className="p-1.5 rounded-lg text-slate-700 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer"
-                        title="Download Voucher"
-                      >
-                        <Download className="w-4 h-4" />
-                      </button>
-                      <button 
-                        onClick={() => handleBookingAction(item._id, 'cancel')}
-                        className="p-1.5 rounded-lg text-red-600 hover:text-red-800 hover:bg-red-50 transition-colors cursor-pointer"
-                        title="Cancel Booking"
-                      >
-                        <XCircle className="w-4 h-4" />
-                      </button>
-                    </>
-                  )}
-                  {activeTab !== 'support' && activeTab !== 'payments' && activeTab !== 'bookings' && (
-                    <button 
-                      className="p-1.5 rounded-lg text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50 transition-colors cursor-pointer"
-                      title="Approve"
-                    >
-                      <Check className="w-4 h-4" />
-                    </button>
-                  )}
-                  {activeTab !== 'bookings' && (
-                    <button 
-                      className="p-1.5 rounded-lg text-red-600 hover:text-red-800 hover:bg-red-50 transition-colors cursor-pointer"
-                      title="Delete"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  )}
-                </div>
-              </TableCell>
-            </TableRow>
-          );
-        })
-      ) : (
-        <TableRow>
-          <TableCell colSpan={6} className="px-6 py-12 text-center text-slate-400 text-xs sm:text-sm">
-            No data available
-          </TableCell>
-        </TableRow>
-      )}
-    </TableBody>
-  </Table>
-</div>
-        )}
-
-        {/* Pagination */}
-        {data.totalPages > 1 && (
-          <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
-            <div className="text-sm text-gray-500">
-              Showing {((filters.page - 1) * filters.limit) + 1} to {Math.min(filters.page * filters.limit, data.totalDocs)} of {data.totalDocs} results
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => handlePageChange(filters.page - 1)}
-                disabled={filters.page === 1}
-                className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Previous
-              </button>
-              <button
-                onClick={() => handlePageChange(filters.page + 1)}
-                disabled={filters.page >= data.totalPages}
-                className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Next
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
+      <div className="p-12 text-center text-slate-500 bg-white rounded-xl border border-slate-200 shadow-2xs">
+        <p className="text-base font-semibold text-slate-700">Select a section from the navigation sidebar</p>
+        <p className="text-xs text-slate-400 mt-1">Manage bookings, suppliers, live APITUDE content, finance, and system settings.</p>
       </div>
     );
   };
@@ -1734,11 +1367,14 @@ const AdminDashboard = () => {
     { id: 'payments', label: 'Payments', icon: CreditCard },
     { id: 'pay-on-site', label: 'Pay on Site', icon: Building2 },
     { id: 'support', label: 'Support', icon: MessageSquare },
+    { id: 'markups', label: 'Markup Rules', icon: TrendingUp },
+    { id: 'coupons', label: 'Promo Coupons', icon: Tag },
     { id: 'reports', label: 'Reports', icon: FileText },
     { id: 'financial', label: 'Financial', icon: DollarSign },
     { id: 'email', label: 'Email', icon: Mail },
     { id: 'content-sync', label: 'Content Sync', icon: Database },
     { id: 'hotelbeds-tools', label: 'Hotelbeds Tools', icon: GitCompare },
+    { id: 'audit-trail', label: 'Audit Trail', icon: History },
     { id: 'settings', label: 'Settings', icon: Settings },
   ];
 
