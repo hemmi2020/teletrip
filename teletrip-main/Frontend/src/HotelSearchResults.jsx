@@ -2252,8 +2252,7 @@ const HotelSearchResults = () => {
                 const rawPrice = parseFloat(hotel.pricePkr || hotel.price) || 0;
                 const totalPrice = rawPrice;
                 const pricePerNight = nights > 0 ? Math.round(totalPrice / nights) : totalPrice;
-                const taxesAndCharges = hotel.minRateTaxesPkr || Math.round(totalPrice * 0.22);
-                const strikethroughPrice = Math.round(totalPrice * 1.18);
+                const genuineOriginalPrice = (hotel.originalPricePkr && hotel.originalPricePkr > totalPrice) ? hotel.originalPricePkr : null;
                 const roomTypes = [...new Set((hotel.rooms || []).map(r => r.name))];
 
                 const hotelImage = hotel.thumbnail || (hotel.images && hotel.images[0]?.path ? `https://photos.hotelbeds.com/giata/original/${hotel.images[0].path.replace(/^\/+/, '')}` : "https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg");
@@ -2388,8 +2387,8 @@ const HotelSearchResults = () => {
                             <div className="text-sm sm:text-xl font-black text-slate-900 leading-tight">
                               PKR {totalPrice.toLocaleString()}
                             </div>
-                            <div className="text-[9px] sm:text-[10px] text-gray-500 truncate">
-                              +PKR {taxesAndCharges.toLocaleString()} taxes
+                            <div className="text-[9px] sm:text-[10px] text-emerald-600 font-semibold truncate">
+                              Taxes & fees included
                             </div>
                           </div>
 
@@ -2437,7 +2436,7 @@ const HotelSearchResults = () => {
                 const ratingVal = hotelReviews[hotel.id]?.rating ? Number(hotelReviews[hotel.id].rating).toFixed(1) : (hotel.stars >= 4 ? (4.2 + (Number(hotel.id || 1) % 8) * 0.1).toFixed(1) : '8.8');
                 const reviewCountVal = hotelReviews[hotel.id]?.numReviews || (1200 + (Number(hotel.id || 1) % 1500));
                 const reviewRatingLabel = Number(ratingVal) >= 4.5 || Number(ratingVal) >= 9.0 ? 'Exceptional' : Number(ratingVal) >= 4.0 || Number(ratingVal) >= 8.5 ? 'Superb' : 'Very good';
-                const hasLimitedDeal = (hotel.promos?.length > 0 || hotel.discounts?.length > 0 || (Number(hotel.id || 1) % 2 === 0));
+                const hasLimitedDeal = Boolean(hotel.promos?.length > 0 || hotel.discounts?.length > 0);
 
                 return (
                   <div
@@ -2594,18 +2593,20 @@ const HotelSearchResults = () => {
                         )}
                       </div>
 
-                      {/* Mobile-Only Bottom Row: Booking.com Style Dual Price + View Rooms */}
+                      {/* Mobile-Only Bottom Row: Clean Live Pricing + View Rooms */}
                       <div className="flex md:hidden flex-col items-end pt-2 mt-1.5 border-t border-gray-100 w-full">
                         <div className="flex items-baseline gap-2 justify-end">
-                          <span className="text-red-600 line-through text-xs font-bold">
-                            PKR {strikethroughPrice.toLocaleString()}
-                          </span>
+                          {genuineOriginalPrice && genuineOriginalPrice > totalPrice && (
+                            <span className="text-red-600 line-through text-xs font-bold">
+                              PKR {genuineOriginalPrice.toLocaleString()}
+                            </span>
+                          )}
                           <span className="text-base sm:text-lg font-black text-slate-900 leading-tight">
                             PKR {totalPrice.toLocaleString()}
                           </span>
                         </div>
-                        <div className="text-[10px] text-gray-500 font-medium">
-                          +PKR {taxesAndCharges.toLocaleString()} taxes and charges
+                        <div className="text-[10px] text-emerald-600 font-semibold">
+                          Taxes & fees included
                         </div>
 
                         <button
@@ -2654,15 +2655,17 @@ const HotelSearchResults = () => {
                             Total Stay
                           </span>
                           <div className="flex items-baseline justify-end gap-2">
-                            <span className="text-red-600 line-through text-xs font-semibold">
-                              PKR {strikethroughPrice.toLocaleString()}
-                            </span>
+                            {genuineOriginalPrice && genuineOriginalPrice > totalPrice && (
+                              <span className="text-red-600 line-through text-xs font-semibold">
+                                PKR {genuineOriginalPrice.toLocaleString()}
+                              </span>
+                            )}
                             <span className="text-xl sm:text-2xl font-black text-slate-900 leading-tight">
                               PKR {totalPrice.toLocaleString()}
                             </span>
                           </div>
-                          <div className="text-[10px] text-gray-500 mt-0.5">
-                            +PKR {taxesAndCharges.toLocaleString()} taxes and charges
+                          <div className="text-[10px] text-emerald-600 font-semibold mt-0.5">
+                            Taxes & fees included
                           </div>
                           <div className="text-[10px] text-gray-400">
                             PKR {pricePerNight.toLocaleString()} / night · {nights} nights
