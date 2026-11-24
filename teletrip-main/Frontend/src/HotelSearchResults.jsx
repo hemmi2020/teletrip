@@ -178,20 +178,85 @@ const HotelSearchResults = () => {
   const [galleryImages, setGalleryImages] = useState([]);
   const [galleryTitle, setGalleryTitle] = useState('');
   const [galleryAlbums, setGalleryAlbums] = useState(null);
-  const [activeGalleryAlbum, setActiveGalleryAlbum] = useState('All');
+  const [activeGalleryAlbum, setActiveGalleryAlbum] = useState('Rooms');
   const [hotelContentData, setHotelContentData] = useState(null);
   const [loadingContent, setLoadingContent] = useState(false);
 
-  // Helper to categorize hotel images into intuitive albums
+  // Touch & Swipe state for image gallery lightbox
+  const touchStartXRef = useRef(0);
+  const touchStartYRef = useRef(0);
+  const [touchOffsetX, setTouchOffsetX] = useState(0);
+  const [isSwiping, setIsSwiping] = useState(false);
+  const activeThumbnailRef = useRef(null);
+
+  // Auto-scroll active thumbnail into view
+  useEffect(() => {
+    if (activeThumbnailRef.current) {
+      activeThumbnailRef.current.scrollIntoView({
+        behavior: 'smooth',
+        inline: 'center',
+        block: 'nearest'
+      });
+    }
+  }, [galleryIndex]);
+
+  // Keyboard navigation for gallery
+  useEffect(() => {
+    if (!galleryOpen) return;
+    const handleGalleryKeyDown = (e) => {
+      if (e.key === 'ArrowRight') {
+        setGalleryIndex(prev => prev < galleryImages.length - 1 ? prev + 1 : 0);
+      } else if (e.key === 'ArrowLeft') {
+        setGalleryIndex(prev => prev > 0 ? prev - 1 : galleryImages.length - 1);
+      } else if (e.key === 'Escape') {
+        setGalleryOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleGalleryKeyDown);
+    return () => window.removeEventListener('keydown', handleGalleryKeyDown);
+  }, [galleryOpen, galleryImages.length]);
+
+  const handleTouchStart = (e) => {
+    if (!e.touches || e.touches.length !== 1) return;
+    touchStartXRef.current = e.touches[0].clientX;
+    touchStartYRef.current = e.touches[0].clientY;
+    setIsSwiping(true);
+    setTouchOffsetX(0);
+  };
+
+  const handleTouchMove = (e) => {
+    if (!isSwiping || !e.touches || e.touches.length !== 1) return;
+    const diffX = e.touches[0].clientX - touchStartXRef.current;
+    const diffY = e.touches[0].clientY - touchStartYRef.current;
+    if (Math.abs(diffX) > Math.abs(diffY)) {
+      setTouchOffsetX(diffX);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (!isSwiping) return;
+    setIsSwiping(false);
+    const threshold = 45;
+    if (touchOffsetX > threshold) {
+      // Swiped right -> Previous image
+      setGalleryIndex(prev => prev > 0 ? prev - 1 : galleryImages.length - 1);
+    } else if (touchOffsetX < -threshold) {
+      // Swiped left -> Next image
+      setGalleryIndex(prev => prev < galleryImages.length - 1 ? prev + 1 : 0);
+    }
+    setTouchOffsetX(0);
+  };
+
+  // Helper to categorize hotel images into intuitive albums: Rooms first, then others, All at last
   const buildImageAlbums = useCallback((rawImages) => {
-    const albums = {
-      'All': [],
+    const rawAlbums = {
       'Rooms': [],
       'General View': [],
       'Lobby': [],
       'Restaurant': [],
       'Conference': [],
-      'Pool & Facilities': []
+      'Pool & Facilities': [],
+      'All': []
     };
 
     (rawImages || []).forEach(img => {
@@ -204,33 +269,56 @@ const HotelSearchResults = () => {
       }
       if (!url) return;
 
-      albums['All'].push(url);
+      rawAlbums['All'].push(url);
 
       const typeCode = String(img.imageTypeCode || img.typeCode || img.type?.code || '').toUpperCase();
       const typeDesc = String(img.type || img.type?.description?.content || '').toLowerCase();
       const hasRoom = Boolean(img.roomCode || img.roomType);
 
       if (typeCode === 'HAB' || hasRoom || typeDesc.includes('room') || typeDesc.includes('suite') || typeDesc.includes('bedroom')) {
-        albums['Rooms'].push(url);
+        rawAlbums['Rooms'].push(url);
       } else if (typeCode === 'GEN' || typeDesc.includes('general') || typeDesc.includes('view') || typeDesc.includes('exterior') || typeDesc.includes('facade')) {
-        albums['General View'].push(url);
+        rawAlbums['General View'].push(url);
       } else if (typeCode === 'LOB' || typeDesc.includes('lobby') || typeDesc.includes('reception') || typeDesc.includes('entrance')) {
-        albums['Lobby'].push(url);
+        rawAlbums['Lobby'].push(url);
       } else if (typeCode === 'RES' || typeCode === 'BAR' || typeDesc.includes('restaurant') || typeDesc.includes('dining') || typeDesc.includes('bar') || typeDesc.includes('buffet') || typeDesc.includes('breakfast')) {
-        albums['Restaurant'].push(url);
+        rawAlbums['Restaurant'].push(url);
       } else if (typeCode === 'CON' || typeDesc.includes('conference') || typeDesc.includes('meeting') || typeDesc.includes('event') || typeDesc.includes('hall')) {
-        albums['Conference'].push(url);
+        rawAlbums['Conference'].push(url);
       } else if (typeCode === 'SPO' || typeCode === 'TER' || typeDesc.includes('pool') || typeDesc.includes('spa') || typeDesc.includes('gym') || typeDesc.includes('terrace') || typeDesc.includes('beach') || typeDesc.includes('fitness')) {
-        albums['Pool & Facilities'].push(url);
+        rawAlbums['Pool & Facilities'].push(url);
       } else {
-        albums['General View'].push(url);
+        rawAlbums['General View'].push(url);
       }
     });
 
+    const orderedCategories = ['Rooms', 'General View', 'Lobby', 'Restaurant', 'Conference', 'Pool & Facilities'];
     const cleanAlbums = {};
-    Object.entries(albums).forEach(([k, list]) => {
-      if (list.length > 0) cleanAlbums[k] = list;
+
+    // 1. Rooms tab first (if it has images)
+    if (rawAlbums['Rooms'].length > 0) {
+      cleanAlbums['Rooms'] = rawAlbums['Rooms'];
+    }
+
+    // 2. Then other categories in order
+    orderedCategories.forEach(cat => {
+      if (cat !== 'Rooms' && rawAlbums[cat]?.length > 0) {
+        cleanAlbums[cat] = rawAlbums[cat];
+      }
     });
+
+    // Any remaining categories (except All)
+    Object.entries(rawAlbums).forEach(([k, list]) => {
+      if (k !== 'All' && !cleanAlbums[k] && list.length > 0) {
+        cleanAlbums[k] = list;
+      }
+    });
+
+    // 3. At last, All tab
+    if (rawAlbums['All'].length > 0) {
+      cleanAlbums['All'] = rawAlbums['All'];
+    }
+
     return cleanAlbums;
   }, []);
 
@@ -1618,51 +1706,6 @@ const HotelSearchResults = () => {
                 <button onClick={clearFilters} className="text-xs text-blue-600 hover:text-blue-700 font-bold cursor-pointer">Reset all</button>
               </div>
 
-              {/* Quick Toggles: Luxury & Free Cancel */}
-              <div className="space-y-2">
-                <label
-                  onClick={() => {
-                    setSelectedEstablishment(prev => prev.includes('119') ? prev.filter(x => x !== '119') : [...prev, '119']);
-                  }}
-                  className={`flex items-center justify-between p-2.5 rounded-xl cursor-pointer select-none transition-all ${selectedEstablishment.includes('119')
-                    ? 'bg-amber-50 border border-amber-300 text-amber-950 font-bold shadow-xs'
-                    : 'bg-gray-50/80 hover:bg-gray-100 text-gray-700 border border-transparent'
-                    }`}
-                >
-                  <div className="flex items-center gap-2 text-xs">
-                    <AnimatedIcon name="crown" animation="pulse" size={16} className="text-amber-500" />
-                    <span>Luxury Collection Only</span>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={selectedEstablishment.includes('119')}
-                    onChange={() => { }}
-                    className="w-4 h-4 accent-amber-500 rounded cursor-pointer"
-                  />
-                </label>
-
-                <label
-                  onClick={() => {
-                    setSelectedCancellation(prev => prev === 'free' ? '' : 'free');
-                  }}
-                  className={`flex items-center justify-between p-2.5 rounded-xl cursor-pointer select-none transition-all ${selectedCancellation === 'free'
-                    ? 'bg-emerald-50 border border-emerald-300 text-emerald-950 font-bold shadow-xs'
-                    : 'bg-gray-50/80 hover:bg-gray-100 text-gray-700 border border-transparent'
-                    }`}
-                >
-                  <div className="flex items-center gap-2 text-xs">
-                    <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                    <span>Free Cancellation Only</span>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={selectedCancellation === 'free'}
-                    onChange={() => { }}
-                    className="w-4 h-4 accent-emerald-600 rounded cursor-pointer"
-                  />
-                </label>
-              </div>
-
               {/* 1. Hotel Name Search */}
               <div className="py-3 border-b border-gray-50">
                 <button
@@ -2123,78 +2166,10 @@ const HotelSearchResults = () => {
 
           {/* Right Column: Quick Chips + Results Header + Hotel Cards */}
           <div className="lg:col-span-8 xl:col-span-9 space-y-4">
-            {/* Option A: Quick-Filter Chips Bar (Desktop Only - hidden on mobile to maximize card visibility) */}
-            <div className="hidden lg:flex sticky top-20 z-30 bg-slate-50/95 backdrop-blur-xs py-2 -mx-1 px-1 items-center gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
-              <button
-                type="button"
-                onClick={() => {
-                  setSelectedEstablishment(prev => prev.includes('119') ? prev.filter(x => x !== '119') : [...prev, '119']);
-                }}
-                className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${selectedEstablishment.includes('119')
-                  ? 'bg-amber-500 text-white shadow-sm ring-1 ring-amber-500'
-                  : 'bg-white text-gray-700 border border-gray-200 shadow-2xs hover:bg-gray-50'
-                  }`}
-              >
-                <AnimatedIcon name="crown" animation="pulse" size={13} className={selectedEstablishment.includes('119') ? 'text-amber-100' : 'text-amber-500'} />
-                <span>Luxury Collection</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setSelectedCancellation(prev => prev === 'free' ? '' : 'free');
-                }}
-                className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${selectedCancellation === 'free'
-                  ? 'bg-emerald-600 text-white shadow-sm ring-1 ring-emerald-600'
-                  : 'bg-white text-gray-700 border border-gray-200 shadow-2xs hover:bg-gray-50'
-                  }`}
-              >
-                <AnimatedIcon name="shield" animation="pulse" size={13} className={selectedCancellation === 'free' ? 'text-emerald-100' : 'text-emerald-500'} />
-                <span>Free Cancellation</span>
-              </button>
-
-              {dynamicBoards.some(b => b.toUpperCase().includes('BREAKFAST')) && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    const bf = dynamicBoards.find(b => b.toUpperCase().includes('BREAKFAST'));
-                    if (bf) {
-                      setSelectedBoards(prev => prev.includes(bf) ? prev.filter(x => x !== bf) : [...prev, bf]);
-                    }
-                  }}
-                  className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${selectedBoards.some(b => b.toUpperCase().includes('BREAKFAST'))
-                    ? 'bg-blue-600 text-white shadow-sm ring-1 ring-blue-600'
-                    : 'bg-white text-gray-700 border border-gray-200 shadow-2xs hover:bg-gray-50'
-                    }`}
-                >
-                  <AnimatedIcon name="breakfast" animation="bounce" size={13} className={selectedBoards.some(b => b.toUpperCase().includes('BREAKFAST')) ? 'text-amber-200' : 'text-amber-600'} />
-                  <span>Breakfast Included</span>
-                </button>
-              )}
-
-              {dynamicCategories.some(c => c.startsWith('5')) && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    const five = dynamicCategories.find(c => c.startsWith('5'));
-                    if (five) {
-                      setSelectedCategories(prev => prev.includes(five) ? prev.filter(x => x !== five) : [...prev, five]);
-                    }
-                  }}
-                  className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${selectedCategories.some(c => c.startsWith('5'))
-                    ? 'bg-blue-600 text-white shadow-sm ring-1 ring-blue-600'
-                    : 'bg-white text-gray-700 border border-gray-200 shadow-2xs hover:bg-gray-50'
-                    }`}
-                >
-                  <AnimatedIcon name="star" animation="pulse" size={13} className={selectedCategories.some(c => c.startsWith('5')) ? 'text-amber-200' : 'text-amber-400'} />
-                  <span>5-Star Only</span>
-                </button>
-              )}
-            </div>
-
-            {/* Sleek Space-Saving Toolbar: Sort Selector + View Mode Switcher */}
-            <div className="flex items-center justify-between gap-2 py-1 px-0.5 sm:px-1">
-              <div className="flex items-center gap-2">
+            {/* Sleek Space-Saving Unified Toolbar: Sort Selector + Quick Filter Chips + View Mode Switcher */}
+            <div className="flex items-center justify-between gap-2.5 py-1.5 px-0.5 sm:px-1 bg-slate-50/95 backdrop-blur-xs sticky top-20 z-30">
+              {/* Left: Sort Selector */}
+              <div className="flex items-center gap-2 shrink-0">
                 <span className="text-xs font-bold text-slate-500 hidden sm:inline">Sort:</span>
                 <div className="relative flex items-center">
                   <ArrowUpDown className="w-3.5 h-3.5 text-blue-600 absolute left-2.5 pointer-events-none" />
@@ -2212,8 +2187,77 @@ const HotelSearchResults = () => {
                 </div>
               </div>
 
-              {/* View Mode Toggle: List / Grid */}
-              <div className="flex items-center bg-white border border-slate-200/90 p-0.5 rounded-xl shadow-2xs">
+              {/* Center: Desktop Quick-Filter Chips */}
+              <div className="hidden lg:flex items-center gap-2 overflow-x-auto py-0.5" style={{ scrollbarWidth: 'none' }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedEstablishment(prev => prev.includes('119') ? prev.filter(x => x !== '119') : [...prev, '119']);
+                  }}
+                  className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${selectedEstablishment.includes('119')
+                    ? 'bg-amber-500 text-white shadow-sm ring-1 ring-amber-500'
+                    : 'bg-white text-gray-700 border border-gray-200 shadow-2xs hover:bg-gray-50'
+                    }`}
+                >
+                  <AnimatedIcon name="crown" animation="pulse" size={13} className={selectedEstablishment.includes('119') ? 'text-amber-100' : 'text-amber-500'} />
+                  <span>Luxury Collection</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedCancellation(prev => prev === 'free' ? '' : 'free');
+                  }}
+                  className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${selectedCancellation === 'free'
+                    ? 'bg-emerald-600 text-white shadow-sm ring-1 ring-emerald-600'
+                    : 'bg-white text-gray-700 border border-gray-200 shadow-2xs hover:bg-gray-50'
+                    }`}
+                >
+                  <AnimatedIcon name="shield" animation="pulse" size={13} className={selectedCancellation === 'free' ? 'text-emerald-100' : 'text-emerald-500'} />
+                  <span>Free Cancellation</span>
+                </button>
+
+                {dynamicBoards.some(b => b.toUpperCase().includes('BREAKFAST')) && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const bf = dynamicBoards.find(b => b.toUpperCase().includes('BREAKFAST'));
+                      if (bf) {
+                        setSelectedBoards(prev => prev.includes(bf) ? prev.filter(x => x !== bf) : [...prev, bf]);
+                      }
+                    }}
+                    className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${selectedBoards.some(b => b.toUpperCase().includes('BREAKFAST'))
+                      ? 'bg-blue-600 text-white shadow-sm ring-1 ring-blue-600'
+                      : 'bg-white text-gray-700 border border-gray-200 shadow-2xs hover:bg-gray-50'
+                      }`}
+                  >
+                    <AnimatedIcon name="breakfast" animation="bounce" size={13} className={selectedBoards.some(b => b.toUpperCase().includes('BREAKFAST')) ? 'text-amber-200' : 'text-amber-600'} />
+                    <span>Breakfast Included</span>
+                  </button>
+                )}
+
+                {dynamicCategories.some(c => c.startsWith('5')) && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const five = dynamicCategories.find(c => c.startsWith('5'));
+                      if (five) {
+                        setSelectedCategories(prev => prev.includes(five) ? prev.filter(x => x !== five) : [...prev, five]);
+                      }
+                    }}
+                    className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${selectedCategories.some(c => c.startsWith('5'))
+                      ? 'bg-blue-600 text-white shadow-sm ring-1 ring-blue-600'
+                      : 'bg-white text-gray-700 border border-gray-200 shadow-2xs hover:bg-gray-50'
+                      }`}
+                  >
+                    <AnimatedIcon name="star" animation="pulse" size={13} className={selectedCategories.some(c => c.startsWith('5')) ? 'text-amber-200' : 'text-amber-400'} />
+                    <span>5-Star Only</span>
+                  </button>
+                )}
+              </div>
+
+              {/* Right: View Mode Toggle: List / Grid */}
+              <div className="flex items-center bg-white border border-slate-200/90 p-0.5 rounded-xl shadow-2xs shrink-0">
                 <button
                   type="button"
                   onClick={() => setViewMode('list')}
@@ -2461,9 +2505,12 @@ const HotelSearchResults = () => {
                 }
 
                 {/* ── OPTION A: SLEEK MODERN HORIZONTAL LIST VIEW (BOOKING.COM STYLE) ── */ }
-                const ratingVal = hotelReviews[hotel.id]?.rating ? Number(hotelReviews[hotel.id].rating).toFixed(1) : (hotel.stars >= 4 ? (4.2 + (Number(hotel.id || 1) % 8) * 0.1).toFixed(1) : '8.8');
-                const reviewCountVal = hotelReviews[hotel.id]?.numReviews || (1200 + (Number(hotel.id || 1) % 1500));
-                const reviewRatingLabel = Number(ratingVal) >= 4.5 || Number(ratingVal) >= 9.0 ? 'Exceptional' : Number(ratingVal) >= 4.0 || Number(ratingVal) >= 8.5 ? 'Superb' : 'Very good';
+                const hasRealReview = Boolean(hotelReviews[hotel.id]?.rating);
+                const ratingVal = hasRealReview ? Number(hotelReviews[hotel.id].rating).toFixed(1) : null;
+                const reviewCountVal = hotelReviews[hotel.id]?.numReviews || null;
+                const reviewRatingLabel = ratingVal
+                  ? (Number(ratingVal) >= 4.5 ? 'Exceptional' : Number(ratingVal) >= 4.0 ? 'Superb' : 'Very good')
+                  : null;
                 const hasLimitedDeal = Boolean(hotel.promos?.length > 0 || hotel.discounts?.length > 0);
 
                 return (
@@ -2541,24 +2588,39 @@ const HotelSearchResults = () => {
                         </h2>
 
                         {/* TripAdvisor / Reviews Score Badge - Visible on Mobile & Desktop */}
-                        <div
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            openReviewsModal(hotel);
-                          }}
-                          className="flex items-center gap-1.5 cursor-pointer hover:opacity-85 transition-opacity"
-                        >
-                          <span className="w-5 h-5 sm:w-6 sm:h-6 rounded-md bg-blue-700 text-white font-extrabold text-[10px] sm:text-xs flex items-center justify-center shrink-0 shadow-2xs">
-                            {ratingVal}
-                          </span>
-                          <span className="text-[11px] sm:text-xs font-bold text-gray-800">{reviewRatingLabel}</span>
-                          <span className="text-[11px] sm:text-xs text-gray-500">· {reviewCountVal.toLocaleString()} reviews</span>
-                        </div>
+                        {hasRealReview ? (
+                          <div
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openReviewsModal(hotel);
+                            }}
+                            className="flex items-center gap-1.5 cursor-pointer hover:opacity-85 transition-opacity"
+                          >
+                            <span className="w-5 h-5 sm:w-6 sm:h-6 rounded-md bg-blue-700 text-white font-extrabold text-[10px] sm:text-xs flex items-center justify-center shrink-0 shadow-2xs">
+                              {ratingVal}
+                            </span>
+                            <span className="text-[11px] sm:text-xs font-bold text-gray-800">{reviewRatingLabel}</span>
+                            {reviewCountVal && <span className="text-[11px] sm:text-xs text-gray-500">· {reviewCountVal.toLocaleString()} reviews</span>}
+                          </div>
+                        ) : (
+                          <div
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openReviewsModal(hotel);
+                            }}
+                            className="flex items-center gap-1.5 cursor-pointer hover:opacity-85 transition-opacity text-slate-500 text-[11px] sm:text-xs"
+                          >
+                            <span className="px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 font-bold text-[10px]">
+                              Verified Property
+                            </span>
+                            <span>· {hotel.category || `${hotel.stars || 4}-Star Hotel`}</span>
+                          </div>
+                        )}
 
                         {/* Location / Zone */}
                         <div className="flex items-center gap-1 text-[10px] sm:text-xs text-gray-500 truncate">
                           <MapPin className="w-3 sm:w-3.5 h-3 sm:h-3.5 text-gray-400 shrink-0" />
-                          <span className="truncate">{hotel.zoneName ? `${hotel.zoneName} · 400 m from center` : hotel.address}</span>
+                          <span className="truncate">{hotel.zoneName ? `${hotel.zoneName}, ${hotel.destinationName || hotel.city || ''}`.replace(/,\s*$/, '') : hotel.address}</span>
                         </div>
 
                         {/* Limited-time Deal Badge */}
@@ -3133,7 +3195,7 @@ const HotelSearchResults = () => {
           applyCommission={applyCommission}
           onAddToCart={handleAddToCart}
           onMultiRoomAddToCart={handleMultiRoomAddToCart}
-          openGallery={(idx = 0, customImages = null, title = '', customAlbums = null, initialAlbum = 'All') => {
+          openGallery={(idx = 0, customImages = null, title = '', customAlbums = null, initialAlbum = null) => {
             const rawImages = (hotelContentData?.images && hotelContentData.images.length >= (selectedHotel?.images?.length || 0))
               ? hotelContentData.images
               : (selectedHotel?.images && selectedHotel.images.length > 0 ? selectedHotel.images : (hotelContentData?.images || []));
@@ -3146,12 +3208,22 @@ const HotelSearchResults = () => {
             if (allImages.length === 0 && selectedHotel?.thumbnail) allImages.push(selectedHotel.thumbnail);
 
             setGalleryAlbums(computedAlbums);
-            setActiveGalleryAlbum(initialAlbum || 'All');
 
-            if (customImages && customImages.length > 0) {
+            // Default to 'Rooms' first, else first available category, fallback to 'All'
+            const defaultAlbum = (computedAlbums['Rooms'] && computedAlbums['Rooms'].length > 0)
+              ? 'Rooms'
+              : (Object.keys(computedAlbums).find(k => k !== 'All') || 'All');
+
+            const selectedAlbum = (initialAlbum && computedAlbums[initialAlbum] && computedAlbums[initialAlbum].length > 0)
+              ? initialAlbum
+              : defaultAlbum;
+
+            setActiveGalleryAlbum(selectedAlbum);
+
+            if (customImages && customImages.length > 0 && initialAlbum) {
               setGalleryImages(customImages);
-            } else if (initialAlbum && computedAlbums[initialAlbum] && computedAlbums[initialAlbum].length > 0) {
-              setGalleryImages(computedAlbums[initialAlbum]);
+            } else if (computedAlbums[selectedAlbum] && computedAlbums[selectedAlbum].length > 0) {
+              setGalleryImages(computedAlbums[selectedAlbum]);
             } else {
               setGalleryImages(allImages);
             }
@@ -3259,24 +3331,25 @@ const HotelSearchResults = () => {
         </div>
       )}
 
-      {/* Image Gallery Lightbox */}
+      {/* Image Gallery Lightbox - Touch Friendly & Swipable */}
       {galleryOpen && galleryImages.length > 0 && (
-        <div className="fixed inset-0 z-[200] bg-black/95 flex flex-col">
+        <div className="fixed inset-0 z-[200] bg-black/95 flex flex-col select-none touch-pan-y">
           {/* Top bar */}
-          <div className="flex items-center justify-between px-4 py-3 flex-shrink-0 border-b border-white/10">
-            <div className="flex items-center gap-3 min-w-0 pr-4">
+          <div className="flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3 flex-shrink-0 border-b border-white/10 bg-black/40 backdrop-blur-md">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0 pr-2 sm:pr-4">
               {galleryTitle && (
-                <span className="text-white font-medium text-sm sm:text-base truncate max-w-[200px] sm:max-w-md">
+                <span className="text-white font-bold text-xs sm:text-base truncate max-w-[180px] sm:max-w-md">
                   {galleryTitle}
                 </span>
               )}
-              <span className="text-white/70 text-xs sm:text-sm flex-shrink-0">
-                ({galleryIndex + 1} / {galleryImages.length})
+              <span className="text-white/70 text-xs sm:text-sm font-medium flex-shrink-0 bg-white/10 px-2 py-0.5 rounded-full">
+                {galleryIndex + 1} / {galleryImages.length}
               </span>
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
               {galleryTitle && selectedHotel && galleryTitle !== selectedHotel.name && (
                 <button
+                  type="button"
                   onClick={() => {
                     const rawImages = (hotelContentData?.images && hotelContentData.images.length >= (selectedHotel?.images?.length || 0))
                       ? hotelContentData.images
@@ -3290,20 +3363,25 @@ const HotelSearchResults = () => {
                     setGalleryTitle(selectedHotel.name);
                     setActiveGalleryAlbum('All');
                   }}
-                  className="text-xs px-2.5 py-1 rounded-full bg-white/15 hover:bg-white/25 text-white transition-colors cursor-pointer"
+                  className="text-xs px-2.5 py-1 rounded-full bg-white/15 hover:bg-white/25 active:scale-95 text-white transition-all cursor-pointer font-medium"
                 >
                   View All Hotel Photos
                 </button>
               )}
-              <button onClick={() => setGalleryOpen(false)} className="p-2 sm:p-2.5 rounded-full bg-white/15 hover:bg-white/25 transition-colors cursor-pointer">
+              <button
+                type="button"
+                onClick={() => setGalleryOpen(false)}
+                className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full bg-white/15 hover:bg-white/25 active:scale-90 transition-all cursor-pointer"
+                aria-label="Close gallery"
+              >
                 <X className="w-5 h-5 text-white" />
               </button>
             </div>
           </div>
 
-          {/* Category / Album Tabs Bar */}
+          {/* Category / Album Tabs Bar: Rooms first, others in middle, All at last */}
           {galleryAlbums && Object.keys(galleryAlbums).length > 1 && (
-            <div className="flex items-center gap-2 px-4 py-2 bg-black/60 border-b border-white/10 overflow-x-auto flex-shrink-0" style={{ scrollbarWidth: 'thin' }}>
+            <div className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 bg-black/60 border-b border-white/10 overflow-x-auto flex-shrink-0" style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
               {Object.entries(galleryAlbums).map(([catKey, catImages]) => {
                 if (!catImages || catImages.length === 0) return null;
                 const isActive = activeGalleryAlbum === catKey;
@@ -3316,7 +3394,7 @@ const HotelSearchResults = () => {
                       setGalleryImages(catImages);
                       setGalleryIndex(0);
                     }}
-                    className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${isActive
+                    className={`px-3 py-1 sm:py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all cursor-pointer active:scale-95 ${isActive
                       ? 'bg-blue-600 text-white shadow-sm ring-2 ring-white/30'
                       : 'bg-white/10 text-white/80 hover:bg-white/20'
                       }`}
@@ -3327,17 +3405,69 @@ const HotelSearchResults = () => {
               })}
             </div>
           )}
-          {/* Main image */}
-          <div className="flex-1 flex items-center justify-center px-4 relative min-h-0">
-            <button onClick={() => setGalleryIndex(prev => prev > 0 ? prev - 1 : galleryImages.length - 1)} className="absolute left-2 sm:left-6 p-2.5 rounded-full bg-white/10 hover:bg-white/20 transition-colors z-10"><ChevronDown className="w-5 h-5 text-white rotate-90" /></button>
-            <img src={galleryImages[galleryIndex]} alt="" className="max-h-full max-w-full object-contain rounded-lg" onError={(e) => e.target.src = 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg'} />
-            <button onClick={() => setGalleryIndex(prev => prev < galleryImages.length - 1 ? prev + 1 : 0)} className="absolute right-2 sm:right-6 p-2.5 rounded-full bg-white/10 hover:bg-white/20 transition-colors z-10"><ChevronDown className="w-5 h-5 text-white -rotate-90" /></button>
+
+          {/* Main Swipable Image Container */}
+          <div
+            className="flex-1 flex items-center justify-center px-2 sm:px-6 relative min-h-0 overflow-hidden touch-pan-y"
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            onTouchCancel={() => { setIsSwiping(false); setTouchOffsetX(0); }}
+          >
+            {/* Previous Image Button */}
+            <button
+              type="button"
+              onClick={() => setGalleryIndex(prev => prev > 0 ? prev - 1 : galleryImages.length - 1)}
+              className="absolute left-2 sm:left-6 w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center rounded-full bg-black/50 hover:bg-black/75 text-white active:scale-90 transition-all z-10 shadow-lg cursor-pointer"
+              aria-label="Previous image"
+            >
+              <ChevronDown className="w-5 h-5 text-white rotate-90" />
+            </button>
+
+            {/* Current Active Image with Smooth Touch Offset Translation */}
+            <img
+              src={galleryImages[galleryIndex]}
+              alt=""
+              draggable="false"
+              style={{
+                transform: isSwiping ? `translateX(${touchOffsetX}px)` : 'translateX(0)',
+                transition: isSwiping ? 'none' : 'transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1)',
+                userSelect: 'none',
+                WebkitUserSelect: 'none'
+              }}
+              className="max-h-full max-w-full object-contain rounded-lg pointer-events-none sm:pointer-events-auto shadow-2xl"
+              onError={(e) => {
+                e.target.src = "https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg";
+              }}
+            />
+
+            {/* Next Image Button */}
+            <button
+              type="button"
+              onClick={() => setGalleryIndex(prev => prev < galleryImages.length - 1 ? prev + 1 : 0)}
+              className="absolute right-2 sm:right-6 w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center rounded-full bg-black/50 hover:bg-black/75 text-white active:scale-90 transition-all z-10 shadow-lg cursor-pointer"
+              aria-label="Next image"
+            >
+              <ChevronDown className="w-5 h-5 text-white -rotate-90" />
+            </button>
+
+            {/* Mobile swipe hint */}
+            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 sm:hidden px-2.5 py-0.5 rounded-full bg-black/50 backdrop-blur-xs text-[10px] text-white/70 pointer-events-none">
+              Swipe left or right
+            </div>
           </div>
-          {/* Thumbnail strip */}
-          <div className="flex-shrink-0 px-4 py-3 overflow-x-auto">
-            <div className="flex gap-1.5 justify-center">
+
+          {/* Thumbnail Strip with Auto-Scroll to Active Thumbnail */}
+          <div className="flex-shrink-0 px-3 sm:px-4 py-2.5 sm:py-3 bg-black/40 border-t border-white/10 overflow-x-auto" style={{ scrollbarWidth: 'thin', WebkitOverflowScrolling: 'touch' }}>
+            <div className="flex gap-2 justify-start sm:justify-center">
               {galleryImages.map((img, i) => (
-                <button key={i} onClick={() => setGalleryIndex(i)} className={`flex-shrink-0 w-16 h-12 rounded-md overflow-hidden border-2 transition-all ${i === galleryIndex ? 'border-white opacity-100' : 'border-transparent opacity-50 hover:opacity-80'}`}>
+                <button
+                  key={i}
+                  ref={i === galleryIndex ? activeThumbnailRef : null}
+                  type="button"
+                  onClick={() => setGalleryIndex(i)}
+                  className={`flex-shrink-0 w-14 h-10 sm:w-16 sm:h-12 rounded-lg overflow-hidden border-2 transition-all cursor-pointer active:scale-95 ${i === galleryIndex ? 'border-white opacity-100 ring-2 ring-blue-500/80 scale-105' : 'border-transparent opacity-50 hover:opacity-85'}`}
+                >
                   <img src={img} alt="" className="w-full h-full object-cover" onError={(e) => e.target.src = 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg'} />
                 </button>
               ))}

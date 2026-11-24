@@ -59,13 +59,13 @@ const isPolicyOrNonPromo = (text) => {
 
 function buildImageAlbums(rawImages) {
   const albums = {
-    'All': [],
     'Rooms': [],
     'General View': [],
     'Lobby': [],
     'Restaurant': [],
     'Conference': [],
-    'Pool & Facilities': []
+    'Pool & Facilities': [],
+    'All': []
   };
 
   (rawImages || []).forEach(img => {
@@ -101,10 +101,33 @@ function buildImageAlbums(rawImages) {
     }
   });
 
+  const orderedCategories = ['Rooms', 'General View', 'Lobby', 'Restaurant', 'Conference', 'Pool & Facilities'];
   const cleanAlbums = {};
-  Object.entries(albums).forEach(([k, list]) => {
-    if (list.length > 0) cleanAlbums[k] = list;
+
+  // 1. Rooms first (if available)
+  if (albums['Rooms'] && albums['Rooms'].length > 0) {
+    cleanAlbums['Rooms'] = albums['Rooms'];
+  }
+
+  // 2. Other categories in order
+  orderedCategories.forEach(cat => {
+    if (cat !== 'Rooms' && albums[cat] && albums[cat].length > 0) {
+      cleanAlbums[cat] = albums[cat];
+    }
   });
+
+  // Any remaining categories (except 'All')
+  Object.entries(albums).forEach(([k, list]) => {
+    if (k !== 'All' && !cleanAlbums[k] && list && list.length > 0) {
+      cleanAlbums[k] = list;
+    }
+  });
+
+  // 3. At last, All tab
+  if (albums['All'] && albums['All'].length > 0) {
+    cleanAlbums['All'] = albums['All'];
+  }
+
   return cleanAlbums;
 }
 
@@ -477,7 +500,7 @@ export const HotelDetailModal = ({
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
-                  if (openGallery) openGallery(0, allImages, hotel.name, imageAlbums, 'All');
+                  if (openGallery) openGallery(0, allImages, hotel.name, imageAlbums, 'Rooms');
                 }}
                 className="px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-md border-0 text-white text-[11px] sm:text-xs font-semibold flex items-center gap-1.5 transition-all shadow-md cursor-pointer active:scale-95"
                 title="View all photos in gallery"
@@ -1024,7 +1047,7 @@ export const HotelDetailModal = ({
                 <div className="flex items-center justify-between">
                   <h4 className="text-xs font-bold uppercase text-gray-700">Photo Gallery Preview</h4>
                   <button
-                    onClick={() => openGallery && openGallery(0, allImages, hotel.name, imageAlbums, 'All')}
+                    onClick={() => openGallery && openGallery(0, allImages, hotel.name, imageAlbums, 'Rooms')}
                     className="text-xs text-blue-600 hover:underline font-semibold flex items-center gap-1 cursor-pointer"
                   >
                     View all {allImages.length} photos in gallery →
@@ -1034,7 +1057,7 @@ export const HotelDetailModal = ({
                   {allImages.slice(0, 4).map((img, i) => (
                     <div
                       key={i}
-                      onClick={() => openGallery && openGallery(i, allImages, hotel.name, imageAlbums, 'All')}
+                      onClick={() => openGallery && openGallery(i, allImages, hotel.name, imageAlbums, 'Rooms')}
                       className="aspect-video rounded-xl overflow-hidden cursor-pointer bg-gray-100 relative group"
                     >
                       <img src={img} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
