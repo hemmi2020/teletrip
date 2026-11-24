@@ -343,7 +343,7 @@ const FilterSection = ({ section }) => {
 };
 
 // ─── Main component ───────────────────────────────────────────────────────────
-const MobileFilters = ({ isOpen, onClose, onReset, activeCount = 0, sections = [] }) => {
+const MobileFilters = ({ isOpen, onClose, onReset, activeCount = 0, sections = [], quickFilters = null }) => {
   if (!isOpen) return null;
 
   return (
@@ -380,6 +380,11 @@ const MobileFilters = ({ isOpen, onClose, onReset, activeCount = 0, sections = [
 
         {/* Scrollable filter sections */}
         <div style={S.body}>
+          {quickFilters && (
+            <div style={{ padding: '12px 16px', borderBottom: '1px solid #f1f5f9', display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              {quickFilters}
+            </div>
+          )}
           {sections.map(section => (
             <FilterSection key={section.key} section={section} />
           ))}

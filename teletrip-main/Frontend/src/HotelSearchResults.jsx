@@ -1469,24 +1469,15 @@ const HotelSearchResults = () => {
                   <span>·</span>
                   <span>{searchParams.get("rooms") || 1} Room</span>
                 </div>
+                {/* Integrated Showing Results line */}
+                <div className="text-[11px] sm:text-xs font-bold text-blue-600 mt-1 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-600 shrink-0"></span>
+                  <span>Showing {sortedHotels.length} verified {searchParams.get("city") || "Dubai"} properties</span>
+                </div>
               </div>
             </div>
 
             <div className="flex items-center gap-2">
-              {/* Mobile Filter Toggle */}
-              <button
-                type="button"
-                onClick={() => setShowMobileFilters(true)}
-                className="lg:hidden px-3.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-xs rounded-xl flex items-center gap-1.5 shadow-xs cursor-pointer shrink-0"
-              >
-                <SlidersHorizontal className="w-3.5 h-3.5" />
-                <span>Filters</span>
-                {activeFilterCount > 0 && (
-                  <span className="w-4 h-4 rounded-full bg-blue-600 text-white text-[10px] flex items-center justify-center font-bold">
-                    {activeFilterCount}
-                  </span>
-                )}
-              </button>
               <button
                 type="button"
                 onClick={() => setShowModifySearch(s => !s)}
@@ -1506,39 +1497,6 @@ const HotelSearchResults = () => {
               <HotelSearchForm defaultTab="stays" variant="light" onSearch={() => setShowModifySearch(false)} />
             </div>
           )}
-        </div>
-
-        {/* Mobile Quick Action Bar: Sort | Filter | Map (Booking.com style) */}
-        <div className="lg:hidden flex items-center justify-between bg-white rounded-xl border border-slate-200/90 shadow-2xs divide-x divide-slate-100 overflow-hidden mb-3">
-          <button
-            type="button"
-            onClick={() => setSortBy(prev => prev === 'price_asc' ? 'price_desc' : 'price_asc')}
-            className="flex-1 py-2.5 px-3 flex items-center justify-center gap-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors"
-          >
-            <ArrowUpDown className="w-3.5 h-3.5 text-blue-600" />
-            <span>Sort</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setShowMobileFilters(true)}
-            className="flex-1 py-2.5 px-3 flex items-center justify-center gap-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors relative"
-          >
-            <SlidersHorizontal className="w-3.5 h-3.5 text-blue-600" />
-            <span>Filter</span>
-            {activeFilterCount > 0 && (
-              <span className="w-4 h-4 rounded-full bg-blue-600 text-white text-[9px] font-black flex items-center justify-center">
-                {activeFilterCount}
-              </span>
-            )}
-          </button>
-          <button
-            type="button"
-            onClick={() => setViewMode(prev => prev === 'map' ? 'list' : 'map')}
-            className="flex-1 py-2.5 px-3 flex items-center justify-center gap-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors"
-          >
-            <Map className="w-3.5 h-3.5 text-blue-600" />
-            <span>Map</span>
-          </button>
         </div>
 
         {/* ── MAIN 12-COLUMN RESPONSIVE GRID ── */}
@@ -2059,8 +2017,8 @@ const HotelSearchResults = () => {
 
           {/* Right Column: Quick Chips + Results Header + Hotel Cards */}
           <div className="lg:col-span-8 xl:col-span-9 space-y-4">
-            {/* Option A: Quick-Filter Chips Bar (Sticky on Desktop) */}
-            <div className="sticky top-20 z-30 bg-slate-50/95 backdrop-blur-xs py-2 -mx-1 px-1 flex items-center gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+            {/* Option A: Quick-Filter Chips Bar (Desktop Only - hidden on mobile to maximize card visibility) */}
+            <div className="hidden lg:flex sticky top-20 z-30 bg-slate-50/95 backdrop-blur-xs py-2 -mx-1 px-1 items-center gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
               <button
                 type="button"
                 onClick={() => {
@@ -2128,60 +2086,57 @@ const HotelSearchResults = () => {
               )}
             </div>
 
-            {/* Results Count Header with View Mode Switcher (List / 2-Col Grid) */}
-            <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-gray-500 p-3 sm:p-4 bg-white rounded-2xl border-0 shadow-sm">
-              <div>
-                <span className="font-extrabold text-sm text-gray-900">
-                  Showing {sortedHotels.length} verified {searchParams.get("city") || "Dubai"} properties
-                </span>
-                <span className="text-[11px] text-gray-400 hidden sm:inline ml-2">Sorted by: {sortOption === 'priceLowHigh' ? 'Price (Low to High)' : sortOption === 'priceHighLow' ? 'Price (High to Low)' : sortOption === 'ratingHighLow' ? 'Rating (High to Low)' : 'Recommended'}</span>
+            {/* Sleek Space-Saving Toolbar: Sort Selector + View Mode Switcher */}
+            <div className="flex items-center justify-between gap-2 py-1 px-0.5 sm:px-1">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-slate-500 hidden sm:inline">Sort:</span>
+                <div className="relative flex items-center">
+                  <ArrowUpDown className="w-3.5 h-3.5 text-blue-600 absolute left-2.5 pointer-events-none" />
+                  <select
+                    value={sortOption}
+                    onChange={(e) => setSortOption(e.target.value)}
+                    className="pl-7 pr-3 py-1.5 text-xs font-bold bg-white border border-slate-200/90 rounded-xl text-slate-700 shadow-2xs hover:border-blue-500 cursor-pointer outline-none"
+                  >
+                    <option value="default">Recommended</option>
+                    <option value="priceLowHigh">Price: Low to High</option>
+                    <option value="priceHighLow">Price: High to Low</option>
+                    <option value="ratingHighLow">Rating: High to Low</option>
+                    <option value="ratingLowHigh">Rating: Low to High</option>
+                  </select>
+                </div>
               </div>
 
-              <div className="flex items-center gap-3">
-                <select
-                  value={sortOption}
-                  onChange={(e) => setSortOption(e.target.value)}
-                  className="text-xs px-2.5 py-1.5 border-0 rounded-xl bg-gray-50/80 text-gray-700 font-bold outline-none cursor-pointer shadow-xs"
+              {/* View Mode Toggle: List / Grid */}
+              <div className="flex items-center bg-white border border-slate-200/90 p-0.5 rounded-xl shadow-2xs">
+                <button
+                  type="button"
+                  onClick={() => setViewMode('list')}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${viewMode === 'list'
+                    ? 'bg-blue-50 text-blue-600 font-black shadow-xs'
+                    : 'text-slate-500 hover:text-slate-900'
+                    }`}
+                  title="List View"
                 >
-                  <option value="default">Recommended</option>
-                  <option value="priceLowHigh">Price: Low to High</option>
-                  <option value="priceHighLow">Price: High to Low</option>
-                  <option value="ratingHighLow">Rating: High to Low</option>
-                  <option value="ratingLowHigh">Rating: Low to High</option>
-                </select>
-
-                {/* View Changer Buttons (Mobile & Desktop) */}
-                <div className="flex items-center bg-gray-100 p-1 rounded-xl border-0">
-                  <button
-                    type="button"
-                    onClick={() => setViewMode('list')}
-                    className={`px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${viewMode === 'list'
-                      ? 'bg-white text-blue-600 shadow-xs font-black'
-                      : 'text-gray-500 hover:text-gray-900'
-                      }`}
-                    title="List View"
-                  >
-                    <List className="w-3.5 h-3.5" />
-                    <span className="text-[11px]">List</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setViewMode('thumbnail')}
-                    className={`px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${viewMode === 'thumbnail'
-                      ? 'bg-white text-blue-600 shadow-xs font-black'
-                      : 'text-gray-500 hover:text-gray-900'
-                      }`}
-                    title="Grid View"
-                  >
-                    <LayoutGrid className="w-3.5 h-3.5" />
-                    <span className="text-[11px]">Grid</span>
-                  </button>
-                </div>
+                  <List className="w-3.5 h-3.5" />
+                  <span className="text-[11px]">List</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode('thumbnail')}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${viewMode === 'thumbnail'
+                    ? 'bg-blue-50 text-blue-600 font-black shadow-xs'
+                    : 'text-slate-500 hover:text-slate-900'
+                    }`}
+                  title="Grid View"
+                >
+                  <LayoutGrid className="w-3.5 h-3.5" />
+                  <span className="text-[11px]">Grid</span>
+                </button>
               </div>
             </div>
 
-            {/* Hotel Cards: Supports List View or 3-Column Grid on Desktop */}
-            <div className={viewMode === 'thumbnail' ? "grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3.5 sm:gap-4.5 pb-6" : "space-y-4 pb-6"}>
+            {/* Hotel Cards: Supports List View or 2-Column Grid on Mobile (3-Col on Desktop) */}
+            <div className={viewMode === 'thumbnail' ? "grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-2.5 sm:gap-4.5 pb-6" : "space-y-4 pb-6"}>
               {sortedHotels.slice(0, visibleCount).map((hotel, cardIndex) => {
                 const checkIn = searchParams.get("checkIn");
                 const checkOut = searchParams.get("checkOut");
@@ -2200,7 +2155,12 @@ const HotelSearchResults = () => {
                   return (
                     <div
                       key={hotel.id}
-                      className="bento-card bg-white rounded-2xl overflow-hidden flex flex-col justify-between group h-full"
+                      onClick={() => {
+                        setRoomSelections({});
+                        setActiveRoomTab(0);
+                        setSelectedHotel(hotel);
+                      }}
+                      className="bento-card bg-white rounded-2xl overflow-hidden flex flex-col justify-between group h-full cursor-pointer border border-slate-200/80 shadow-2xs hover:shadow-md transition-shadow"
                     >
                       <div>
                         {/* 1. Bento Image Tile with Aspect Ratio & Badges */}
@@ -2259,7 +2219,7 @@ const HotelSearchResults = () => {
                         </div>
 
                         {/* 2. Bento Card Body: Complete Details */}
-                        <div className="p-3.5 sm:p-4 space-y-2 text-left">
+                        <div className="p-2.5 sm:p-4 space-y-1.5 sm:space-y-2 text-left">
                           {/* Stars + Category + Zone */}
                           <div className="flex items-center gap-1.5 flex-wrap">
                             <div className="flex text-amber-400">
@@ -2267,13 +2227,13 @@ const HotelSearchResults = () => {
                                 <Star key={i} className="w-3 h-3 fill-current" />
                               ))}
                             </div>
-                            <span className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
-                              {hotel.stars >= 5 ? '5-Star Luxury' : `${hotel.stars || 4}-Star Hotel`}
+                            <span className="text-[10px] sm:text-[11px] font-semibold text-gray-500 uppercase tracking-wider truncate">
+                              {hotel.stars >= 5 ? '5-Star' : `${hotel.stars || 4}-Star`}
                             </span>
                             {(hotel.zoneName || hotel.city) && (
                               <>
-                                <span className="text-gray-300">·</span>
-                                <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-md truncate max-w-[120px]">
+                                <span className="text-gray-300 hidden sm:inline">·</span>
+                                <span className="text-[9px] sm:text-[10px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-md truncate max-w-[100px] hidden sm:inline">
                                   {hotel.zoneName || hotel.city}
                                 </span>
                               </>
@@ -2281,89 +2241,47 @@ const HotelSearchResults = () => {
                           </div>
 
                           {/* Hotel Name */}
-                          <h2 className="text-sm sm:text-base font-extrabold text-gray-900 line-clamp-2 leading-snug group-hover:text-blue-600 transition-colors">
+                          <h2 className="text-xs sm:text-base font-extrabold text-gray-900 line-clamp-2 leading-snug group-hover:text-blue-600 transition-colors">
                             {hotel.name}
                           </h2>
 
                           {/* Address */}
-                          <div className="flex items-center text-gray-400 text-xs truncate">
+                          <div className="hidden sm:flex items-center text-gray-400 text-xs truncate">
                             <MapPin className="w-3.5 h-3.5 mr-1 shrink-0 text-gray-400" />
                             <span className="truncate">{hotel.address}</span>
                           </div>
 
                           {/* Inclusions: Meal Plan + Cancellation + Promo */}
-                          <div className="pt-1 flex items-center gap-1.5 flex-wrap text-xs">
+                          <div className="pt-0.5 sm:pt-1 flex items-center gap-1 sm:gap-1.5 flex-wrap text-xs">
                             {/* Meal / Board */}
-                            <span className="font-semibold text-gray-700 flex items-center gap-1 text-[11px] bg-gray-100/80 px-2 py-0.5 rounded-md">
-                              <Check className="w-3 h-3 text-blue-600 shrink-0" />
-                              <span>{hotel.boards?.[0] || 'Room Only'}</span>
+                            <span className="font-semibold text-gray-700 flex items-center gap-1 text-[9px] sm:text-[11px] bg-gray-100/80 px-1.5 sm:px-2 py-0.5 rounded-md truncate max-w-[110px]">
+                              <Check className="w-2.5 sm:w-3 h-2.5 sm:h-3 text-blue-600 shrink-0" />
+                              <span className="truncate">{hotel.boards?.[0] || 'Room Only'}</span>
                             </span>
 
                             {/* Cancellation Policy */}
                             {hotel.hasFreeCancellation ? (
-                              <span className="font-semibold text-emerald-700 flex items-center gap-1 text-[11px] bg-emerald-50 px-2 py-0.5 rounded-md">
-                                <CheckCircle className="w-3 h-3 text-emerald-600 shrink-0" />
-                                <span>Free Cancellation</span>
+                              <span className="font-semibold text-emerald-700 flex items-center gap-1 text-[9px] sm:text-[11px] bg-emerald-50 px-1.5 sm:px-2 py-0.5 rounded-md truncate">
+                                <CheckCircle className="w-2.5 sm:w-3 h-2.5 sm:h-3 text-emerald-600 shrink-0" />
+                                <span className="truncate">Free Cancel</span>
                               </span>
-                            ) : (
-                              <span className="font-medium text-gray-500 flex items-center gap-1 text-[11px] bg-gray-100/60 px-2 py-0.5 rounded-md">
-                                <AlertCircle className="w-3 h-3 text-gray-400 shrink-0" />
-                                <span>Non-Refundable</span>
-                              </span>
-                            )}
-
-                            {/* Promo Tag */}
-                            {hotel.promos?.length > 0 && (
-                              <span className="font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md flex items-center gap-1 text-[10px]">
-                                <Tag className="w-2.5 h-2.5 text-amber-600 shrink-0" />
-                                <span className="truncate max-w-[110px]">{hotel.promos[0]}</span>
-                              </span>
-                            )}
-                          </div>
-
-                          {/* Room Types & Availability */}
-                          <div className="pt-1 flex items-center justify-between text-xs text-gray-500">
-                            {roomTypes.length > 0 && (
-                              <div className="flex gap-1 flex-wrap">
-                                {roomTypes.slice(0, 2).map((rt, i) => (
-                                  <span key={i} className="text-[10px] font-medium px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 truncate max-w-[130px]">
-                                    {rt}
-                                  </span>
-                                ))}
-                                {roomTypes.length > 2 && (
-                                  <span className="text-[10px] text-gray-400 self-center">
-                                    +{roomTypes.length - 2} more
-                                  </span>
-                                )}
-                              </div>
-                            )}
-                            {hotel.rooms?.length > 0 && (
-                              <span className="text-[10px] text-gray-400 font-medium ml-auto">
-                                {hotel.rooms.length} room options
-                              </span>
-                            )}
+                            ) : null}
                           </div>
                         </div>
                       </div>
 
                       {/* 3. Bento Card Footer: Price & Primary CTA */}
-                      <div className="p-3.5 sm:p-4 pt-2.5 border-t border-slate-100 bg-slate-50/70 space-y-2.5 text-left">
-                        <div className="flex items-end justify-between gap-2">
+                      <div className="p-2.5 sm:p-4 pt-2 border-t border-slate-100 bg-slate-50/70 space-y-2 text-left">
+                        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-1">
                           <div>
-                            <span className="text-[10px] uppercase font-bold text-gray-400 block tracking-wider">
-                              From Total Stay
+                            <span className="text-[9px] uppercase font-bold text-gray-400 block tracking-wider">
+                              Total Stay
                             </span>
-                            <div className="text-lg sm:text-xl font-black text-blue-600 leading-tight">
+                            <div className="text-sm sm:text-xl font-black text-slate-900 leading-tight">
                               PKR {totalPrice.toLocaleString()}
                             </div>
-                            <div className="text-[10px] text-gray-500">
-                              +PKR {taxesAndCharges.toLocaleString()} taxes and charges
-                            </div>
-                            <div className="text-[10px] text-gray-400">
-                              PKR {pricePerNight.toLocaleString()} / night · {nights} nights
-                            </div>
-                            <div className="text-[9px] text-emerald-600 font-semibold mt-0.5">
-                              Taxes & fees included
+                            <div className="text-[9px] sm:text-[10px] text-gray-500 truncate">
+                              +PKR {taxesAndCharges.toLocaleString()} taxes
                             </div>
                           </div>
 
@@ -2375,7 +2293,7 @@ const HotelSearchResults = () => {
                                 e.stopPropagation();
                                 openReviewsModal(hotel);
                               }}
-                              className="text-right cursor-pointer group/rev p-0 bg-transparent border-0"
+                              className="hidden sm:block text-right cursor-pointer group/rev p-0 bg-transparent border-0"
                               title="Click to view traveler reviews"
                             >
                               <span className="text-[11px] font-bold text-gray-900 group-hover/rev:text-blue-600 block">
@@ -2397,9 +2315,9 @@ const HotelSearchResults = () => {
                             setActiveRoomTab(0);
                             setSelectedHotel(hotel);
                           }}
-                          className="w-full min-h-[40px] py-2 px-3 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded-xl text-xs sm:text-sm font-extrabold inline-flex items-center justify-center gap-1.5 shadow-md transition-all cursor-pointer"
+                          className="w-full py-1.5 sm:py-2 px-2 sm:px-3 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded-xl text-[11px] sm:text-xs font-extrabold inline-flex items-center justify-center gap-1 shadow-xs transition-all cursor-pointer"
                         >
-                          <Bed className="w-4 h-4" />
+                          <Bed className="w-3.5 h-3.5" />
                           <span>View Rooms</span>
                         </button>
                       </div>
@@ -2912,6 +2830,75 @@ const HotelSearchResults = () => {
         onClose={() => setShowMobileFilters(false)}
         onReset={clearFilters}
         activeCount={activeFilterCount}
+        quickFilters={
+          <>
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedEstablishment(prev => prev.includes('119') ? prev.filter(x => x !== '119') : [...prev, '119']);
+              }}
+              className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${selectedEstablishment.includes('119')
+                ? 'bg-amber-500 text-white shadow-xs'
+                : 'bg-white text-gray-700 border border-gray-200'
+                }`}
+            >
+              <AnimatedIcon name="crown" animation="pulse" size={13} className={selectedEstablishment.includes('119') ? 'text-amber-100' : 'text-amber-500'} />
+              <span>Luxury Collection</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedCancellation(prev => prev === 'free' ? '' : 'free');
+              }}
+              className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${selectedCancellation === 'free'
+                ? 'bg-emerald-600 text-white shadow-xs'
+                : 'bg-white text-gray-700 border border-gray-200'
+                }`}
+            >
+              <AnimatedIcon name="shield" animation="pulse" size={13} className={selectedCancellation === 'free' ? 'text-emerald-100' : 'text-emerald-500'} />
+              <span>Free Cancellation</span>
+            </button>
+
+            {dynamicBoards.some(b => b.toUpperCase().includes('BREAKFAST')) && (
+              <button
+                type="button"
+                onClick={() => {
+                  const bf = dynamicBoards.find(b => b.toUpperCase().includes('BREAKFAST'));
+                  if (bf) {
+                    setSelectedBoards(prev => prev.includes(bf) ? prev.filter(x => x !== bf) : [...prev, bf]);
+                  }
+                }}
+                className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${selectedBoards.some(b => b.toUpperCase().includes('BREAKFAST'))
+                  ? 'bg-blue-600 text-white shadow-xs'
+                  : 'bg-white text-gray-700 border border-gray-200'
+                  }`}
+              >
+                <AnimatedIcon name="breakfast" animation="bounce" size={13} className={selectedBoards.some(b => b.toUpperCase().includes('BREAKFAST')) ? 'text-amber-200' : 'text-amber-600'} />
+                <span>Breakfast Included</span>
+              </button>
+            )}
+
+            {dynamicCategories.some(c => c.startsWith('5')) && (
+              <button
+                type="button"
+                onClick={() => {
+                  const five = dynamicCategories.find(c => c.startsWith('5'));
+                  if (five) {
+                    setSelectedCategories(prev => prev.includes(five) ? prev.filter(x => x !== five) : [...prev, five]);
+                  }
+                }}
+                className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${selectedCategories.some(c => c.startsWith('5'))
+                  ? 'bg-blue-600 text-white shadow-xs'
+                  : 'bg-white text-gray-700 border border-gray-200'
+                  }`}
+              >
+                <AnimatedIcon name="star" animation="pulse" size={13} className={selectedCategories.some(c => c.startsWith('5')) ? 'text-amber-200' : 'text-amber-400'} />
+                <span>5-Star Only</span>
+              </button>
+            )}
+          </>
+        }
         sections={[
           {
             key: 'hotelName', label: 'Hotel Name', type: 'search',
