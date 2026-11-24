@@ -50,6 +50,8 @@ import HotelDetailModal from "./components/hotels/HotelDetailModal";
 import { AlertCircle } from "lucide-react";
 import SearchLoadingScreen from './components/SearchLoadingScreen';
 import logo from './images/Telitrip-Logo.png';
+import { format, addDays } from "date-fns";
+import { TOP_HOTELS } from "./utils/instantSearchData";
 
 
 export const isPolicyOrNonPromo = (text) => {
@@ -1065,6 +1067,20 @@ const HotelSearchResults = () => {
         }
 
         if (!hotelResponse.ok) {
+          let isNoAvailability = false;
+          try {
+            const errClone = await hotelResponse.clone().json();
+            if (hotelResponse.status === 404 || errClone?.message?.toLowerCase().includes("no hotel") || errClone?.message?.toLowerCase().includes("no availability")) {
+              isNoAvailability = true;
+            }
+          } catch (_) {}
+
+          if (isNoAvailability || hotelResponse.status === 404) {
+            console.warn('⚠️ No hotels available for searched criteria');
+            setHotels([]);
+            return;
+          }
+
           const errorText = await hotelResponse.text();
           console.error('❌ Hotel API Error:', errorText);
           throw new Error(`Hotel search failed: ${hotelResponse.status}`);
@@ -1073,9 +1089,10 @@ const HotelSearchResults = () => {
         const hotelResult = await hotelResponse.json();
         console.log('✅ Hotel API Response:', hotelResult);
 
-        if (!hotelResult.success) {
-          console.error('❌ No hotels found in response');
-          throw new Error("No hotels found");
+        if (!hotelResult.success || !hotelResult.data?.hotels) {
+          console.warn('⚠️ No hotels found in response for criteria');
+          setHotels([]);
+          return;
         }
 
         if (isAuthenticated && hotelResult.user) {
@@ -1163,7 +1180,13 @@ const HotelSearchResults = () => {
 
         setHotels(finalHotels);
       } catch (err) {
-        setError(err.message);
+        console.error('❌ Error fetching hotels:', err);
+        const errMsg = err?.message || "";
+        if (errMsg.toLowerCase().includes("no hotel") || errMsg.toLowerCase().includes("no availability") || errMsg.includes("404")) {
+          setHotels([]);
+        } else {
+          setError(errMsg || "Failed to fetch hotels");
+        }
       } finally {
         setLoading(false);
       }
@@ -1325,6 +1348,96 @@ const HotelSearchResults = () => {
 
 
 
+  const cityParam = searchParams.get("city") || searchParams.get("destination") || "this destination";
+  const countryParam = searchParams.get("country") || "";
+  const hotelNameParam = searchParams.get("hotelName");
+  const hotelCodeParam = searchParams.get("hotelCode");
+  const checkInParam = searchParams.get("checkIn") || "";
+  const checkOutParam = searchParams.get("checkOut") || "";
+  const adultsParam = searchParams.get("adults") || "2";
+  const childrenParam = searchParams.get("children") || "0";
+  const roomsParam = searchParams.get("rooms") || "1";
+
+  const stayNights = useMemo(() => {
+    if (!checkInParam || !checkOutParam) return 1;
+    try {
+      const diff = Math.ceil((new Date(checkOutParam) - new Date(checkInParam)) / (1000 * 60 * 60 * 24));
+      return isNaN(diff) || diff < 1 ? 1 : diff;
+    } catch (_) {
+      return 1;
+    }
+  }, [checkInParam, checkOutParam]);
+
+  const formatReadableDate = (dateStr) => {
+    if (!dateStr) return "";
+    try {
+      const d = new Date(dateStr);
+      return !isNaN(d.getTime())
+        ? d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+        : dateStr;
+    } catch (_) {
+      return dateStr;
+    }
+  };
+
+  const handleShiftDates = (days) => {
+    try {
+      const inDate = checkInParam ? new Date(checkInParam) : new Date();
+      const outDate = checkOutParam ? new Date(checkOutParam) : addDays(new Date(), 2);
+      const newIn = addDays(inDate, days);
+      const newOut = addDays(outDate, days);
+      const newParams = new URLSearchParams(searchParams);
+      newParams.set("checkIn", format(newIn, "yyyy-MM-dd"));
+      newParams.set("checkOut", format(newOut, "yyyy-MM-dd"));
+      navigate(`/hotels?${newParams.toString()}`);
+    } catch (e) {
+      console.error("Date shift error:", e);
+    }
+  };
+
+  const handleNextWeekend = () => {
+    try {
+      const today = new Date();
+      const daysUntilFriday = (5 - today.getDay() + 7) % 7 || 7;
+      const nextFri = addDays(today, daysUntilFriday);
+      const nextSun = addDays(nextFri, 2);
+      const newParams = new URLSearchParams(searchParams);
+      newParams.set("checkIn", format(nextFri, "yyyy-MM-dd"));
+      newParams.set("checkOut", format(nextSun, "yyyy-MM-dd"));
+      navigate(`/hotels?${newParams.toString()}`);
+    } catch (e) {
+      console.error("Next weekend error:", e);
+    }
+  };
+
+  const handleSearchAllCityHotels = () => {
+    const newParams = new URLSearchParams(searchParams);
+    newParams.delete("hotelName");
+    newParams.delete("hotelCode");
+    navigate(`/hotels?${newParams.toString()}`);
+  };
+
+  const handleSelectAlternativeHotel = (altHotel) => {
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set("hotelName", altHotel.name);
+    if (altHotel.code) {
+      newParams.set("hotelCode", altHotel.code);
+    }
+    navigate(`/hotels?${newParams.toString()}`);
+  };
+
+  const alternativeHotels = useMemo(() => {
+    const cityLower = (cityParam || "").toLowerCase().trim();
+    const matches = TOP_HOTELS.filter((h) =>
+      (h.destinationName && h.destinationName.toLowerCase().includes(cityLower)) ||
+      (h.zoneName && h.zoneName.toLowerCase().includes(cityLower)) ||
+      (h.name && h.name.toLowerCase().includes(cityLower)) ||
+      (countryParam && h.countryCode && h.countryCode.toLowerCase() === countryParam.toLowerCase())
+    );
+    if (matches.length > 0) return matches.slice(0, 4);
+    return TOP_HOTELS.slice(0, 4);
+  }, [cityParam, countryParam]);
+
   const activeFilterCount = selectedAmenities.length + selectedAccommodationTypes.length + selectedBoards.length + selectedCategories.length + selectedZones.length + selectedReviewRatings.length + selectedPromos.length + selectedDiscounts.length + selectedChains.length + selectedEstablishment.length + (hotelNameSearch ? 1 : 0) + (selectedCancellation ? 1 : 0) + (priceMin ? 1 : 0) + (priceMax ? 1 : 0) + (selectedSight ? 1 : 0) + (addressSearch ? 1 : 0);
 
   return (
@@ -1432,10 +1545,10 @@ const HotelSearchResults = () => {
         </div>
 
         {/* ── MAIN 12-COLUMN RESPONSIVE GRID ── */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          {/* Left Column: Filter Sidebar (Desktop) */}
-          <div className="hidden lg:block lg:col-span-4 xl:col-span-3 sticky top-24">
-            <aside className="w-full bg-white rounded-2xl border border-slate-200/90 p-4 sm:p-5 space-y-4 shadow-2xs text-left max-h-[calc(100vh-7rem)] overflow-y-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: '#e5e7eb transparent' }}>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Left Column: Filter Sidebar (Desktop Sticky) */}
+          <div className="hidden lg:block lg:col-span-4 xl:col-span-3">
+            <aside className="sticky top-20 w-full bg-white rounded-2xl border border-slate-200/90 p-4 sm:p-5 space-y-4 shadow-2xs text-left max-h-[calc(100vh-5.5rem)] overflow-y-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: '#e5e7eb transparent' }}>
               <div className="flex justify-between items-center pb-3 border-b border-gray-100">
                 <div className="flex items-center gap-2">
                   <SlidersHorizontal className="w-4 h-4 text-blue-600" />
@@ -1949,8 +2062,8 @@ const HotelSearchResults = () => {
 
           {/* Right Column: Quick Chips + Results Header + Hotel Cards */}
           <div className="lg:col-span-8 xl:col-span-9 space-y-4">
-            {/* Option A: Quick-Filter Chips Bar */}
-            <div className="flex items-center gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+            {/* Option A: Quick-Filter Chips Bar (Sticky on Desktop) */}
+            <div className="sticky top-20 z-30 bg-slate-50/95 backdrop-blur-xs py-2 -mx-1 px-1 flex items-center gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
               <button
                 type="button"
                 onClick={() => {
@@ -2570,16 +2683,207 @@ const HotelSearchResults = () => {
               </div>
             )}
 
-            {sortedHotels.length === 0 && (
-              <div className="text-center py-16">
-                <div className="flex justify-center mb-3">
-                  <AnimatedIcon name="hotel" animation="pulse" size={48} className="text-blue-600" />
+            {hotels.length === 0 ? (
+              <div className="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-5 sm:p-8 space-y-6 text-left animate-in fade-in-50 duration-200">
+                {/* Header Badge & Reason */}
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0 shadow-2xs">
+                    <AnimatedIcon name="hotel" animation="pulse" size={26} className="text-amber-600" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-amber-800 bg-amber-100/80 px-2.5 py-0.5 rounded-full inline-block mb-1 border border-amber-200">
+                      No Live Availability
+                    </span>
+                    <h2 className="text-lg sm:text-2xl font-black text-gray-900 leading-tight">
+                      {hotelNameParam
+                        ? `No rooms available at "${hotelNameParam}" for your selected dates`
+                        : `No hotels available in ${cityParam} for your dates`}
+                    </h2>
+                    <p className="text-xs sm:text-sm text-gray-500 mt-1 leading-relaxed">
+                      All room allotments matching your exact stay dates and guest count are currently sold out with our wholesale bed banks.
+                    </p>
+                  </div>
                 </div>
-                <p className="text-gray-800 text-lg font-medium mb-1">No hotels match your filters</p>
-                <p className="text-gray-400 text-sm mb-4">Try adjusting your filters or search criteria</p>
-                <button onClick={clearFilters} className="px-5 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 text-sm font-bold transition-all shadow-md border-0 cursor-pointer active:scale-95">Clear All Filters</button>
+
+                {/* Searched Criteria Summary Capsule */}
+                <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200/80 flex flex-wrap items-center gap-2 sm:gap-4 text-xs font-semibold text-slate-700">
+                  <div className="flex items-center gap-1.5">
+                    <Calendar className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                    <span>{formatReadableDate(checkInParam)} → {formatReadableDate(checkOutParam)} ({stayNights} night{stayNights > 1 ? 's' : ''})</span>
+                  </div>
+                  <span className="text-slate-300">·</span>
+                  <div className="flex items-center gap-1.5">
+                    <User className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                    <span>{adultsParam} Adults{childrenParam !== '0' ? `, ${childrenParam} Children` : ''} · {roomsParam} Room</span>
+                  </div>
+                  {cityParam && (
+                    <>
+                      <span className="text-slate-300">·</span>
+                      <div className="flex items-center gap-1.5">
+                        <MapPin className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                        <span>{cityParam}{countryParam ? `, ${countryParam}` : ''}</span>
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                {/* Action 1: Shifting Dates Suggestions */}
+                <div className="space-y-2.5 pt-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-gray-900 flex items-center gap-1.5">
+                      <Sparkles className="w-4 h-4 text-amber-500" />
+                      <span>Try shifting your stay dates for live openings:</span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setShowModifySearch(true)}
+                      className="text-xs text-blue-600 font-bold hover:underline cursor-pointer"
+                    >
+                      Custom Dates
+                    </button>
+                  </div>
+
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <button
+                      type="button"
+                      onClick={() => handleShiftDates(1)}
+                      className="px-3.5 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold transition-all border border-blue-200/60 flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                    >
+                      <Calendar className="w-3.5 h-3.5" />
+                      <span>Shift +1 Day Later</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleShiftDates(-1)}
+                      className="px-3.5 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold transition-all border border-blue-200/60 flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                    >
+                      <Calendar className="w-3.5 h-3.5" />
+                      <span>Shift -1 Day Earlier</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleNextWeekend}
+                      className="px-3.5 py-2 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 text-xs font-bold transition-all border border-purple-200/60 flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                    >
+                      <Calendar className="w-3.5 h-3.5" />
+                      <span>Next Weekend (Fri–Sun)</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleShiftDates(3)}
+                      className="px-3.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-xs font-bold transition-all border border-emerald-200/60 flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                    >
+                      <Calendar className="w-3.5 h-3.5" />
+                      <span>+3 Days Ahead</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Action 2: If Specific Hotel was Searched, Suggest Searching Whole City */}
+                {hotelNameParam && (
+                  <div className="p-4 bg-blue-50/70 border border-blue-200 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                      <h4 className="text-xs sm:text-sm font-extrabold text-blue-950">
+                        Looking for stays in {cityParam}?
+                      </h4>
+                      <p className="text-[11px] text-blue-800 mt-0.5">
+                        Multiple other hotels and resorts in {cityParam} have guaranteed vacancies for your selected dates.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleSearchAllCityHotels}
+                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all cursor-pointer shadow-sm shrink-0"
+                    >
+                      Browse All {cityParam} Hotels
+                    </button>
+                  </div>
+                )}
+
+                {/* Action 3: Suggested Alternative Properties */}
+                {alternativeHotels.length > 0 && (
+                  <div className="space-y-3 pt-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-extrabold text-gray-900 uppercase tracking-wider">
+                        Recommended Alternative Properties with High Availability:
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {alternativeHotels.map((alt) => (
+                        <div
+                          key={alt.code || alt.name}
+                          className="p-3.5 rounded-2xl border border-gray-200 hover:border-blue-300 hover:bg-blue-50/30 transition-all flex items-center justify-between gap-3 shadow-2xs"
+                        >
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1 mb-0.5">
+                              {[...Array(5)].map((_, i) => (
+                                <Star key={i} className="w-2.5 h-2.5 text-amber-400 fill-current" />
+                              ))}
+                              <span className="text-[10px] text-gray-500 font-semibold ml-1">{alt.zoneName || alt.destinationName}</span>
+                            </div>
+                            <h5 className="text-xs font-extrabold text-gray-900 truncate">
+                              {alt.name}
+                            </h5>
+                            <span className="text-[10px] text-emerald-600 font-bold block mt-0.5">
+                              ● Instant Confirmation Eligible
+                            </span>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => handleSelectAlternativeHotel(alt)}
+                            className="px-3 py-1.5 bg-white border border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white rounded-xl text-xs font-bold transition-all cursor-pointer shrink-0 shadow-2xs"
+                          >
+                            Check Rates
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Action 4: Filter Relief Notice */}
+                {activeFilterCount > 0 && (
+                  <div className="p-3 rounded-xl bg-slate-100 flex items-center justify-between text-xs text-slate-700">
+                    <span>You have <strong>{activeFilterCount} active filters</strong>. Removing them may reveal open rooms.</span>
+                    <button
+                      type="button"
+                      onClick={clearFilters}
+                      className="text-blue-600 font-bold hover:underline cursor-pointer ml-3"
+                    >
+                      Clear Filters
+                    </button>
+                  </div>
+                )}
               </div>
-            )}
+            ) : sortedHotels.length === 0 ? (
+              <div className="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-6 sm:p-8 text-center space-y-4">
+                <div className="w-14 h-14 mx-auto rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                  <SlidersHorizontal className="w-7 h-7" />
+                </div>
+                <h3 className="text-lg font-black text-gray-900">No Hotels Match Your Active Filters</h3>
+                <p className="text-xs sm:text-sm text-gray-500 max-w-md mx-auto leading-relaxed">
+                  We found {hotels.length} available hotel{hotels.length > 1 ? 's' : ''} in {cityParam}, but your {activeFilterCount} active filter criteria (star rating, board type, or price limit) narrowed them down.
+                </p>
+                <div className="flex items-center justify-center gap-3 pt-1">
+                  <button
+                    type="button"
+                    onClick={clearFilters}
+                    className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer"
+                  >
+                    Clear All Filters ({activeFilterCount})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowModifySearch(true)}
+                    className="px-5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 font-bold text-xs rounded-xl transition-all cursor-pointer"
+                  >
+                    Modify Search
+                  </button>
+                </div>
+              </div>
+            ) : null}
           </div>
         </div>
       </main>

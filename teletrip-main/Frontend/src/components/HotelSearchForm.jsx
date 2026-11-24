@@ -1319,8 +1319,7 @@ export default function HotelSearchForm({
             }}
           >
             <div
-              className="bg-white border border-gray-200 rounded-3xl shadow-2xl overflow-auto max-h-[85vh] p-4 sm:p-6"
-              style={{ maxWidth: '95vw', margin: 16 }}
+              className="bg-white border border-gray-200 rounded-3xl shadow-2xl p-4 sm:p-6 max-h-[92vh] overflow-x-hidden overflow-y-auto w-[calc(100vw-20px)] sm:w-auto max-w-sm sm:max-w-2xl lg:max-w-3xl mx-auto"
             >
               <div className="flex items-center justify-between pb-3 mb-2 border-b border-gray-100">
                 <div>
@@ -1567,8 +1566,7 @@ export default function HotelSearchForm({
             }}
           >
             <div
-              className="bg-white border border-gray-200 rounded-3xl shadow-2xl p-4 sm:p-6 max-h-[85vh] overflow-auto"
-              style={{ maxWidth: '95vw', margin: 16 }}
+              className="bg-white border border-gray-200 rounded-3xl shadow-2xl p-4 sm:p-6 max-h-[92vh] overflow-x-hidden overflow-y-auto w-[calc(100vw-20px)] sm:w-auto max-w-sm sm:max-w-2xl lg:max-w-3xl mx-auto"
             >
               <div className="flex items-center justify-between pb-3 mb-2 border-b border-gray-100">
                 <h3 className="font-extrabold text-base text-gray-900">Select Transfer Date & Time</h3>
@@ -1785,8 +1783,7 @@ export default function HotelSearchForm({
             }}
           >
             <div
-              className="bg-white border border-gray-200 rounded-3xl shadow-2xl p-4 sm:p-6 max-h-[85vh] overflow-auto"
-              style={{ maxWidth: '95vw', margin: 16 }}
+              className="bg-white border border-gray-200 rounded-3xl shadow-2xl p-4 sm:p-6 max-h-[92vh] overflow-x-hidden overflow-y-auto w-[calc(100vw-20px)] sm:w-auto max-w-sm sm:max-w-2xl lg:max-w-3xl mx-auto"
             >
               <div className="flex items-center justify-between pb-3 mb-2 border-b border-gray-100">
                 <h3 className="font-extrabold text-base text-gray-900">Select Activity Dates</h3>

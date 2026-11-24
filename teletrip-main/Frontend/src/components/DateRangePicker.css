@@ -4,6 +4,13 @@
 .rdrCalendarWrapper {
   font-family: inherit;
   font-size: 14px;
+  overflow-x: hidden !important;
+  max-width: 100% !important;
+}
+
+.rdrDateRangeWrapper {
+  overflow-x: hidden !important;
+  max-width: 100% !important;
 }
 
 /* Month navigation */
