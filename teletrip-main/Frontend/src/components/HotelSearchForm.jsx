@@ -47,14 +47,8 @@ export default function HotelSearchForm({
   // ═══════════════════════════════════════════════════════════════════════════
   // 1. STAYS SEARCH STATE
   // ═══════════════════════════════════════════════════════════════════════════
-  const [searchQuery, setSearchQuery] = useState('Dubai, United Arab Emirates');
-  const [selectedLocation, setSelectedLocation] = useState({
-    name: 'Dubai',
-    city: 'Dubai',
-    country: 'United Arab Emirates',
-    destinationCode: 'DXB',
-    type: 'destination'
-  });
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedLocation, setSelectedLocation] = useState(null);
   const [selectedHotelCode, setSelectedHotelCode] = useState(null);
   const [filteredLocations, setFilteredLocations] = useState([]);
   const [hotelSuggestions, setHotelSuggestions] = useState([]);
@@ -442,6 +436,11 @@ export default function HotelSearchForm({
     try {
       if (activeTab === 'stays') {
         const trimmedQuery = searchQuery.trim();
+        if (!selectedLocation && !selectedHotelCode && !trimmedQuery) {
+          setShowLocationDropdown(true);
+          setIsSubmitting(false);
+          return;
+        }
         const checkIn = format(dateRange[0].startDate, 'yyyy-MM-dd');
         const checkOut = format(dateRange[0].endDate, 'yyyy-MM-dd');
 
@@ -705,7 +704,7 @@ export default function HotelSearchForm({
                 {/* Segment 1: Location & Hotel */}
                 <div
                   ref={locationRef}
-                  className="relative flex-1 px-4 py-1.5 sm:py-1 flex items-center gap-3 cursor-pointer group rounded-2xl sm:rounded-none hover:bg-slate-50/80 transition-colors"
+                  className={`relative flex-1 px-4 py-1.5 sm:py-1 flex items-center gap-3 cursor-pointer group rounded-2xl sm:rounded-none hover:bg-slate-50/80 transition-colors ${showLocationDropdown ? 'z-[60]' : 'z-20'}`}
                 >
                   <div className="w-8 h-8 rounded-full bg-slate-50 group-hover:bg-blue-50 text-slate-400 group-hover:text-blue-600 flex items-center justify-center shrink-0 transition-colors">
                     {selectedHotelCode ? (
@@ -794,25 +793,29 @@ export default function HotelSearchForm({
                             <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
                             <span>Searching destinations and hotels...</span>
                           </div>
+                        ) : searchQuery.trim().length < 2 ? (
+                          <div className="p-4 text-center text-slate-400 text-xs">
+                            Please type at least 2 characters to search destinations or hotels.
+                          </div>
+                        ) : filteredLocations.length === 0 && hotelSuggestions.length === 0 ? (
+                          <div className="p-4 text-center text-slate-400 text-xs">
+                            No destinations or hotels found for "{searchQuery}".
+                          </div>
                         ) : (
                           <>
                             {/* Destinations */}
                             {(() => {
                               const dests = filteredLocations.filter(l => l.type !== 'hotel');
-                              const list = dests.length > 0 ? dests : TOP_DESTINATIONS.slice(0, 6);
-                              const isDefault = dests.length === 0;
+                              if (dests.length === 0) return null;
                               return (
                                 <div>
                                   <div className="px-3 pt-2 pb-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-slate-50/70 flex items-center justify-between">
                                     <div className="flex items-center gap-1.5">
                                       <MapPin size={12} className="text-blue-600" />
-                                      <span>{isDefault ? 'Top Destinations' : 'Destinations & Cities'}</span>
+                                      <span>Destinations & Cities</span>
                                     </div>
-                                    {isDefault && (
-                                      <span className="text-[9px] text-slate-400 font-medium">Popular</span>
-                                    )}
                                   </div>
-                                  {list.map((loc, i) => (
+                                  {dests.map((loc, i) => (
                                     <div
                                       key={`dest-${i}`}
                                       onClick={() => {
@@ -846,21 +849,16 @@ export default function HotelSearchForm({
 
                             {/* Hotels */}
                             {(() => {
-                              const hotels = hotelSuggestions;
-                              const hList = hotels.length > 0 ? hotels : TOP_HOTELS.slice(0, 5);
-                              const isDefault = hotels.length === 0;
+                              if (hotelSuggestions.length === 0) return null;
                               return (
                                 <div>
                                   <div className="px-3 pt-2 pb-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-slate-50/70 flex items-center justify-between">
                                     <div className="flex items-center gap-1.5">
                                       <Building2 size={12} className="text-emerald-600" />
-                                      <span>{isDefault ? 'Featured Hotels' : 'Hotels & Properties'}</span>
+                                      <span>Hotels & Properties</span>
                                     </div>
-                                    {isDefault && (
-                                      <span className="text-[9px] text-slate-400 font-medium">Iconic</span>
-                                    )}
                                   </div>
-                                  {hList.map((hotel, idx) => (
+                                  {hotelSuggestions.map((hotel, idx) => (
                                     <div
                                       key={`h-${idx}`}
                                       onClick={() => {
@@ -1275,7 +1273,7 @@ export default function HotelSearchForm({
           </div>
 
           {/* ── Search Action Button: Full-width tap target on mobile, circular on desktop ── */}
-          <div className="p-1 sm:p-0 sm:pr-1 flex w-full sm:w-auto justify-end shrink-0 mt-1 sm:mt-0">
+          <div className="p-1 sm:p-0 sm:pr-1 flex w-full sm:w-auto justify-end shrink-0 mt-1 sm:mt-0 relative z-10">
             <button
               type="submit"
               disabled={isSubmitting}

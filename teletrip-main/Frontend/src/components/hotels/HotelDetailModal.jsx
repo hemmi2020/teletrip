@@ -205,6 +205,7 @@ export const HotelDetailModal = ({
   const [activeSentiment, setActiveSentiment] = useState('all');
   const [reviewSearchQuery, setReviewSearchQuery] = useState('');
   const [travelerTypeFilter, setTravelerTypeFilter] = useState('all');
+  const [selectedSingleRate, setSelectedSingleRate] = useState(null);
 
   // Filter rates for each room
   const filterRate = (rate) => {
@@ -385,8 +386,16 @@ export const HotelDetailModal = ({
         return next;
       });
     } else {
-      if (onAddToCart) onAddToCart(hotel, room, rate);
+      setSelectedSingleRate({ room, rate });
     }
+  };
+
+  const handleBrowseRooms = () => {
+    setActiveTab('rooms');
+    setTimeout(() => {
+      const el = document.getElementById('hotel-rooms-section') || document.querySelector('[id^="room-"]');
+      el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 60);
   };
 
   const multiRoomTotal = Object.values(roomSelections || {}).reduce(
@@ -561,100 +570,73 @@ export const HotelDetailModal = ({
                 </div>
               )}
 
-              {/* ── ROOM TYPE SHORTCUT PILLS (Addresses Long Scroll) ── */}
-              {roomCategories.length > 1 && (
-                <div className="bg-slate-50 p-3 rounded-2xl border-0 shadow-xs space-y-1.5">
-                  <div className="flex items-center justify-between text-[11px] text-gray-500 font-medium px-0.5">
-                    <span className="flex items-center gap-1 font-semibold text-gray-700">
-                      <Layers className="w-3.5 h-3.5 text-blue-600" />
-                      Room Type Shortcuts:
-                    </span>
+              {/* ── COMPACT ROOM & RATE TOOLBAR (Point 8: Minimal vertical footprint to maximize room visibility) ── */}
+              <div className="bg-slate-50/90 p-2 rounded-xl flex items-center justify-between gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+                <div className="flex items-center gap-1.5 flex-nowrap shrink-0">
+                  {/* Category Pills */}
+                  <button
+                    type="button"
+                    onClick={() => setSelectedCategory('all')}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                      selectedCategory === 'all'
+                        ? 'bg-blue-600 text-white shadow-xs'
+                        : 'bg-white text-gray-700 hover:bg-gray-100'
+                    }`}
+                  >
+                    All ({hotel.rooms?.length || 0})
+                  </button>
+                  {roomCategories.map(cat => (
                     <button
+                      key={cat.name}
                       type="button"
-                      onClick={toggleExpandAll}
-                      className="text-blue-600 hover:text-blue-700 font-semibold cursor-pointer text-[11px] flex items-center gap-1"
-                    >
-                      <ChevronsUpDown className="w-3 h-3" />
-                      {areAllExpanded ? 'Collapse All' : 'Expand All'}
-                    </button>
-                  </div>
-
-                  <div className="flex items-center gap-1.5 overflow-x-auto pb-1 pt-0.5" style={{ scrollbarWidth: 'none' }}>
-                    <button
-                      type="button"
-                      onClick={() => setSelectedCategory('all')}
-                      className={`px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 ${
-                        selectedCategory === 'all'
+                      onClick={() => setSelectedCategory(cat.name)}
+                      className={`px-2 py-1 rounded-lg text-xs font-medium whitespace-nowrap transition-all cursor-pointer ${
+                        selectedCategory === cat.name
                           ? 'bg-blue-600 text-white shadow-xs font-semibold'
-                          : 'bg-white text-gray-700 hover:bg-gray-100 border-0 shadow-xs'
+                          : 'bg-white text-gray-700 hover:bg-gray-100'
                       }`}
                     >
-                      <span>All Types</span>
-                      <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${selectedCategory === 'all' ? 'bg-white/25 text-white' : 'bg-gray-100 text-gray-600'}`}>
-                        {hotel.rooms?.length || 0}
-                      </span>
+                      {cat.name} ({cat.count})
                     </button>
+                  ))}
 
-                    {roomCategories.map(cat => (
-                      <button
-                        key={cat.name}
-                        type="button"
-                        onClick={() => setSelectedCategory(cat.name)}
-                        className={`px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 ${
-                          selectedCategory === cat.name
-                            ? 'bg-blue-600 text-white shadow-xs font-semibold'
-                            : 'bg-white text-gray-700 hover:bg-gray-100 border-0 shadow-xs'
-                        }`}
-                      >
-                        <span>{cat.name}</span>
-                        <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${selectedCategory === cat.name ? 'bg-white/25 text-white' : 'bg-gray-100 text-gray-600'}`}>
-                          {cat.count}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
+                  <div className="h-4 w-px bg-slate-300 mx-1 shrink-0" />
 
-              {/* ── RATE CRITERIA FILTER PILLS ── */}
-              <div className="flex items-center justify-between gap-2 flex-wrap">
-                <div className="flex items-center gap-1.5 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
-                  <span className="text-[11px] text-gray-400 font-medium flex-shrink-0">Filter rates:</span>
+                  {/* Quick Rate Filters */}
                   {[
-                    { id: 'all', label: 'All Rates', icon: null },
-                    { id: 'breakfast', label: 'Breakfast', icon: 'breakfast' },
-                    { id: 'free_cancel', label: 'Free Cancellation', icon: 'shield' },
-                    { id: 'packages', label: 'Package Deals', icon: 'sparkle' }
+                    { id: 'all', label: 'All Rates' },
+                    { id: 'free_cancel', label: 'Free Cancellation' },
+                    { id: 'breakfast', label: 'Breakfast' },
+                    { id: 'packages', label: 'Packages' }
                   ].map(f => (
                     <button
                       key={f.id}
+                      type="button"
                       onClick={() => setRateFilter(f.id)}
-                      className={`text-xs px-2.5 py-1 rounded-full font-medium transition-all flex-shrink-0 cursor-pointer inline-flex items-center gap-1.5 ${
+                      className={`text-xs px-2.5 py-1 rounded-lg font-medium transition-all whitespace-nowrap cursor-pointer ${
                         rateFilter === f.id
-                          ? 'bg-blue-600 text-white shadow-xs'
-                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                          ? 'bg-blue-600 text-white shadow-xs font-semibold'
+                          : 'bg-white text-gray-600 hover:bg-gray-100'
                       }`}
                     >
-                      {f.icon && <AnimatedIcon name={f.icon} size={12} className={rateFilter === f.id ? 'text-white' : 'text-gray-500'} />}
-                      <span>{f.label}</span>
+                      {f.label}
                     </button>
                   ))}
                 </div>
 
-                {roomCategories.length <= 1 && (
-                  <button
-                    type="button"
-                    onClick={toggleExpandAll}
-                    className="text-blue-600 hover:text-blue-700 font-semibold cursor-pointer text-xs flex items-center gap-1 ml-auto"
-                  >
-                    <ChevronsUpDown className="w-3.5 h-3.5" />
-                    {areAllExpanded ? 'Collapse All' : 'Expand All'}
-                  </button>
-                )}
+                {/* Right: Expand/Collapse All */}
+                <button
+                  type="button"
+                  onClick={toggleExpandAll}
+                  className="text-blue-600 hover:text-blue-700 font-semibold cursor-pointer text-xs flex items-center gap-1 shrink-0 ml-auto pl-2"
+                >
+                  <ChevronsUpDown className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">{areAllExpanded ? 'Collapse' : 'Expand'}</span>
+                </button>
               </div>
 
               {/* ── ROOM CARDS ACCORDION LIST ── */}
-              <div className="space-y-3">
+              <div id="hotel-rooms-section" className="space-y-3">
                 {hotel.rooms && hotel.rooms.length > 0 ? (
                   hotel.rooms.map((room, rIdx) => {
                     const filteredRates = (room.rates || []).filter(filterRate);
@@ -744,7 +726,7 @@ export const HotelDetailModal = ({
                             <div className="min-w-0 flex-1">
                               <div className="flex items-center gap-1.5 flex-wrap">
                                 <Bed className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" />
-                                <h3 className="text-xs sm:text-sm font-bold text-gray-900 leading-tight">
+                                <h3 className="text-sm sm:text-base font-bold text-gray-900 leading-tight">
                                   {room.name}
                                 </h3>
                                 <span className="text-[10px] text-blue-700 bg-blue-50 border-0 px-2 py-0.5 rounded-md font-medium shadow-2xs">
@@ -909,7 +891,7 @@ export const HotelDetailModal = ({
                                   {/* Right / Bottom on Mobile: Price & CTA Button */}
                                   <div className="flex items-center justify-between w-full md:w-auto md:flex-col md:items-end gap-3 pt-2 md:pt-0 border-t md:border-0 border-gray-100 flex-shrink-0">
                                     <div className="text-left md:text-right">
-                                      <div className="text-base sm:text-lg font-black text-blue-600 leading-tight">
+                                      <div className="text-lg sm:text-2xl font-black text-blue-600 leading-tight">
                                         {hotel.currency || 'AED'} {totalEur.toFixed(2)}
                                       </div>
                                       <div className="text-[10px] sm:text-[11px] text-gray-400">
@@ -929,7 +911,7 @@ export const HotelDetailModal = ({
                                         handleSelectRateForRoom(room, rate);
                                       }}
                                       className={`px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs active:scale-95 ${
-                                        isSelectedForTab
+                                        (isMultiRoom ? isSelectedForTab : (selectedSingleRate?.rate?.rateKey === rate.rateKey || selectedSingleRate?.rate?.id === rate.id))
                                           ? 'bg-emerald-600 text-white shadow-md'
                                           : 'bg-blue-600 hover:bg-blue-700 text-white'
                                       }`}
@@ -941,7 +923,11 @@ export const HotelDetailModal = ({
                                           `Select for Room ${activeRoomTab + 1}`
                                         )
                                       ) : (
-                                        <><ShoppingCart className="w-3.5 h-3.5" /> Add to Cart</>
+                                        (selectedSingleRate?.rate?.rateKey === rate.rateKey || selectedSingleRate?.rate?.id === rate.id) ? (
+                                          <><CheckCircle className="w-3.5 h-3.5" /> Selected</>
+                                        ) : (
+                                          `Select Room`
+                                        )
                                       )}
                                     </button>
                                   </div>
@@ -1354,81 +1340,131 @@ export const HotelDetailModal = ({
           )}
         </div>
 
-        {/* ── STICKY BOTTOM DOCK ── */}
+        {/* ── STICKY BOTTOM DOCK (Add to Cart hidden/prompting until room selected) ── */}
         <div className="flex-shrink-0 p-3 px-4 sm:p-4 sm:px-6 bg-white border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
-          <div className="flex items-center justify-between sm:block w-full sm:w-auto">
-            <span className="text-[11px] sm:text-xs text-gray-400 block">
-              {isMultiRoom
-                ? `Selected ${Object.keys(roomSelections || {}).length} of ${roomConfigs.length} rooms`
-                : `Stay Total for ${nights} nights`}
-            </span>
-            <div className="flex items-baseline gap-2">
-              <span className="text-lg sm:text-2xl font-black text-blue-600">
-                {hotel.currency || 'AED'}{' '}
-                {isMultiRoom
-                  ? multiRoomTotal.toFixed(2)
-                  : startingPrice.toFixed(2)}
-              </span>
-              {formatPKR && (
-                <span className="text-[11px] sm:text-xs font-semibold text-gray-500">
-                  ≈ {formatPKR(isMultiRoom ? multiRoomTotal : startingPrice, hotel.currency || 'AED', true)}
+          {isMultiRoom ? (
+            <>
+              <div className="flex items-center justify-between sm:block w-full sm:w-auto">
+                <span className="text-[11px] sm:text-xs text-gray-400 block">
+                  {`Selected ${Object.keys(roomSelections || {}).length} of ${roomConfigs.length} rooms`}
                 </span>
-              )}
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 w-full sm:w-auto">
-            <button
-              type="button"
-              onClick={() => setActiveTab('rooms')}
-              className="px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl border-0 bg-gray-100 text-xs font-bold text-gray-700 hover:bg-gray-200 transition-colors cursor-pointer flex-1 sm:flex-initial shadow-xs"
-            >
-              Browse Rooms
-            </button>
-
-            {isMultiRoom ? (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (onMultiRoomAddToCart) {
-                    onMultiRoomAddToCart(hotel, roomSelections, roomConfigs);
-                  }
-                }}
-                disabled={!allRoomsSelected}
-                className={`px-5 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs font-bold shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer flex-1 sm:flex-initial ${
-                  allRoomsSelected
-                    ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                    : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                }`}
-              >
-                <ShoppingCart className="w-4 h-4" />
-                Add All {roomConfigs.length} Rooms
-                {!allRoomsSelected && (
-                  <span className="text-[10px] opacity-75">
-                    ({Object.keys(roomSelections || {}).length}/{roomConfigs.length})
+                <div className="flex items-baseline gap-2">
+                  <span className="text-lg sm:text-2xl font-black text-blue-600">
+                    {hotel.currency || 'AED'} {multiRoomTotal.toFixed(2)}
                   </span>
-                )}
-              </button>
-            ) : (
+                  {formatPKR && (
+                    <span className="text-[11px] sm:text-xs font-semibold text-gray-500">
+                      ≈ {formatPKR(multiRoomTotal, hotel.currency || 'AED', true)}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <button
+                  type="button"
+                  onClick={handleBrowseRooms}
+                  className="px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl border-0 bg-gray-100 text-xs font-bold text-gray-700 hover:bg-gray-200 transition-colors cursor-pointer flex-1 sm:flex-initial shadow-xs"
+                >
+                  Browse Rooms
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (onMultiRoomAddToCart) {
+                      onMultiRoomAddToCart(hotel, roomSelections, roomConfigs);
+                    }
+                  }}
+                  disabled={!allRoomsSelected}
+                  className={`px-5 sm:px-6 py-2 sm:py-2.5 rounded-xl text-xs font-bold shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer flex-1 sm:flex-initial ${
+                    allRoomsSelected
+                      ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                      : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                  }`}
+                >
+                  <ShoppingCart className="w-4 h-4" />
+                  Add All {roomConfigs.length} Rooms
+                  {!allRoomsSelected && (
+                    <span className="text-[10px] opacity-75">
+                      ({Object.keys(roomSelections || {}).length}/{roomConfigs.length})
+                    </span>
+                  )}
+                </button>
+              </div>
+            </>
+          ) : !selectedSingleRate ? (
+            /* Prompt state: No default rate displayed until room is selected */
+            <div className="flex items-center justify-between w-full gap-3">
+              <div>
+                <span className="text-xs sm:text-sm font-bold text-gray-800 block">
+                  Please select a room above to proceed
+                </span>
+                <span className="text-[11px] text-gray-400">
+                  Available from {hotel.currency || 'AED'} {startingPrice.toFixed(0)} for {nights} nights
+                </span>
+              </div>
               <button
                 type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  // Select first available rate or scroll to rooms
-                  if (hotel.rooms?.[0]?.rates?.[0] && onAddToCart) {
-                    onAddToCart(hotel, hotel.rooms[0], hotel.rooms[0].rates[0]);
-                  } else {
-                    setActiveTab('rooms');
-                  }
-                }}
-                className="px-5 sm:px-6 py-2 sm:py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer flex-1 sm:flex-initial"
+                onClick={handleBrowseRooms}
+                className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md transition-all cursor-pointer shrink-0"
               >
-                <ShoppingCart className="w-4 h-4" />
-                Add to Cart
+                Browse Rooms
               </button>
-            )}
-          </div>
+            </div>
+          ) : (
+            /* Room Selected: Displays only the selected room rate */
+            <>
+              <div className="flex items-center justify-between sm:block w-full sm:w-auto">
+                <span className="text-[11px] sm:text-xs text-emerald-700 font-bold block truncate max-w-[260px]">
+                  ✓ Selected: {selectedSingleRate.room.name}
+                </span>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-lg sm:text-2xl font-black text-blue-600">
+                    {hotel.currency || 'AED'}{' '}
+                    {(propApplyCommission
+                      ? propApplyCommission(parseFloat(selectedSingleRate.rate.net || 0))
+                      : parseFloat(selectedSingleRate.rate.net || 0)
+                    ).toFixed(2)}
+                  </span>
+                  {formatPKR && (
+                    <span className="text-[11px] sm:text-xs font-semibold text-gray-500">
+                      ≈ {formatPKR(
+                        propApplyCommission
+                          ? propApplyCommission(parseFloat(selectedSingleRate.rate.net || 0))
+                          : parseFloat(selectedSingleRate.rate.net || 0),
+                        hotel.currency || 'AED',
+                        true
+                      )}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <button
+                  type="button"
+                  onClick={handleBrowseRooms}
+                  className="px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl border-0 bg-gray-100 text-xs font-bold text-gray-700 hover:bg-gray-200 transition-colors cursor-pointer flex-1 sm:flex-initial shadow-xs"
+                >
+                  Change Room
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (onAddToCart) {
+                      onAddToCart(hotel, selectedSingleRate.room, selectedSingleRate.rate);
+                    }
+                  }}
+                  className="px-5 sm:px-6 py-2 sm:py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer flex-1 sm:flex-initial"
+                >
+                  <ShoppingCart className="w-4 h-4" />
+                  Add to Cart
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>

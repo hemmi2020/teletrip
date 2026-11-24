@@ -840,8 +840,29 @@ export const SlideOutCart = ({ isOpen, onClose, onProceedToCheckout }) => {
                         {isActivity && item.duration && <span className="text-[10px] px-2 py-0.5 bg-gray-50 text-gray-500 rounded-full">{item.duration}</span>}
                         {!isActivity && !isTransfer && <span className="text-[10px] px-2 py-0.5 bg-gray-50 text-gray-500 rounded-full">{nights}N</span>}
                         {!isActivity && !isTransfer && item.boardName && <span className="text-[10px] px-2 py-0.5 bg-gray-50 text-gray-500 rounded-full">{item.boardName}</span>}
-                        {item.rateClass === 'NRF' && <span className="text-[10px] px-2 py-0.5 bg-red-50 text-red-500 rounded-full">Non-refundable</span>}
-                        {item.rateClass === 'NOR' && <span className="text-[10px] px-2 py-0.5 bg-green-50 text-green-600 rounded-full">Free cancellation</span>}
+                        {item.rateClass === 'NRF' && <span className="text-[10px] px-2 py-0.5 bg-red-50 text-red-500 rounded-full font-medium">Non-refundable</span>}
+                        {(item.rateClass === 'NOR' || item.hasFreeCancellation || item.cancellationDeadline || item.cancellationPolicies?.length > 0) && (() => {
+                          const policyDate = item.cancellationDeadline || item.cancellationPolicies?.[0]?.from || item.cancellationPolicy?.from;
+                          if (policyDate) {
+                            try {
+                              const d = new Date(policyDate);
+                              if (!isNaN(d.getTime())) {
+                                const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                                const timeStr = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                                return (
+                                  <span className="text-[10px] px-2 py-0.5 bg-emerald-50 text-emerald-700 font-bold rounded-full">
+                                    Free cancellation before {dateStr} at {timeStr}
+                                  </span>
+                                );
+                              }
+                            } catch (_) {}
+                          }
+                          return (
+                            <span className="text-[10px] px-2 py-0.5 bg-green-50 text-green-600 rounded-full font-medium">
+                              Free cancellation
+                            </span>
+                          );
+                        })()}
                       </div>
 
                       {/* Dates + Price */}

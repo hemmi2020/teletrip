@@ -133,14 +133,8 @@ export default function HeroSection() {
   // ═══════════════════════════════════════════════════════════════════════════
   // 1. STAYS SEARCH STATE (Audited from HotelSearchForm.jsx)
   // ═══════════════════════════════════════════════════════════════════════════
-  const [searchQuery, setSearchQuery] = useState("Dubai, United Arab Emirates");
-  const [selectedLocation, setSelectedLocation] = useState({
-    name: "Dubai",
-    city: "Dubai",
-    country: "United Arab Emirates",
-    destinationCode: "DXB",
-    type: "destination"
-  });
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedLocation, setSelectedLocation] = useState(null);
   const [selectedHotelCode, setSelectedHotelCode] = useState(null);
   const [filteredLocations, setFilteredLocations] = useState([]);
   const [hotelSuggestions, setHotelSuggestions] = useState([]);
@@ -892,8 +886,8 @@ export default function HeroSection() {
       {/* ════ MAIN CONTAINER ════ */}
       <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full flex flex-col justify-center py-2 sm:py-3">
 
-        {/* ── TOP SECTION: Dynamic Headline & Subtitle ── */}
-        <div className="max-w-3xl mb-5 sm:mb-7 lg:mb-8">
+        {/* ── TOP SECTION: Dynamic Headline & Subtitle (Centrally aligned with search bar) ── */}
+        <div className="max-w-3xl mx-auto text-center mb-5 sm:mb-7 lg:mb-8">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}
@@ -911,17 +905,17 @@ export default function HeroSection() {
               </h1>
 
               {/* Dynamic Subtext */}
-              <p className="text-xs sm:text-sm md:text-base text-slate-600 font-medium max-w-xl leading-relaxed">
+              <p className="text-xs sm:text-sm md:text-base text-slate-600 font-medium max-w-xl mx-auto leading-relaxed">
                 {currentTab.subtitle}
               </p>
             </motion.div>
           </AnimatePresence>
         </div>
 
-        {/* ════ 3 TABS & FLOATING CAPSULE SEARCH BAR (Moved up directly after subtext) ════ */}
+        {/* ════ 3 TABS & FLOATING CAPSULE SEARCH BAR (Centrally aligned) ════ */}
         <div
           ref={searchBarRef}
-          className="max-w-5xl relative z-50 w-full search-form-section"
+          className="max-w-5xl mx-auto relative z-50 w-full search-form-section mb-6 sm:mb-2 pb-2 sm:pb-0"
         >
           {/* Transfer Error Alert */}
           {activeTab === "transfers" && transferError && (
@@ -1036,7 +1030,7 @@ export default function HeroSection() {
                     {/* Segment 1: Location & Hotel */}
                     <div
                       ref={locationRef}
-                      className="relative flex-1 px-4 py-1.5 sm:py-1 flex items-center gap-3 cursor-pointer group rounded-2xl sm:rounded-none hover:bg-slate-50/80 transition-colors"
+                      className={`relative flex-1 px-4 py-1.5 sm:py-1 flex items-center gap-3 cursor-pointer group rounded-2xl sm:rounded-none hover:bg-slate-50/80 transition-colors ${showLocationDropdown ? 'z-[60]' : 'z-20'}`}
                     >
                       <div className="w-8 h-8 rounded-full bg-slate-50 group-hover:bg-blue-50 text-slate-400 group-hover:text-blue-600 flex items-center justify-center shrink-0 transition-colors">
                         {selectedHotelCode ? (
@@ -1125,25 +1119,29 @@ export default function HeroSection() {
                                 <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
                                 <span>Searching destinations and hotels...</span>
                               </div>
+                            ) : searchQuery.trim().length < 2 ? (
+                              <div className="p-4 text-center text-slate-400 text-xs">
+                                Please type at least 2 characters to search destinations or hotels.
+                              </div>
+                            ) : filteredLocations.length === 0 && hotelSuggestions.length === 0 ? (
+                              <div className="p-4 text-center text-slate-400 text-xs">
+                                No destinations or hotels found for "{searchQuery}".
+                              </div>
                             ) : (
                               <>
-                                {/* Section 1: Destinations (Filtered or Fallback to Top Destinations) */}
+                                {/* Section 1: Destinations */}
                                 {(() => {
                                   const dests = filteredLocations.filter((l) => l.type !== "hotel");
-                                  const list = dests.length > 0 ? dests : TOP_DESTINATIONS.slice(0, 6);
-                                  const isDefault = dests.length === 0;
+                                  if (dests.length === 0) return null;
                                   return (
                                     <div>
                                       <div className="px-3 pt-2 pb-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-slate-50/70 flex items-center justify-between">
                                         <div className="flex items-center gap-1.5">
                                           <MapPin size={12} className="text-blue-600" />
-                                          <span>{isDefault ? "Top Destinations" : "Destinations & Cities"}</span>
+                                          <span>Destinations & Cities</span>
                                         </div>
-                                        {isDefault && (
-                                          <span className="text-[9px] text-slate-400 font-medium">Popular</span>
-                                        )}
                                       </div>
-                                      {list.map((loc, i) => (
+                                      {dests.map((loc, i) => (
                                         <div
                                           key={`loc-${i}`}
                                           onClick={() => handleLocationSelect(loc)}
@@ -1170,22 +1168,18 @@ export default function HeroSection() {
                                   );
                                 })()}
 
-                                {/* Section 2: Hotels (Filtered or Fallback to Top Hotels) */}
+                                {/* Section 2: Hotels */}
                                 {(() => {
-                                  const hList = hotelSuggestions.length > 0 ? hotelSuggestions : TOP_HOTELS.slice(0, 4);
-                                  const isDefault = hotelSuggestions.length === 0;
+                                  if (hotelSuggestions.length === 0) return null;
                                   return (
                                     <div>
                                       <div className="px-3 pt-2 pb-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider bg-slate-50/70 flex items-center justify-between">
                                         <div className="flex items-center gap-1.5">
                                           <Building2 size={12} className="text-emerald-600" />
-                                          <span>{isDefault ? "Featured Hotels" : "Hotels & Properties"}</span>
+                                          <span>Hotels & Properties</span>
                                         </div>
-                                        {isDefault && (
-                                          <span className="text-[9px] text-slate-400 font-medium">Iconic</span>
-                                        )}
                                       </div>
-                                      {hList.map((hotel, idx) => (
+                                      {hotelSuggestions.map((hotel, idx) => (
                                         <div
                                           key={`h-${idx}`}
                                           onClick={() => handleHotelSelect(hotel)}
@@ -1589,7 +1583,7 @@ export default function HeroSection() {
               </div>
 
               {/* ── Search Action Button: Full-width tap target on mobile, circular on desktop ── */}
-              <div className="p-1 sm:p-0 sm:pr-1 flex w-full sm:w-auto justify-end shrink-0 mt-1 sm:mt-0">
+              <div className="p-1 sm:p-0 sm:pr-1 flex w-full sm:w-auto justify-end shrink-0 mt-1 sm:mt-0 relative z-10">
                 <button
                   type="submit"
                   aria-label="Search"
@@ -1641,8 +1635,7 @@ export default function HeroSection() {
             }}
           >
             <div
-              className="bg-white border border-gray-200 rounded-3xl shadow-2xl overflow-auto max-h-[85vh] p-4 sm:p-6"
-              style={{ maxWidth: "95vw", margin: 16 }}
+              className="bg-white border border-gray-200 rounded-3xl shadow-2xl overflow-auto max-h-[90vh] p-3 sm:p-6 w-[calc(100vw-20px)] sm:w-auto max-w-sm sm:max-w-md mx-auto"
             >
               <div className="flex items-center justify-between pb-3 mb-2 border-b border-gray-100">
                 <div>
@@ -1889,8 +1882,7 @@ export default function HeroSection() {
             }}
           >
             <div
-              className="bg-white border border-gray-200 rounded-3xl shadow-2xl overflow-auto max-h-[85vh] p-4 sm:p-6"
-              style={{ maxWidth: "95vw", margin: 16 }}
+              className="bg-white border border-gray-200 rounded-3xl shadow-2xl overflow-auto max-h-[90vh] p-3 sm:p-6 w-[calc(100vw-20px)] sm:w-auto max-w-sm sm:max-w-md mx-auto"
             >
               <div className="flex items-center justify-between pb-3 mb-2 border-b border-gray-100">
                 <h3 className="text-sm font-extrabold text-slate-900">
@@ -2087,8 +2079,7 @@ export default function HeroSection() {
             }}
           >
             <div
-              className="bg-white border border-gray-200 rounded-3xl shadow-2xl overflow-auto max-h-[85vh] p-4 sm:p-6"
-              style={{ maxWidth: "95vw", margin: 16 }}
+              className="bg-white border border-gray-200 rounded-3xl shadow-2xl overflow-auto max-h-[90vh] p-3 sm:p-6 w-[calc(100vw-20px)] sm:w-auto max-w-sm sm:max-w-md mx-auto"
             >
               <div className="flex items-center justify-between pb-3 mb-2 border-b border-gray-100">
                 <h3 className="text-sm font-extrabold text-slate-900">Select Activity Dates</h3>

@@ -297,7 +297,7 @@ const Home = () => {
       <Helmet><title>Telitrip — Travel Smarter</title></Helmet>
       <Header />
       {/* Main Hero Section matching user design */}
-      <div className="relative z-30 bg-white overflow-visible">
+      <div className="relative z-30 bg-white overflow-visible pb-6 sm:pb-0">
         <HeroSection />
       </div>
 

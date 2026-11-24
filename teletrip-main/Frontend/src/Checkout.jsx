@@ -22,7 +22,8 @@ import {
   Users,
   ShieldCheck,
   CheckCircle,
-  Clock
+  Clock,
+  ShoppingBag
 } from 'lucide-react';
 import { AnimatedIcon } from './components/common/AnimatedIcon';
 
@@ -36,6 +37,19 @@ const Checkout = () => {
   // Get cart data from navigation state or use current cart
   const checkoutItems = location.state?.cartItems || cartItems;
   const totalAmount = location.state?.totalAmount || getTotalPrice();
+
+  const hasNonRefundable = checkoutItems?.some(item => item.rateClass === 'NRF');
+  const hasFreeCancellation = checkoutItems?.length > 0 && !hasNonRefundable;
+  const deadlineRaw = checkoutItems?.[0]?.cancellationDeadline || checkoutItems?.[0]?.cancellationPolicies?.[0]?.from || checkoutItems?.[0]?.cancellationPolicy?.from;
+  let formattedDeadline = '';
+  if (deadlineRaw) {
+    try {
+      const d = new Date(deadlineRaw);
+      if (!isNaN(d.getTime())) {
+        formattedDeadline = `${d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} at ${d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`;
+      }
+    } catch (_) {}
+  }
   
   // Currency conversion state
   const [currencyConversion, setCurrencyConversion] = useState(null);
@@ -46,24 +60,42 @@ const Checkout = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState('hblpay'); // 'hblpay' or 'pay_on_site'
+  const [paymentMethod, setPaymentMethod] = useState('hblpay'); // 'hblpay' or 'pay_on_site' (Pay Later)
   const [showOrderSummary, setShowOrderSummary] = useState(true);
   const [rateComments, setRateComments] = useState([]);
   const [excludedTaxes, setExcludedTaxes] = useState([]);
   const [validatedRateKeys, setValidatedRateKeys] = useState({});
   const [priceChangeNotice, setPriceChangeNotice] = useState(null);
   const [isValidatingRates, setIsValidatingRates] = useState(false);
-
+  const [agreeTerms, setAgreeTerms] = useState(false);
+  const [agreeNRF, setAgreeNRF] = useState(false);
+  const [isHoldExpired, setIsHoldExpired] = useState(false);
 
   // Inventory hold countdown timer (Expedia / Bedsonline style)
   const [timeLeft, setTimeLeft] = useState(899); // 14:59
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
     }, 1000);
     return () => clearInterval(timer);
   }, []);
+
+  // Point 15: Clear cart and invalidate hold immediately on timer expiry
+  useEffect(() => {
+    if (timeLeft === 0 && !isHoldExpired) {
+      setIsHoldExpired(true);
+      if (clearCart) {
+        clearCart();
+      }
+    }
+  }, [timeLeft, isHoldExpired, clearCart]);
 
   const formatTimer = (seconds) => {
     const mins = Math.floor(seconds / 60);
@@ -828,10 +860,22 @@ const handlePayOnSiteBooking = async () => {
 };
 
 const handlePaymentSubmit = () => {
-  if (paymentMethod === 'pay_on_site') {
+  if (isHoldExpired) {
+    setError('Your 15-minute price hold has expired. Please search stays again.');
+    return;
+  }
+  if (hasNonRefundable && !agreeNRF) {
+    setError('Please acknowledge that this booking is 100% non-refundable to proceed.');
+    return;
+  }
+  if (!agreeTerms) {
+    setError('Please agree to the Terms & Conditions and cancellation policy to proceed.');
+    return;
+  }
+  if (paymentMethod === 'pay_on_site' || paymentMethod === 'pay_later') {
     handlePayOnSiteBooking();
   } else {
-    handlePayment(); // Your existing HBL payment function
+    handlePayment();
   }
 };
 
@@ -858,15 +902,15 @@ const handlePaymentSubmit = () => {
         {/* Name Fields */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-600 mb-1">
-              First Name *
+            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+              First Name <span className="text-red-500 font-bold ml-0.5">*</span>
             </label>
             <div className="relative">
               <input
                 type="text"
                 value={billingInfo.firstName}
                 onChange={(e) => handleInputChange('firstName', e.target.value)}
-                className="w-full px-3 py-2.5 text-xs sm:text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold text-gray-800"
+                className="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-slate-50/70 border border-slate-300 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none font-bold text-slate-900 transition-colors"
                 placeholder="Ahmed"
                 required
               />
@@ -874,15 +918,15 @@ const handlePaymentSubmit = () => {
           </div>
 
           <div>
-            <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-600 mb-1">
-              Last Name *
+            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+              Last Name <span className="text-red-500 font-bold ml-0.5">*</span>
             </label>
             <div className="relative">
               <input
                 type="text"
                 value={billingInfo.lastName}
                 onChange={(e) => handleInputChange('lastName', e.target.value)}
-                className="w-full px-3 py-2.5 text-xs sm:text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold text-gray-800"
+                className="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-slate-50/70 border border-slate-300 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none font-bold text-slate-900 transition-colors"
                 placeholder="Khan"
                 required
               />
@@ -893,15 +937,15 @@ const handlePaymentSubmit = () => {
         {/* Contact Fields */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-600 mb-1">
-              Email Address (for official voucher) *
+            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+              Email Address (for official voucher) <span className="text-red-500 font-bold ml-0.5">*</span>
             </label>
             <div className="relative">
               <input
                 type="email"
                 value={billingInfo.email}
                 onChange={(e) => handleInputChange('email', e.target.value)}
-                className="w-full px-3 py-2.5 text-xs sm:text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold text-gray-800"
+                className="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-slate-50/70 border border-slate-300 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none font-bold text-slate-900 transition-colors"
                 placeholder="guest@example.com"
                 required
               />
@@ -909,15 +953,15 @@ const handlePaymentSubmit = () => {
           </div>
 
           <div>
-            <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-600 mb-1">
-              Mobile Phone *
+            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+              Mobile Phone <span className="text-red-500 font-bold ml-0.5">*</span>
             </label>
             <div className="relative">
               <input
                 type="tel"
                 value={billingInfo.phone}
                 onChange={(e) => handleInputChange('phone', e.target.value)}
-                className="w-full px-3 py-2.5 text-xs sm:text-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-bold text-gray-800"
+                className="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-slate-50/70 border border-slate-300 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none font-bold text-slate-900 transition-colors"
                 placeholder="+971 50 123 4567"
                 required
               />
@@ -928,28 +972,28 @@ const handlePaymentSubmit = () => {
         {/* Address and City Fields (Prefilled & Compact) */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div className="sm:col-span-2">
-            <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-600 mb-1">
-              Billing Address *
+            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+              Billing Address <span className="text-red-500 font-bold ml-0.5">*</span>
             </label>
             <input
               type="text"
               value={billingInfo.address}
               onChange={(e) => handleInputChange('address', e.target.value)}
-              className="w-full px-3 py-2 text-xs border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-gray-800"
+              className="w-full px-3.5 py-2.5 text-xs bg-slate-50/70 border border-slate-300 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-slate-900 transition-colors"
               placeholder="Residential address"
               required
             />
           </div>
 
           <div>
-            <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-600 mb-1">
-              City *
+            <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+              City <span className="text-red-500 font-bold ml-0.5">*</span>
             </label>
             <input
               type="text"
               value={billingInfo.city}
               onChange={(e) => handleInputChange('city', e.target.value)}
-              className="w-full px-3 py-2 text-xs border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-gray-800"
+              className="w-full px-3.5 py-2.5 text-xs bg-slate-50/70 border border-slate-300 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-slate-900 transition-colors"
               placeholder="City"
               required
             />
@@ -958,14 +1002,14 @@ const handlePaymentSubmit = () => {
 
         {/* Special Requests */}
         <div className="pt-1">
-          <label className="block text-[11px] font-bold uppercase tracking-wider text-gray-600 mb-1">
+          <label className="block text-xs font-semibold text-slate-700 mb-1.5">
             Special Requests (Optional)
           </label>
           <textarea
             value={billingInfo.specialRequests}
             onChange={(e) => handleInputChange('specialRequests', e.target.value)}
             placeholder="E.g. High floor, quiet room, late check-in..."
-            className="w-full px-3 py-2 text-xs border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-gray-800"
+            className="w-full px-3.5 py-2.5 text-xs bg-slate-50/70 border border-slate-300 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none text-slate-900 transition-colors"
             rows={2}
             maxLength={500}
           />
@@ -977,7 +1021,7 @@ const handlePaymentSubmit = () => {
 
   const renderPaymentMethodSelector = () => (
     <div className="space-y-2.5">
-      {/* HBLPay Option */}
+      {/* Option 1: Credit / Debit Card (HBLPay) */}
       <button
         type="button"
         onClick={() => setPaymentMethod('hblpay')}
@@ -993,7 +1037,7 @@ const handlePaymentSubmit = () => {
           </div>
           <div>
             <span className="text-xs font-extrabold text-gray-900 block">Credit / Debit Card (HBLPay)</span>
-            <span className="text-[11px] text-gray-500">Visa, Mastercard & UnionPay</span>
+            <span className="text-[11px] text-gray-500">Instant confirmation via Visa, Mastercard & UnionPay</span>
           </div>
         </div>
         <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
@@ -1003,53 +1047,56 @@ const handlePaymentSubmit = () => {
         </div>
       </button>
 
-      {/* Pay on Site Option */}
-      <button
-        type="button"
-        onClick={() => setPaymentMethod('pay_on_site')}
-        className={`w-full p-3.5 rounded-xl border text-left transition-all cursor-pointer flex items-center justify-between ${
-          paymentMethod === 'pay_on_site'
-            ? 'border-emerald-600 bg-emerald-50/70 ring-2 ring-emerald-100'
-            : 'border-gray-200 hover:bg-gray-50'
-        }`}
-      >
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
-            <Building2 className="w-5 h-5" />
-          </div>
-          <div>
-            <span className="text-xs font-extrabold text-gray-900 block">Pay at Office</span>
-            <span className="text-[11px] text-gray-500">Reserve now, pay in-person before check-in</span>
-          </div>
-        </div>
-        <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
-          paymentMethod === 'pay_on_site' ? 'border-emerald-600' : 'border-gray-300'
-        }`}>
-          {paymentMethod === 'pay_on_site' && <div className="w-2 h-2 rounded-full bg-emerald-600" />}
-        </div>
-      </button>
-
-      {/* Pay at Office Instructions */}
-      {paymentMethod === 'pay_on_site' && (
-        <div className="bg-emerald-50/80 border border-emerald-200 rounded-xl p-3">
-          <div className="flex items-start space-x-2">
-            <AlertCircle className="w-4 h-4 text-emerald-600 mt-0.5 flex-shrink-0" />
-            <div className="text-xs text-emerald-900">
-              <p className="font-bold mb-1">Pay at Office Terms:</p>
-              <ul className="space-y-0.5 list-disc list-inside text-[11px] text-emerald-800">
-                <li>Hotel room reserved instantly at certified wholesale rates</li>
-                <li>Visit Telitrip office to complete payment before check-in</li>
-                <li>Cash or local credit card accepted</li>
-              </ul>
+      {/* Option 2: Book Now & Pay Later (Only available for Free Cancellation bookings) */}
+      {hasFreeCancellation ? (
+        <button
+          type="button"
+          onClick={() => setPaymentMethod('pay_on_site')}
+          className={`w-full p-3.5 rounded-xl border text-left transition-all cursor-pointer flex items-center justify-between ${
+            paymentMethod === 'pay_on_site'
+              ? 'border-emerald-600 bg-emerald-50/70 ring-2 ring-emerald-100'
+              : 'border-gray-200 hover:bg-gray-50'
+          }`}
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+              <Building2 className="w-5 h-5" />
+            </div>
+            <div>
+              <span className="text-xs font-extrabold text-gray-900 block">Book Now & Pay Later</span>
+              <span className="text-[11px] text-emerald-700 font-semibold">Reserve now without immediate payment</span>
             </div>
           </div>
+          <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
+            paymentMethod === 'pay_on_site' ? 'border-emerald-600' : 'border-gray-300'
+          }`}>
+            {paymentMethod === 'pay_on_site' && <div className="w-2 h-2 rounded-full bg-emerald-600" />}
+          </div>
+        </button>
+      ) : (
+        <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-500 text-xs">
+          <span className="font-bold text-slate-700 block mb-0.5">Pay Later unavailable for this booking:</span>
+          <span>This rate is Non-Refundable (NRF). Immediate card payment is required by Bedsonline supplier policies to confirm this reservation.</span>
+        </div>
+      )}
+
+      {/* Book Now & Pay Later Terms & Cancellation Warning (Point 13) */}
+      {paymentMethod === 'pay_on_site' && hasFreeCancellation && (
+        <div className="bg-amber-50/90 border border-amber-300 rounded-xl p-3.5 space-y-1.5 animate-in fade-in-50 duration-200">
+          <div className="flex items-center gap-2 text-amber-900 font-bold text-xs">
+            <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+            <span>Pay Later Terms & Cancellation Warning:</span>
+          </div>
+          <p className="text-[11px] text-amber-900 leading-relaxed">
+            Your booking will be reserved without upfront charge. Full payment must be completed before <strong>{formattedDeadline || 'the free cancellation deadline'}</strong>. If payment is not completed by this deadline, your reservation will be <strong>automatically cancelled</strong> to avoid supplier cancellation penalties.
+          </p>
         </div>
       )}
     </div>
   );
 
   const renderPaymentBox = () => (
-    <div className="bg-white rounded-2xl border border-gray-200/90 shadow-xs p-5 space-y-4">
+    <div className="bg-white rounded-2xl border border-gray-200/90 shadow-xs p-5 space-y-4 text-left">
       <div className="flex items-center justify-between pb-3 border-b border-gray-100">
         <div>
           <h2 className="text-sm font-extrabold text-gray-900 flex items-center gap-2">
@@ -1066,10 +1113,39 @@ const handlePaymentSubmit = () => {
       {/* Payment Method Selector */}
       {renderPaymentMethodSelector()}
 
+      {/* Mandatory Checkboxes (Point 13) */}
+      <div className="pt-3 border-t border-gray-100 space-y-2.5">
+        {hasNonRefundable && (
+          <label className="flex items-start gap-2.5 text-xs text-slate-800 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={agreeNRF}
+              onChange={(e) => setAgreeNRF(e.target.checked)}
+              className="mt-0.5 w-4 h-4 rounded text-blue-600 border-gray-300 focus:ring-blue-500 accent-blue-600"
+            />
+            <span>
+              I understand and acknowledge that this booking is <strong>100% Non-Refundable</strong> and cannot be amended or cancelled once confirmed. <span className="text-red-500 font-bold">*</span>
+            </span>
+          </label>
+        )}
+
+        <label className="flex items-start gap-2.5 text-xs text-slate-800 cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={agreeTerms}
+            onChange={(e) => setAgreeTerms(e.target.checked)}
+            className="mt-0.5 w-4 h-4 rounded text-blue-600 border-gray-300 focus:ring-blue-500 accent-blue-600"
+          />
+          <span>
+            I have read and agree to the <a href="/terms" target="_blank" className="text-blue-600 underline font-semibold">Terms & Conditions</a>, Privacy Policy, and cancellation policies. <span className="text-red-500 font-bold">*</span>
+          </span>
+        </label>
+      </div>
+
       {/* Primary Payment CTA Button */}
       <button
         onClick={handlePaymentSubmit}
-        disabled={isProcessing || checkoutItems.length === 0}
+        disabled={isProcessing || isHoldExpired || checkoutItems.length === 0 || !agreeTerms || (hasNonRefundable && !agreeNRF)}
         className={`w-full min-h-[50px] py-3.5 px-4 rounded-xl font-extrabold text-xs sm:text-sm flex items-center justify-center space-x-2 shadow-md hover:shadow-lg transition-all cursor-pointer ${
           paymentMethod === 'hblpay'
             ? 'bg-blue-600 hover:bg-blue-700 text-white'
@@ -1091,7 +1167,7 @@ const handlePaymentSubmit = () => {
             ) : (
               <>
                 <Wallet className="w-4 h-4" />
-                <span>Reserve Booking · Pay at Office</span>
+                <span>Confirm Reservation · Pay Later</span>
               </>
             )}
           </>
@@ -1249,18 +1325,41 @@ const handlePaymentSubmit = () => {
     return (
       <>
         <Header />
-        <div className="pt-20 min-h-screen bg-gray-50">
-          <div className="max-w-4xl mx-auto px-4 py-8">
-            <div className="text-center">
-              <h1 className="text-2xl font-bold text-gray-900 mb-4">Your cart is empty</h1>
-              <p className="text-gray-600 mb-6">Add some items to your cart to proceed with checkout.</p>
-              <button
-                onClick={() => navigate('/home')}
-                className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700"
-              >
-                Continue Shopping
-              </button>
-            </div>
+        <div className="pt-20 min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="max-w-md mx-auto px-4 py-12 text-center w-full">
+            {isHoldExpired ? (
+              <div className="bg-white rounded-2xl p-6 sm:p-8 border border-amber-200 shadow-sm space-y-4">
+                <div className="w-14 h-14 mx-auto rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center">
+                  <Clock className="w-7 h-7" />
+                </div>
+                <h1 className="text-xl sm:text-2xl font-black text-gray-900">Booking Hold Expired</h1>
+                <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
+                  Your 15-minute price and room availability hold has expired. The inventory has been released back to the supplier to ensure accurate live availability.
+                </p>
+                <button
+                  onClick={() => navigate('/home')}
+                  className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition-colors shadow-sm cursor-pointer"
+                >
+                  Search Stays Again
+                </button>
+              </div>
+            ) : (
+              <div className="bg-white rounded-2xl p-6 sm:p-8 border border-gray-200 shadow-sm space-y-4">
+                <div className="w-14 h-14 mx-auto rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                  <ShoppingBag className="w-7 h-7" />
+                </div>
+                <h1 className="text-xl sm:text-2xl font-black text-gray-900">Your Cart is Empty</h1>
+                <p className="text-xs sm:text-sm text-gray-600">
+                  Select a room or activity to proceed with checkout.
+                </p>
+                <button
+                  onClick={() => navigate('/home')}
+                  className="w-full bg-blue-600 text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition-colors shadow-sm cursor-pointer"
+                >
+                  Browse Stays
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </>
@@ -1277,7 +1376,7 @@ const handlePaymentSubmit = () => {
             <p className="text-xs sm:text-sm text-gray-500 mt-1">Complete your booking with direct B2B net rates</p>
           </div>
 
-          {/* Inventory Hold Timer Banner (Style 1 from Cart Design Lab) */}
+          {/* 1. Checkout Timer (Mobile Order 1 & Desktop Top Banner) */}
           <div className="mb-6 p-4 bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-amber-500/15 bento-card border-0 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3 shadow-2xs">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center font-black shadow-sm shrink-0">
@@ -1302,88 +1401,94 @@ const handlePaymentSubmit = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-            {/* Left 7 Columns: Selected Room Card + Primary Guest Information + TeleTrip Guarantee */}
-            <div className="lg:col-span-7 space-y-5">
-              {/* Selected Room / Property Cards */}
-              {checkoutItems.map((item, idx) => {
-                const isActivity = item.type === 'activity';
-                const isTransfer = item.type === 'transfer';
-                const checkInDate = item.checkIn ? new Date(item.checkIn) : new Date();
-                const checkOutDate = item.checkOut ? new Date(item.checkOut) : new Date();
-                const nights = Math.max(1, Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24)));
-                const itemImg = item.thumbnail || item.image || (item.images && item.images[0]?.path ? `https://photos.hotelbeds.com/giata/original/${item.images[0].path.replace(/^\/+/, '')}` : "https://images.pexels.com/photos/261102/pexels-photo-261102.jpeg");
+          {/* Reordered Layout: Mobile Order [1.Timer, 2.Property, 3.Passenger, 4.Fare Breakdown, 5.Payment, 6.Guarantee] */}
+          <div className="flex flex-col gap-6 lg:grid lg:grid-cols-12 lg:gap-8 items-start">
+            {/* Left 7 Columns on Desktop */}
+            <div className="contents lg:block lg:col-span-7 lg:space-y-5">
+              {/* Mobile Order 2: Selected Room / Property Cards */}
+              <div className="order-1 lg:order-none space-y-4">
+                {checkoutItems.map((item, idx) => {
+                  const isActivity = item.type === 'activity';
+                  const isTransfer = item.type === 'transfer';
+                  const checkInDate = item.checkIn ? new Date(item.checkIn) : new Date();
+                  const checkOutDate = item.checkOut ? new Date(item.checkOut) : new Date();
+                  const nights = Math.max(1, Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24)));
+                  const itemImg = item.thumbnail || item.image || (item.images && item.images[0]?.path ? `https://photos.hotelbeds.com/giata/original/${item.images[0].path.replace(/^\/+/, '')}` : "https://images.pexels.com/photos/261102/pexels-photo-261102.jpeg");
 
-                return (
-                  <div key={idx} className="p-4 sm:p-5 rounded-2xl bento-card border-0 bg-slate-50/70 space-y-3 shadow-xs text-left">
-                    <div className="flex items-start gap-3.5">
-                      <img
-                        src={itemImg}
-                        alt=""
-                        className="w-20 h-20 rounded-xl object-cover shrink-0 border-0"
-                        onError={(e) => { e.target.src = "https://images.pexels.com/photos/261102/pexels-photo-261102.jpeg"; }}
-                      />
-                      <div className="min-w-0 flex-1">
-                        <span className="text-[10px] font-black uppercase text-blue-600 bg-blue-50 px-2 py-0.5 rounded">
-                          {isActivity ? 'Selected Experience' : isTransfer ? 'Selected Transfer' : 'Selected Property'}
-                        </span>
-                        <h3 className="text-base font-extrabold text-gray-900 mt-1 truncate">
-                          {isActivity ? item.name : isTransfer ? (item.vehicle || item.name) : item.hotelName}
-                        </h3>
-                        {item.location && <p className="text-xs text-gray-500 truncate">{item.location}</p>}
-                        <div className="flex items-center gap-2 text-xs text-gray-700 font-semibold mt-1 flex-wrap">
-                          <span>
-                            {checkInDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – {checkOutDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} ({nights} {nights === 1 ? 'night' : 'nights'})
+                  return (
+                    <div key={idx} className="p-4 sm:p-5 rounded-2xl bento-card border-0 bg-slate-50/70 space-y-3 shadow-xs text-left">
+                      <div className="flex items-start gap-3.5">
+                        <img
+                          src={itemImg}
+                          alt=""
+                          className="w-20 h-20 rounded-xl object-cover shrink-0 border-0"
+                          onError={(e) => { e.target.src = "https://images.pexels.com/photos/261102/pexels-photo-261102.jpeg"; }}
+                        />
+                        <div className="min-w-0 flex-1">
+                          <span className="text-[10px] font-black uppercase text-blue-600 bg-blue-50 px-2 py-0.5 rounded">
+                            {isActivity ? 'Selected Experience' : isTransfer ? 'Selected Transfer' : 'Selected Property'}
                           </span>
-                          {!isActivity && !isTransfer && item.roomName && (
-                            <>
-                              <span>·</span>
-                              <span className="text-blue-600 truncate">{item.roomName}</span>
-                            </>
-                          )}
+                          <h3 className="text-base font-extrabold text-gray-900 mt-1 truncate">
+                            {isActivity ? item.name : isTransfer ? (item.vehicle || item.name) : item.hotelName}
+                          </h3>
+                          {item.location && <p className="text-xs text-gray-500 truncate">{item.location}</p>}
+                          <div className="flex items-center gap-2 text-xs text-gray-700 font-semibold mt-1 flex-wrap">
+                            <span>
+                              {checkInDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – {checkOutDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} ({nights} {nights === 1 ? 'night' : 'nights'})
+                            </span>
+                            {!isActivity && !isTransfer && item.roomName && (
+                              <>
+                                <span>·</span>
+                                <span className="text-blue-600 truncate">{item.roomName}</span>
+                              </>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    <div className="pt-2 border-t border-gray-200/80 flex items-center justify-between text-xs text-gray-600 flex-wrap gap-2">
-                      <span className="flex items-center gap-1 text-emerald-700 font-semibold">
-                        <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
-                        {item.rateClass === 'NRF' ? 'Non-refundable rate' : 'Free Cancellation Available'}
-                      </span>
-                      <span className="font-semibold text-gray-800">
-                        {item.adults || 2} Adults{item.children > 0 ? `, ${item.children} Children` : ''} · 1 Room
-                      </span>
+                      <div className="pt-2 border-t border-gray-200/80 flex items-center justify-between text-xs text-gray-600 flex-wrap gap-2">
+                        <span className="flex items-center gap-1 text-emerald-700 font-semibold">
+                          <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+                          {item.rateClass === 'NRF' ? 'Non-refundable rate' : 'Free Cancellation Available'}
+                        </span>
+                        <span className="font-semibold text-gray-800">
+                          {item.adults || 2} Adults{item.children > 0 ? `, ${item.children} Children` : ''} · 1 Room
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Mobile Order 3: Passenger / Primary Guest Information */}
+              <div className="order-2 lg:order-none space-y-5">
+                {!user && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 text-left">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="text-sm font-bold text-blue-900">Sign in for faster checkout</h3>
+                        <p className="text-xs text-blue-700 mt-0.5">Save your information and track your bookings</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setShowAuthModal(true)}
+                        className="bg-blue-600 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-blue-700 transition-colors cursor-pointer"
+                      >
+                        Sign In
+                      </button>
                     </div>
                   </div>
-                );
-              })}
+                )}
 
-              {!user && (
-                <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 text-left">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-sm font-bold text-blue-900">Sign in for faster checkout</h3>
-                      <p className="text-xs text-blue-700 mt-0.5">Save your information and track your bookings</p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setShowAuthModal(true)}
-                      className="bg-blue-600 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-blue-700 transition-colors cursor-pointer"
-                    >
-                      Sign In
-                    </button>
-                  </div>
-                </div>
-              )}
+                {/* Primary Guest Information Form */}
+                {renderBillingForm()}
+              </div>
 
-              {/* Primary Guest Information */}
-              {renderBillingForm()}
-
-              {/* Important Booking Guarantee Notice */}
-              <div className="p-4 rounded-2xl bg-blue-50/70 border border-blue-200/80 space-y-2 text-left">
+              {/* Mobile Order 6: Teli Trip Guarantee & Cancellation Terms */}
+              <div className="order-5 lg:order-none p-4 rounded-2xl bg-blue-50/70 border border-blue-200/80 space-y-2 text-left">
                 <div className="flex items-center gap-2 text-xs font-bold text-blue-900">
                   <ShieldCheck className="w-4 h-4 text-blue-600" />
-                  <span>TeleTrip Guarantee & Cancellation Terms</span>
+                  <span>Teli Trip Guarantee & Cancellation Terms</span>
                 </div>
                 <ul className="text-[11px] text-blue-800 space-y-1 list-disc list-inside">
                   <li>Guaranteed room reservation with official Bedsonline wholesale booking voucher.</li>
@@ -1393,14 +1498,42 @@ const handlePaymentSubmit = () => {
               </div>
             </div>
 
-            {/* Right 5 Columns: Payment Options ON TOP of Fare Breakdown & Taxes */}
-            <div className="lg:col-span-5 space-y-4 sticky top-24">
-              {renderPaymentBox()}
-              {renderOrderSummary()}
+            {/* Right 5 Columns on Desktop: Sticky Sidebar */}
+            <div className="contents lg:block lg:col-span-5 lg:space-y-4 lg:sticky lg:top-24">
+              {/* Mobile Order 4: Fare Breakdown & Taxes */}
+              <div className="order-3 lg:order-none">
+                {renderOrderSummary()}
+              </div>
+
+              {/* Mobile Order 5: Payment Options */}
+              <div className="order-4 lg:order-none">
+                {renderPaymentBox()}
+              </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Expired Hold Modal (Point 15) */}
+      {isHoldExpired && (
+        <div className="fixed inset-0 z-[999] bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 text-center space-y-4 shadow-2xl border border-gray-100 animate-in fade-in zoom-in-95 duration-200">
+            <div className="w-14 h-14 mx-auto rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center">
+              <Clock className="w-7 h-7" />
+            </div>
+            <h3 className="text-lg font-black text-gray-900">Booking Hold Expired</h3>
+            <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
+              Your 15-minute price and room availability hold has expired. The cart has been cleared to prevent bookings on expired supplier rates.
+            </p>
+            <button
+              onClick={() => navigate('/home')}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl transition-all cursor-pointer shadow-md"
+            >
+              Search Stays Again
+            </button>
+          </div>
+        </div>
+      )}
 
       <AuthModal
         isOpen={showAuthModal}

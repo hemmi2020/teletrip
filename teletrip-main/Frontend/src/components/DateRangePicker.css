@@ -163,22 +163,48 @@
 
 /* Mobile responsiveness */
 @media (max-width: 640px) {
+  .rdrCalendarWrapper,
+  .rdrDateRangeWrapper,
+  .rdrMonths,
+  .rdrMonthsVertical,
+  .rdrMonth {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  
   .rdrCalendarWrapper {
-    font-size: 12px;
+    font-size: 11px;
+    padding: 0 !important;
+  }
+  
+  .rdrMonthAndYearWrapper {
+    padding: 6px 8px;
+  }
+  
+  .rdrWeekDays {
+    padding: 0 4px;
+  }
+  
+  .rdrDays {
+    padding: 0 4px 6px;
   }
   
   .rdrDay {
-    height: 36px;
+    height: 32px !important;
+  }
+  
+  .rdrDayNumber span {
+    font-size: 11px !important;
   }
   
   .rdrMonthAndYearPickers select {
-    padding: 4px 8px;
-    font-size: 12px;
+    padding: 3px 6px;
+    font-size: 11px;
   }
   
   .rdrNextPrevButton {
-    width: 28px;
-    height: 28px;
+    width: 26px;
+    height: 26px;
   }
 }
 
