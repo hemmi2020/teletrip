@@ -1315,42 +1315,6 @@ const HotelSearchResults = () => {
     }
   }, [sortedHotels, visibleCount]);
 
-  if (loading) {
-    return (
-      <>
-        <Header />
-        <SearchLoadingScreen type="hotels" />
-      </>
-    );
-  }
-
-  if (error) {
-    return (
-      <>
-        <Header />
-        <div className="flex flex-col items-center justify-center min-h-screen px-6 text-center bg-gray-50">
-          <img src={logo} alt="Telitrip" className="h-12 mb-8 opacity-80" />
-          <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mb-4">
-            <AlertCircle className="w-8 h-8 text-red-400" />
-          </div>
-          <h2 className="text-xl font-bold text-gray-900 mb-2">Something went wrong</h2>
-          <p className="text-sm text-gray-500 max-w-md mb-2">{error}</p>
-          <p className="text-xs text-gray-400 max-w-sm mb-6">This could be due to a network issue or the hotels being temporarily unavailable. Please try again.</p>
-          <div className="flex gap-3">
-            <button onClick={() => window.location.reload()} className="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium transition-colors">Try Again</button>
-            <button onClick={() => window.location.href = '/home'} className="px-5 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm font-medium transition-colors">Back to Search</button>
-          </div>
-        </div>
-      </>
-    );
-  }
-
-
-
-
-
-
-
   const cityParam = searchParams.get("city") || searchParams.get("destination") || "this destination";
   const countryParam = searchParams.get("country") || "";
   const hotelNameParam = searchParams.get("hotelName");
@@ -1442,6 +1406,36 @@ const HotelSearchResults = () => {
   }, [cityParam, countryParam]);
 
   const activeFilterCount = selectedAmenities.length + selectedAccommodationTypes.length + selectedBoards.length + selectedCategories.length + selectedZones.length + selectedReviewRatings.length + selectedPromos.length + selectedDiscounts.length + selectedChains.length + selectedEstablishment.length + (hotelNameSearch ? 1 : 0) + (selectedCancellation ? 1 : 0) + (priceMin ? 1 : 0) + (priceMax ? 1 : 0) + (selectedSight ? 1 : 0) + (addressSearch ? 1 : 0);
+
+  if (loading) {
+    return (
+      <>
+        <Header />
+        <SearchLoadingScreen type="hotels" />
+      </>
+    );
+  }
+
+  if (error) {
+    return (
+      <>
+        <Header />
+        <div className="flex flex-col items-center justify-center min-h-screen px-6 text-center bg-gray-50">
+          <img src={logo} alt="Telitrip" className="h-12 mb-8 opacity-80" />
+          <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mb-4">
+            <AlertCircle className="w-8 h-8 text-red-400" />
+          </div>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Something went wrong</h2>
+          <p className="text-sm text-gray-500 max-w-md mb-2">{error}</p>
+          <p className="text-xs text-gray-400 max-w-sm mb-6">This could be due to a network issue or the hotels being temporarily unavailable. Please try again.</p>
+          <div className="flex gap-3">
+            <button onClick={() => window.location.reload()} className="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium transition-colors">Try Again</button>
+            <button onClick={() => window.location.href = '/home'} className="px-5 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm font-medium transition-colors">Back to Search</button>
+          </div>
+        </div>
+      </>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50/60 text-left">
@@ -2422,7 +2416,12 @@ const HotelSearchResults = () => {
                 return (
                   <div
                     key={hotel.id}
-                    className="bento-card bg-white rounded-2xl overflow-hidden flex flex-row group border border-slate-200/80 shadow-2xs hover:shadow-md transition-shadow"
+                    onClick={() => {
+                      setRoomSelections({});
+                      setActiveRoomTab(0);
+                      setSelectedHotel(hotel);
+                    }}
+                    className="bento-card bg-white rounded-2xl overflow-hidden flex flex-row group border border-slate-200/80 shadow-2xs hover:shadow-md transition-shadow cursor-pointer"
                   >
                     {/* Left: Enhanced Thumbnail */}
                     <div className="w-32 min-[420px]:w-36 sm:w-48 md:w-72 relative shrink-0 overflow-hidden bg-gray-100 self-stretch min-h-[160px] sm:min-h-[180px] md:min-h-0">
@@ -2518,19 +2517,24 @@ const HotelSearchResults = () => {
                           </div>
                         )}
 
-                        {/* Room Types pills (Desktop only) */}
+                        {/* Room Types: Visible on mobile & desktop */}
                         {roomTypes.length > 0 && (
-                          <div className="hidden md:flex gap-1.5 flex-wrap pt-0.5">
-                            {roomTypes.slice(0, 3).map((rt, i) => (
-                              <span key={i} className="text-[10px] font-medium px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 truncate max-w-[180px]">
-                                {rt}
-                              </span>
-                            ))}
-                            {roomTypes.length > 3 && (
-                              <span className="text-[10px] text-gray-400 self-center font-medium">
-                                +{roomTypes.length - 3} more
-                              </span>
-                            )}
+                          <div className="pt-0.5">
+                            <div className="text-[11px] sm:text-xs font-semibold text-slate-700 truncate">
+                              {roomTypes[0]}
+                            </div>
+                            <div className="hidden md:flex gap-1.5 flex-wrap pt-0.5">
+                              {roomTypes.slice(1, 3).map((rt, i) => (
+                                <span key={i} className="text-[10px] font-medium px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 truncate max-w-[180px]">
+                                  {rt}
+                                </span>
+                              ))}
+                              {roomTypes.length > 3 && (
+                                <span className="text-[10px] text-gray-400 self-center font-medium">
+                                  +{roomTypes.length - 3} more
+                                </span>
+                              )}
+                            </div>
                           </div>
                         )}
 
@@ -2566,15 +2570,15 @@ const HotelSearchResults = () => {
 
                       {/* Mobile-Only Bottom Row: Booking.com Style Dual Price + View Rooms */}
                       <div className="flex md:hidden flex-col items-end pt-2 mt-1.5 border-t border-gray-100 w-full">
-                        <div className="flex items-baseline gap-2">
-                          <span className="text-red-600 line-through text-xs font-semibold">
+                        <div className="flex items-baseline gap-2 justify-end">
+                          <span className="text-red-600 line-through text-xs font-bold">
                             PKR {strikethroughPrice.toLocaleString()}
                           </span>
                           <span className="text-base sm:text-lg font-black text-slate-900 leading-tight">
                             PKR {totalPrice.toLocaleString()}
                           </span>
                         </div>
-                        <div className="text-[9px] text-gray-500">
+                        <div className="text-[10px] text-gray-500 font-medium">
                           +PKR {taxesAndCharges.toLocaleString()} taxes and charges
                         </div>
 

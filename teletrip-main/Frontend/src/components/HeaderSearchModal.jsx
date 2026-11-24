@@ -1153,7 +1153,7 @@ export default function HeaderSearchModal({ isOpen, onClose }) {
                   if (e.target === e.currentTarget) setShowCalendar(false);
                 }}
               >
-                <div className="bg-white border border-gray-200 rounded-3xl shadow-2xl p-4 sm:p-6 overflow-auto max-h-[85vh]">
+                <div className="bg-white border border-gray-200 rounded-3xl shadow-2xl p-4 sm:p-6 overflow-y-auto overflow-x-hidden max-h-[85vh] w-[calc(100vw-24px)] sm:w-[680px] md:w-[720px] max-w-[720px] mx-auto">
                   <div className="flex items-center justify-between pb-3 mb-2 border-b border-gray-100">
                     <h3 className="text-sm font-extrabold text-slate-900">Select Travel Dates ({calculateNights()}n)</h3>
                     <button type="button" onClick={() => setShowCalendar(false)}>
@@ -1360,7 +1360,7 @@ export default function HeaderSearchModal({ isOpen, onClose }) {
                   if (e.target === e.currentTarget) setShowTransferCalendar(false);
                 }}
               >
-                <div className="bg-white border border-gray-200 rounded-3xl shadow-2xl p-4 sm:p-6 overflow-auto max-h-[85vh]">
+                <div className="bg-white border border-gray-200 rounded-3xl shadow-2xl p-4 sm:p-6 overflow-y-auto overflow-x-hidden max-h-[85vh] w-[calc(100vw-24px)] sm:w-[680px] md:w-[720px] max-w-[720px] mx-auto">
                   <div className="flex items-center justify-between pb-3 mb-2 border-b border-gray-100">
                     <h3 className="text-sm font-extrabold text-slate-900">Select Transfer Date</h3>
                     <button type="button" onClick={() => setShowTransferCalendar(false)}>
@@ -1418,7 +1418,7 @@ export default function HeaderSearchModal({ isOpen, onClose }) {
                   if (e.target === e.currentTarget) setShowExperienceCalendar(false);
                 }}
               >
-                <div className="bg-white border border-gray-200 rounded-3xl shadow-2xl p-4 sm:p-6 overflow-auto max-h-[85vh]">
+                <div className="bg-white border border-gray-200 rounded-3xl shadow-2xl p-4 sm:p-6 overflow-y-auto overflow-x-hidden max-h-[85vh] w-[calc(100vw-24px)] sm:w-[680px] md:w-[720px] max-w-[720px] mx-auto">
                   <div className="flex items-center justify-between pb-3 mb-2 border-b border-gray-100">
                     <h3 className="text-sm font-extrabold text-slate-900">Select Activity Dates</h3>
                     <button type="button" onClick={() => setShowExperienceCalendar(false)}>
