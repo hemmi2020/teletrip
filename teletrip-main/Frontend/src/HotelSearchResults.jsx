@@ -53,6 +53,7 @@ import logo from './images/Telitrip-Logo.png';
 import { format, addDays } from "date-fns";
 import { TOP_HOTELS, TOP_DESTINATIONS } from "./utils/instantSearchData";
 
+export const HOTEL_PLACEHOLDER_IMAGE = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 500' width='800' height='500'%3E%3Crect width='100%25' height='100%25' fill='%23f1f5f9'/%3E%3Cg fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' transform='translate(360, 170)'%3E%3Cpath d='M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18'/%3E%3Cpath d='M18 10h4a2 2 0 0 1 2 2v10'/%3E%3Cpath d='M2 14h4v8'/%3E%3Cpath d='M10 6h4'/%3E%3Cpath d='M10 10h4'/%3E%3Cpath d='M10 14h4'/%3E%3Cpath d='M10 18h4'/%3E%3C/g%3E%3Ctext x='400' y='265' fill='%23475569' font-family='system-ui, -apple-system, sans-serif' font-size='15' font-weight='700' text-anchor='middle'%3EPhoto Available Soon%3C/text%3E%3Ctext x='400' y='288' fill='%2394a3b8' font-family='system-ui, -apple-system, sans-serif' font-size='12' font-weight='500' text-anchor='middle'%3ETelitrip Verified Property%3C/text%3E%3C/svg%3E";
 
 export const isPolicyOrNonPromo = (text) => {
   if (!text || typeof text !== 'string') return true;
@@ -2327,7 +2328,7 @@ const HotelSearchResults = () => {
                 const genuineOriginalPrice = (hotel.originalPricePkr && hotel.originalPricePkr > totalPrice) ? hotel.originalPricePkr : null;
                 const roomTypes = [...new Set((hotel.rooms || []).map(r => r.name))];
 
-                const hotelImage = hotel.thumbnail || (hotel.images && hotel.images[0]?.path ? `https://photos.hotelbeds.com/giata/original/${hotel.images[0].path.replace(/^\/+/, '')}` : "https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg");
+                const hotelImage = hotel.thumbnail || (hotel.images && hotel.images[0]?.path ? `https://photos.hotelbeds.com/giata/original/${hotel.images[0].path.replace(/^\/+/, '')}` : HOTEL_PLACEHOLDER_IMAGE);
 
                 {/* ── BENTO GRID CARD (3-COLUMNS ON DESKTOP, COMPLETE DETAILS) ── */ }
                 if (viewMode === 'thumbnail') {
@@ -2356,7 +2357,7 @@ const HotelSearchResults = () => {
                               } else if (src.includes('/giata/original/')) {
                                 e.target.src = src.replace('/giata/original/', '/giata/medium/');
                               } else {
-                                e.target.src = "https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg";
+                                e.target.src = HOTEL_PLACEHOLDER_IMAGE;
                               }
                             }}
                           />
@@ -2537,7 +2538,7 @@ const HotelSearchResults = () => {
                           } else if (src.includes('/giata/original/')) {
                             e.target.src = src.replace('/giata/original/', '/giata/medium/');
                           } else {
-                            e.target.src = "https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg";
+                            e.target.src = HOTEL_PLACEHOLDER_IMAGE;
                           }
                         }}
                       />
@@ -3437,7 +3438,7 @@ const HotelSearchResults = () => {
               }}
               className="max-h-full max-w-full object-contain rounded-lg pointer-events-none sm:pointer-events-auto shadow-2xl"
               onError={(e) => {
-                e.target.src = "https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg";
+                e.target.src = HOTEL_PLACEHOLDER_IMAGE;
               }}
             />
 
@@ -3468,7 +3469,7 @@ const HotelSearchResults = () => {
                   onClick={() => setGalleryIndex(i)}
                   className={`flex-shrink-0 w-14 h-10 sm:w-16 sm:h-12 rounded-lg overflow-hidden border-2 transition-all cursor-pointer active:scale-95 ${i === galleryIndex ? 'border-white opacity-100 ring-2 ring-blue-500/80 scale-105' : 'border-transparent opacity-50 hover:opacity-85'}`}
                 >
-                  <img src={img} alt="" className="w-full h-full object-cover" onError={(e) => e.target.src = 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg'} />
+                  <img src={img} alt="" className="w-full h-full object-cover" onError={(e) => e.target.src = HOTEL_PLACEHOLDER_IMAGE} />
                 </button>
               ))}
             </div>

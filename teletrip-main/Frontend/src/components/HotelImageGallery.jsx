@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { ImageIcon, X } from 'lucide-react';
 
+const HOTEL_PLACEHOLDER_IMAGE = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 500' width='800' height='500'%3E%3Crect width='100%25' height='100%25' fill='%23f1f5f9'/%3E%3Cg fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' transform='translate(360, 170)'%3E%3Cpath d='M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18'/%3E%3Cpath d='M18 10h4a2 2 0 0 1 2 2v10'/%3E%3Cpath d='M2 14h4v8'/%3E%3Cpath d='M10 6h4'/%3E%3Cpath d='M10 10h4'/%3E%3Cpath d='M10 14h4'/%3E%3Cpath d='M10 18h4'/%3E%3C/g%3E%3Ctext x='400' y='265' fill='%23475569' font-family='system-ui, -apple-system, sans-serif' font-size='15' font-weight='700' text-anchor='middle'%3EPhoto Available Soon%3C/text%3E%3Ctext x='400' y='288' fill='%2394a3b8' font-family='system-ui, -apple-system, sans-serif' font-size='12' font-weight='500' text-anchor='middle'%3ETelitrip Verified Property%3C/text%3E%3C/svg%3E";
+
 // Add this component to your HotelDetails.jsx file
 const HotelImageGallery = ({ hotel }) => {
   const [showAllPhotos, setShowAllPhotos] = useState(false);
@@ -85,7 +87,7 @@ const HotelImageGallery = ({ hotel }) => {
                   alt={`${hotel.name} - Photo ${currentImageIndex + 1}`}
                   className="w-full h-full object-contain"
                   onError={(e) => {
-                    e.target.src = "https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg";
+                    e.target.src = HOTEL_PLACEHOLDER_IMAGE;
                   }}
                 />
                 
@@ -132,7 +134,7 @@ const HotelImageGallery = ({ hotel }) => {
                       alt={`${hotel.name} - Thumbnail ${index + 1}`}
                       className="w-full h-full object-cover"
                       onError={(e) => {
-                        e.target.src = "https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg";
+                        e.target.src = HOTEL_PLACEHOLDER_IMAGE;
                       }}
                     />
                   </div>
@@ -169,7 +171,7 @@ const HotelImageGallery = ({ hotel }) => {
             className="w-full h-full object-cover rounded-l-lg cursor-pointer hover:opacity-90 transition-opacity"
             onClick={() => setShowAllPhotos(true)}
             onError={(e) => {
-              e.target.src = hotel.thumbnail || "https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg";
+              e.target.src = hotel.thumbnail || HOTEL_PLACEHOLDER_IMAGE;
             }}
           />
         </div>
@@ -189,7 +191,7 @@ const HotelImageGallery = ({ hotel }) => {
                   index === 1 ? 'rounded-tr-lg' : ''
                 } ${index === 3 ? 'rounded-br-lg' : ''}`}
                 onError={(e) => {
-                  e.target.src = "https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg";
+                  e.target.src = HOTEL_PLACEHOLDER_IMAGE;
                 }}
               />
               
@@ -219,7 +221,7 @@ const HotelImageGallery = ({ hotel }) => {
                 alt={`${hotel.name} - View ${index + 2}`}
                 className="w-full h-full object-cover rounded hover:opacity-90 transition-opacity"
                 onError={(e) => {
-                  e.target.src = "https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg";
+                  e.target.src = HOTEL_PLACEHOLDER_IMAGE;
                 }}
               />
               
