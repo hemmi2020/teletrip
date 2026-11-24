@@ -845,9 +845,9 @@ export default function HeroSection() {
   const currentImage = currentTab.images[currentSlide] || currentTab.images[0];
 
   return (
-    <section className="relative w-full min-h-0 sm:min-h-[540px] lg:min-h-[580px] overflow-visible bg-white flex flex-col justify-center pt-20 sm:pt-24 lg:pt-28 pb-6 sm:pb-8 lg:pb-10 select-none">
+    <section className="relative w-full min-h-[100dvh] overflow-visible bg-white flex flex-col justify-center items-center pt-24 sm:pt-28 lg:pt-32 pb-10 sm:pb-14 select-none">
 
-      {/* ════ BACKGROUND SLIDING IMAGES (Mid-to-Left Fade-to-Zero) ════ */}
+      {/* ════ BACKGROUND SLIDING IMAGES (Full-Width Balanced Visual Background) ════ */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
         <AnimatePresence initial={false} custom={slideDirection}>
           <motion.div
@@ -862,12 +862,6 @@ export default function HeroSection() {
               scale: { duration: 1.35, ease: [0.16, 1, 0.3, 1] }
             }}
             className="absolute inset-0 w-full h-full"
-            style={{
-              WebkitMaskImage:
-                "linear-gradient(to right, transparent 0%, rgba(0,0,0,0.06) 18%, rgba(0,0,0,0.45) 36%, rgba(0,0,0,0.92) 52%, black 65%, black 100%)",
-              maskImage:
-                "linear-gradient(to right, transparent 0%, rgba(0,0,0,0.06) 18%, rgba(0,0,0,0.45) 36%, rgba(0,0,0,0.92) 52%, black 65%, black 100%)"
-            }}
           >
             <img
               src={currentImage.url}
@@ -878,9 +872,10 @@ export default function HeroSection() {
           </motion.div>
         </AnimatePresence>
 
-        {/* Soft vignette overlays */}
-        <div className="absolute inset-0 bg-gradient-to-r from-white via-white/85 to-white/40 sm:to-transparent w-full sm:w-[58%] z-10 pointer-events-none" />
-        <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-white/40 pointer-events-none z-10" />
+        {/* Balanced full-width scrim & vertical transitions (no left-half fade) */}
+        <div className="absolute inset-0 bg-white/45 sm:bg-white/40 pointer-events-none z-10" />
+        <div className="absolute inset-x-0 top-0 h-32 sm:h-44 bg-gradient-to-b from-white/70 via-white/30 to-transparent pointer-events-none z-10" />
+        <div className="absolute inset-x-0 bottom-0 h-32 sm:h-44 bg-gradient-to-t from-white via-white/60 to-transparent pointer-events-none z-10" />
       </div>
 
       {/* ════ MAIN CONTAINER ════ */}
@@ -1608,6 +1603,13 @@ export default function HeroSection() {
               </div>
             </form>
           </div>
+        </div>
+      </div>
+
+      {/* ── First-Screen Scroll Indicator ── */}
+      <div className="hidden sm:flex absolute bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 z-20 flex-col items-center pointer-events-none opacity-40 hover:opacity-100 transition-opacity">
+        <div className="w-5 h-8 rounded-full border-2 border-slate-400 flex items-start justify-center p-1">
+          <div className="w-1 h-2 bg-slate-500 rounded-full animate-bounce" />
         </div>
       </div>
 
