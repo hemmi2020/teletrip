@@ -51,7 +51,7 @@ import { AlertCircle } from "lucide-react";
 import SearchLoadingScreen from './components/SearchLoadingScreen';
 import logo from './images/Telitrip-Logo.png';
 import { format, addDays } from "date-fns";
-import { TOP_HOTELS } from "./utils/instantSearchData";
+import { TOP_HOTELS, TOP_DESTINATIONS } from "./utils/instantSearchData";
 
 
 export const isPolicyOrNonPromo = (text) => {
@@ -1000,7 +1000,35 @@ const HotelSearchResults = () => {
           return occ;
         });
 
-        const destinationCode = searchParams.get("destinationCode");
+        let destinationCode = searchParams.get("destinationCode");
+        const parsedLat = parseFloat(lat);
+        const parsedLon = parseFloat(lon);
+        const hasValidCoords = !isNaN(parsedLat) && !isNaN(parsedLon);
+
+        if (!destinationCode && !hasValidCoords) {
+          // Resolve destination code from hotelName or city
+          const searchCity = searchParams.get("city") || "";
+          const searchHotelName = searchParams.get("hotelName") || "";
+          const term = (searchCity || searchHotelName).toLowerCase().trim();
+          const matched = TOP_DESTINATIONS.find(d => 
+            (d.city || d.name).toLowerCase() === term ||
+            term.includes((d.city || d.name).toLowerCase()) ||
+            d.destinationCode.toLowerCase() === term
+          );
+          if (matched) {
+            destinationCode = matched.destinationCode;
+          } else {
+            const hotelMatch = TOP_HOTELS.find(h => 
+              h.name.toLowerCase() === term || term.includes(h.name.toLowerCase())
+            );
+            if (hotelMatch) {
+              destinationCode = hotelMatch.destinationCode;
+            } else {
+              destinationCode = "DXB"; // Safe default
+            }
+          }
+        }
+
         const requestBody = {
           stay: { checkIn, checkOut },
           occupancies,
@@ -1008,8 +1036,8 @@ const HotelSearchResults = () => {
             ? { destination: { code: destinationCode.toUpperCase() } }
             : {
               geolocation: {
-                latitude: parseFloat(lat),
-                longitude: parseFloat(lon),
+                latitude: parsedLat,
+                longitude: parsedLon,
                 radius: 30,
                 unit: "km",
               },
@@ -1020,7 +1048,7 @@ const HotelSearchResults = () => {
         let searchEndpoint = `${API_BASE_URL}/hotels/search`;
         let searchBody = requestBody;
 
-        if (hotelCode) {
+        if (hotelCode && !isNaN(parseInt(hotelCode))) {
           searchEndpoint = `${API_BASE_URL}/hotels/search-by-hotels`;
           searchBody = {
             stay: { checkIn, checkOut },
@@ -1580,8 +1608,8 @@ const HotelSearchResults = () => {
         {/* ── MAIN 12-COLUMN RESPONSIVE GRID ── */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Left Column: Filter Sidebar (Desktop Sticky) */}
-          <div className="hidden lg:block lg:col-span-4 xl:col-span-3">
-            <aside className="sticky top-20 w-full bg-white rounded-2xl border border-slate-200/90 p-4 sm:p-5 space-y-4 shadow-2xs text-left max-h-[calc(100vh-5.5rem)] overflow-y-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: '#e5e7eb transparent' }}>
+          <div className="hidden lg:block lg:col-span-4 xl:col-span-3 self-start sticky top-24 z-20">
+            <aside className="w-full bg-white rounded-2xl border border-slate-200/90 p-4 sm:p-5 space-y-4 shadow-2xs text-left max-h-[calc(100vh-7rem)] overflow-y-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: '#e5e7eb transparent' }}>
               <div className="flex justify-between items-center pb-3 border-b border-gray-100">
                 <div className="flex items-center gap-2">
                   <SlidersHorizontal className="w-4 h-4 text-blue-600" />

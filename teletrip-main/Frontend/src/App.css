@@ -136,7 +136,7 @@ html {
   margin: 0;
   padding: 0;
   width: 100%;
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 body {
   background-color: #ffffff;
@@ -150,7 +150,7 @@ body {
   margin: 0;
   padding: 0;
   width: 100%;
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 #root {

@@ -130,10 +130,23 @@ router.get('/hotels/search-by-name', async (req, res) => {
 
         const hotels = await HotelIndex.find(query)
             .select('code name destinationCode destinationName countryCode categoryCode zoneName')
-            .limit(parseInt(limit))
+            .limit(parseInt(limit) || 25)
             .lean();
 
-        res.json({ success: true, data: hotels });
+        const formatted = (hotels || []).map(h => ({
+            type: 'hotel',
+            code: h.code,
+            name: h.name,
+            city: h.zoneName || h.destinationName || '',
+            destinationName: h.destinationName || h.zoneName || '',
+            destinationCode: h.destinationCode || '',
+            countryCode: h.countryCode || '',
+            categoryCode: h.categoryCode || '',
+            zoneName: h.zoneName || '',
+            displayName: `${h.name} (${h.zoneName || h.destinationName || h.destinationCode || ''}, ${h.countryCode || ''})`
+        }));
+
+        res.json({ success: true, data: formatted });
     } catch (error) {
         // If collection doesn't exist yet, return empty
         if (error.message?.includes('ns not found') || error.code === 26) {
@@ -417,6 +430,18 @@ router.post('/hotels/search', async (req, res) => {
             }
         };
 
+        // Sanitize geolocation so invalid/null/NaN coordinates are never sent to Hotelbeds
+        if (searchBody.geolocation) {
+            const lat = parseFloat(searchBody.geolocation.latitude);
+            const lon = parseFloat(searchBody.geolocation.longitude);
+            if (isNaN(lat) || isNaN(lon)) {
+                delete searchBody.geolocation;
+                if (!searchBody.destination && !searchBody.hotels) {
+                    searchBody.destination = { code: 'DXB' };
+                }
+            }
+        }
+
         const agent = getMTLSAgent();
         const response = await fetch(`${HOTELBEDS_BASE_URL}/hotel-api/1.0/hotels`, {
             method: 'POST',
@@ -507,6 +532,18 @@ router.post('/hotels/search-auth', async (req, res) => {
                 deviceInfo: 'TeleTrip Web Application'
             }
         };
+
+        // Sanitize geolocation so invalid/null/NaN coordinates are never sent to Hotelbeds
+        if (searchBody.geolocation) {
+            const lat = parseFloat(searchBody.geolocation.latitude);
+            const lon = parseFloat(searchBody.geolocation.longitude);
+            if (isNaN(lat) || isNaN(lon)) {
+                delete searchBody.geolocation;
+                if (!searchBody.destination && !searchBody.hotels) {
+                    searchBody.destination = { code: 'DXB' };
+                }
+            }
+        }
 
         const url = `${HOTELBEDS_BASE_URL}/hotel-api/1.0/hotels`;
         const agent = getMTLSAgent();

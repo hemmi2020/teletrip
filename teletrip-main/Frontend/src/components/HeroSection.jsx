@@ -263,9 +263,12 @@ export default function HeroSection() {
         // Merge instant local suggestions with API results (deduplicate)
         const instant = getInstantSuggestions(queryTerm);
 
+        const locDests = apiLocs.filter(l => l.type !== "hotel");
+        const locHotels = apiLocs.filter(l => l.type === "hotel");
+
         const seenLocs = new Set();
         const mergedLocs = [];
-        for (const loc of [...(instant.locations || []), ...apiLocs]) {
+        for (const loc of [...(instant.locations || []), ...locDests]) {
           const key = (loc.destinationCode || loc.code || loc.city || loc.name || "").toLowerCase();
           if (key && !seenLocs.has(key)) {
             seenLocs.add(key);
@@ -275,7 +278,7 @@ export default function HeroSection() {
 
         const seenHotels = new Set();
         const mergedHotels = [];
-        for (const hotel of [...(instant.hotels || []), ...apiHotels]) {
+        for (const hotel of [...(instant.hotels || []), ...apiHotels, ...locHotels]) {
           const key = (hotel.code ? `code-${hotel.code}` : hotel.name || "").toLowerCase();
           if (key && !seenHotels.has(key)) {
             seenHotels.add(key);
@@ -663,13 +666,28 @@ export default function HeroSection() {
             loc = exactLoc;
           } else {
             const parts = trimmedQuery.split(",").map((s) => s.trim());
+            const termLower = parts[0].toLowerCase();
+            const matchedTopDest = TOP_DESTINATIONS.find(d => 
+              (d.city || d.name).toLowerCase() === termLower ||
+              termLower.includes((d.city || d.name).toLowerCase()) ||
+              d.destinationCode.toLowerCase() === termLower
+            );
+            const matchedTopHotel = !matchedTopDest ? TOP_HOTELS.find(h => 
+              h.name.toLowerCase().includes(termLower) || termLower.includes(h.name.toLowerCase())
+            ) : null;
+
             loc = {
-              name: parts[0],
-              city: parts[0],
-              country: parts[1] || "",
-              destinationCode: "",
-              type: "destination"
+              name: matchedTopHotel ? matchedTopHotel.name : parts[0],
+              city: matchedTopHotel ? (matchedTopHotel.destinationName || matchedTopHotel.zoneName) : (matchedTopDest ? matchedTopDest.name : parts[0]),
+              country: matchedTopHotel ? matchedTopHotel.countryCode : (matchedTopDest ? matchedTopDest.country : (parts[1] || "")),
+              destinationCode: matchedTopHotel ? matchedTopHotel.destinationCode : (matchedTopDest ? matchedTopDest.destinationCode : "DXB"),
+              type: matchedTopHotel ? "hotel" : "destination",
+              code: matchedTopHotel ? matchedTopHotel.code : undefined
             };
+            if (matchedTopHotel) {
+              hCode = matchedTopHotel.code;
+              hName = matchedTopHotel.name;
+            }
           }
         }
       }

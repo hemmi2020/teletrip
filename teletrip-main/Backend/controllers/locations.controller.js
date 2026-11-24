@@ -285,12 +285,12 @@ function getBuiltInDestinations() {
 
 exports.searchLocations = async (req, res) => {
   try {
-    const { q } = req.query;
-    if (!q || q.length < 2) {
-      return res.json({ success: true, data: [] });
+    const rawQuery = req.query.q || req.query.search;
+    if (!rawQuery || rawQuery.trim().length < 2) {
+      return res.json({ success: true, data: [], locations: [], hotels: [] });
     }
 
-    const query = q.toLowerCase().trim();
+    const query = rawQuery.toLowerCase().trim();
     const primaryTerm = query.split(',')[0].trim();
     const queryTokens = query.split(/[\s,]+/).filter(t => t.length > 1);
     const aliasQuery = CITY_ALIASES[query] || CITY_ALIASES[primaryTerm] || null;
@@ -382,8 +382,8 @@ exports.searchLocations = async (req, res) => {
       const hotels = await HotelIndex.find({
         name: { $regex: safeTerm, $options: 'i' }
       })
-      .select('code name destinationCode destinationName countryCode zoneName')
-      .limit(16)
+      .select('code name destinationCode destinationName countryCode zoneName categoryCode')
+      .limit(30)
       .lean();
 
       if (hotels && hotels.length > 0) {
@@ -396,6 +396,7 @@ exports.searchLocations = async (req, res) => {
             destinationCode: h.destinationCode || '',
             country: h.countryCode || '',
             countryCode: h.countryCode || '',
+            categoryCode: h.categoryCode || '',
             displayName: `${h.name} (${h.zoneName || h.destinationName || h.destinationCode || ''}, ${h.countryCode || ''})`
           });
         });
@@ -416,7 +417,15 @@ exports.searchLocations = async (req, res) => {
       return (order[a.type] || 3) - (order[b.type] || 3);
     });
 
-    res.json({ success: true, data: results.slice(0, 50) });
+    const locationsOnly = results.filter(r => r.type !== 'hotel').slice(0, 40);
+    const hotelsOnly = results.filter(r => r.type === 'hotel').slice(0, 25);
+
+    res.json({
+      success: true,
+      data: results.slice(0, 60),
+      locations: locationsOnly,
+      hotels: hotelsOnly
+    });
   } catch (error) {
     console.error('Location search error:', error);
     res.status(500).json({ success: false, error: error.message });

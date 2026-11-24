@@ -192,9 +192,12 @@ export default function HeaderSearchModal({ isOpen, onClose }) {
 
         const instant = getInstantSuggestions(queryTerm);
 
+        const locDests = apiLocs.filter(l => l.type !== "hotel");
+        const locHotels = apiLocs.filter(l => l.type === "hotel");
+
         const seenLocs = new Set();
         const mergedLocs = [];
-        for (const loc of [...(instant.locations || []), ...apiLocs]) {
+        for (const loc of [...(instant.locations || []), ...locDests]) {
           const key = (loc.destinationCode || loc.code || loc.city || loc.name || "").toLowerCase();
           if (key && !seenLocs.has(key)) {
             seenLocs.add(key);
@@ -204,7 +207,7 @@ export default function HeaderSearchModal({ isOpen, onClose }) {
 
         const seenHotels = new Set();
         const mergedHotels = [];
-        for (const hotel of [...(instant.hotels || []), ...apiHotels]) {
+        for (const hotel of [...(instant.hotels || []), ...apiHotels, ...locHotels]) {
           const key = (hotel.code ? `code-${hotel.code}` : hotel.name || "").toLowerCase();
           if (key && !seenHotels.has(key)) {
             seenHotels.add(key);

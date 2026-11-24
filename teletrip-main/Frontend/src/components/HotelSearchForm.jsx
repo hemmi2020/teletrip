@@ -23,6 +23,8 @@ const LazyDateRange = lazy(() =>
   import('react-date-range').then(mod => ({ default: mod.DateRange }))
 );
 
+const API_BASE = (import.meta.env.VITE_BASE_URL || "https://telitrip-backend.onrender.com").replace(/\/+$/, '');
+
 const TABS = [
   { id: 'stays', label: 'Stays', icon: Building2 },
   { id: 'transfers', label: 'Transfers', icon: Car },
@@ -339,23 +341,47 @@ export default function HotelSearchForm({
       setIsLoadingLocations(true);
       const timer = setTimeout(async () => {
         try {
-          const resp = await axios.get(
-            `${import.meta.env.VITE_BASE_URL}/api/locations?search=${encodeURIComponent(searchQuery.trim())}`
-          );
-          if (resp.data && resp.data.success) {
-            const apiDests = resp.data.data.filter(l => l.type !== 'hotel');
-            const apiHotels = resp.data.data.filter(l => l.type === 'hotel');
-            setFilteredLocations(prev => {
-              const combined = [...apiDests, ...prev];
-              return combined.filter((v, i, a) => a.findIndex(t => (t.city || t.name) === (v.city || v.name)) === i);
-            });
-            if (apiHotels.length > 0) {
-              setHotelSuggestions(prev => {
-                const combined = [...apiHotels, ...prev];
-                return combined.filter((v, i, a) => a.findIndex(t => t.name === v.name) === i);
-              });
+          const queryTerm = searchQuery.trim();
+          const [locRes, hotelRes] = await Promise.allSettled([
+            axios.get(`${API_BASE}/api/locations/search?q=${encodeURIComponent(queryTerm)}`),
+            axios.get(`${API_BASE}/api/hotels/search-by-name?q=${encodeURIComponent(queryTerm)}&limit=16`)
+          ]);
+
+          let apiLocs = [];
+          if (locRes.status === "fulfilled" && locRes.value?.data?.success) {
+            apiLocs = locRes.value.data.data || [];
+          }
+
+          let apiHotels = [];
+          if (hotelRes.status === "fulfilled" && hotelRes.value?.data?.success) {
+            apiHotels = hotelRes.value.data.data || [];
+          }
+
+          const locDests = apiLocs.filter(l => l.type !== 'hotel');
+          const locHotels = apiLocs.filter(l => l.type === 'hotel');
+
+          const seenLocs = new Set();
+          const mergedLocs = [];
+          for (const loc of [...(instant.locations || []), ...locDests]) {
+            const key = (loc.destinationCode || loc.code || loc.city || loc.name || "").toLowerCase();
+            if (key && !seenLocs.has(key)) {
+              seenLocs.add(key);
+              mergedLocs.push(loc);
             }
           }
+
+          const seenHotels = new Set();
+          const mergedHotels = [];
+          for (const hotel of [...(instant.hotels || []), ...apiHotels, ...locHotels]) {
+            const key = (hotel.code ? `code-${hotel.code}` : hotel.name || "").toLowerCase();
+            if (key && !seenHotels.has(key)) {
+              seenHotels.add(key);
+              mergedHotels.push(hotel);
+            }
+          }
+
+          setFilteredLocations(mergedLocs);
+          setHotelSuggestions(mergedHotels);
         } catch (err) {
           console.error('Autocomplete API error:', err);
         } finally {
@@ -376,7 +402,7 @@ export default function HotelSearchForm({
     const timer = setTimeout(async () => {
       try {
         const resp = await axios.get(
-          `${import.meta.env.VITE_BASE_URL}/api/locations/transfers?search=${encodeURIComponent(pickupQuery.trim())}`
+          `${API_BASE}/api/locations/transfers?search=${encodeURIComponent(pickupQuery.trim())}`
         );
         if (resp.data && resp.data.success) {
           setFilteredPickupLocations(resp.data.data || []);
@@ -401,7 +427,7 @@ export default function HotelSearchForm({
     const timer = setTimeout(async () => {
       try {
         const resp = await axios.get(
-          `${import.meta.env.VITE_BASE_URL}/api/locations/transfers?search=${encodeURIComponent(dropoffQuery.trim())}`
+          `${API_BASE}/api/locations/transfers?search=${encodeURIComponent(dropoffQuery.trim())}`
         );
         if (resp.data && resp.data.success) {
           setFilteredDropoffLocations(resp.data.data || []);
@@ -479,13 +505,28 @@ export default function HotelSearchForm({
             if (exactLoc) {
               loc = exactLoc;
             } else {
+              const termLower = trimmedQuery.toLowerCase();
+              const matchedTopDest = TOP_DESTINATIONS.find(d => 
+                (d.city || d.name).toLowerCase() === termLower ||
+                termLower.includes((d.city || d.name).toLowerCase()) ||
+                d.destinationCode.toLowerCase() === termLower
+              );
+              const matchedTopHotel = !matchedTopDest ? TOP_HOTELS.find(h => 
+                h.name.toLowerCase().includes(termLower) || termLower.includes(h.name.toLowerCase())
+              ) : null;
+
               loc = {
-                city: trimmedQuery,
-                name: trimmedQuery,
-                destinationCode: '',
-                country: '',
-                type: 'destination'
+                name: matchedTopHotel ? matchedTopHotel.name : trimmedQuery,
+                city: matchedTopHotel ? (matchedTopHotel.destinationName || matchedTopHotel.zoneName) : (matchedTopDest ? matchedTopDest.name : trimmedQuery),
+                country: matchedTopHotel ? matchedTopHotel.countryCode : (matchedTopDest ? matchedTopDest.country : ''),
+                destinationCode: matchedTopHotel ? matchedTopHotel.destinationCode : (matchedTopDest ? matchedTopDest.destinationCode : 'DXB'),
+                type: matchedTopHotel ? 'hotel' : 'destination',
+                code: matchedTopHotel ? matchedTopHotel.code : undefined
               };
+              if (matchedTopHotel) {
+                hCode = matchedTopHotel.code;
+                hName = matchedTopHotel.name;
+              }
             }
           }
         }
