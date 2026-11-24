@@ -1635,7 +1635,7 @@ export default function HeroSection() {
             }}
           >
             <div
-              className="bg-white border border-gray-200 rounded-3xl shadow-2xl overflow-x-hidden overflow-y-auto max-h-[92vh] p-3 sm:p-6 w-[calc(100vw-20px)] sm:w-auto max-w-sm sm:max-w-2xl lg:max-w-3xl mx-auto"
+              className="bg-white border border-gray-200 rounded-3xl shadow-2xl overflow-hidden p-4 sm:p-6 w-[calc(100vw-24px)] sm:w-[680px] md:w-[720px] max-w-[720px] mx-auto"
             >
               <div className="flex items-center justify-between pb-3 mb-2 border-b border-gray-100">
                 <div>
@@ -1665,7 +1665,7 @@ export default function HeroSection() {
                   minDate={new Date()}
                   moveRangeOnFirstSelection={false}
                   preventSnapRefocus={true}
-                  months={window.innerWidth < 640 ? 1 : 2}
+                  months={typeof window !== 'undefined' && window.innerWidth < 768 ? 1 : 2}
                   direction="horizontal"
                   rangeColors={["#2563eb"]}
                   showDateDisplay={false}

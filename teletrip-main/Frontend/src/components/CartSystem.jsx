@@ -164,13 +164,13 @@ export const CartProvider = ({ children }) => {
 
   const getTotalPrice = () => {
     return state.items.reduce((total, item) => {
-      if (item.type === 'activity') return total + (item.price || 0);
-      if (item.type === 'transfer') return total + (item.totalPrice || item.price || 0);
-      const itemTotal = item.totalPrice || item.net || (() => {
+      if (item.type === 'activity') return total + (item.pricePkr || item.price || 0);
+      if (item.type === 'transfer') return total + (item.pricePkr || item.totalPrice || item.price || 0);
+      const itemTotal = item.pricePkr || item.totalPrice || item.net || (() => {
         const checkIn = new Date(item.checkIn);
         const checkOut = new Date(item.checkOut);
-        const nights = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24));
-        return item.price * nights;
+        const nights = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24)) || 1;
+        return (item.pricePkr || item.price || 0) * nights;
       })();
       return total + parseFloat(itemTotal);
     }, 0);
@@ -869,9 +869,10 @@ export const SlideOutCart = ({ isOpen, onClose, onProceedToCheckout }) => {
                       <div className="px-3 pb-3 flex items-center justify-between">
                         <span className="text-[11px] text-gray-400">{formatShortDate(item.checkIn)} → {formatShortDate(item.checkOut)}</span>
                         <div className="text-right">
-                          <span className="text-[14px] font-bold text-gray-900">{item.currency || 'AED'} {totalPrice.toFixed(0)}</span>
-                          {fmtPKR(totalPrice, item.currency) && <span className="text-[11px] text-gray-400 block">≈ {fmtPKR(totalPrice, item.currency)}</span>}
-                          {!isActivity && !isTransfer && <span className="text-[10px] text-gray-400 block">{item.currency || 'AED'} {item.price?.toFixed(0)}/night</span>}
+                          <span className="text-[14px] font-bold text-gray-900">PKR {Math.round(totalPrice).toLocaleString()}</span>
+                          {!isActivity && !isTransfer && nights > 0 && (
+                            <span className="text-[10px] text-gray-400 block">PKR {Math.round(totalPrice / nights).toLocaleString()}/night</span>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -887,8 +888,7 @@ export const SlideOutCart = ({ isOpen, onClose, onProceedToCheckout }) => {
               <div className="flex items-center justify-between">
                 <span className="text-[13px] text-gray-500">Total</span>
                 <div className="text-right">
-                  <div className="text-xl font-bold text-gray-900">{items[0]?.currency || 'AED'} {getTotalPrice().toFixed(2)}</div>
-                  {fmtPKR(getTotalPrice(), items[0]?.currency) && <div className="text-[11px] text-gray-400">≈ {fmtPKR(getTotalPrice(), items[0]?.currency)} (charged amount)</div>}
+                  <div className="text-xl font-bold text-gray-900">PKR {Math.round(getTotalPrice()).toLocaleString()}</div>
                 </div>
               </div>
               <button onClick={handleCheckoutClick} className="w-full bg-blue-600 text-white py-2.5 rounded-lg font-semibold hover:bg-blue-700 transition-colors text-[14px]">

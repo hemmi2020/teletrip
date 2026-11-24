@@ -3,14 +3,34 @@
 /* Calendar container */
 .rdrCalendarWrapper {
   font-family: inherit;
-  font-size: 14px;
-  overflow-x: hidden !important;
+  font-size: 13px;
+  overflow: hidden !important;
   max-width: 100% !important;
+  box-sizing: border-box;
 }
 
 .rdrDateRangeWrapper {
-  overflow-x: hidden !important;
+  overflow: hidden !important;
   max-width: 100% !important;
+  box-sizing: border-box;
+}
+
+.rdrMonths {
+  display: flex !important;
+  flex-direction: row;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 8px;
+  max-width: 100% !important;
+  overflow: hidden !important;
+}
+
+.rdrMonth {
+  width: 300px !important;
+  max-width: 310px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  box-sizing: border-box;
 }
 
 /* Month navigation */

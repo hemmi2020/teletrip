@@ -224,8 +224,8 @@ export const HotelDetailModal = ({
       const ratePromos = (rate.promotions || rate.offers || []).map(p => p.name || p.code).filter(Boolean);
       if (!selectedPromos.some(p => ratePromos.includes(p))) return false;
     }
-    const ratePrice = parseFloat(rate.net);
-    const ratePkr = convert ? (convert(ratePrice) || ratePrice) : ratePrice;
+    const ratePrice = parseFloat(rate.pricePkr || rate.price || rate.net || 0);
+    const ratePkr = ratePrice;
     if (priceMin && ratePkr < parseFloat(priceMin)) return false;
     if (priceMax && ratePkr > parseFloat(priceMax)) return false;
 
@@ -399,12 +399,12 @@ export const HotelDetailModal = ({
   };
 
   const multiRoomTotal = Object.values(roomSelections || {}).reduce(
-    (sum, sel) => sum + parseFloat(sel?.rate?.net || 0),
+    (sum, sel) => sum + parseFloat(sel?.rate?.pricePkr || sel?.rate?.price || sel?.rate?.net || 0),
     0
   );
   const allRoomsSelected = isMultiRoom && Object.keys(roomSelections || {}).length >= roomConfigs.length;
 
-  const startingPrice = propApplyCommission ? propApplyCommission(parseFloat(hotel.price || 0)) : parseFloat(hotel.price || 0);
+  const startingPrice = parseFloat(hotel.pricePkr || hotel.minRatePkr || hotel.price || 0);
 
   return (
     <div
@@ -498,13 +498,8 @@ export const HotelDetailModal = ({
             <div className="text-left sm:text-right flex-shrink-0 self-start sm:self-auto">
               <span className="text-[9px] sm:text-[10px] text-white/75 block uppercase tracking-wider font-semibold">from</span>
               <div className="text-lg sm:text-2xl font-black text-white leading-tight drop-shadow">
-                {hotel.currency || 'AED'} {startingPrice.toFixed(0)}
+                PKR {startingPrice.toLocaleString()}
               </div>
-              {formatPKR && formatPKR(startingPrice, hotel.currency || 'AED', true) && (
-                <div className="text-[10px] sm:text-[11px] text-white/80 font-medium">
-                  ≈ {formatPKR(startingPrice, hotel.currency || 'AED', true)}
-                </div>
-              )}
               <div className="text-[9px] sm:text-[10px] text-white/70">{nights} {nights === 1 ? 'night' : 'nights'}</div>
             </div>
           </div>
@@ -672,12 +667,10 @@ export const HotelDetailModal = ({
 
                     // Calculate lowest rate for this room
                     const minNet = filteredRates.reduce((min, r) => {
-                      const p = parseFloat(r.net || 0);
-                      return p < min ? p : min;
+                      const p = parseFloat(r.pricePkr || r.price || r.net || 0);
+                      return p > 0 && p < min ? p : min;
                     }, Infinity);
-                    const roomLowestTotal = minNet !== Infinity
-                      ? (propApplyCommission ? propApplyCommission(minNet) : minNet)
-                      : null;
+                    const roomLowestTotal = minNet !== Infinity ? minNet : null;
 
                     return (
                       <div
@@ -763,13 +756,8 @@ export const HotelDetailModal = ({
                               <div className="text-right">
                                 <span className="text-[9px] text-gray-400 block uppercase font-medium">from</span>
                                 <div className="text-xs sm:text-sm font-black text-blue-600 leading-tight">
-                                  {hotel.currency || 'AED'} {roomLowestTotal.toFixed(0)}
+                                  PKR {roomLowestTotal.toLocaleString()}
                                 </div>
-                                {formatPKR && formatPKR(roomLowestTotal, hotel.currency || 'AED', true) && (
-                                  <div className="text-[10px] text-gray-500 font-medium hidden sm:block">
-                                    ≈ {formatPKR(roomLowestTotal, hotel.currency || 'AED', true)}
-                                  </div>
-                                )}
                               </div>
                             )}
 
@@ -788,9 +776,9 @@ export const HotelDetailModal = ({
                         {isExpanded && (
                           <div className="divide-y divide-gray-100 bg-white animate-in slide-in-from-top-1 duration-150">
                             {filteredRates.map((rate, idx) => {
-                              const rawNet = parseFloat(rate.net) || 0;
-                              const totalEur = propApplyCommission ? propApplyCommission(rawNet) : rawNet;
-                              const perNightEur = nights > 0 ? totalEur / nights : totalEur;
+                              const rawNet = parseFloat(rate.pricePkr || rate.price || rate.net) || 0;
+                              const totalEur = rawNet;
+                              const perNightEur = nights > 0 ? Math.round(totalEur / nights) : totalEur;
                               const hasFreeCancellation = rate.rateClass !== 'NRF' && rate.cancellationPolicies?.length > 0 &&
                                 (parseFloat(rate.cancellationPolicies[0]?.amount || 0) === 0 || new Date() < new Date(rate.cancellationPolicies[0].from));
                               const isSelectedForTab = isMultiRoom &&
@@ -877,13 +865,30 @@ export const HotelDetailModal = ({
                                     )}
 
                                     {/* Mandatory Hotelbeds Excluded Local Taxes Alert */}
-                                    {rate.taxes && rate.taxes.taxes && rate.taxes.taxes.length > 0 && !rate.taxes.allIncluded && (
+                                    {/* Excluded taxes payable locally */}
+                                    {rate.excludedTaxes && rate.excludedTaxes.length > 0 ? (
+                                      <div className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] text-amber-800 bg-amber-50 px-2.5 py-1 rounded-md border border-amber-200 shadow-xs">
+                                        <AlertCircle className="w-3 h-3 text-amber-600 flex-shrink-0" />
+                                        <span>
+                                          Payable at check-in: {rate.excludedTaxes[0]?.type || 'Local Tax'}{' '}
+                                          {rate.excludedTaxes[0]?.currency} {parseFloat(rate.excludedTaxes[0]?.amount || 0).toFixed(2)} (Payable directly at property)
+                                        </span>
+                                      </div>
+                                    ) : rate.taxes && rate.taxes.taxes && rate.taxes.taxes.length > 0 && !rate.taxes.allIncluded ? (
                                       <div className="inline-flex items-center gap-1 text-[10px] sm:text-[11px] text-amber-800 bg-amber-50 px-2.5 py-1 rounded-md border-0 shadow-xs">
                                         <AlertCircle className="w-3 h-3 text-amber-600 flex-shrink-0" />
                                         <span>
                                           Excluded: {rate.taxes.taxes[0]?.subType || rate.taxes.taxes[0]?.type || 'City Tax'}{' '}
                                           {rate.taxes.taxes[0]?.currency} {parseFloat(rate.taxes.taxes[0]?.amount || 0).toFixed(2)} (payable locally at property)
                                         </span>
+                                      </div>
+                                    ) : null}
+
+                                    {/* Mandatory rateComments disclosure */}
+                                    {rate.rateComments && (
+                                      <div className="text-[10px] sm:text-[11px] text-slate-600 bg-slate-50 border border-slate-200 p-2 rounded-lg mt-1.5 leading-relaxed">
+                                        <span className="font-semibold text-slate-800">Rate Notice: </span>
+                                        {rate.rateComments}
                                       </div>
                                     )}
                                   </div>
@@ -892,16 +897,11 @@ export const HotelDetailModal = ({
                                   <div className="flex items-center justify-between w-full md:w-auto md:flex-col md:items-end gap-3 pt-2 md:pt-0 border-t md:border-0 border-gray-100 flex-shrink-0">
                                     <div className="text-left md:text-right">
                                       <div className="text-lg sm:text-2xl font-black text-blue-600 leading-tight">
-                                        {hotel.currency || 'AED'} {totalEur.toFixed(2)}
+                                        PKR {totalEur.toLocaleString()}
                                       </div>
                                       <div className="text-[10px] sm:text-[11px] text-gray-400">
-                                        {hotel.currency || 'AED'} {perNightEur.toFixed(0)} / night · {nights}n
+                                        PKR {perNightEur.toLocaleString()} / night · {nights}n
                                       </div>
-                                      {formatPKR && formatPKR(totalEur, hotel.currency || 'AED', true) && (
-                                        <div className="text-[10px] sm:text-[11px] text-gray-500 font-medium">
-                                          ≈ {formatPKR(totalEur, hotel.currency || 'AED', true)}
-                                        </div>
-                                      )}
                                     </div>
 
                                     <button
@@ -1350,13 +1350,8 @@ export const HotelDetailModal = ({
                 </span>
                 <div className="flex items-baseline gap-2">
                   <span className="text-lg sm:text-2xl font-black text-blue-600">
-                    {hotel.currency || 'AED'} {multiRoomTotal.toFixed(2)}
+                    PKR {multiRoomTotal.toLocaleString()}
                   </span>
-                  {formatPKR && (
-                    <span className="text-[11px] sm:text-xs font-semibold text-gray-500">
-                      ≈ {formatPKR(multiRoomTotal, hotel.currency || 'AED', true)}
-                    </span>
-                  )}
                 </div>
               </div>
 
@@ -1401,7 +1396,7 @@ export const HotelDetailModal = ({
                   Please select a room above to proceed
                 </span>
                 <span className="text-[11px] text-gray-400">
-                  Available from {hotel.currency || 'AED'} {startingPrice.toFixed(0)} for {nights} nights
+                  Available from PKR {startingPrice.toLocaleString()} for {nights} nights
                 </span>
               </div>
               <button
@@ -1421,23 +1416,8 @@ export const HotelDetailModal = ({
                 </span>
                 <div className="flex items-baseline gap-2">
                   <span className="text-lg sm:text-2xl font-black text-blue-600">
-                    {hotel.currency || 'AED'}{' '}
-                    {(propApplyCommission
-                      ? propApplyCommission(parseFloat(selectedSingleRate.rate.net || 0))
-                      : parseFloat(selectedSingleRate.rate.net || 0)
-                    ).toFixed(2)}
+                    PKR {parseFloat(selectedSingleRate.rate.pricePkr || selectedSingleRate.rate.price || selectedSingleRate.rate.net || 0).toLocaleString()}
                   </span>
-                  {formatPKR && (
-                    <span className="text-[11px] sm:text-xs font-semibold text-gray-500">
-                      ≈ {formatPKR(
-                        propApplyCommission
-                          ? propApplyCommission(parseFloat(selectedSingleRate.rate.net || 0))
-                          : parseFloat(selectedSingleRate.rate.net || 0),
-                        hotel.currency || 'AED',
-                        true
-                      )}
-                    </span>
-                  )}
                 </div>
               </div>
 

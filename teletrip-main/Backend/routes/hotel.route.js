@@ -10,6 +10,7 @@ const HotelIndex = require('../models/hotelIndex.model');
 const bookingModel = require('../models/booking.model');
 const Review = require('../models/review.model');
 const MarkupEngine = require('../services/markupEngine.service');
+const PricingEngine = require('../services/pricingEngine.service');
 // Hotelbeds API configuration  
 const HOTELBEDS_API_KEY = process.env.HOTELBEDS_API_KEY;
 const HOTELBEDS_SECRET = process.env.HOTELBEDS_SECRET;
@@ -467,11 +468,11 @@ router.post('/hotels/search', async (req, res) => {
 
         if (data.hotels && data.hotels.hotels) {
             data.hotels.hotels = await enhanceHotelsWithContent(data.hotels.hotels);
-            await MarkupEngine.applyToHotelsList(data.hotels.hotels, req.body.destination?.code || req.body.destination?.name || '');
+            await PricingEngine.processHotelsList(data.hotels.hotels, req.body.destination?.code || req.body.destination?.name || '');
         }
 
         if (data && data.hotel) {
-            await MarkupEngine.applyToCheckRate(data);
+            await PricingEngine.processHotelsList([data.hotel], req.body.destination?.code || req.body.destination?.name || '');
         }
 
         res.json({
@@ -559,11 +560,11 @@ router.post('/hotels/search-auth', async (req, res) => {
 
         if (data.hotels && data.hotels.hotels) {
             data.hotels.hotels = await enhanceHotelsWithContent(data.hotels.hotels);
-            await MarkupEngine.applyToHotelsList(data.hotels.hotels, req.body.destination?.code || req.body.destination?.name || '');
+            await PricingEngine.processHotelsList(data.hotels.hotels, req.body.destination?.code || req.body.destination?.name || '');
         }
 
         if (data && data.hotel) {
-            await MarkupEngine.applyToCheckRate(data);
+            await PricingEngine.processHotelsList([data.hotel], req.body.destination?.code || req.body.destination?.name || '');
         }
 
         res.json({
@@ -682,13 +683,27 @@ router.post('/hotels/book', authUser, async (req, res) => {
             }
         });
 
+        let quote = null;
         if (data && data.hotel) {
-            await MarkupEngine.applyToCheckRate(data);
+            const checkRateResult = await PricingEngine.processCheckRateAndCreateQuote(data, req.body.destination?.code || req.body.destination?.name || '');
+            quote = checkRateResult.quote;
         }
 
         res.json({
             success: true,
-            data: data
+            data: data,
+            quoteId: quote?.quoteId || null,
+            quote: quote ? {
+                quoteId: quote.quoteId,
+                rateKey: quote.rateKey,
+                totalPkr: quote.totalPkr,
+                baseFarePkr: quote.baseFarePkr,
+                taxesAndFeesPkr: quote.taxesAndFeesPkr,
+                displayCurrency: quote.displayCurrency,
+                excludedTaxes: quote.excludedTaxes,
+                cancellationPolicies: quote.cancellationPolicies,
+                expiresAt: quote.expiresAt
+            } : null
         });
 
     } catch (error) {
@@ -760,13 +775,27 @@ router.post('/hotels/checkrate', async (req, res) => {
             }
         });
 
+        let quote = null;
         if (data && data.hotel) {
-            await MarkupEngine.applyToCheckRate(data);
+            const checkRateResult = await PricingEngine.processCheckRateAndCreateQuote(data, req.body.destination?.code || req.body.destination?.name || '');
+            quote = checkRateResult.quote;
         }
 
         res.json({
             success: true,
-            data: data
+            data: data,
+            quoteId: quote?.quoteId || null,
+            quote: quote ? {
+                quoteId: quote.quoteId,
+                rateKey: quote.rateKey,
+                totalPkr: quote.totalPkr,
+                baseFarePkr: quote.baseFarePkr,
+                taxesAndFeesPkr: quote.taxesAndFeesPkr,
+                displayCurrency: quote.displayCurrency,
+                excludedTaxes: quote.excludedTaxes,
+                cancellationPolicies: quote.cancellationPolicies,
+                expiresAt: quote.expiresAt
+            } : null
         });
 
     } catch (error) {
@@ -1332,7 +1361,7 @@ router.post('/hotels/search-by-hotels', async (req, res) => {
         // Enhance with content images
         if (data.hotels && data.hotels.hotels) {
             data.hotels.hotels = await enhanceHotelsWithContent(data.hotels.hotels);
-            await MarkupEngine.applyToHotelsList(data.hotels.hotels, req.body.destination?.code || req.body.destination?.name || '');
+            await PricingEngine.processHotelsList(data.hotels.hotels, req.body.destination?.code || req.body.destination?.name || '');
         }
 
         res.json({ success: true, data });

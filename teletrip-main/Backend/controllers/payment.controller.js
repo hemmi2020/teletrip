@@ -13,6 +13,7 @@ const logger = require('../utils/logger.util'); // Enhanced logging utility
 const querystring = require('querystring');
 const forge = require('node-forge');
 const { confirmBookingWithHotelbeds } = require('../services/hotelbeds.booking.service');
+const PricingEngine = require('../services/pricingEngine.service');
 
 
 // HBLPay Configuration
@@ -1570,16 +1571,32 @@ const buildRedirectUrl = (sessionId) => {
 module.exports.initiateHBLPayPayment = asyncErrorHandler(async (req, res) => {
   console.log('📥 RAW REQUEST BODY:', JSON.stringify(req.body, null, 2));
   
-  const { bookingData, userData, amount, currency = 'PKR', orderId, bookingId } = req.body;
+  const { bookingData, userData, amount, currency = 'PKR', orderId, bookingId, quoteId } = req.body;
   const userId = req.user._id;
+
+  // Server-Side Pricing Verification (Zero Client-Side Leakage & Anti-Tampering)
+  const itemRateKey = bookingData?.items?.[0]?.rateKey || req.body.rateKey || null;
+  let validAmount = amount;
+  if (typeof validAmount === 'string') {
+    validAmount = parseFloat(validAmount);
+  }
+
+  if (quoteId || itemRateKey) {
+    const verified = await PricingEngine.getVerifiedAmount(quoteId, itemRateKey);
+    if (verified.valid && verified.amountPkr > 0) {
+      console.log(`🔒 [HBLPay] Using server-verified quote price: PKR ${verified.amountPkr} (client sent: ${amount})`);
+      validAmount = verified.amountPkr;
+    }
+  }
 
   console.log('🚀 Initiating HBLPay payment:', {
     userId: userId.toString(),
-    amount: amount,
-    amountType: typeof amount,
+    amount: validAmount,
+    amountType: typeof validAmount,
     currency,
     orderId: orderId || 'auto-generated',
     bookingId,
+    quoteId,
     userEmail: userData?.email,
     hasBookingData: !!bookingData,
     hasUserData: !!userData,
@@ -1587,17 +1604,8 @@ module.exports.initiateHBLPayPayment = asyncErrorHandler(async (req, res) => {
     userDataKeys: userData ? Object.keys(userData) : []
   });
 
-  // Enhanced validation
-  let validAmount = amount;
-  
-  // Convert string to number if needed
-  if (typeof amount === 'string') {
-    validAmount = parseFloat(amount);
-    console.log('⚠️ Amount was string, converted to number:', { original: amount, converted: validAmount });
-  }
-  
   if (!validAmount || typeof validAmount !== 'number' || validAmount <= 0 || isNaN(validAmount)) {
-    console.error('❌ Invalid amount:', { amount, validAmount, type: typeof amount });
+    console.error('❌ Invalid amount:', { amount, validAmount, type: typeof validAmount });
     return ApiResponse.error(res, `Invalid payment amount: ${amount} (type: ${typeof amount})`, 400);
   }
 
@@ -2361,22 +2369,35 @@ module.exports.extractHBLData = (req, res) => {
 
 module.exports.createPayOnSiteBooking = asyncErrorHandler(async (req, res) => {
   const startTime = Date.now();
-  const { bookingData, userData, amount, bookingId, currencyConversion } = req.body;
-  const effectiveCurrency = req.body.currency || bookingData?.currency || bookingData?.items?.[0]?.currency || 'AED';
+  const { bookingData, userData, amount, bookingId, currencyConversion, quoteId } = req.body;
+  const effectiveCurrency = req.body.currency || bookingData?.currency || bookingData?.items?.[0]?.currency || 'PKR';
   const currency = effectiveCurrency;
   const userId = req.user._id;
 
+  // Server-Side Pricing Verification (Zero Client-Side Leakage & Anti-Tampering)
+  const itemRateKey = bookingData?.items?.[0]?.rateKey || req.body.rateKey || null;
+  let validAmount = typeof amount === 'number' ? amount : parseFloat(amount) || 0;
+
+  if (quoteId || itemRateKey) {
+    const verified = await PricingEngine.getVerifiedAmount(quoteId, itemRateKey);
+    if (verified.valid && verified.amountPkr > 0) {
+      console.log(`🔒 [PayOnSite] Using server-verified quote price: PKR ${verified.amountPkr} (client sent: ${amount})`);
+      validAmount = verified.amountPkr;
+    }
+  }
+
   console.log('🏨 Creating Pay on Site booking:', {
     userId: userId.toString(),
-    amount,
+    amount: validAmount,
     currency,
     bookingId,
+    quoteId,
     userEmail: userData?.email
   });
 
   // ✅ VALIDATION
-  if (!amount || typeof amount !== 'number' || amount <= 0) {
-    console.error('❌ Invalid amount:', { amount, type: typeof amount });
+  if (!validAmount || typeof validAmount !== 'number' || validAmount <= 0) {
+    console.error('❌ Invalid amount:', { amount, validAmount, type: typeof validAmount });
     return ApiResponse.error(res, `Invalid payment amount: ${amount}`, 400);
   }
 
@@ -2400,7 +2421,7 @@ module.exports.createPayOnSiteBooking = asyncErrorHandler(async (req, res) => {
   try {
     const paymentId = generatePaymentId();
     const orderId = generateOrderId();
-    const paymentAmount = parseFloat(amount);
+    const paymentAmount = validAmount;
 
     if (isNaN(paymentAmount) || paymentAmount <= 0) {
       return ApiResponse.error(res, `Invalid payment amount: ${paymentAmount}`, 400);

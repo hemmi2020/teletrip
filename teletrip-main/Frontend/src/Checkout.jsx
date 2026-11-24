@@ -62,6 +62,7 @@ const Checkout = () => {
   const [success, setSuccess] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('hblpay'); // 'hblpay' or 'pay_on_site' (Pay Later)
   const [showOrderSummary, setShowOrderSummary] = useState(true);
+  const [serverQuoteId, setServerQuoteId] = useState(null);
   const [rateComments, setRateComments] = useState([]);
   const [excludedTaxes, setExcludedTaxes] = useState([]);
   const [validatedRateKeys, setValidatedRateKeys] = useState({});
@@ -204,21 +205,27 @@ const Checkout = () => {
             const freshRate = res.data.hotel.rooms[0].rates[0];
             keysMap[item.rateKey] = freshRate.rateKey;
 
+            if (res.quoteId) {
+              setServerQuoteId(res.quoteId);
+            }
+
             if (freshRate.rateComments) {
               comments.push(freshRate.rateComments);
             }
-            if (freshRate.taxes?.taxes?.length > 0) {
+            if (freshRate.excludedTaxes?.length > 0) {
+              taxes.push(...freshRate.excludedTaxes);
+            } else if (freshRate.taxes?.taxes?.length > 0) {
               const unpaidTaxes = freshRate.taxes.taxes.filter(t => !t.included);
               taxes.push(...unpaidTaxes);
             }
 
-            const freshNet = parseFloat(freshRate.net || 0);
-            const originalNet = parseFloat(item.totalPrice || item.net || item.price || 0);
-            if (freshNet > 0 && Math.abs(freshNet - originalNet) > 0.01) {
+            const freshPkr = parseFloat(freshRate.pricePkr || freshRate.totalAmountPkr || freshRate.price || freshRate.net || 0);
+            const originalPkr = parseFloat(item.pricePkr || item.totalPrice || item.price || item.net || 0);
+            if (freshPkr > 0 && Math.abs(freshPkr - originalPkr) > 1) {
               detectedPriceChange = true;
-              freshTotal += freshNet;
+              freshTotal += freshPkr;
             } else {
-              freshTotal += originalNet;
+              freshTotal += (freshPkr || originalPkr);
             }
           } else {
             keysMap[item.rateKey] = item.rateKey;
@@ -527,9 +534,10 @@ const Checkout = () => {
           ).join('; '),
           hotelbedsBookingRequest: hotelbedsBookingRequest
         },
-        amount: currencyConversion ? currencyConversion.totalPKR : parseFloat(totalAmount),
+        amount: parseFloat(totalAmount),
         currency: 'PKR',
-        currencyConversion: currencyConversion, // Store conversion details
+        quoteId: serverQuoteId,
+        rateKey: checkoutItems[0]?.rateKey,
         bookingId: bookingId,
         orderId: `ORDER_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
       };
@@ -775,8 +783,9 @@ const handlePayOnSiteBooking = async () => {
           hotelbedsBookingRequest: hotelbedsBookingRequest
         },
         amount: parseFloat(totalAmount),
-        currency: firstItem?.currency || checkoutItems[0]?.currency || 'AED',
-        currencyConversion: currencyConversion,
+        currency: 'PKR',
+        quoteId: serverQuoteId,
+        rateKey: firstItem?.rateKey,
         confirmImmediately: true,
         bookingId: `HOTELBEDS_${Date.now()}`
       };
@@ -1162,7 +1171,7 @@ const handlePaymentSubmit = () => {
             {paymentMethod === 'hblpay' ? (
               <>
                 <Lock className="w-4 h-4" />
-                <span>Pay with HBLPay · {checkoutItems[0]?.currency || 'AED'} {parseFloat(totalAmount).toFixed(0)}</span>
+                <span>Pay with HBLPay · PKR {Math.round(parseFloat(totalAmount)).toLocaleString()}</span>
               </>
             ) : (
               <>

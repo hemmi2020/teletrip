@@ -1319,7 +1319,7 @@ export default function HotelSearchForm({
             }}
           >
             <div
-              className="bg-white border border-gray-200 rounded-3xl shadow-2xl p-4 sm:p-6 max-h-[92vh] overflow-x-hidden overflow-y-auto w-[calc(100vw-20px)] sm:w-auto max-w-sm sm:max-w-2xl lg:max-w-3xl mx-auto"
+              className="bg-white border border-gray-200 rounded-3xl shadow-2xl p-4 sm:p-6 overflow-hidden w-[calc(100vw-24px)] sm:w-[680px] md:w-[720px] max-w-[720px] mx-auto"
             >
               <div className="flex items-center justify-between pb-3 mb-2 border-b border-gray-100">
                 <div>
@@ -1350,7 +1350,7 @@ export default function HotelSearchForm({
                   }}
                   minDate={addDays(new Date(), 1)}
                   maxDate={addDays(new Date(), 365)}
-                  months={window.innerWidth < 640 ? 1 : 2}
+                  months={typeof window !== 'undefined' && window.innerWidth < 768 ? 1 : 2}
                   direction="horizontal"
                   rangeColors={['#2563eb']}
                   showDateDisplay={false}

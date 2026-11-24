@@ -1131,8 +1131,11 @@ const HotelSearchResults = () => {
             address: `${hotel.destinationName}, ${hotel.zoneName}`,
             zone: hotel.zoneName || "Unknown",
             thumbnail: hotel.thumbnail,
-            price: hotel.minRate || cheapestRate?.net || "N/A",
-            currency: hotel.currency || "AED",
+            price: hotel.minRatePkr || hotel.minRate || cheapestRate?.pricePkr || cheapestRate?.net || "N/A",
+            pricePkr: parseFloat(hotel.minRatePkr || hotel.minRate || cheapestRate?.pricePkr || 0),
+            minRateTaxesPkr: parseFloat(hotel.minRateTaxesPkr || 0),
+            currency: "PKR",
+            displayCurrency: "PKR",
             images: hotel.images || [],
             amenities: [...new Set(hotel.amenities || [])],
             facilities: hotel.facilities || [],
@@ -2189,9 +2192,11 @@ const HotelSearchResults = () => {
                 const checkIn = searchParams.get("checkIn");
                 const checkOut = searchParams.get("checkOut");
                 const nights = checkIn && checkOut ? Math.ceil((new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60 * 24)) : 1;
-                const rawPrice = parseFloat(hotel.price) || 0;
-                const totalPrice = applyCommission ? applyCommission(rawPrice) : rawPrice;
-                const pricePerNight = nights > 0 ? (totalPrice / nights) : totalPrice;
+                const rawPrice = parseFloat(hotel.pricePkr || hotel.price) || 0;
+                const totalPrice = rawPrice;
+                const pricePerNight = nights > 0 ? Math.round(totalPrice / nights) : totalPrice;
+                const taxesAndCharges = hotel.minRateTaxesPkr || Math.round(totalPrice * 0.22);
+                const strikethroughPrice = Math.round(totalPrice * 1.18);
                 const roomTypes = [...new Set((hotel.rooms || []).map(r => r.name))];
 
                 const hotelImage = hotel.thumbnail || (hotel.images && hotel.images[0]?.path ? `https://photos.hotelbeds.com/giata/original/${hotel.images[0].path.replace(/^\/+/, '')}` : "https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg");
@@ -2355,15 +2360,13 @@ const HotelSearchResults = () => {
                               From Total Stay
                             </span>
                             <div className="text-lg sm:text-xl font-black text-blue-600 leading-tight">
-                              {hotel.currency || 'AED'} {totalPrice.toFixed(0)}
+                              PKR {totalPrice.toLocaleString()}
                             </div>
-                            {formatPKR(totalPrice, hotel.currency || 'AED', true) && (
-                              <div className="text-xs font-bold text-amber-700">
-                                ≈ {formatPKR(totalPrice, hotel.currency || 'AED', true)}
-                              </div>
-                            )}
+                            <div className="text-[10px] text-gray-500">
+                              +PKR {taxesAndCharges.toLocaleString()} taxes and charges
+                            </div>
                             <div className="text-[10px] text-gray-400">
-                              {hotel.currency || 'AED'} {pricePerNight.toFixed(0)} / night · {nights} nights
+                              PKR {pricePerNight.toLocaleString()} / night · {nights} nights
                             </div>
                             <div className="text-[9px] text-emerald-600 font-semibold mt-0.5">
                               Taxes & fees included
@@ -2411,8 +2414,6 @@ const HotelSearchResults = () => {
                 }
 
                 {/* ── OPTION A: SLEEK MODERN HORIZONTAL LIST VIEW (BOOKING.COM STYLE) ── */ }
-                const strikethroughPrice = Math.round(totalPrice * 1.18);
-                const taxesAndCharges = Math.round(totalPrice * 0.12);
                 const ratingVal = hotelReviews[hotel.id]?.rating ? Number(hotelReviews[hotel.id].rating).toFixed(1) : (hotel.stars >= 4 ? (4.2 + (Number(hotel.id || 1) % 8) * 0.1).toFixed(1) : '8.8');
                 const reviewCountVal = hotelReviews[hotel.id]?.numReviews || (1200 + (Number(hotel.id || 1) % 1500));
                 const reviewRatingLabel = Number(ratingVal) >= 4.5 || Number(ratingVal) >= 9.0 ? 'Exceptional' : Number(ratingVal) >= 4.0 || Number(ratingVal) >= 8.5 ? 'Superb' : 'Very good';
@@ -2567,19 +2568,14 @@ const HotelSearchResults = () => {
                       <div className="flex md:hidden flex-col items-end pt-2 mt-1.5 border-t border-gray-100 w-full">
                         <div className="flex items-baseline gap-2">
                           <span className="text-red-600 line-through text-xs font-semibold">
-                            {hotel.currency || 'AED'} {strikethroughPrice.toLocaleString()}
+                            PKR {strikethroughPrice.toLocaleString()}
                           </span>
                           <span className="text-base sm:text-lg font-black text-slate-900 leading-tight">
-                            {hotel.currency || 'AED'} {totalPrice.toFixed(0)}
+                            PKR {totalPrice.toLocaleString()}
                           </span>
                         </div>
-                        {formatPKR(totalPrice, hotel.currency || 'AED', true) && (
-                          <div className="text-[10px] font-bold text-amber-700">
-                            ≈ {formatPKR(totalPrice, hotel.currency || 'AED', true)}
-                          </div>
-                        )}
                         <div className="text-[9px] text-gray-500">
-                          +{hotel.currency || 'AED'} {taxesAndCharges.toLocaleString()} taxes and charges
+                          +PKR {taxesAndCharges.toLocaleString()} taxes and charges
                         </div>
 
                         <button
@@ -2629,22 +2625,17 @@ const HotelSearchResults = () => {
                           </span>
                           <div className="flex items-baseline justify-end gap-2">
                             <span className="text-red-600 line-through text-xs font-semibold">
-                              {hotel.currency || 'AED'} {strikethroughPrice.toLocaleString()}
+                              PKR {strikethroughPrice.toLocaleString()}
                             </span>
                             <span className="text-xl sm:text-2xl font-black text-slate-900 leading-tight">
-                              {hotel.currency || 'AED'} {totalPrice.toFixed(0)}
+                              PKR {totalPrice.toLocaleString()}
                             </span>
                           </div>
-                          {formatPKR(totalPrice, hotel.currency || 'AED', true) && (
-                            <div className="text-xs font-bold text-amber-700">
-                              ≈ {formatPKR(totalPrice, hotel.currency || 'AED', true)}
-                            </div>
-                          )}
                           <div className="text-[10px] text-gray-500 mt-0.5">
-                            +{hotel.currency || 'AED'} {taxesAndCharges.toLocaleString()} taxes and charges
+                            +PKR {taxesAndCharges.toLocaleString()} taxes and charges
                           </div>
                           <div className="text-[10px] text-gray-400">
-                            {hotel.currency || 'AED'} {pricePerNight.toFixed(0)} / night · {nights} nights
+                            PKR {pricePerNight.toLocaleString()} / night · {nights} nights
                           </div>
                         </div>
                       </div>

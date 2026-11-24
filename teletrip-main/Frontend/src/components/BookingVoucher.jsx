@@ -313,13 +313,9 @@ const BookingVoucher = ({ booking, onClose }) => {
 
   let displayCustomerTotal = 'Prepaid in Full';
   if (customerPKR) {
-    if (customerRetailCurrency === 'PKR') {
-      displayCustomerTotal = `PKR ${customerPKR.toLocaleString()}`;
-    } else {
-      displayCustomerTotal = `PKR ${customerPKR.toLocaleString()} (${customerRetailCurrency} ${customerRetailAmount.toFixed(2)})`;
-    }
+    displayCustomerTotal = `PKR ${customerPKR.toLocaleString()}`;
   } else if (rawTotal > 0) {
-    displayCustomerTotal = `${customerRetailCurrency} ${rawTotal.toFixed(2)}`;
+    displayCustomerTotal = `PKR ${Math.round(rawTotal).toLocaleString()}`;
   }
 
   const paymentMethod = booking.payment?.method || booking.paymentMethod ||
@@ -636,31 +632,12 @@ const BookingVoucher = ({ booking, onClose }) => {
               </div>
               <div className="space-y-2">
                 <div className="flex justify-between items-center text-sm">
-                  <span className="text-gray-500">Retail Booking Amount:</span>
+                  <span className="text-gray-500">Total Paid Amount:</span>
                   <span className="font-semibold text-gray-900 ml-2">{displayCustomerTotal}</span>
                 </div>
-                {customerRetailCurrency !== 'PKR' && customerPKR && (
-                  <div className="text-[11px] text-gray-500 bg-gray-50 border border-gray-100 rounded-lg p-2.5 space-y-1">
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Supplier / API Price:</span>
-                      <span className="font-medium text-gray-700">{customerRetailCurrency} {customerRetailAmount.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Conversion Rate:</span>
-                      <span className="font-medium text-gray-700">1 {customerRetailCurrency} ≈ {exchangeRate} PKR</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Service Charges & Taxes:</span>
-                      <span className="font-medium text-gray-700">Included ({serviceChargePct}%)</span>
-                    </div>
-                    {commissionPct > 0 && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">Agency Commission:</span>
-                        <span className="font-medium text-gray-700">Included ({commissionPct}%)</span>
-                      </div>
-                    )}
-                  </div>
-                )}
+                <div className="text-[11px] text-gray-500 bg-gray-50 border border-gray-100 rounded-lg p-2.5">
+                  <span className="text-gray-600 font-medium">All online taxes, surcharges & service fees are included in the total.</span>
+                </div>
                 <div className="flex justify-between items-center text-sm pt-1">
                   <span className="text-gray-500">Payment Status</span>
                   <span className="text-sm font-semibold text-green-700">
