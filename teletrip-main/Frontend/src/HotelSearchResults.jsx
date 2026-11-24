@@ -1152,12 +1152,12 @@ const HotelSearchResults = () => {
           let isNoAvailability = false;
           try {
             const errClone = await hotelResponse.clone().json();
-            if (hotelResponse.status === 404 || errClone?.message?.toLowerCase().includes("no hotel") || errClone?.message?.toLowerCase().includes("no availability")) {
+            if (hotelResponse.status === 404 || hotelResponse.status === 400 || errClone?.message?.toLowerCase().includes("no hotel") || errClone?.message?.toLowerCase().includes("no availability") || errClone?.warning) {
               isNoAvailability = true;
             }
           } catch (_) {}
 
-          if (hotelCode && (isNoAvailability || hotelResponse.status === 404)) {
+          if (hotelCode && (isNoAvailability || hotelResponse.status === 404 || hotelResponse.status === 400)) {
             shouldFallbackToDestination = true;
           } else if (isNoAvailability || hotelResponse.status === 404) {
             console.warn('⚠️ No hotels available for searched criteria');

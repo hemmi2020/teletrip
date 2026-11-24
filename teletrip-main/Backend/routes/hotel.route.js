@@ -1346,6 +1346,23 @@ router.post('/hotels/search-by-hotels', async (req, res) => {
 
         if (!response.ok) {
             const errorText = await response.text();
+            console.warn(`[Hotelbeds] search-by-hotels status ${response.status}:`, errorText);
+
+            // Hotelbeds returns 400 for invalid/uncontracted hotel codes or 404 for no rooms
+            // Return empty hotels array so frontend can gracefully suggest similar available hotels in the area
+            if (response.status === 400 || response.status === 404) {
+                return res.json({
+                    success: true,
+                    data: {
+                        hotels: {
+                            hotels: [],
+                            total: 0
+                        }
+                    },
+                    warning: 'Hotel not available in active portfolio'
+                });
+            }
+
             return res.status(response.status).json({ success: false, error: 'Search failed', details: errorText });
         }
 
