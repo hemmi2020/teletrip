@@ -693,7 +693,7 @@ const HotelSearchResults = () => {
     const childAgesParam = searchParams.get("childAges");
     const childAges = childAgesParam ? childAgesParam.split(',').map(age => parseInt(age)).filter(a => !isNaN(a)) : [];
     const nights = Math.ceil((new Date(checkOut) - new Date(checkIn)) / (1000 * 60 * 60 * 24));
-    const totalFromAPI = parseFloat(rate.net);
+    const totalFromAPI = parseFloat(rate.pricePkr || rate.price || rate.totalAmountPkr || rate.sellingRate || rate.net || 0);
     const pricePerNight = nights > 0 ? (totalFromAPI / nights) : totalFromAPI;
 
     const cartItem = {
@@ -701,7 +701,7 @@ const HotelSearchResults = () => {
       id: `${hotel.id}-${room.code}-${rate.rateKey || rate.net}`,
       hotelId: hotel.id, hotelName: hotel.name, hotelCode: hotel.code,
       roomCode: room.code, roomName: room.name, rateKey: rate.rateKey,
-      price: pricePerNight, pricePerNight, currency: hotel.currency || 'AED',
+      price: pricePerNight, pricePerNight, currency: rate.displayCurrency || hotel.displayCurrency || 'PKR',
       checkIn, checkOut, nights, guests: adults + children, adults, children, rooms,
       childAges,
       location: `${hotel.zoneName}, ${hotel.destinationName}`,
@@ -712,7 +712,7 @@ const HotelSearchResults = () => {
       thumbnail: hotel.thumbnail, allotment: rate.allotment,
       packaging: rate.packaging, taxes: rate.taxes,
       city: hotel.destinationName, zone: hotel.zoneName,
-      category: hotel.categoryName, totalPrice: totalFromAPI, net: totalFromAPI,
+      category: hotel.categoryName, totalPrice: totalFromAPI, net: totalFromAPI, pricePkr: totalFromAPI,
       addedAt: new Date().toISOString(),
     };
 
@@ -737,7 +737,7 @@ const HotelSearchResults = () => {
 
     Object.entries(selections).forEach(([tabIdx, sel]) => {
       const config = roomConfigsList[parseInt(tabIdx)];
-      const totalFromAPI = parseFloat(sel.rate.net);
+      const totalFromAPI = parseFloat(sel.rate.pricePkr || sel.rate.price || sel.rate.totalAmountPkr || sel.rate.sellingRate || sel.rate.net || 0);
       const pricePerNight = nights > 0 ? (totalFromAPI / nights) : totalFromAPI;
 
       addToCart({
@@ -745,7 +745,7 @@ const HotelSearchResults = () => {
         id: `${hotel.id}-${sel.room.code}-${sel.rate.rateKey || sel.rate.net}-room${parseInt(tabIdx) + 1}`,
         hotelId: hotel.id, hotelName: hotel.name, hotelCode: hotel.code,
         roomCode: sel.room.code, roomName: `${sel.room.name} (Room ${parseInt(tabIdx) + 1})`, rateKey: sel.rate.rateKey,
-        price: pricePerNight, pricePerNight, currency: hotel.currency || 'AED',
+        price: pricePerNight, pricePerNight, currency: sel.rate.displayCurrency || hotel.displayCurrency || 'PKR',
         checkIn, checkOut, nights, guests: (config.adults || 2) + (config.children || 0),
         adults: config.adults || 2, children: config.children || 0, rooms: 1,
         childAges: config.childAges || [],
@@ -757,7 +757,7 @@ const HotelSearchResults = () => {
         thumbnail: hotel.thumbnail, allotment: sel.rate.allotment,
         packaging: sel.rate.packaging, taxes: sel.rate.taxes,
         city: hotel.destinationName, zone: hotel.zoneName,
-        category: hotel.categoryName, totalPrice: totalFromAPI, net: totalFromAPI,
+        category: hotel.categoryName, totalPrice: totalFromAPI, net: totalFromAPI, pricePkr: totalFromAPI,
         addedAt: new Date().toISOString(),
       });
     });

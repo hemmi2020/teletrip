@@ -140,10 +140,32 @@ const getCookie = (name) => {
   }
 };
 
+// Sanitize cart items to prevent any NaN values from legacy storage
+const cleanCartItems = (rawItems) => {
+  if (!Array.isArray(rawItems)) return [];
+  return rawItems
+    .filter((item) => item && typeof item === "object")
+    .map((item) => {
+      const rawVal = item.pricePkr ?? item.totalPrice ?? item.price ?? item.net ?? 0;
+      const numVal = parseFloat(rawVal);
+      const validTotal = !isNaN(numVal) && numVal > 0 ? numVal : 0;
+      const nights = Math.max(1, parseInt(item.nights) || 1);
+      const validPerNight = validTotal > 0 ? validTotal / nights : 0;
+      return {
+        ...item,
+        totalPrice: validTotal,
+        pricePkr: validTotal,
+        price: validPerNight,
+        pricePerNight: validPerNight,
+        currency: item.currency || "PKR",
+      };
+    });
+};
+
 // Cart Provider
 export const CartProvider = ({ children }) => {
   const [state, dispatch] = useReducer(cartReducer, {
-    items: getCookie("cart") || [],
+    items: cleanCartItems(getCookie("cart")),
   });
 
   useEffect(() => {
@@ -164,15 +186,23 @@ export const CartProvider = ({ children }) => {
 
   const getTotalPrice = () => {
     return state.items.reduce((total, item) => {
-      if (item.type === 'activity') return total + (item.pricePkr || item.price || 0);
-      if (item.type === 'transfer') return total + (item.pricePkr || item.totalPrice || item.price || 0);
-      const itemTotal = item.pricePkr || item.totalPrice || item.net || (() => {
-        const checkIn = new Date(item.checkIn);
-        const checkOut = new Date(item.checkOut);
-        const nights = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24)) || 1;
-        return (item.pricePkr || item.price || 0) * nights;
-      })();
-      return total + parseFloat(itemTotal);
+      let val = 0;
+      if (item.type === "activity" || item.type === "transfer") {
+        const raw = item.pricePkr ?? item.totalPrice ?? item.price ?? 0;
+        val = parseFloat(raw);
+      } else {
+        const rawTotal = item.pricePkr ?? item.totalPrice ?? item.net;
+        if (rawTotal !== undefined && rawTotal !== null && !isNaN(parseFloat(rawTotal))) {
+          val = parseFloat(rawTotal);
+        } else {
+          const checkIn = new Date(item.checkIn);
+          const checkOut = new Date(item.checkOut);
+          const nights = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24)) || 1;
+          const p = parseFloat(item.pricePkr ?? item.price ?? 0);
+          val = (!isNaN(p) ? p : 0) * nights;
+        }
+      }
+      return total + (isNaN(val) ? 0 : val);
     }, 0);
   };
 
@@ -802,7 +832,11 @@ export const SlideOutCart = ({ isOpen, onClose, onProceedToCheckout }) => {
                 {items.map((item, index) => {
                   console.log(`🛒 Cart item ${index}:`, { hotelName: item.hotelName, roomName: item.roomName, id: item.id });
                   const nights = calculateNights(item.checkIn, item.checkOut);
-                  const totalPrice = item.type === 'activity' ? (item.price || 0) : (item.totalPrice || item.net || (item.price * nights));
+                  const rawTotal = item.type === 'activity' 
+                    ? (item.pricePkr ?? item.totalPrice ?? item.price ?? 0)
+                    : (item.pricePkr ?? item.totalPrice ?? item.net ?? ((item.price || 0) * nights));
+                  const parsedTotal = parseFloat(rawTotal);
+                  const totalPrice = (!isNaN(parsedTotal) && parsedTotal > 0) ? parsedTotal : 0;
                   const isActivity = item.type === 'activity';
                   const isTransfer = item.type === 'transfer';
 

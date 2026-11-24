@@ -36,7 +36,23 @@ const Checkout = () => {
   
   // Get cart data from navigation state or use current cart
   const checkoutItems = location.state?.cartItems || cartItems;
-  const totalAmount = location.state?.totalAmount || getTotalPrice();
+
+  const initialTotal = (() => {
+    const fromNav = parseFloat(location.state?.totalAmount);
+    if (!isNaN(fromNav) && fromNav > 0) return fromNav;
+    const fromContext = parseFloat(getTotalPrice());
+    if (!isNaN(fromContext) && fromContext > 0) return fromContext;
+    if (Array.isArray(checkoutItems) && checkoutItems.length > 0) {
+      const sum = checkoutItems.reduce((acc, it) => {
+        const val = parseFloat(it.pricePkr ?? it.totalPrice ?? it.price ?? it.net ?? 0);
+        return acc + (!isNaN(val) ? val : 0);
+      }, 0);
+      if (sum > 0) return sum;
+    }
+    return 0;
+  })();
+
+  const [totalAmount, setTotalAmount] = useState(initialTotal);
 
   const hasNonRefundable = checkoutItems?.some(item => item.rateClass === 'NRF');
   const hasFreeCancellation = checkoutItems?.length > 0 && !hasNonRefundable;
@@ -239,11 +255,14 @@ const Checkout = () => {
       setValidatedRateKeys(keysMap);
       if (comments.length > 0) setRateComments([...new Set(comments)]);
       if (taxes.length > 0) setExcludedTaxes(taxes);
-      if (detectedPriceChange && freshTotal > 0) {
+      if (freshTotal > 0) {
+        setTotalAmount(freshTotal);
+      }
+      if (detectedPriceChange && freshTotal > 0 && initialTotal > 0 && Math.abs(freshTotal - initialTotal) > 1) {
         setPriceChangeNotice({
-          oldTotal: parseFloat(totalAmount),
+          oldTotal: parseFloat(initialTotal),
           newTotal: freshTotal,
-          difference: (freshTotal - parseFloat(totalAmount)).toFixed(2)
+          difference: (freshTotal - parseFloat(initialTotal)).toFixed(0)
         });
       }
       setIsValidatingRates(false);
@@ -1206,7 +1225,7 @@ const handlePaymentSubmit = () => {
         <div className="flex justify-between items-center text-gray-600">
           <span>Base Room Rate</span>
           <span className="font-semibold text-gray-800">
-            {checkoutItems[0]?.currency || 'AED'} {parseFloat(totalAmount).toFixed(0)}
+            PKR {Math.round(parseFloat(totalAmount) || 0).toLocaleString()}
           </span>
         </div>
 
@@ -1215,7 +1234,7 @@ const handlePaymentSubmit = () => {
             <span>Taxes & Service Fees</span>
             <span className="text-[10px] text-emerald-600 font-semibold bg-emerald-50 px-1.5 py-0.2 rounded">Included</span>
           </span>
-          <span className="font-semibold text-emerald-600">AED 0.00</span>
+          <span className="font-semibold text-emerald-600">PKR 0.00</span>
         </div>
 
         {excludedTaxes && excludedTaxes.length > 0 && (
@@ -1239,13 +1258,8 @@ const handlePaymentSubmit = () => {
           </div>
           <div className="text-right">
             <div className="text-xl sm:text-2xl font-black text-blue-600 leading-tight">
-              {checkoutItems[0]?.currency || 'AED'} {parseFloat(totalAmount).toFixed(0)}
+              PKR {Math.round(parseFloat(totalAmount) || 0).toLocaleString()}
             </div>
-            {(formatPKR(totalAmount, checkoutItems[0]?.currency) || currencyConversion?.totalPKR) && (
-              <div className="text-xs font-bold text-amber-700">
-                ≈ {formatPKR(totalAmount, checkoutItems[0]?.currency) || `PKR ${Math.round(currencyConversion.totalPKR).toLocaleString()}`}
-              </div>
-            )}
           </div>
         </div>
       </div>
@@ -1283,7 +1297,7 @@ const handlePaymentSubmit = () => {
           <div>
             <h4 className="text-sm font-bold text-blue-900">Hotelbeds Rate Update</h4>
             <p className="text-xs text-blue-800 mt-1">
-              The hotel has updated the room price from <strong>EUR {priceChangeNotice.oldTotal.toFixed(2)}</strong> to <strong>EUR {priceChangeNotice.newTotal.toFixed(2)}</strong> ({priceChangeNotice.difference > 0 ? `+EUR ${priceChangeNotice.difference}` : `EUR ${priceChangeNotice.difference}`}). Your booking will proceed with the confirmed rate.
+              The hotel has updated the room price from <strong>PKR {Math.round(priceChangeNotice.oldTotal).toLocaleString()}</strong> to <strong>PKR {Math.round(priceChangeNotice.newTotal).toLocaleString()}</strong> ({priceChangeNotice.difference > 0 ? `+PKR ${Math.round(priceChangeNotice.difference).toLocaleString()}` : `PKR ${Math.round(priceChangeNotice.difference).toLocaleString()}`}). Your booking will proceed with the confirmed rate.
             </p>
           </div>
         </div>

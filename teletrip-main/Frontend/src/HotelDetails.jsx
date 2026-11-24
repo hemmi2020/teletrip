@@ -96,9 +96,9 @@ const useHotelCartIntegration = () => {
     const nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
 
     // Calculate price per night and total price
-    const totalFromAPI  = parseFloat(rate.net);
-    const pricePerNight = nights > 0 ? (totalFromAPI  / nights) : totalFromAPI ;
-    const totalPrice = totalFromAPI ;
+    const totalFromAPI = parseFloat(rate.pricePkr || rate.price || rate.totalAmountPkr || rate.sellingRate || rate.net || 0);
+    const pricePerNight = nights > 0 ? (totalFromAPI / nights) : totalFromAPI;
+    const totalPrice = totalFromAPI;
 
     const cartItem = {
       id: `${hotel.id}-${room.code}-${rate.rateKey || rate.net}`,
@@ -110,7 +110,10 @@ const useHotelCartIntegration = () => {
       rateKey: rate.rateKey,
       price: pricePerNight,
       pricePerNight: pricePerNight,
-      currency: hotel.currency || 'AED',
+      currency: rate.displayCurrency || hotel.displayCurrency || 'PKR',
+      pricePkr: totalFromAPI,
+      totalPrice: totalFromAPI,
+      net: totalFromAPI,
       checkIn: checkIn,
       checkOut: checkOut,
       nights: nights,
@@ -145,9 +148,6 @@ const useHotelCartIntegration = () => {
       categoryName: hotel.categoryName,
       rateType: rate.rateType,
       boardCode: rate.boardCode,
-      totalPrice: totalFromAPI,
-      net: totalFromAPI ,
-
       addedAt: new Date().toISOString(),
       // ✅ Add original price if there was a discount
       originalPrice: rate.originalPrice || null
