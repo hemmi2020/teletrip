@@ -439,6 +439,7 @@ export default function HeroSection() {
   const [experienceAdults, setExperienceAdults] = useState(2);
   const [experienceChildren, setExperienceChildren] = useState(0);
   const [showExperienceTravellers, setShowExperienceTravellers] = useState(false);
+  const isAnyLocationDropdownOpen = showLocationDropdown || showPickupDropdown || showDropoffDropdown || showExperienceDropdown;
 
   useEffect(() => {
     if (!experienceQuery.trim()) {
@@ -845,7 +846,7 @@ export default function HeroSection() {
   const currentImage = currentTab.images[currentSlide] || currentTab.images[0];
 
   return (
-    <section className="relative w-full min-h-[100dvh] overflow-visible bg-white flex flex-col justify-center items-center pt-24 sm:pt-28 lg:pt-32 pb-10 sm:pb-14 select-none">
+    <section className="relative w-full min-h-0 sm:min-h-[100dvh] overflow-visible bg-white flex flex-col justify-center items-center pt-20 sm:pt-28 lg:pt-32 pb-8 sm:pb-14 select-none">
 
       {/* ════ BACKGROUND SLIDING IMAGES (Full-Width Balanced Visual Background) ════ */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
@@ -882,7 +883,7 @@ export default function HeroSection() {
       <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full flex flex-col justify-center py-2 sm:py-3">
 
         {/* ── TOP SECTION: Dynamic Headline & Subtitle (Centrally aligned with search bar) ── */}
-        <div className="max-w-3xl mx-auto text-center mb-5 sm:mb-7 lg:mb-8">
+        <div className="max-w-3xl mx-auto text-center mb-4 sm:mb-6 lg:mb-8">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}
@@ -894,7 +895,7 @@ export default function HeroSection() {
               {/* Dynamic Tagline (Always 2 Balanced Lines) */}
               <h1 className="text-2xl min-[360px]:text-3xl sm:text-5xl md:text-6xl font-black text-slate-900 tracking-tight leading-[1.12] mb-2 sm:mb-3 lg:mb-4">
                 <span className="block">{currentTab.headlinePrimary}</span>
-                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-sky-500">
+                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-[#2563eb] via-[#1d4ed8] to-[#042770]">
                   {currentTab.headlineSecondary}
                 </span>
               </h1>
@@ -956,7 +957,7 @@ export default function HeroSection() {
                     {isActive && (
                       <motion.div
                         layoutId="activeTabUnderline"
-                        className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 rounded-full"
+                        className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#2563eb] to-[#042770] rounded-full"
                       />
                     )}
                   </button>
@@ -971,7 +972,7 @@ export default function HeroSection() {
                   type="button"
                   onClick={() => setTripType("one_way")}
                   className={`px-3 py-1 rounded-full transition-all cursor-pointer ${tripType === "one_way"
-                    ? "bg-blue-600 text-white shadow-xs"
+                    ? "bg-gradient-to-r from-[#2563eb] to-[#042770] text-white shadow-xs"
                     : "text-slate-600 hover:text-slate-900"
                     }`}
                 >
@@ -981,7 +982,7 @@ export default function HeroSection() {
                   type="button"
                   onClick={() => setTripType("round_trip")}
                   className={`px-3 py-1 rounded-full transition-all cursor-pointer ${tripType === "round_trip"
-                    ? "bg-blue-600 text-white shadow-xs"
+                    ? "bg-gradient-to-r from-[#2563eb] to-[#042770] text-white shadow-xs"
                     : "text-slate-600 hover:text-slate-900"
                     }`}
                 >
@@ -1010,7 +1011,7 @@ export default function HeroSection() {
             >
               {/* Input Fields (Slide right and collapse toward the blue search button) */}
               <div
-                className="flex flex-col sm:flex-row sm:items-center flex-1 transition-all duration-200"
+                className={`flex flex-col sm:flex-row sm:items-center flex-1 transition-all duration-200 relative ${isAnyLocationDropdownOpen ? 'z-50' : 'z-20'}`}
                 style={{
                   opacity: Math.max(0, 1 - collapseProgress * 1.3),
                   transform: `translateX(${collapseProgress * 24}px)`,
@@ -1578,7 +1579,7 @@ export default function HeroSection() {
               </div>
 
               {/* ── Search Action Button: Full-width tap target on mobile, circular on desktop ── */}
-              <div className="p-1 sm:p-0 sm:pr-1 flex w-full sm:w-auto justify-end shrink-0 mt-1 sm:mt-0 relative z-10">
+              <div className={`p-1 sm:p-0 sm:pr-1 flex w-full sm:w-auto justify-end shrink-0 mt-1 sm:mt-0 relative z-10 transition-all duration-150 ${isAnyLocationDropdownOpen ? 'hidden sm:flex' : 'flex'}`}>
                 <button
                   type="submit"
                   aria-label="Search"
@@ -1587,7 +1588,7 @@ export default function HeroSection() {
                     transform: reachedHeader ? "scale(0.85) translateY(-6px)" : "scale(1) translateY(0)",
                     transition: "opacity 0.15s ease, transform 0.15s ease"
                   }}
-                  className="w-full sm:w-12 h-11 sm:h-12 rounded-xl sm:rounded-full bg-blue-600 hover:bg-blue-700 active:scale-98 text-white flex items-center justify-center gap-2 shadow-md hover:shadow-lg cursor-pointer transition-all"
+                  className="w-full sm:w-12 h-11 sm:h-12 rounded-xl sm:rounded-full bg-gradient-to-r from-[#2563eb] to-[#042770] hover:from-[#1d4ed8] hover:to-[#031d54] active:scale-98 text-white flex items-center justify-center gap-2 shadow-md hover:shadow-lg cursor-pointer transition-all"
                 >
                   {isSubmitting ? (
                     <Loader2 className="w-5 h-5 text-white animate-spin" />
@@ -1681,7 +1682,7 @@ export default function HeroSection() {
                 <button
                   type="button"
                   onClick={() => setShowCalendar(false)}
-                  className="px-6 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-bold text-xs cursor-pointer shadow-md"
+                  className="px-6 py-2 bg-gradient-to-r from-[#2563eb] to-[#042770] hover:from-[#1d4ed8] hover:to-[#031d54] text-white rounded-xl transition-all font-bold text-xs cursor-pointer shadow-md"
                 >
                   Done
                 </button>
@@ -1855,7 +1856,7 @@ export default function HeroSection() {
               <button
                 type="button"
                 onClick={() => setShowTravellerDropdown(false)}
-                className="w-full mt-4 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-black text-xs cursor-pointer shadow-md"
+                className="w-full mt-4 py-2.5 bg-gradient-to-r from-[#2563eb] to-[#042770] hover:from-[#1d4ed8] hover:to-[#031d54] text-white rounded-xl transition-all font-black text-xs cursor-pointer shadow-md"
               >
                 Apply Guests
               </button>
@@ -1929,7 +1930,7 @@ export default function HeroSection() {
                 <button
                   type="button"
                   onClick={() => setShowTransferCalendar(false)}
-                  className="px-6 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-bold text-xs cursor-pointer shadow-md"
+                  className="px-6 py-2 bg-gradient-to-r from-[#2563eb] to-[#042770] hover:from-[#1d4ed8] hover:to-[#031d54] text-white rounded-xl transition-all font-bold text-xs cursor-pointer shadow-md"
                 >
                   Done
                 </button>
@@ -2052,7 +2053,7 @@ export default function HeroSection() {
               <button
                 type="button"
                 onClick={() => setShowTransferTravellers(false)}
-                className="w-full mt-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-black text-xs cursor-pointer shadow-md"
+                className="w-full mt-4 py-2 bg-gradient-to-r from-[#2563eb] to-[#042770] hover:from-[#1d4ed8] hover:to-[#031d54] text-white rounded-xl transition-all font-black text-xs cursor-pointer shadow-md"
               >
                 Apply Passengers
               </button>
@@ -2081,7 +2082,7 @@ export default function HeroSection() {
             }}
           >
             <div
-              className="bg-white border border-gray-200 rounded-3xl shadow-2xl overflow-x-hidden overflow-y-auto max-h-[92vh] p-3 sm:p-6 w-[calc(100vw-20px)] sm:w-auto max-w-sm sm:max-w-2xl lg:max-w-3xl mx-auto"
+              className="bg-white border border-gray-200 rounded-3xl shadow-2xl overflow-hidden p-4 sm:p-6 w-[calc(100vw-24px)] sm:w-[680px] md:w-[720px] max-w-[720px] mx-auto"
             >
               <div className="flex items-center justify-between pb-3 mb-2 border-b border-gray-100">
                 <h3 className="text-sm font-extrabold text-slate-900">Select Activity Dates</h3>
@@ -2101,7 +2102,7 @@ export default function HeroSection() {
                   minDate={new Date()}
                   moveRangeOnFirstSelection={false}
                   preventSnapRefocus={true}
-                  months={window.innerWidth < 640 ? 1 : 2}
+                  months={typeof window !== 'undefined' && window.innerWidth < 768 ? 1 : 2}
                   direction="horizontal"
                   rangeColors={["#2563eb"]}
                   showDateDisplay={false}
@@ -2115,7 +2116,7 @@ export default function HeroSection() {
                 <button
                   type="button"
                   onClick={() => setShowExperienceCalendar(false)}
-                  className="px-6 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-bold text-xs cursor-pointer shadow-md"
+                  className="px-6 py-2 bg-gradient-to-r from-[#2563eb] to-[#042770] hover:from-[#1d4ed8] hover:to-[#031d54] text-white rounded-xl transition-all font-bold text-xs cursor-pointer shadow-md"
                 >
                   Done
                 </button>
@@ -2213,7 +2214,7 @@ export default function HeroSection() {
               <button
                 type="button"
                 onClick={() => setShowExperienceTravellers(false)}
-                className="w-full mt-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors font-black text-xs cursor-pointer shadow-md"
+                className="w-full mt-4 py-2 bg-gradient-to-r from-[#2563eb] to-[#042770] hover:from-[#1d4ed8] hover:to-[#031d54] text-white rounded-xl transition-all font-black text-xs cursor-pointer shadow-md"
               >
                 Apply Travellers
               </button>

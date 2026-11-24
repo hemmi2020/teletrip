@@ -314,13 +314,13 @@ const Home = () => {
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 sm:gap-4 mb-4 sm:mb-6">
               <div>
                 <div className="flex items-center gap-2 mb-1.5 sm:mb-2">
-                  <div className="w-6 h-[2px] bg-blue-600 rounded-full" />
+                  <div className="w-6 h-[2px] bg-gradient-to-r from-[#2563eb] to-[#042770] rounded-full" />
                   <span className="text-[10px] sm:text-[11px] font-bold tracking-[0.16em] uppercase text-blue-600">
                     Top Destinations
                   </span>
                 </div>
                 <h2 className="text-xl sm:text-3xl lg:text-4xl font-extrabold text-gray-900 tracking-tight leading-tight">
-                  Popular destinations <span className="text-blue-600">worldwide</span>
+                  Popular destinations <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#2563eb] to-[#042770]">worldwide</span>
                 </h2>
                 <p className="text-gray-500 text-xs sm:text-sm mt-1 max-w-lg leading-relaxed">
                   Browse live hotel availability and click any destination to auto-fill search.
