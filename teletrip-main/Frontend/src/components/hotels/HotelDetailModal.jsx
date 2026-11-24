@@ -30,7 +30,7 @@ import {
   Calendar,
   ThumbsUp,
   Sparkles,
-  Map,
+  Map as MapIcon,
   ExternalLink,
   Navigation
 } from 'lucide-react';
@@ -332,14 +332,14 @@ export const HotelDetailModal = ({
   // Deduplicated popular amenities (Hook 11)
   const uniqueAmenities = useMemo(() => {
     if (!hotel?.amenities) return [];
-    const map = new Map();
+    const amenityMap = new window.Map();
     hotel.amenities.forEach(a => {
       const str = (typeof a === 'string' ? a : (a?.name || String(a))).trim();
-      if (str && !map.has(str.toLowerCase())) {
-        map.set(str.toLowerCase(), str.toUpperCase());
+      if (str && !amenityMap.has(str.toLowerCase())) {
+        amenityMap.set(str.toLowerCase(), str.toUpperCase());
       }
     });
-    return Array.from(map.values());
+    return Array.from(amenityMap.values());
   }, [hotel?.amenities]);
 
   // ── 2. CONDITIONAL EXIT AFTER ALL HOOKS HAVE BEEN EXECUTED ──
@@ -545,7 +545,7 @@ export const HotelDetailModal = ({
               className="px-3 sm:px-3.5 py-1.5 bg-gradient-to-r from-[#2563eb] to-[#042770] hover:from-blue-700 hover:to-blue-900 active:scale-95 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
               title="View hotel location on interactive map"
             >
-              <Map className="w-3.5 h-3.5 text-white" />
+              <MapIcon className="w-3.5 h-3.5 text-white" />
               <span>View on Map</span>
             </button>
           </div>

@@ -103,6 +103,8 @@ const HotelSearchResults = () => {
   const [showModifySearch, setShowModifySearch] = useState(false);
   const [visibleCount, setVisibleCount] = useState(20);
   const [viewMode, setViewMode] = useState('list'); // 'list' | 'thumbnail'
+  const [selectedHotelUnavailable, setSelectedHotelUnavailable] = useState(false);
+  const [unavailableHotelName, setUnavailableHotelName] = useState("");
 
   // Listen for Search tab press from BottomNavBar
   useEffect(() => {
@@ -901,6 +903,8 @@ const HotelSearchResults = () => {
       try {
         setLoading(true);
         setError(null);
+        setSelectedHotelUnavailable(false);
+        setUnavailableHotelName("");
 
         const checkIn = searchParams.get("checkIn");
         const checkOut = searchParams.get("checkOut");
@@ -1066,42 +1070,7 @@ const HotelSearchResults = () => {
           });
         }
 
-        if (!hotelResponse.ok) {
-          let isNoAvailability = false;
-          try {
-            const errClone = await hotelResponse.clone().json();
-            if (hotelResponse.status === 404 || errClone?.message?.toLowerCase().includes("no hotel") || errClone?.message?.toLowerCase().includes("no availability")) {
-              isNoAvailability = true;
-            }
-          } catch (_) {}
-
-          if (isNoAvailability || hotelResponse.status === 404) {
-            console.warn('⚠️ No hotels available for searched criteria');
-            setHotels([]);
-            return;
-          }
-
-          const errorText = await hotelResponse.text();
-          console.error('❌ Hotel API Error:', errorText);
-          throw new Error(`Hotel search failed: ${hotelResponse.status}`);
-        }
-
-        const hotelResult = await hotelResponse.json();
-        console.log('✅ Hotel API Response:', hotelResult);
-
-        if (!hotelResult.success || !hotelResult.data?.hotels) {
-          console.warn('⚠️ No hotels found in response for criteria');
-          setHotels([]);
-          return;
-        }
-
-        if (isAuthenticated && hotelResult.user) {
-          setUser(hotelResult.user);
-        }
-
-        const hotelsRaw = hotelResult.data.hotels?.hotels || hotelResult.data.hotels || [];
-        const hotelsArray = Array.isArray(hotelsRaw) ? hotelsRaw : [];
-        const transformedHotels = hotelsArray.map((hotel) => {
+        const transformHotelItem = (hotel) => {
           const allRates = hotel.rooms?.flatMap((room) => room.rates) || [];
           const cheapestRate =
             allRates.length > 0
@@ -1174,10 +1143,119 @@ const HotelSearchResults = () => {
             zoneCode: hotel.zoneCode,
             categoryName: hotel.categoryName,
           };
-        });
+        };
 
-        // Filter by hotel name if provided
-        const finalHotels = hotelName
+        let shouldFallbackToDestination = false;
+        let hotelResult = null;
+
+        if (!hotelResponse.ok) {
+          let isNoAvailability = false;
+          try {
+            const errClone = await hotelResponse.clone().json();
+            if (hotelResponse.status === 404 || errClone?.message?.toLowerCase().includes("no hotel") || errClone?.message?.toLowerCase().includes("no availability")) {
+              isNoAvailability = true;
+            }
+          } catch (_) {}
+
+          if (hotelCode && (isNoAvailability || hotelResponse.status === 404)) {
+            shouldFallbackToDestination = true;
+          } else if (isNoAvailability || hotelResponse.status === 404) {
+            console.warn('⚠️ No hotels available for searched criteria');
+            setHotels([]);
+            return;
+          } else {
+            const errorText = await hotelResponse.text();
+            console.error('❌ Hotel API Error:', errorText);
+            throw new Error(`Hotel search failed: ${hotelResponse.status}`);
+          }
+        } else {
+          hotelResult = await hotelResponse.json();
+          console.log('✅ Hotel API Response:', hotelResult);
+          const hotelsRaw = hotelResult.data?.hotels?.hotels || hotelResult.data?.hotels || [];
+          const hotelsArray = Array.isArray(hotelsRaw) ? hotelsRaw : [];
+          if (hotelCode && hotelsArray.length === 0) {
+            shouldFallbackToDestination = true;
+          }
+        }
+
+        // If specific hotel search returned 0 rooms or was unavailable, search the destination for similar options
+        if (shouldFallbackToDestination) {
+          console.log('🏨 Selected hotel has no rooms for requested dates. Searching similar available options in destination...');
+          setSelectedHotelUnavailable(true);
+          setUnavailableHotelName(hotelName || searchParams.get("hotelName") || "");
+
+          try {
+            let fallbackRes;
+            if (authToken) {
+              try {
+                fallbackRes = await makeAuthenticatedRequest(
+                  `${API_BASE_URL}/hotels/search-auth`,
+                  {
+                    method: "POST",
+                    body: JSON.stringify(requestBody),
+                  }
+                );
+                if (fallbackRes.ok) {
+                  isAuthenticated = true;
+                } else {
+                  fallbackRes = await fetch(`${API_BASE_URL}/hotels/search`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(requestBody),
+                  });
+                }
+              } catch {
+                fallbackRes = await fetch(`${API_BASE_URL}/hotels/search`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify(requestBody),
+                });
+              }
+            } else {
+              fallbackRes = await fetch(`${API_BASE_URL}/hotels/search`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(requestBody),
+              });
+            }
+
+            if (fallbackRes && fallbackRes.ok) {
+              const fbResult = await fallbackRes.json();
+              const fbRaw = fbResult.data?.hotels?.hotels || fbResult.data?.hotels || [];
+              const fbArray = Array.isArray(fbRaw) ? fbRaw : [];
+              if (fbArray.length > 0) {
+                if (isAuthenticated && fbResult.user) {
+                  setUser(fbResult.user);
+                }
+                const transformedHotels = fbArray.map(transformHotelItem);
+                setHotels(transformedHotels);
+                return;
+              }
+            }
+          } catch (fbErr) {
+            console.warn('Fallback search error:', fbErr);
+          }
+
+          setHotels([]);
+          return;
+        }
+
+        if (!hotelResult.success || !hotelResult.data?.hotels) {
+          console.warn('⚠️ No hotels found in response for criteria');
+          setHotels([]);
+          return;
+        }
+
+        if (isAuthenticated && hotelResult.user) {
+          setUser(hotelResult.user);
+        }
+
+        const hotelsRaw = hotelResult.data.hotels?.hotels || hotelResult.data.hotels || [];
+        const hotelsArray = Array.isArray(hotelsRaw) ? hotelsRaw : [];
+        const transformedHotels = hotelsArray.map(transformHotelItem);
+
+        // Filter by hotel name if provided and not in fallback mode
+        const finalHotels = (hotelName && !hotelCode)
           ? transformedHotels.filter(h => h.name.toLowerCase().includes(hotelName.toLowerCase()))
           : transformedHotels;
 
@@ -2135,6 +2213,36 @@ const HotelSearchResults = () => {
               </div>
             </div>
 
+            {/* ── SELECTED HOTEL UNAVAILABILITY & SIMILAR AVAILABLE OPTIONS BANNER ── */}
+            {selectedHotelUnavailable && hotels.length > 0 && (
+              <div className="mb-4 sm:mb-6 p-4 sm:p-5 bg-gradient-to-r from-amber-50/90 via-orange-50/50 to-amber-50/90 border border-amber-200/90 rounded-2xl sm:rounded-3xl shadow-xs text-left animate-in fade-in duration-200">
+                <div className="flex items-start gap-3 sm:gap-4">
+                  <div className="w-10 h-10 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0 shadow-2xs mt-0.5">
+                    <AlertCircle className="w-5 h-5 text-amber-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap mb-1">
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-200/80 text-amber-900 border border-amber-300/60">
+                        Property Unavailable
+                      </span>
+                      <span className="text-xs text-amber-800 font-semibold">
+                        {formatReadableDate(checkInParam)} → {formatReadableDate(checkOutParam)} ({stayNights} {stayNights === 1 ? 'night' : 'nights'})
+                      </span>
+                    </div>
+                    <h3 className="text-sm sm:text-base font-extrabold text-slate-900">
+                      {unavailableHotelName ? `"${unavailableHotelName}" is sold out for your selected dates` : "The selected hotel is not available for these dates"}
+                    </h3>
+                    <p className="text-xs sm:text-sm text-slate-600 mt-1 leading-relaxed">
+                      This property has no room allotments available for your party ({adultsParam} Adults{childrenParam !== '0' ? `, ${childrenParam} Children` : ''} · {roomsParam} Room).
+                      <span className="font-bold text-blue-700 block sm:inline sm:ml-1">
+                        However, we found {hotels.length} verified similar hotels in {cityParam || 'this destination'} available for your exact dates and criteria:
+                      </span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Hotel Cards: Supports List View or 2-Column Grid on Mobile (3-Col on Desktop) */}
             <div className={viewMode === 'thumbnail' ? "grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-2.5 sm:gap-4.5 pb-6" : "space-y-4 pb-6"}>
               {sortedHotels.slice(0, visibleCount).map((hotel, cardIndex) => {
@@ -2608,12 +2716,14 @@ const HotelSearchResults = () => {
                       No Live Availability
                     </span>
                     <h2 className="text-lg sm:text-2xl font-black text-gray-900 leading-tight">
-                      {hotelNameParam
-                        ? `No rooms available at "${hotelNameParam}" for your selected dates`
+                      {unavailableHotelName || hotelNameParam
+                        ? `"${unavailableHotelName || hotelNameParam}" is not available for your selected dates`
                         : `No hotels available in ${cityParam} for your dates`}
                     </h2>
                     <p className="text-xs sm:text-sm text-gray-500 mt-1 leading-relaxed">
-                      All room allotments matching your exact stay dates and guest count are currently sold out with our wholesale bed banks.
+                      {unavailableHotelName || hotelNameParam
+                        ? `The selected property has no rooms available matching your exact stay dates (${formatReadableDate(checkInParam)} → ${formatReadableDate(checkOutParam)}) and party size (${adultsParam} Adults${childrenParam !== '0' ? `, ${childrenParam} Children` : ''} · ${roomsParam} Room). You can shift dates below or explore similar available options.`
+                        : `All room allotments matching your exact stay dates and guest count are currently sold out with our wholesale bed banks.`}
                     </p>
                   </div>
                 </div>
@@ -2718,7 +2828,7 @@ const HotelSearchResults = () => {
                   <div className="space-y-3 pt-2">
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-extrabold text-gray-900 uppercase tracking-wider">
-                        Recommended Alternative Properties with High Availability:
+                        Similar Available Properties Matching Your Criteria ({stayNights} {stayNights === 1 ? 'Night' : 'Nights'} · {adultsParam} Adults in {cityParam}):
                       </span>
                     </div>
 
