@@ -29,7 +29,10 @@ import {
   ShieldCheck,
   Calendar,
   ThumbsUp,
-  Sparkles
+  Sparkles,
+  Map,
+  ExternalLink,
+  Navigation
 } from 'lucide-react';
 
 const isPolicyOrNonPromo = (text) => {
@@ -206,6 +209,7 @@ export const HotelDetailModal = ({
   const [reviewSearchQuery, setReviewSearchQuery] = useState('');
   const [travelerTypeFilter, setTravelerTypeFilter] = useState('all');
   const [selectedSingleRate, setSelectedSingleRate] = useState(null);
+  const [showMapModal, setShowMapModal] = useState(false);
 
   // Filter rates for each room
   const filterRate = (rate) => {
@@ -367,6 +371,19 @@ export const HotelDetailModal = ({
 
   const headerBg = allImages[0] || hotel.thumbnail || 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg';
 
+  // Dynamic Map Coordinates & URLs
+  const hotelLat = hotel.latitude || hotel.coordinates?.latitude || hotel.coordinates?.lat || hotelContentData?.coordinates?.latitude;
+  const hotelLon = hotel.longitude || hotel.coordinates?.longitude || hotel.coordinates?.lng || hotelContentData?.coordinates?.longitude;
+  const hotelAddressFull = (typeof hotel.address === 'string' ? hotel.address : hotelContentData?.address?.content)
+    || [hotel.zone, hotel.destinationName || hotel.city, hotel.countryName].filter(Boolean).join(', ')
+    || hotel.name;
+  const hasValidCoords = hotelLat && hotelLon && !isNaN(Number(hotelLat)) && Number(hotelLat) !== 0 && !isNaN(Number(hotelLon)) && Number(hotelLon) !== 0;
+  const mapQuery = hasValidCoords
+    ? `${hotelLat},${hotelLon}`
+    : `${hotel.name}, ${hotelAddressFull}`;
+  const mapEmbedUrl = `https://maps.google.com/maps?q=${encodeURIComponent(mapQuery)}&t=m&z=15&ie=UTF8&iwloc=&output=embed`;
+  const googleMapsExternalUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapQuery)}`;
+
   // Multi-room config
   const roomConfigsParam = searchParams?.get("roomConfigs");
   const roomConfigs = roomConfigsParam
@@ -505,11 +522,41 @@ export const HotelDetailModal = ({
           </div>
         </div>
 
+        {/* ── DYNAMIC HOTEL LOCATION & MAP ACTION BAR (Directly below cover header) ── */}
+        <div className="flex-shrink-0 bg-slate-50 border-b border-gray-200/80 px-3.5 sm:px-6 py-2.5 flex items-center justify-between gap-3 shadow-xs">
+          <div className="flex items-center gap-2 text-xs text-slate-700 min-w-0">
+            <div className="w-6 h-6 rounded-lg bg-blue-100 flex items-center justify-center shrink-0 text-blue-600 shadow-xs">
+              <MapPin className="w-3.5 h-3.5" />
+            </div>
+            <div className="min-w-0 flex items-center gap-1.5 flex-wrap">
+              <span className="font-bold text-slate-800 truncate max-w-[200px] sm:max-w-md">{hotelAddressFull}</span>
+              {hotel.zone && (
+                <span className="text-[11px] font-medium text-slate-500 bg-white px-2 py-0.5 rounded-full border border-slate-200/80 hidden sm:inline-flex items-center">
+                  {hotel.zone}
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={() => setShowMapModal(true)}
+              className="px-3 sm:px-3.5 py-1.5 bg-gradient-to-r from-[#2563eb] to-[#042770] hover:from-blue-700 hover:to-blue-900 active:scale-95 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+              title="View hotel location on interactive map"
+            >
+              <Map className="w-3.5 h-3.5 text-white" />
+              <span>View on Map</span>
+            </button>
+          </div>
+        </div>
+
         {/* ── SEGMENTED NAVIGATION TABS ── */}
         <div className="flex-shrink-0 px-3 sm:px-6 border-b border-gray-200 bg-white flex items-center gap-1 sm:gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
           {[
             { id: 'rooms', label: `Rooms & Rates (${hotel.rooms?.length || 0})` },
             { id: 'overview', label: 'Hotel Highlights' },
+            { id: 'map', label: 'Location Map' },
             { id: 'facilities', label: 'Facilities & Amenities' },
             { id: 'policies', label: 'Policies & Taxes' },
             { id: 'reviews', label: 'Guest Reviews' }
@@ -1017,6 +1064,51 @@ export const HotelDetailModal = ({
             </div>
           )}
 
+          {/* ────── TAB: LOCATION MAP ────── */}
+          {activeTab === 'map' && (
+            <div className="space-y-4">
+              <div className="bg-slate-50 rounded-2xl border border-gray-200/80 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <MapPin className="w-5 h-5 text-blue-600 shrink-0" />
+                    <h3 className="font-extrabold text-slate-900 text-sm sm:text-base">{hotel.name}</h3>
+                  </div>
+                  <p className="text-xs sm:text-sm text-slate-600 mt-1">{hotelAddressFull}</p>
+                  {hasValidCoords && (
+                    <div className="mt-2 flex items-center gap-2">
+                      <span className="font-mono text-[11px] bg-white px-2 py-0.5 rounded border border-gray-200 text-slate-500">
+                        GPS: {Number(hotelLat).toFixed(4)}, {Number(hotelLon).toFixed(4)}
+                      </span>
+                    </div>
+                  )}
+                </div>
+                <a
+                  href={googleMapsExternalUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 py-2 bg-gradient-to-r from-[#2563eb] to-[#042770] hover:opacity-95 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-sm transition-all active:scale-95 shrink-0"
+                >
+                  <span>Open in Google Maps</span>
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </a>
+              </div>
+
+              {/* Embedded Google Map */}
+              <div className="w-full h-[360px] sm:h-[450px] rounded-2xl overflow-hidden border border-gray-200 shadow-xs bg-slate-100">
+                <iframe
+                  src={mapEmbedUrl}
+                  title={`Map of ${hotel.name}`}
+                  width="100%"
+                  height="100%"
+                  className="w-full h-full border-0"
+                  loading="lazy"
+                  allowFullScreen
+                  referrerPolicy="no-referrer-when-downgrade"
+                />
+              </div>
+            </div>
+          )}
+
           {/* ────── TAB 3: FACILITIES & AMENITIES (HOTELBEDS COMPLIANT) ────── */}
           {activeTab === 'facilities' && (
             <div className="space-y-5">
@@ -1447,6 +1539,82 @@ export const HotelDetailModal = ({
           )}
         </div>
       </div>
+
+      {/* ── INTERACTIVE MAP MODAL POPUP (Triggered by "View on Map" button) ── */}
+      {showMapModal && (
+        <div
+          className="fixed inset-0 z-[200] flex items-center justify-center p-3 sm:p-6 bg-black/70 backdrop-blur-xs animate-in fade-in duration-150"
+          onClick={() => setShowMapModal(false)}
+        >
+          <div
+            className="relative bg-white w-full max-w-3xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] border border-gray-100"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Map Modal Header */}
+            <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 border-b border-gray-200 bg-slate-50">
+              <div className="min-w-0 pr-3">
+                <div className="flex items-center gap-2">
+                  <MapPin className="w-4 h-4 text-blue-600 shrink-0" />
+                  <h3 className="text-sm sm:text-base font-extrabold text-slate-900 truncate">{hotel.name}</h3>
+                </div>
+                <p className="text-xs text-slate-600 truncate mt-0.5">{hotelAddressFull}</p>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <a
+                  href={googleMapsExternalUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3 py-1.5 rounded-xl bg-blue-50 text-blue-700 hover:bg-blue-100 font-bold text-xs flex items-center gap-1.5 transition-colors border border-blue-200"
+                >
+                  <span>Open in Maps</span>
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </a>
+                <button
+                  type="button"
+                  onClick={() => setShowMapModal(false)}
+                  className="w-8 h-8 rounded-full bg-gray-200/80 hover:bg-gray-300 text-gray-700 flex items-center justify-center transition-colors cursor-pointer"
+                  aria-label="Close map"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Map Iframe */}
+            <div className="relative w-full h-[380px] sm:h-[480px] bg-slate-100">
+              <iframe
+                src={mapEmbedUrl}
+                title={`Map of ${hotel.name}`}
+                width="100%"
+                height="100%"
+                className="w-full h-full border-0"
+                loading="lazy"
+                allowFullScreen
+                referrerPolicy="no-referrer-when-downgrade"
+              />
+            </div>
+
+            {/* Map Modal Footer */}
+            <div className="px-4 sm:px-6 py-2.5 bg-slate-50 border-t border-gray-200 flex items-center justify-between text-xs text-slate-600 flex-wrap gap-2">
+              <div className="flex items-center gap-2">
+                {hasValidCoords && (
+                  <span className="font-mono text-[11px] bg-white px-2 py-0.5 rounded border border-gray-200 text-slate-500">
+                    GPS: {Number(hotelLat).toFixed(4)}, {Number(hotelLon).toFixed(4)}
+                  </span>
+                )}
+                {hotel.zone && <span className="font-medium text-slate-700">Area: {hotel.zone}</span>}
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowMapModal(false)}
+                className="px-4 py-1.5 bg-slate-900 text-white rounded-lg font-bold text-xs hover:bg-slate-800 transition-colors cursor-pointer"
+              >
+                Close Map
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
