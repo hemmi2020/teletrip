@@ -2719,27 +2719,43 @@ const HotelSearchResults = () => {
                     {/* Right: Transparent Pricing & Primary CTA (Desktop Only) */}
                     <div className="hidden md:flex p-4 sm:p-5 md:w-60 bg-slate-50/70 border-l border-gray-100 flex-col justify-between shrink-0">
                       <div className="text-right space-y-1">
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            openReviewsModal(hotel);
-                          }}
-                          className="flex items-center justify-end gap-1.5 cursor-pointer group/rev hover:opacity-80 transition-opacity bg-transparent border-0 p-0 w-full"
-                          title="Click to view traveler reviews"
-                        >
-                          <div className="text-right">
-                            <span className="text-xs font-bold text-gray-900 group-hover/rev:text-blue-600 block">
-                              {reviewRatingLabel}
-                            </span>
-                            <div className="text-[10px] text-gray-400">
-                              {reviewCountVal.toLocaleString()} reviews
+                        {hasRealReview ? (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openReviewsModal(hotel);
+                            }}
+                            className="flex items-center justify-end gap-1.5 cursor-pointer group/rev hover:opacity-80 transition-opacity bg-transparent border-0 p-0 w-full"
+                            title="Click to view traveler reviews"
+                          >
+                            <div className="text-right">
+                              <span className="text-xs font-bold text-gray-900 group-hover/rev:text-blue-600 block">
+                                {reviewRatingLabel}
+                              </span>
+                              <div className="text-[10px] text-gray-400">
+                                {reviewCountVal ? `${reviewCountVal.toLocaleString()} reviews` : 'Verified'}
+                              </div>
                             </div>
+                            <span className="w-8 h-8 rounded-lg bg-blue-600 text-white font-extrabold text-xs flex items-center justify-center shadow-xs">
+                              {ratingVal}
+                            </span>
+                          </button>
+                        ) : (
+                          <div className="flex items-center justify-end gap-1.5 py-0.5">
+                            <div className="text-right">
+                              <span className="text-xs font-bold text-blue-700 block">
+                                Verified Property
+                              </span>
+                              <div className="text-[10px] text-gray-400">
+                                {hotel.category || `${hotel.stars || 4}-Star`}
+                              </div>
+                            </div>
+                            <span className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 font-extrabold text-xs flex items-center justify-center border border-blue-200/80 shadow-2xs">
+                              ★
+                            </span>
                           </div>
-                          <span className="w-8 h-8 rounded-lg bg-blue-600 text-white font-extrabold text-xs flex items-center justify-center shadow-xs">
-                            {ratingVal}
-                          </span>
-                        </button>
+                        )}
 
                         <div className="pt-2 text-right">
                           <span className="text-[10px] uppercase font-bold text-gray-400 block tracking-wider">
